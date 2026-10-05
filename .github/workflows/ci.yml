@@ -3,7 +3,7 @@ run-name: Build DIFARMÁS ERP #${{ github.run_number }}
 
 on:
   push:
-    branches: [main]
+    branches: [main, ci/verify-build]
   pull_request:
     branches: [main]
 
