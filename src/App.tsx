@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Activity, AlertTriangle, Boxes, DollarSign, LayoutDashboard, Pencil, Plus, Search, ShoppingCart, TrendingUp, Wallet, X } from 'lucide-react';
 
 type Module = 'dashboard' | 'ventas' | 'inventario' | 'compras' | 'finanzas';
+type CartItem = Product & { qty: number; price: number };
 type Product = {
   id: number; code: string; name: string; category: string; laboratory: string;
   presentation: string; cost: number; retail: number; wholesale: number;
@@ -30,6 +31,10 @@ function App() {
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [saleType, setSaleType] = useState<'minorista'|'mayorista'>('minorista');
+  const [payment, setPayment] = useState<'Efectivo'|'Transferencia'|'Crédito'>('Efectivo');
+  const [saleSearch, setSaleSearch] = useState('');
 
   const nav = [
     ['dashboard', 'Dashboard', LayoutDashboard], ['ventas', 'Ventas / POS', ShoppingCart],
@@ -54,7 +59,7 @@ function App() {
     </aside>
     <main className="main">
       <header className="topbar"><div><p className="eyebrow">DIFARMÁS · ERP</p><h1>{active === 'dashboard' ? 'Panel de control' : nav.find(n => n[0] === active)?.[1]}</h1></div><div className="status"><span/> Sistema operativo</div></header>
-      {active === 'dashboard' ? <Dashboard/> : active === 'inventario' ? <Inventory products={filtered} search={search} setSearch={setSearch} onNew={() => { setEditing(null); setShowForm(true); }} onEdit={p => { setEditing(p); setShowForm(true); }} /> : <ModulePlaceholder name={nav.find(n => n[0] === active)?.[1] || ''}/>}
+      {active === 'dashboard' ? <Dashboard/> : active === 'inventario' ? <Inventory products={filtered} search={search} setSearch={setSearch} onNew={() => { setEditing(null); setShowForm(true); }} onEdit={p => { setEditing(p); setShowForm(true); }} /> : active === 'ventas' ? <POS products={products} cart={cart} setCart={setCart} saleType={saleType} setSaleType={setSaleType} payment={payment} setPayment={setPayment} search={saleSearch} setSearch={setSaleSearch} onComplete={(sold)=>setProducts(current=>current.map(p=>{const item=sold.find(x=>x.id===p.id); return item?{...p,stock:p.stock-item.qty}:p}))}/> : <ModulePlaceholder name={nav.find(n => n[0] === active)?.[1] || ''}/>} 
       {showForm && <ProductModal product={editing} onClose={() => {setShowForm(false);setEditing(null)}} onSave={saveProduct}/>}
     </main>
   </div>;
@@ -67,6 +72,18 @@ function Dashboard() {
     <section className="two-col"><article className="card"><div className="card-title"><div><h3>Rendimiento de ventas</h3><p>Resumen del período actual</p></div><TrendingUp size={20}/></div><div className="bar-area">{[42,58,49,74,68,88,79].map((h,i)=><div key={i} className={i===6?'bar current':'bar'} style={{height:h+'%'}}/>)}</div><div className="days"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>H</span></div></article>
     <article className="card"><div className="card-title"><div><h3>Alertas</h3><p>Acciones recomendadas</p></div><AlertTriangle size={20}/></div>{[['Stock bajo','Revisar productos por debajo del mínimo','warning'],['Vencimientos','Productos próximos a vencer','danger'],['Caja','Revisar flujo de efectivo del día','info']].map(([title,text,type])=><div className="alert" key={title}><div className={'dot '+type}/><div><strong>{title}</strong><p>{text}</p></div></div>)}</article></section>
   </div>;
+}
+
+function POS({products,cart,setCart,saleType,setSaleType,payment,setPayment,search,setSearch,onComplete}:{products:Product[];cart:CartItem[];setCart:(c:CartItem[])=>void;saleType:'minorista'|'mayorista';setSaleType:(v:'minorista'|'mayorista')=>void;payment:'Efectivo'|'Transferencia'|'Crédito';setPayment:(v:'Efectivo'|'Transferencia'|'Crédito')=>void;search:string;setSearch:(v:string)=>void;onComplete:(sold:CartItem[])=>void}) {
+  const results=products.filter(p=>[p.code,p.name].join(' ').toLowerCase().includes(search.toLowerCase())).slice(0,6);
+  const total=cart.reduce((sum,i)=>sum+i.price*i.qty,0);
+  const profit=cart.reduce((sum,i)=>sum+(i.price-i.cost)*i.qty,0);
+  const add=(p:Product)=>{if(p.stock<=0)return;setCart(cart.some(i=>i.id===p.id)?cart.map(i=>i.id===p.id?{...i,qty:Math.min(i.qty+1,p.stock),price:saleType==='mayorista'?p.wholesale:p.retail}:i):[...cart,{...p,qty:1,price:saleType==='mayorista'?p.wholesale:p.retail}]);setSearch('');};
+  const change=(id:number,delta:number)=>setCart(cart.map(i=>i.id===id?{...i,qty:Math.max(1,Math.min(i.qty+delta,i.stock))}:i));
+  const remove=(id:number)=>setCart(cart.filter(i=>i.id!==id));
+  const checkout=()=>{if(!cart.length)return;onComplete(cart);setCart([]);};
+  return <div className="content"><div className="page-head"><div><span className="pill">MVP · MÓDULO 3</span><h2>Punto de venta</h2><p>Venta rápida con precio minorista o mayorista.</p></div><div className="sale-type"><button className={saleType==='minorista'?'type active':'type'} onClick={()=>setSaleType('minorista')}>Minorista</button><button className={saleType==='mayorista'?'type active':'type'} onClick={()=>setSaleType('mayorista')}>Mayorista</button></div></div>
+  <div className="pos-grid"><section><div className="card search-pos"><Search size={18}/><input autoFocus value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar producto o escanear código..." /></div>{search&&<div className="results card">{results.length?results.map(p=><button key={p.id} onClick={()=>add(p)}><span><strong>{p.name}</strong><small>{p.code} · Stock: {p.stock}</small></span><b>{money(saleType==='mayorista'?p.wholesale:p.retail)}</b></button>):<p>No se encontraron productos.</p>}</div>}<div className="card cart-card"><div className="card-title"><div><h3>Carrito</h3><p>{cart.length} productos</p></div><ShoppingCart size={20}/></div>{cart.length===0?<div className="cart-empty">Agrega productos para iniciar la venta.</div>:cart.map(i=><div className="cart-row" key={i.id}><div><strong>{i.name}</strong><small>{money(i.price)} c/u</small></div><div className="qty"><button onClick={()=>change(i.id,-1)}>-</button><b>{i.qty}</b><button onClick={()=>change(i.id,1)}>+</button></div><strong>{money(i.price*i.qty)}</strong><button className="remove" onClick={()=>remove(i.id)}>×</button></div>)}</div></section><aside className="card checkout"><h3>Resumen de venta</h3><div className="summary-line"><span>Subtotal</span><strong>{money(total)}</strong></div><div className="summary-line"><span>Utilidad estimada</span><strong>{money(profit)}</strong></div><label className="checkout-label">Método de pago<select value={payment} onChange={e=>setPayment(e.target.value as typeof payment)}><option>Efectivo</option><option>Transferencia</option><option>Crédito</option></select></label><div className="grand"><span>Total</span><strong>{money(total)}</strong></div><button className="primary checkout-btn" disabled={!cart.length} onClick={checkout}>Registrar venta</button></aside></div></div>;
 }
 
 function Inventory({products, search, setSearch, onNew, onEdit}:{products:Product[];search:string;setSearch:(v:string)=>void;onNew:()=>void;onEdit:(p:Product)=>void}) {
