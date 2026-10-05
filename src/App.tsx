@@ -347,7 +347,7 @@ function CashControlExecutive({sales,expenses,receivables,payables,movements}:{s
 }
 
 function ExecutiveDashboard360({sales,expenses,receivables}:{sales:SaleRecord[];expenses:Expense[];receivables:Receivable[]}) {
- const rev=sales.reduce((a,x)=>a+x.total,0),gross=sales.reduce((a,x)=>a+x.profit,0),exp=expenses.reduce((a,x)=>a+x.amount,0),net=gross-exp,margin=rev?gross/rev:0,pending=receivables.reduce((a,x)=>a+Math.max(0,x.total-x.paid),0);
+ const ms=sales.filter(x=>isCurrentMonth(x.date)),me=expenses.filter(x=>isCurrentMonth(x.date)); const rev=ms.reduce((a,x)=>a+x.total,0),gross=ms.reduce((a,x)=>a+x.profit,0),exp=me.reduce((a,x)=>a+x.amount,0),net=gross-exp,margin=rev?gross/rev:0,pending=receivables.reduce((a,x)=>a+Math.max(0,x.total-x.paid),0);
  const score=(rev>=100000?2:rev>=70000?1:0)+(margin>=.3?2:margin>=.2?1:0)+(rev&&exp/rev<=.25?2:rev&&exp/rev<=.35?1:0)+(net>0?2:net===0?1:0)+(pending<=rev*.15?2:pending<=rev*.3?1:0); const status=score>=8?'SALUDABLE':score>=5?'ATENCIÓN':'RIESGO';
  return <section className="card"><div className="card-title"><div><h3>Dashboard Ejecutivo 360</h3><p>Resumen financiero para decisiones de administración.</p></div><LayoutDashboard size={20}/></div><div className="metrics-grid"><div className="metric"><span>Estado</span><strong>{status}</strong></div><div className="metric"><span>Ventas</span><strong>{money(rev)}</strong></div><div className="metric"><span>Margen</span><strong>{(margin*100).toFixed(1)}%</strong></div><div className="metric"><span>Resultado neto</span><strong>{money(net)}</strong></div><div className="metric"><span>Gastos</span><strong>{money(exp)}</strong></div><div className="metric"><span>Cartera</span><strong>{money(pending)}</strong></div></div><div className="alert">Prioridad ejecutiva: {net<0?'corregir el resultado neto.':margin<.2?'mejorar margen.':pending>rev*.2?'acelerar cobranza.':'mantener control y crecer ventas.'}</div></section>;
 }
@@ -433,7 +433,7 @@ function NetProfitability({sales,expenses}:{sales:SaleRecord[];expenses:Expense[
 }
 
 function ExpenseAlerts({expenses}:{expenses:Expense[]}) {
- const groups=expenses.reduce((a,x)=>{a[x.category]=(a[x.category]||0)+x.amount;return a},{} as Record<string,number>);
+ const monthExpenses=expenses.filter(x=>isCurrentMonth(x.date)); const groups=monthExpenses.reduce((a,x)=>{a[x.category]=(a[x.category]||0)+x.amount;return a},{} as Record<string,number>);
  const rows=Object.entries(groups).sort((a,b)=>b[1]-a[1]); const total=expenses.reduce((s,x)=>s+x.amount,0);
  const alerts=rows.filter(([,v])=>Number(v)>0&&(total>0?Number(v)/total>=.3:false));
  return <section className="card"><div className="card-title"><div><h3>Alertas inteligentes de gastos</h3><p>Detecta categorías con peso relevante sobre el gasto registrado.</p></div><ShieldCheck size={20}/></div>{alerts.length===0?<div className="alert">No se detectan categorías con una concentración igual o superior al 30%.</div>:alerts.map(([name,value])=><div className="list-row" key={name}><div><strong>Revisar: {name}</strong><small>{money(Number(value))} · {total?(Number(value)/total*100).toFixed(1):0}% del gasto</small></div><span>Atención</span></div>)}<div className="alert">Estas alertas son indicadores de revisión; no significan por sí solas que el gasto deba eliminarse.</div></section>;
