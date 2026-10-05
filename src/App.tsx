@@ -20,6 +20,10 @@ type Product = {
 
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
 
+const localDateKey = (d = new Date()) => { const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; };
+const currentMonthKey = (d = new Date()) => localDateKey(d).slice(0,7);
+const isCurrentMonth = (date:string) => (date||'').slice(0,7) === currentMonthKey();
+
 const initialProducts: Product[] = [
   { id: 1, code: '750100000001', name: 'Eutirox 50 mcg', category: 'Medicamentos', laboratory: 'Merck', presentation: 'Caja x 50 tabletas', cost: 250, retail: 330, wholesale: 310, stock: 18, minStock: 8, lot: 'EUT-2607', expiry: '2027-07-31', supplier: 'Distribuidora Nacional' },
   { id: 2, code: '750100000002', name: 'Neurobión 25,000', category: 'Vitaminas', laboratory: 'Merck', presentation: 'Ampolla', cost: 205, retail: 265, wholesale: 245, stock: 6, minStock: 10, lot: 'NEU-2610', expiry: '2027-10-31', supplier: 'Droguería Central' },
@@ -95,14 +99,16 @@ function App() {
 }
 
 function Dashboard({products,sales,expenses,monthlyGoal,fixedExpenses}:{products:Product[];sales:SaleRecord[];expenses:Expense[];monthlyGoal:number;fixedExpenses:number}) {
-  const salesTotal=sales.reduce((a,s)=>a+s.total,0);
-  const grossProfit=sales.reduce((a,s)=>a+s.profit,0);
-  const expenseTotal=expenses.reduce((a,e)=>a+e.amount,0);
+  const monthSales=sales.filter(s=>isCurrentMonth(s.date));
+  const monthExpenses=expenses.filter(e=>isCurrentMonth(e.date));
+  const salesTotal=monthSales.reduce((a,s)=>a+s.total,0);
+  const grossProfit=monthSales.reduce((a,s)=>a+s.profit,0);
+  const expenseTotal=monthExpenses.reduce((a,e)=>a+e.amount,0);
   const netResult=grossProfit-expenseTotal;
   const inventoryValue=products.reduce((a,p)=>a+p.cost*p.stock,0);
   const lowStock=products.filter(p=>p.stock<=p.minStock);
-  const todayKey=new Date().toDateString();
-  const salesToday=sales.filter(s=>new Date(s.date).toDateString()===todayKey).reduce((a,s)=>a+s.total,0);
+  const todayKey=localDateKey();
+  const salesToday=sales.filter(s=>s.date.slice(0,10)===todayKey).reduce((a,s)=>a+s.total,0);
   const goal=monthlyGoal;
   const workDays=26;
   const dailyGoal=goal/workDays;
@@ -316,7 +322,7 @@ function FinancialRiskControl({sales,expenses,receivables,payables,products}:{sa
 
 function AuditHistory({closures,movements}:{closures:CashClosure[];movements:CashMovement[]}) {
  const key='difarmas_audit_history'; const [items,setItems]=React.useState<{id:number;date:string;type:string;message:string}[]>(()=>{try{return JSON.parse(localStorage.getItem(key)||'[]')}catch{return []}});
- const today=new Date().toISOString().slice(0,10), last=closures[closures.length-1], diff=last?.difference??0, outs=movements.filter(x=>x.date.slice(0,10)===today&&x.type==='Salida').reduce((a,x)=>a+x.amount,0);
+ const today=localDateKey(), last=closures[closures.length-1], diff=last?.difference??0, outs=movements.filter(x=>x.date.slice(0,10)===today&&x.type==='Salida').reduce((a,x)=>a+x.amount,0);
  const current=diff!==0?{type:'CIERRE',message:`Diferencia detectada en último cierre: ${money(diff)}`}:outs>0?{type:'MOVIMIENTO',message:`Salidas manuales registradas hoy: ${money(outs)}`}:null;
  const register=()=>{if(!current)return; const next=[{id:Date.now(),date:new Date().toISOString(),...current},...items].slice(0,30);setItems(next);localStorage.setItem(key,JSON.stringify(next));};
  return <section className="card"><div className="card-title"><div><h3>Historial de auditoría</h3><p>Registro local de revisiones y señales detectadas.</p></div><ReceiptText size={20}/></div><button onClick={register} disabled={!current}>Registrar revisión actual</button>{items.slice(0,8).map(x=><div className="list-row" key={x.id}><strong>{x.type}</strong><span>{x.message} · {x.date.slice(0,16).replace('T',' ')}</span></div>)}{!items.length&&<div className="alert">Aún no hay revisiones registradas.</div>}</section>;
@@ -336,8 +342,8 @@ function SmartCashAudit({closures,movements}:{closures:CashClosure[];movements:C
 }
 
 function CashControlExecutive({sales,expenses,receivables,payables,movements}:{sales:SaleRecord[];expenses:Expense[];receivables:Receivable[];payables:Payable[];movements:CashMovement[]}) {
- const cashSales=sales.filter(x=>x.payment!=='Crédito').reduce((a,x)=>a+x.total,0),collections=receivables.reduce((a,x)=>a+x.paid,0),expenseTotal=expenses.reduce((a,x)=>a+x.amount,0),supplier=payables.reduce((a,x)=>a+x.paid,0),inflow=movements.filter(x=>x.type==='Entrada').reduce((a,x)=>a+x.amount,0),outflow=movements.filter(x=>x.type==='Salida').reduce((a,x)=>a+x.amount,0),net=cashSales+collections+inflow-expenseTotal-supplier-outflow;
- return <section className="card"><div className="card-title"><div><h3>Centro de Control de Caja 360</h3><p>Entradas, salidas y flujo neto registrado.</p></div><WalletCards size={20}/></div><div className="metrics-grid"><div className="metric"><span>Ventas contado</span><strong>{money(cashSales)}</strong></div><div className="metric"><span>Cobros</span><strong>{money(collections)}</strong></div><div className="metric"><span>Entradas manuales</span><strong>{money(inflow)}</strong></div><div className="metric"><span>Gastos</span><strong>{money(expenseTotal)}</strong></div><div className="metric"><span>Pagos proveedores</span><strong>{money(supplier)}</strong></div><div className="metric"><span>Salidas manuales</span><strong>{money(outflow)}</strong></div></div><div className="list-row"><strong>Flujo neto registrado</strong><span>{money(net)}</span></div></section>;
+ const today=localDateKey(),cashSales=sales.filter(x=>x.date.slice(0,10)===today&&x.payment!=='Crédito').reduce((a,x)=>a+x.total,0),expenseTotal=expenses.filter(x=>x.date.slice(0,10)===today).reduce((a,x)=>a+x.amount,0),inflow=movements.filter(x=>x.date.slice(0,10)===today&&x.type==='Entrada').reduce((a,x)=>a+x.amount,0),outflow=movements.filter(x=>x.date.slice(0,10)===today&&x.type==='Salida').reduce((a,x)=>a+x.amount,0),collections=0,supplier=0,net=cashSales+collections+inflow-expenseTotal-supplier-outflow;
+ return <section className="card"><div className="card-title"><div><h3>Centro de Control de Caja 360</h3><p>Movimientos registrados de hoy.</p></div><WalletCards size={20}/></div><div className="metrics-grid"><div className="metric"><span>Ventas contado</span><strong>{money(cashSales)}</strong></div><div className="metric"><span>Cobros</span><strong>{money(collections)}</strong></div><div className="metric"><span>Entradas manuales</span><strong>{money(inflow)}</strong></div><div className="metric"><span>Gastos</span><strong>{money(expenseTotal)}</strong></div><div className="metric"><span>Pagos proveedores</span><strong>{money(supplier)}</strong></div><div className="metric"><span>Salidas manuales</span><strong>{money(outflow)}</strong></div></div><div className="list-row"><strong>Flujo neto registrado</strong><span>{money(net)}</span></div></section>;
 }
 
 function ExecutiveDashboard360({sales,expenses,receivables}:{sales:SaleRecord[];expenses:Expense[];receivables:Receivable[]}) {
@@ -362,7 +368,7 @@ function ExecutiveFinancialTrafficLight({sales,expenses,receivables}:{sales:Sale
 function FinancialGoalsPanel({sales,expenses}:{sales:SaleRecord[];expenses:Expense[]}) {
  const rev=sales.reduce((a,x)=>a+x.total,0),gross=sales.reduce((a,x)=>a+x.profit,0),exp=expenses.reduce((a,x)=>a+x.amount,0),margin=rev?gross/rev:.3;
  const [goal,setGoal]=React.useState(100000),[profit,setProfit]=React.useState(20000);
- const be=margin>0?exp/margin:0,profitSales=margin>0?profit/margin:0;
+ const be=margin>0?exp/margin:0,profitSales=margin>0?(profit+exp)/margin:0;
  const bar=(label:string,value:number,target:number)=><div className="list-row"><strong>{label}</strong><span>{money(value)} / {money(target)} · {target?Math.min(100,value/target*100).toFixed(0):0}%</span></div>;
  return <section className="card"><div className="card-title"><div><h3>Panel de metas financieras</h3><p>Ventas, equilibrio y utilidad en una sola vista.</p></div><Target size={20}/></div><div className="form-grid"><label>Meta de ventas<input type="number" value={goal} onChange={e=>setGoal(Number(e.target.value))}/></label><label>Meta de utilidad<input type="number" value={profit} onChange={e=>setProfit(Number(e.target.value))}/></label></div>{bar('Ventas actuales',rev,goal)}{bar('Punto de equilibrio',rev,be)}{bar('Meta de utilidad',rev,profitSales)}<div className="alert">Margen actual usado: {(margin*100).toFixed(1)}% · Ventas necesarias para la utilidad: {money(profitSales)}</div></section>;
 }
@@ -370,7 +376,7 @@ function FinancialGoalsPanel({sales,expenses}:{sales:SaleRecord[];expenses:Expen
 function ProfitTargetSimulator({sales}:{sales:SaleRecord[]}) {
  const rev=sales.reduce((a,x)=>a+x.total,0),gross=sales.reduce((a,x)=>a+x.profit,0),baseMargin=rev?gross/rev:.3;
  const [target,setTarget]=React.useState(20000),[margin,setMargin]=React.useState(baseMargin*100),[days,setDays]=React.useState(26);
- const monthly=margin>0?target/(margin/100):0;
+ const monthly=margin>0?(target+exp)/(margin/100):0;
  return <section className="card"><div className="card-title"><div><h3>Simulador de meta de utilidad</h3><p>Calcula cuánto vender para alcanzar una utilidad neta objetivo.</p></div><Target size={20}/></div><div className="form-grid"><label>Utilidad objetivo<input type="number" value={target} onChange={e=>setTarget(Number(e.target.value))}/></label><label>Margen %<input type="number" value={margin} onChange={e=>setMargin(Number(e.target.value))}/></label><label>Días de operación<input type="number" value={days} onChange={e=>setDays(Number(e.target.value))}/></label></div><div className="metrics-grid"><div className="metric"><span>Ventas requeridas</span><strong>{money(monthly)}</strong></div><div className="metric"><span>Venta diaria</span><strong>{money(days?monthly/days:0)}</strong></div><div className="metric"><span>Utilidad objetivo</span><strong>{money(target)}</strong></div></div></section>;
 }
 
@@ -456,7 +462,7 @@ function CashAudit({sales,expenses,payables,movements,closures}:{sales:SaleRecor
 }
 
 function CashReconciliation({sales,receivables,expenses,payables,movements,closures}:{sales:SaleRecord[];receivables:Receivable[];expenses:Expense[];payables:Payable[];movements:CashMovement[];closures:CashClosure[]}) {
- const today=new Date().toISOString().slice(0,10); const cashSales=sales.filter(x=>x.date.slice(0,10)===today&&x.payment!=='Crédito').reduce((s,x)=>s+x.total,0); const collections=receivables.reduce((s,x)=>s+x.paid,0); const exp=expenses.filter(x=>x.date.slice(0,10)===today).reduce((s,x)=>s+x.amount,0); const supplier=payables.reduce((s,x)=>s+x.paid,0); const inMov=movements.filter(x=>x.date.slice(0,10)===today&&x.type==='Entrada').reduce((s,x)=>s+x.amount,0); const outMov=movements.filter(x=>x.date.slice(0,10)===today&&x.type==='Salida').reduce((s,x)=>s+x.amount,0); const opening=closures.filter(x=>x.date===today).slice(-1)[0]?.opening||0; const expected=opening+cashSales+collections+inMov-exp-supplier-outMov; const counted=closures.filter(x=>x.date===today).slice(-1)[0]?.counted; const diff=typeof counted==='number'?counted-expected:undefined;
+ const today=localDateKey(); const cashSales=sales.filter(x=>x.date.slice(0,10)===today&&x.payment!=='Crédito').reduce((s,x)=>s+x.total,0); const collections=receivables.reduce((s,x)=>s+x.paid,0); const exp=expenses.filter(x=>x.date.slice(0,10)===today).reduce((s,x)=>s+x.amount,0); const supplier=payables.reduce((s,x)=>s+x.paid,0); const inMov=movements.filter(x=>x.date.slice(0,10)===today&&x.type==='Entrada').reduce((s,x)=>s+x.amount,0); const outMov=movements.filter(x=>x.date.slice(0,10)===today&&x.type==='Salida').reduce((s,x)=>s+x.amount,0); const opening=closures.filter(x=>x.date===today).slice(-1)[0]?.opening||0; const expected=opening+cashSales+collections+inMov-exp-supplier-outMov; const counted=closures.filter(x=>x.date===today).slice(-1)[0]?.counted; const diff=typeof counted==='number'?counted-expected:undefined;
  return <section className="card"><div className="card-title"><div><h3>Conciliación de caja</h3><p>Compara efectivo esperado contra efectivo contado.</p></div><Scale size={20}/></div><div className="metrics-grid"><div className="metric"><span>Apertura</span><strong>{money(opening)}</strong></div><div className="metric"><span>Esperado</span><strong>{money(expected)}</strong></div><div className="metric"><span>Contado</span><strong>{counted===undefined?'—':money(counted)}</strong></div><div className="metric"><span>Diferencia</span><strong>{diff===undefined?'Pendiente':money(diff)}</strong></div></div><div className="alert"><strong>Estado:</strong> {diff===undefined?'Realiza el cierre con el efectivo contado para conciliar.':Math.abs(diff)<1?'Caja conciliada correctamente.':diff>0?'Hay sobrante de caja por revisar.':'Hay faltante de caja por revisar.'}</div></section>;
 }
 
