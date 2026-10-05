@@ -3,7 +3,7 @@ run-name: Build DIFARMÁS ERP #${{ github.run_number }}
 
 on:
   push:
-    branches: [main]
+    branches: [main, ci/verify-build]
   pull_request:
     branches: [main]
 
@@ -15,7 +15,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
       - run: npm install
       - run: npm run build
 
