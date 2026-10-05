@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Activity, AlertTriangle, Boxes, DollarSign, LayoutDashboard, Pencil, Plus, Search, ShoppingCart, TrendingUp, Wallet, X } from 'lucide-react';
 
 type Module = 'dashboard' | 'ventas' | 'inventario' | 'compras' | 'finanzas';
@@ -30,7 +30,7 @@ const metrics = [
 
 function App() {
   const [active, setActive] = useState<Module>('dashboard');
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<Product[]>(() => { try { const saved = localStorage.getItem('difarmas_products'); return saved ? JSON.parse(saved) : initialProducts; } catch { return initialProducts; } });
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
@@ -41,8 +41,12 @@ function App() {
   const [purchaseCart, setPurchaseCart] = useState<PurchaseItem[]>([]);
   const [purchaseSearch, setPurchaseSearch] = useState('');
   const [purchaseSupplier, setPurchaseSupplier] = useState('');
-  const [sales, setSales] = useState<SaleRecord[]>([]);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [sales, setSales] = useState<SaleRecord[]>(() => { try { const saved = localStorage.getItem('difarmas_sales'); return saved ? JSON.parse(saved) : []; } catch { return []; } });
+  const [expenses, setExpenses] = useState<Expense[]>(() => { try { const saved = localStorage.getItem('difarmas_expenses'); return saved ? JSON.parse(saved) : []; } catch { return []; } });
+
+  useEffect(() => { localStorage.setItem('difarmas_products', JSON.stringify(products)); }, [products]);
+  useEffect(() => { localStorage.setItem('difarmas_sales', JSON.stringify(sales)); }, [sales]);
+  useEffect(() => { localStorage.setItem('difarmas_expenses', JSON.stringify(expenses)); }, [expenses]);
 
   const nav = [
     ['dashboard', 'Dashboard', LayoutDashboard], ['ventas', 'Ventas / POS', ShoppingCart],
@@ -65,10 +69,10 @@ function App() {
       <div className="brand"><div className="brand-mark">D</div><div><strong>DIFARMÁS</strong><span>ERP</span></div></div>
       <div className="section-label">OPERACIÓN</div>
       {nav.map(([id, label, Icon]) => <button key={id} className={active === id ? 'nav active' : 'nav'} onClick={() => setActive(id)}><Icon size={19}/>{label}</button>)}
-      <div className="sidebar-footer"><Activity size={17}/> Sistema MVP v0.2</div>
+      <div className="sidebar-footer"><Activity size={17}/> Sistema MVP v0.7</div>
     </aside>
     <main className="main">
-      <header className="topbar"><div><p className="eyebrow">DIFARMÁS · ERP</p><h1>{active === 'dashboard' ? 'Panel de control' : nav.find(n => n[0] === active)?.[1]}</h1></div><div className="status"><span/> Sistema operativo</div></header>
+      <header className="topbar"><div><p className="eyebrow">DIFARMÁS · ERP</p><h1>{active === 'dashboard' ? 'Panel de control' : nav.find(n => n[0] === active)?.[1]}</h1></div><div className="status"><span/> Datos guardados localmente</div></header>
       {active === 'dashboard' ? <Dashboard products={products} sales={sales} expenses={expenses}/> : active === 'inventario' ? <Inventory products={filtered} search={search} setSearch={setSearch} onNew={() => { setEditing(null); setShowForm(true); }} onEdit={p => { setEditing(p); setShowForm(true); }} /> : active === 'ventas' ? <POS products={products} cart={cart} setCart={setCart} saleType={saleType} setSaleType={setSaleType} payment={payment} setPayment={setPayment} search={saleSearch} setSearch={setSaleSearch} onComplete={recordSale}/> : active === 'compras' ? <Purchases products={products} cart={purchaseCart} setCart={setPurchaseCart} search={purchaseSearch} setSearch={setPurchaseSearch} supplier={purchaseSupplier} setSupplier={setPurchaseSupplier} onReceive={(items)=>setProducts(current=>current.map(p=>{const item=items.find(x=>x.id===p.id); return item?{...p,stock:p.stock+item.qty,cost:item.unitCost,supplier:purchaseSupplier||p.supplier}:p}))}/> : active === 'finanzas' ? <Finance sales={sales} expenses={expenses} setExpenses={setExpenses}/> : <ModulePlaceholder name={nav.find(n => n[0] === active)?.[1] || ''}/>} 
       {showForm && <ProductModal product={editing} onClose={() => {setShowForm(false);setEditing(null)}} onSave={saveProduct}/>}
     </main>
