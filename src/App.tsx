@@ -4,6 +4,8 @@ import { Activity, AlertTriangle, Boxes, DollarSign, LayoutDashboard, Pencil, Pl
 type Module = 'dashboard' | 'ventas' | 'inventario' | 'compras' | 'finanzas';
 type CartItem = Product & { qty: number; price: number };
 type PurchaseItem = Product & { qty: number; unitCost: number };
+type SaleRecord = { id:number; total:number; cost:number; profit:number; payment:string; type:string; date:string };
+type Expense = { id:number; description:string; amount:number; category:string; date:string };
 type Product = {
   id: number; code: string; name: string; category: string; laboratory: string;
   presentation: string; cost: number; retail: number; wholesale: number;
@@ -39,6 +41,8 @@ function App() {
   const [purchaseCart, setPurchaseCart] = useState<PurchaseItem[]>([]);
   const [purchaseSearch, setPurchaseSearch] = useState('');
   const [purchaseSupplier, setPurchaseSupplier] = useState('');
+  const [sales, setSales] = useState<SaleRecord[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
 
   const nav = [
     ['dashboard', 'Dashboard', LayoutDashboard], ['ventas', 'Ventas / POS', ShoppingCart],
@@ -48,6 +52,8 @@ function App() {
   const filtered = useMemo(() => products.filter(p =>
     [p.code, p.name, p.category, p.laboratory].join(' ').toLowerCase().includes(search.toLowerCase())
   ), [products, search]);
+
+  const recordSale = (sold: CartItem[]) => { setProducts(current=>current.map(p=>{const item=sold.find(x=>x.id===p.id);return item?{...p,stock:p.stock-item.qty}:p})); setSales(current=>[...current,{id:Date.now(),total:sold.reduce((a,i)=>a+i.price*i.qty,0),cost:sold.reduce((a,i)=>a+i.cost*i.qty,0),profit:sold.reduce((a,i)=>a+(i.price-i.cost)*i.qty,0),payment,type:saleType,date:new Date().toISOString()}]); };
 
   const saveProduct = (product: Product) => {
     setProducts(current => editing ? current.map(p => p.id === product.id ? product : p) : [...current, { ...product, id: Date.now() }]);
@@ -63,7 +69,7 @@ function App() {
     </aside>
     <main className="main">
       <header className="topbar"><div><p className="eyebrow">DIFARMÁS · ERP</p><h1>{active === 'dashboard' ? 'Panel de control' : nav.find(n => n[0] === active)?.[1]}</h1></div><div className="status"><span/> Sistema operativo</div></header>
-      {active === 'dashboard' ? <Dashboard/> : active === 'inventario' ? <Inventory products={filtered} search={search} setSearch={setSearch} onNew={() => { setEditing(null); setShowForm(true); }} onEdit={p => { setEditing(p); setShowForm(true); }} /> : active === 'ventas' ? <POS products={products} cart={cart} setCart={setCart} saleType={saleType} setSaleType={setSaleType} payment={payment} setPayment={setPayment} search={saleSearch} setSearch={setSaleSearch} onComplete={(sold)=>setProducts(current=>current.map(p=>{const item=sold.find(x=>x.id===p.id); return item?{...p,stock:p.stock-item.qty}:p}))}/> : active === 'compras' ? <Purchases products={products} cart={purchaseCart} setCart={setPurchaseCart} search={purchaseSearch} setSearch={setPurchaseSearch} supplier={purchaseSupplier} setSupplier={setPurchaseSupplier} onReceive={(items)=>setProducts(current=>current.map(p=>{const item=items.find(x=>x.id===p.id); return item?{...p,stock:p.stock+item.qty,cost:item.unitCost,supplier:purchaseSupplier||p.supplier}:p}))}/> : <ModulePlaceholder name={nav.find(n => n[0] === active)?.[1] || ''}/>} 
+      {active === 'dashboard' ? <Dashboard/> : active === 'inventario' ? <Inventory products={filtered} search={search} setSearch={setSearch} onNew={() => { setEditing(null); setShowForm(true); }} onEdit={p => { setEditing(p); setShowForm(true); }} /> : active === 'ventas' ? <POS products={products} cart={cart} setCart={setCart} saleType={saleType} setSaleType={setSaleType} payment={payment} setPayment={setPayment} search={saleSearch} setSearch={setSaleSearch} onComplete={recordSale}/> : active === 'compras' ? <Purchases products={products} cart={purchaseCart} setCart={setPurchaseCart} search={purchaseSearch} setSearch={setPurchaseSearch} supplier={purchaseSupplier} setSupplier={setPurchaseSupplier} onReceive={(items)=>setProducts(current=>current.map(p=>{const item=items.find(x=>x.id===p.id); return item?{...p,stock:p.stock+item.qty,cost:item.unitCost,supplier:purchaseSupplier||p.supplier}:p}))}/> : active === 'finanzas' ? <Finance sales={sales} expenses={expenses} setExpenses={setExpenses}/> : <ModulePlaceholder name={nav.find(n => n[0] === active)?.[1] || ''}/>} 
       {showForm && <ProductModal product={editing} onClose={() => {setShowForm(false);setEditing(null)}} onSave={saveProduct}/>}
     </main>
   </div>;
@@ -113,6 +119,17 @@ function ProductModal({product,onClose,onSave}:{product:Product|null;onClose:()=
   const set=(key:keyof Product,value:string|number)=>setForm(f=>({...f,[key]:typeof value==='string' && ['cost','retail','wholesale','stock','minStock'].includes(key) ? Number(value) : value}));
   const fields:[keyof Product,string,string][]=[['code','Código de barras','text'],['name','Nombre del producto','text'],['category','Categoría','text'],['laboratory','Laboratorio','text'],['presentation','Presentación','text'],['cost','Costo','number'],['retail','Precio minorista','number'],['wholesale','Precio mayorista','number'],['stock','Existencia','number'],['minStock','Stock mínimo','number'],['lot','Lote','text'],['expiry','Vencimiento','date'],['supplier','Proveedor','text']];
   return <div className="modal-backdrop"><div className="modal"><div className="modal-head"><div><h2>{product?'Editar producto':'Nuevo producto'}</h2><p>Completa la ficha del producto.</p></div><button className="icon-btn" onClick={onClose}><X/></button></div><div className="form-grid">{fields.map(([key,label,type])=><label key={key}>{label}<input type={type} value={String(form[key] ?? '')} onChange={e=>set(key,type==='number'?Number(e.target.value):e.target.value)}/></label>)}</div><div className="modal-actions"><button className="secondary" onClick={onClose}>Cancelar</button><button className="primary" onClick={()=>onSave(form)}>Guardar producto</button></div></div></div>;
+}
+
+function Finance({sales,expenses,setExpenses}:{sales:SaleRecord[];expenses:Expense[];setExpenses:(e:Expense[])=>void}) {
+  const [description,setDescription]=useState(''); const [amount,setAmount]=useState(0); const [category,setCategory]=useState('Operación');
+  const salesTotal=sales.reduce((a,s)=>a+s.total,0); const profit=sales.reduce((a,s)=>a+s.profit,0); const expenseTotal=expenses.reduce((a,e)=>a+e.amount,0);
+  const addExpense=()=>{if(!description.trim()||amount<=0)return;setExpenses([...expenses,{id:Date.now(),description,amount,category,date:new Date().toISOString()}]);setDescription('');setAmount(0);};
+  return <div className="content"><div className="page-head"><div><span className="pill">MVP · MÓDULO 5</span><h2>Finanzas</h2><p>Control de ventas, gastos y utilidad registrada en el ERP.</p></div></div>
+  <div className="grid metrics"><article className="card metric"><div className="metric-top"><span>Ventas registradas</span><ShoppingCart size={20}/></div><strong>{money(salesTotal)}</strong><small>{sales.length} operaciones</small></article><article className="card metric"><div className="metric-top"><span>Utilidad bruta</span><TrendingUp size={20}/></div><strong>{money(profit)}</strong><small>Según ventas registradas</small></article><article className="card metric"><div className="metric-top"><span>Gastos</span><Wallet size={20}/></div><strong>{money(expenseTotal)}</strong><small>{expenses.length} gastos</small></article><article className="card metric"><div className="metric-top"><span>Resultado</span><DollarSign size={20}/></div><strong>{money(profit-expenseTotal)}</strong><small>Utilidad después de gastos</small></article></div>
+  <div className="finance-grid"><section className="card"><div className="card-title"><div><h3>Registrar gasto</h3><p>Agrega alquiler, servicios, personal, impuestos u otros.</p></div><Wallet size={20}/></div><div className="expense-form"><input value={description} onChange={e=>setDescription(e.target.value)} placeholder="Descripción del gasto"/><input type="number" min="0" value={amount||''} onChange={e=>setAmount(Number(e.target.value))} placeholder="Monto"/><select value={category} onChange={e=>setCategory(e.target.value)}><option>Operación</option><option>Alquiler</option><option>Servicios</option><option>Personal</option><option>Impuestos</option><option>Otros</option></select><button className="primary" onClick={addExpense}>Registrar gasto</button></div></section>
+  <section className="card"><div className="card-title"><div><h3>Últimos gastos</h3><p>Control de egresos registrados</p></div></div>{expenses.length===0?<div className="cart-empty">Todavía no hay gastos registrados.</div>:expenses.slice(-8).reverse().map(e=><div className="expense-row" key={e.id}><div><strong>{e.description}</strong><small>{e.category}</small></div><strong>{money(e.amount)}</strong></div>)}</section></div>
+  <div className="card table-wrap finance-table"><div className="card-title"><div><h3>Ventas registradas</h3><p>Historial de operaciones del POS</p></div></div>{sales.length===0?<div className="cart-empty">Las ventas registradas desde POS aparecerán aquí.</div>:<table><thead><tr><th>Fecha</th><th>Tipo</th><th>Pago</th><th>Total</th><th>Utilidad</th></tr></thead><tbody>{sales.slice().reverse().map(x=><tr key={x.id}><td>{new Date(x.date).toLocaleString('es-HN')}</td><td>{x.type}</td><td>{x.payment}</td><td>{money(x.total)}</td><td>{money(x.profit)}</td></tr>)}</tbody></table>}</div></div>;
 }
 
 function ModulePlaceholder({name}:{name:string}) { return <div className="content"><div className="empty card"><Boxes size={42}/><h2>{name}</h2><p>Este módulo está preparado en la navegación. Será construido en la siguiente fase del MVP.</p><span className="pill">PRÓXIMO MÓDULO</span></div></div> }
