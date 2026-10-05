@@ -1,25 +1,40 @@
-# DIFARMÁS ERP
+# DIFARMÁS ERP v1.0.0
 
-MVP del sistema ERP para DIFARMÁS.
+ERP web para la gestión integral de DIFARMÁS.
 
-## Objetivo
-Centralizar ventas, inventario, compras, clientes, gastos, rentabilidad y posteriormente IA para apoyar la operación de la farmacia.
+## Módulos principales
 
-## MVP por módulos
-1. Dashboard
-2. Productos e inventario
-3. POS / ventas
-4. Compras
-5. Clientes
-6. Finanzas
-7. Rentabilidad
-8. IA DIFARMÁS
+- Dashboard ejecutivo y metas
+- POS / ventas minoristas y mayoristas
+- Inventario y compras
+- Cuentas por cobrar y pagar
+- Caja, movimientos y cierres diarios
+- Finanzas y control de gastos
+- Rentabilidad, precios y punto de equilibrio
+- Promociones y campañas
+- CRM y recuperación de clientes
+- Venta cruzada y oportunidades comerciales
+- Pronósticos, escenarios y alertas
+- Tareas y centros de decisión ejecutiva
 
-## Stack inicial
-- React + TypeScript
+## Persistencia
+
+Los datos operativos del MVP se guardan localmente en el navegador mediante localStorage. La arquitectura queda preparada para una futura API y PostgreSQL.
+
+## Calidad
+
+GitHub Actions ejecuta automáticamente el build en cada push a main y Pull Request.
+
+## Stack
+
+- React
+- TypeScript
 - Vite
-- Tailwind CSS
-- Arquitectura modular preparada para API y PostgreSQL
+- lucide-react
+- CSS
 
 ## Estado
-MVP — módulo Dashboard inicial.
+
+**v1.0.0 — consolidación del ERP MVP.**
+
+La siguiente etapa recomendada es separar la lógica de negocio de App.tsx, agregar pruebas automatizadas y preparar la migración de localStorage hacia API/PostgreSQL.
