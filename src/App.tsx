@@ -588,7 +588,17 @@ function PromotionEngine({products,sales}:{products:Product[];sales:SaleRecord[]
 
 function ProductPriorityRanking({products,sales}:{products:Product[];sales:SaleRecord[]}) {
  const sold=new Map<number,number>(); const profit=new Map<number,number>(); sales.forEach(s=>(s.items||[]).forEach(i=>{sold.set(i.productId,(sold.get(i.productId)||0)+i.qty);profit.set(i.productId,(profit.get(i.productId)||0)+i.profit)}));
- const rows=products.map(p=>{const units=sold.get(p.id)||0;const totalProfit=profit.get(p.id)||0;const margin=p.retail?(p.retail-p.cost)/p.retail:0;const rotation=Math.min(units/10,1);const marginScore=Math.min(margin/.4,1);const stockScore=p.stock>0?Math.min(units/Math.max(p.stock,1),1):1;const score=Math.round((rotation*.35+marginScore*.35+Math.min(totalProfit/1000,1)*.2+stockScore*.1)*100);const action=score>=75?'PRIORIDAD ALTA':score>=50?'PRIORIDAD MEDIA':'BAJA PRIORIDAD';return {...p,units,totalProfit,margin,score,action}}).filter(r=>r.units>0||r.totalProfit>0).sort((a,b)=>b.score-a.score));
+ const rows=products.map(p => {
+    const units=sold.get(p.id)||0;
+    const totalProfit=profit.get(p.id)||0;
+    const margin=p.retail?(p.retail-p.cost)/p.retail:0;
+    const rotation=Math.min(units/10,1);
+    const marginScore=Math.min(margin/.4,1);
+    const stockScore=p.stock>0?Math.min(units/Math.max(p.stock,1),1):1;
+    const score=Math.round((rotation*.35+marginScore*.35+Math.min(totalProfit/1000,1)*.2+stockScore*.1)*100);
+    const action=score>=75?'PRIORIDAD ALTA':score>=50?'PRIORIDAD MEDIA':'BAJA PRIORIDAD';
+    return {...p,units,totalProfit,margin,score,action};
+  }).filter(r=>r.units>0||r.totalProfit>0).sort((a,b)=>b.score-a.score);
  return <section className="card"><div className="card-title"><div><h3>Ranking inteligente de productos</h3><p>Prioriza productos según rotación, margen y utilidad registrada.</p></div><Award size={20}/></div><div className="metrics-grid"><div className="metric"><span>Prioridad alta</span><strong>{rows.filter(r=>r.score>=75).length}</strong></div><div className="metric"><span>Utilidad acumulada</span><strong>{money(rows.reduce((s,r)=>s+r.totalProfit,0))}</strong></div><div className="metric"><span>Productos evaluados</span><strong>{rows.length}</strong></div></div><div className="table-wrap"><table><thead><tr><th>#</th><th>Producto</th><th>Puntaje</th><th>Unidades</th><th>Margen</th><th>Utilidad</th><th>Acción</th></tr></thead><tbody>{rows.slice(0,10).map((r,i)=><tr key={r.id}><td>{i+1}</td><td><strong>{r.name}</strong></td><td>{r.score}/100</td><td>{r.units}</td><td>{(r.margin*100).toFixed(1)}%</td><td>{money(r.totalProfit)}</td><td>{r.action}</td></tr>)}</tbody></table></div></section>;
 }
 
