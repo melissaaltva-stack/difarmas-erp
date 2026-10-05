@@ -4,7 +4,8 @@ import { Activity, AlertTriangle, Boxes, DollarSign, LayoutDashboard, Pencil, Pl
 type Module = 'dashboard' | 'ventas' | 'inventario' | 'compras' | 'finanzas';
 type CartItem = Product & { qty: number; price: number };
 type PurchaseItem = Product & { qty: number; unitCost: number };
-type SaleRecord = { id:number; total:number; cost:number; profit:number; payment:string; type:string; date:string; customer?:string; dueDate?:string };
+type SaleLine = { productId:number; productName:string; category:string; laboratory:string; qty:number; unitCost:number; unitPrice:number; revenue:number; cost:number; profit:number };
+type SaleRecord = { id:number; total:number; cost:number; profit:number; payment:string; type:string; date:string; customer?:string; dueDate?:string; items?:SaleLine[] };
 type Expense = { id:number; description:string; amount:number; category:string; date:string };
 type Receivable = { id:number; saleId:number; customer:string; total:number; paid:number; dueDate:string; date:string };
 type Payable = { id:number; supplier:string; total:number; paid:number; dueDate:string; date:string };
@@ -64,7 +65,7 @@ function App() {
     [p.code, p.name, p.category, p.laboratory].join(' ').toLowerCase().includes(search.toLowerCase())
   ), [products, search]);
 
-  const recordSale = (sold: CartItem[], customer = '', dueDate = '') => { const id=Date.now(); const total=sold.reduce((a,i)=>a+i.price*i.qty,0); const cost=sold.reduce((a,i)=>a+i.cost*i.qty,0); setProducts(current=>current.map(p=>{const item=sold.find(x=>x.id===p.id);return item?{...p,stock:p.stock-item.qty}:p})); setSales(current=>[...current,{id,total,cost,profit:total-cost,payment,type:saleType,date:new Date().toISOString(),customer:payment==='Crédito'?customer:undefined,dueDate:payment==='Crédito'?dueDate:undefined}]); if(payment==='Crédito') setReceivables(current=>[...current,{id,saleId:id,customer,total,paid:0,dueDate,date:new Date().toISOString()}]); };
+  const recordSale = (sold: CartItem[], customer = '', dueDate = '') => { const id=Date.now(); const total=sold.reduce((a,i)=>a+i.price*i.qty,0); const cost=sold.reduce((a,i)=>a+i.cost*i.qty,0); setProducts(current=>current.map(p=>{const item=sold.find(x=>x.id===p.id);return item?{...p,stock:p.stock-item.qty}:p})); const items:SaleLine[]=sold.map(i=>({productId:i.id,productName:i.name,category:i.category,laboratory:i.laboratory,qty:i.qty,unitCost:i.cost,unitPrice:i.price,revenue:i.price*i.qty,cost:i.cost*i.qty,profit:(i.price-i.cost)*i.qty})); setSales(current=>[...current,{id,total,cost,profit:total-cost,payment,type:saleType,date:new Date().toISOString(),customer:payment==='Crédito'?customer:undefined,dueDate:payment==='Crédito'?dueDate:undefined,items}]); if(payment==='Crédito') setReceivables(current=>[...current,{id,saleId:id,customer,total,paid:0,dueDate,date:new Date().toISOString()}]); };
 
   const saveProduct = (product: Product) => {
     setProducts(current => editing ? current.map(p => p.id === product.id ? product : p) : [...current, { ...product, id: Date.now() }]);
@@ -193,6 +194,7 @@ function Finance({sales,expenses,setExpenses,receivables,setReceivables,payables
   return <div className="content"><div className="page-head"><div><span className="pill">MVP · FINANZAS + CAJA</span><h2>Finanzas y caja</h2><p>Control de ventas, cobros, pagos, flujo de caja y cierre diario.</p></div></div>
   <div className="grid metrics"><article className="card metric"><div className="metric-top"><span>Ventas</span><ShoppingCart size={20}/></div><strong>{money(salesTotal)}</strong><small>{sales.length} operaciones</small></article><article className="card metric"><div className="metric-top"><span>Utilidad bruta</span><TrendingUp size={20}/></div><strong>{money(profit)}</strong></article><article className="card metric"><div className="metric-top"><span>Por cobrar</span><DollarSign size={20}/></div><strong>{money(receivablePending)}</strong></article><article className="card metric"><div className="metric-top"><span>Por pagar</span><Wallet size={20}/></div><strong>{money(payablePending)}</strong></article></div>
   <div className="grid metrics"><article className="card metric"><div className="metric-top"><span>Flujo de caja</span><Activity size={20}/></div><strong>{money(cashFlow)}</strong><small>Entradas de efectivo − egresos</small></article><article className="card metric"><div className="metric-top"><span>Ventas contado</span><DollarSign size={20}/></div><strong>{money(cashSales)}</strong></article><article className="card metric"><div className="metric-top"><span>Cobros</span><DollarSign size={20}/></div><strong>{money(collected)}</strong></article><article className="card metric"><div className="metric-top"><span>Pagos proveedores</span><Wallet size={20}/></div><strong>{money(supplierPayments)}</strong></article></div>
+  <ProductProfitability sales={sales}/>
   <div className="finance-grid"><section className="card"><div className="card-title"><div><h3>Registrar gasto</h3><p>Alquiler, servicios, personal, impuestos u otros.</p></div><Wallet size={20}/></div><div className="expense-form"><input value={description} onChange={e=>setDescription(e.target.value)} placeholder="Descripción del gasto"/><input type="number" min="0" value={amount||''} onChange={e=>setAmount(Number(e.target.value))} placeholder="Monto"/><select value={category} onChange={e=>setCategory(e.target.value)}><option>Operación</option><option>Alquiler</option><option>Servicios</option><option>Personal</option><option>Impuestos</option><option>Otros</option></select><button className="primary" onClick={addExpense}>Registrar gasto</button></div></section>
   <section className="card"><div className="card-title"><div><h3>Últimos gastos</h3><p>Control de egresos</p></div></div>{expenses.length===0?<div className="cart-empty">Todavía no hay gastos.</div>:expenses.slice(-8).reverse().map(e=><div className="expense-row" key={e.id}><div><strong>{e.description}</strong><small>{e.category}</small></div><strong>{money(e.amount)}</strong></div>)}</section></div>
   <div className="card table-wrap finance-table"><div className="card-title"><div><h3>Ventas registradas</h3><p>Historial del POS</p></div></div>{sales.length===0?<div className="cart-empty">No hay ventas.</div>:<table><thead><tr><th>Fecha</th><th>Cliente</th><th>Pago</th><th>Total</th><th>Utilidad</th></tr></thead><tbody>{sales.slice().reverse().map(x=><tr key={x.id}><td>{new Date(x.date).toLocaleString('es-HN')}</td><td>{x.customer||'Contado'}</td><td>{x.payment}</td><td>{money(x.total)}</td><td>{money(x.profit)}</td></tr>)}</tbody></table>}</div>
@@ -203,6 +205,30 @@ function Finance({sales,expenses,setExpenses,receivables,setReceivables,payables
   <section className="card"><div className="card-title"><div><h3>Historial de cierres</h3><p>Diferencias encontradas por día.</p></div></div>{closures.length===0?<div className="cart-empty">Aún no hay cierres.</div>:closures.slice(0,10).map(x=><div className="expense-row" key={x.id}><div><strong>{new Date(x.date).toLocaleDateString('es-HN')}</strong><small>Esperado {money(x.expected)} · Contado {money(x.counted)}{x.note?' · '+x.note:''}</small></div><strong>{x.difference>=0?'+':''}{money(x.difference)}</strong></div>)}</section>
   </div>;
 }
+function ProductProfitability({sales}:{sales:SaleRecord[]}) {
+  const [search,setSearch]=useState('');
+  const [group,setGroup]=useState<'Producto'|'Categoría'|'Laboratorio'>('Producto');
+  const rows=useMemo(()=>{
+    const map=new Map<string,{name:string;category:string;laboratory:string;units:number;revenue:number;cost:number;profit:number}>();
+    sales.forEach(s=>s.items?.forEach(i=>{
+      const key=group==='Producto'?i.productName:group==='Categoría'?i.category:i.laboratory;
+      const current=map.get(key)||{name:key,category:i.category,laboratory:i.laboratory,units:0,revenue:0,cost:0,profit:0};
+      current.units+=i.qty; current.revenue+=i.revenue; current.cost+=i.cost; current.profit+=i.profit; map.set(key,current);
+    }));
+    return [...map.values()].filter(r=>r.name.toLowerCase().includes(search.toLowerCase())).sort((a,b)=>b.profit-a.profit);
+  },[sales,group,search]);
+  const revenue=rows.reduce((a,r)=>a+r.revenue,0);
+  const profit=rows.reduce((a,r)=>a+r.profit,0);
+  const best=rows[0];
+  return <section className="card profitability">
+    <div className="card-title"><div><h3>Rentabilidad por producto</h3><p>Utilidad real basada en las líneas registradas en el POS.</p></div><TrendingUp size={20}/></div>
+    <div className="profit-toolbar"><div className="search"><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar producto, categoría o laboratorio..." /></div><select value={group} onChange={e=>setGroup(e.target.value as typeof group)}><option>Producto</option><option>Categoría</option><option>Laboratorio</option></select></div>
+    <div className="grid metrics profit-metrics"><article className="card metric"><span>Ventas con detalle</span><strong>{money(revenue)}</strong></article><article className="card metric"><span>Utilidad</span><strong>{money(profit)}</strong></article><article className="card metric"><span>Margen</span><strong>{revenue?((profit/revenue)*100).toFixed(1):'0.0'}%</strong></article><article className="card metric"><span>Mayor utilidad</span><strong>{best?best.name:'—'}</strong></article></div>
+    {rows.length===0?<div className="cart-empty">Las nuevas ventas quedarán disponibles aquí con producto, costo, precio, unidades y utilidad. Las ventas históricas sin detalle no pueden desglosarse por producto.</div>:
+    <div className="table-wrap"><table><thead><tr><th>{group}</th><th>Unidades</th><th>Ventas</th><th>Costo</th><th>Utilidad</th><th>Margen</th></tr></thead><tbody>{rows.map(r=><tr key={r.name}><td><strong>{r.name}</strong>{group!=='Producto'&&<small>{r.category} · {r.laboratory}</small>}</td><td>{r.units}</td><td>{money(r.revenue)}</td><td>{money(r.cost)}</td><td>{money(r.profit)}</td><td>{r.revenue?((r.profit/r.revenue)*100).toFixed(1):'0.0'}%</td></tr>)}</tbody></table></div>}
+  </section>;
+}
+
 function ModulePlaceholder({name}:{name:string}) { return <div className="content"><div className="empty card"><Boxes size={42}/><h2>{name}</h2><p>Este módulo está preparado en la navegación. Será construido en la siguiente fase del MVP.</p><span className="pill">PRÓXIMO MÓDULO</span></div></div> }
 
 export default App;
