@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Activity, AlertTriangle, Boxes, DollarSign, LayoutDashboard, Pencil, Plus, Search, ShoppingCart, TrendingUp, Wallet, X } from 'lucide-react';
+import { Activity, AlertTriangle, Boxes, DollarSign, LayoutDashboard, Pencil, Plus, Search, ShoppingCart, TrendingUp, Wallet, X, Users } from 'lucide-react';
 
 type Module = 'dashboard' | 'ventas' | 'inventario' | 'compras' | 'finanzas';
 type CartItem = Product & { qty: number; price: number };
@@ -10,6 +10,8 @@ type Expense = { id:number; description:string; amount:number; category:string; 
 type Receivable = { id:number; saleId:number; customer:string; total:number; paid:number; dueDate:string; date:string };
 type Payable = { id:number; supplier:string; total:number; paid:number; dueDate:string; date:string };
 type CashClosure = { id:number; date:string; opening:number; cashSales:number; collections:number; expenses:number; supplierPayments:number; expected:number; counted:number; difference:number; note:string }; type CashMovement = { id:number; type:'Entrada'|'Salida'; description:string; amount:number; category:string; date:string };
+type Customer = { id:number; name:string; phone:string; creditLimit:number; active:boolean; notes:string };
+
 type Product = {
   id: number; code: string; name: string; category: string; laboratory: string;
   presentation: string; cost: number; retail: number; wholesale: number;
@@ -34,6 +36,7 @@ const metrics = [
 
 function App() {
   const [active, setActive] = useState<Module>('dashboard');
+  const [customers,setCustomers]=useState<Customer[]>(()=>JSON.parse(localStorage.getItem('difarmas_customers')||'[]'));
   const [products, setProducts] = useState<Product[]>(() => { try { const saved = localStorage.getItem('difarmas_products'); return saved ? JSON.parse(saved) : initialProducts; } catch { return initialProducts; } });
   const [search, setSearch] = useState('');
   const [monthlyGoal, setMonthlyGoal] = useState(() => { const v=localStorage.getItem('difarmas_monthly_goal'); return v ? Number(v) : 100000; });
@@ -203,7 +206,7 @@ function Finance({sales,expenses,setExpenses,receivables,setReceivables,payables
   return <div className="content"><div className="page-head"><div><span className="pill">MVP · FINANZAS + CAJA</span><h2>Finanzas y caja</h2><p>Control de ventas, cobros, pagos, flujo de caja y cierre diario.</p></div></div>
   <div className="grid metrics"><article className="card metric"><div className="metric-top"><span>Ventas</span><ShoppingCart size={20}/></div><strong>{money(salesTotal)}</strong><small>{sales.length} operaciones</small></article><article className="card metric"><div className="metric-top"><span>Utilidad bruta</span><TrendingUp size={20}/></div><strong>{money(profit)}</strong></article><article className="card metric"><div className="metric-top"><span>Por cobrar</span><DollarSign size={20}/></div><strong>{money(receivablePending)}</strong></article><article className="card metric"><div className="metric-top"><span>Por pagar</span><Wallet size={20}/></div><strong>{money(payablePending)}</strong></article></div>
   <div className="grid metrics"><article className="card metric"><div className="metric-top"><span>Flujo de caja</span><Activity size={20}/></div><strong>{money(cashFlow)}</strong><small>Entradas de efectivo − egresos</small></article><article className="card metric"><div className="metric-top"><span>Ventas contado</span><DollarSign size={20}/></div><strong>{money(cashSales)}</strong></article><article className="card metric"><div className="metric-top"><span>Cobros</span><DollarSign size={20}/></div><strong>{money(collected)}</strong></article><article className="card metric"><div className="metric-top"><span>Pagos proveedores</span><Wallet size={20}/></div><strong>{money(supplierPayments)}</strong></article></div>
-  <ManagementReports sales={sales} expenses={expenses}/><SmartAlerts products={products} sales={sales} receivables={receivables} payables={payables} monthlyGoal={monthlyGoal}/><SmartPurchasing products={products} sales={sales}/><ProductProfitability sales={sales}/>
+  <ManagementReports sales={sales} expenses={expenses}/><SmartAlerts products={products} sales={sales} receivables={receivables} payables={payables} monthlyGoal={monthlyGoal}/><SmartPurchasing products={products} sales={sales}/>{activeModule==='clientes'&&<CustomerCRM customers={customers} setCustomers={setCustomers} sales={sales}/>} <ProductProfitability sales={sales}/>
   <div className="finance-grid"><section className="card"><div className="card-title"><div><h3>Registrar gasto</h3><p>Alquiler, servicios, personal, impuestos u otros.</p></div><Wallet size={20}/></div><div className="expense-form"><input value={description} onChange={e=>setDescription(e.target.value)} placeholder="Descripción del gasto"/><input type="number" min="0" value={amount||''} onChange={e=>setAmount(Number(e.target.value))} placeholder="Monto"/><select value={category} onChange={e=>setCategory(e.target.value)}><option>Operación</option><option>Alquiler</option><option>Servicios</option><option>Personal</option><option>Impuestos</option><option>Otros</option></select><button className="primary" onClick={addExpense}>Registrar gasto</button></div></section>
   <section className="card"><div className="card-title"><div><h3>Últimos gastos</h3><p>Control de egresos</p></div></div>{expenses.length===0?<div className="cart-empty">Todavía no hay gastos.</div>:expenses.slice(-8).reverse().map(e=><div className="expense-row" key={e.id}><div><strong>{e.description}</strong><small>{e.category}</small></div><strong>{money(e.amount)}</strong></div>)}</section></div>
   <div className="card table-wrap finance-table"><div className="card-title"><div><h3>Ventas registradas</h3><p>Historial del POS</p></div></div>{sales.length===0?<div className="cart-empty">No hay ventas.</div>:<table><thead><tr><th>Fecha</th><th>Cliente</th><th>Pago</th><th>Total</th><th>Utilidad</th></tr></thead><tbody>{sales.slice().reverse().map(x=><tr key={x.id}><td>{new Date(x.date).toLocaleString('es-HN')}</td><td>{x.customer||'Contado'}</td><td>{x.payment}</td><td>{money(x.total)}</td><td>{money(x.profit)}</td></tr>)}</tbody></table>}</div>
@@ -252,6 +255,15 @@ function SmartPurchasing({products,sales}:{products:Product[];sales:SaleRecord[]
     <div className="metrics-grid"><div className="metric"><span>Productos a reponer</span><strong>{rows.length}</strong></div><div className="metric"><span>Inversión sugerida</span><strong>{money(stockValue)}</strong></div><div className="metric"><span>Horizonte</span><strong>2 meses</strong></div></div>
     {rows.length?<div className="table-wrap"><table><thead><tr><th>Producto</th><th>Stock</th><th>Vendidos</th><th>Prom./mes</th><th>Objetivo</th><th>Comprar</th><th>Costo</th></tr></thead><tbody>{rows.slice(0,12).map(p=><tr key={p.id}><td>{p.name}</td><td>{p.stock}</td><td>{p.sold}</td><td>{p.avg.toFixed(1)}</td><td>{p.target}</td><td><strong>{p.suggested}</strong></td><td>{money(p.suggested*p.cost)}</td></tr>)}</tbody></table></div>:<div className="empty">No hay compras sugeridas con los datos actuales.</div>}
   </section>;
+}
+
+function CustomerCRM({customers,setCustomers,sales}:{customers:Customer[];setCustomers:React.Dispatch<React.SetStateAction<Customer[]>>;sales:SaleRecord[]}) {
+ const [name,setName]=useState(''),[phone,setPhone]=useState(''),[limit,setLimit]=useState('0');
+ const rows=customers.map(c=>{const ss=sales.filter(s=>s.customer===c.name);return {...c,total:ss.reduce((a,s)=>a+s.total,0),orders:ss.length,last:ss.map(s=>s.date).sort().pop()||''}}).sort((a,b)=>b.total-a.total);
+ const add=()=>{if(!name.trim())return;setCustomers(v=>[...v,{id:Date.now(),name:name.trim(),phone,creditLimit:Number(limit)||0,active:true,notes:''}]);setName('');setPhone('');setLimit('0')};
+ return <section className="card"><div className="card-title"><div><h3>Clientes / CRM</h3><p>Historial comercial y control básico de crédito.</p></div><Users size={20}/></div>
+ <div className="form-grid"><input placeholder="Nombre" value={name} onChange={e=>setName(e.target.value)}/><input placeholder="Teléfono" value={phone} onChange={e=>setPhone(e.target.value)}/><input type="number" placeholder="Límite de crédito" value={limit} onChange={e=>setLimit(e.target.value)}/><button className="primary" onClick={add}><Plus size={16}/>Agregar</button></div>
+ <div className="table-wrap"><table><thead><tr><th>Cliente</th><th>Teléfono</th><th>Compras</th><th>Pedidos</th><th>Última compra</th><th>Límite</th></tr></thead><tbody>{rows.map(c=><tr key={c.id}><td><strong>{c.name}</strong></td><td>{c.phone||'—'}</td><td>{money(c.total)}</td><td>{c.orders}</td><td>{c.last||'Sin compras'}</td><td>{money(c.creditLimit)}</td></tr>)}</tbody></table></div></section>;
 }
 
 function SmartAlerts({products,sales,receivables,payables,monthlyGoal}:{products:Product[];sales:SaleRecord[];receivables:Receivable[];payables:Payable[];monthlyGoal:number}) {
