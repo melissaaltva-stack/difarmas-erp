@@ -255,7 +255,7 @@ function GoalsSettings({monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpense
 }
 
 function SmartPurchasing({products,sales}:{products:Product[];sales:SaleRecord[]}) {
-  const demand=useMemo(()=>{const m=new Map<number,number>();sales.forEach(s=>s.items?.forEach(i=>m.set(i.productId,(m.get(i.productId)||0)+i.qty));return m},[sales]);
+  const demand=useMemo(()=>{const m=new Map<number,number>();sales.forEach(s=>s.items?.forEach(i=>m.set(i.productId,(m.get(i.productId)||0)+i.qty));return m;},[sales]);
   const rows=products.map(p=>{const sold=demand.get(p.id)||0;const avg=Math.max(sold/3,0.1);const target=Math.ceil(avg*2);const suggested=Math.max(0,target-p.stock);return {...p,sold,avg,target,suggested}}).filter(p=>p.suggested>0).sort((a,b)=>b.suggested-a.suggested);
   const stockValue=rows.reduce((a,p)=>a+p.suggested*p.cost,0);
   return <section className="card"><div className="card-title"><div><h3>Compras inteligentes</h3><p>Sugerencias basadas en ventas registradas y stock actual.</p></div><ShoppingCart size={20}/></div>
