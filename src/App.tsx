@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { Activity, AlertTriangle, Boxes, DollarSign, LayoutDashboard, Pencil, Plus, Search, ShoppingCart, TrendingUp, Wallet, X, Users, Target, BrainCircuit, Scale, SlidersHorizontal, ShieldCheck, CheckCircle2, Clock3, ListChecks, ReceiptText, WalletCards, ArrowUpDown, Brain, LineChart, BarChart3, Megaphone, ShoppingBag, Award, Package, History, Calculator } from 'lucide-react';
 
