@@ -1,4 +1,5 @@
 name: CI
+run-name: Build DIFARMÁS ERP #${{ github.run_number }}
 
 on:
   push:
