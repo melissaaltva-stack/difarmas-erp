@@ -255,7 +255,7 @@ function GoalsSettings({monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpense
 }
 
 function SmartPurchasing({products,sales}:{products:Product[];sales:SaleRecord[]}) {
-  const demand=useMemo(()=>{const m=new Map<number,number>();sales.forEach(s=>s.items?.forEach(i=>m.set(i.productId,(m.get(i.productId)||0)+i.qty));return m;},[sales]);
+  const demand=useMemo(() => { const m=new Map<number,number>(); sales.forEach(s => (s.items || []).forEach(i => m.set(i.productId,(m.get(i.productId)||0)+i.qty))); return m; },[sales]);
   const rows=products.map(p=>{const sold=demand.get(p.id)||0;const avg=Math.max(sold/3,0.1);const target=Math.ceil(avg*2);const suggested=Math.max(0,target-p.stock);return {...p,sold,avg,target,suggested}}).filter(p=>p.suggested>0).sort((a,b)=>b.suggested-a.suggested);
   const stockValue=rows.reduce((a,p)=>a+p.suggested*p.cost,0);
   return <section className="card"><div className="card-title"><div><h3>Compras inteligentes</h3><p>Sugerencias basadas en ventas registradas y stock actual.</p></div><ShoppingCart size={20}/></div>
@@ -716,7 +716,7 @@ function SmartAlerts({products,sales,receivables,payables,monthlyGoal}:{products
   const expiring=products.filter(p=>{const d=(new Date(p.expiry+'T00:00:00').getTime()-now.getTime())/86400000;return d>=0&&d<=90;});
   const overdue=receivables.filter(r=>r.paid<r.total&&r.dueDate<today);
   const due=payables.filter(r=>r.paid<r.total&&r.dueDate<=new Date(now.getTime()+7*86400000).toISOString().slice(0,10));
-  const sold=useMemo(()=>{const m=new Map<number,number>();sales.forEach(s=>s.items?.forEach(i=>m.set(i.productId,(m.get(i.productId)||0)+i.qty));return m},[sales]);
+  const sold=useMemo(() => { const m=new Map<number,number>(); sales.forEach(s => (s.items || []).forEach(i => m.set(i.productId,(m.get(i.productId)||0)+i.qty))); return m; },[sales]);
   const noSales=products.filter(p=>p.stock>p.minStock&&(sold.get(p.id)||0)===0);
   const alerts=[['danger','Meta diaria',required>monthlyGoal/26?money(required)+' por día para alcanzar la meta.':'Ritmo compatible con la meta de referencia.'],['warning','Stock bajo',low.length?low.length+' producto(s) requieren reposición.':'Sin productos bajo mínimo.'],['warning','Próximos a vencer',expiring.length?expiring.length+' producto(s) vencen en 90 días o menos.':'Sin vencimientos próximos.'],['danger','Cobros vencidos',overdue.length?overdue.length+' cuenta(s) están vencidas.':'Sin cuentas vencidas.'],['warning','Pagos próximos',due.length?due.length+' cuenta(s) vencen en 7 días.':'Sin pagos próximos.'],['info','Baja rotación',noSales.length?noSales.length+' producto(s) no registran ventas detalladas.':'Sin alertas de baja rotación.']];
   return <section className="card"><div className="card-title"><div><h3>Alertas inteligentes</h3><p>Prioridades operativas detectadas automáticamente.</p></div><AlertTriangle size={20}/></div><div className="dashboard-grid">{alerts.map(([level,title,text])=><div className="alert" key={title}><div className={"dot "+level}/><div><strong>{title}</strong><p>{text}</p></div></div>)}</div><div className="alert"><div className="dot info"/><div><strong>Ventas restantes</strong><p>{money(Math.max(0,monthlyGoal-monthSales))} para completar la meta. Recomendación: {money(required)} diarios durante los días restantes.</p></div></div></section>;
