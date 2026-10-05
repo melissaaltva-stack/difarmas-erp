@@ -36,6 +36,8 @@ function App() {
   const [active, setActive] = useState<Module>('dashboard');
   const [products, setProducts] = useState<Product[]>(() => { try { const saved = localStorage.getItem('difarmas_products'); return saved ? JSON.parse(saved) : initialProducts; } catch { return initialProducts; } });
   const [search, setSearch] = useState('');
+  const [monthlyGoal, setMonthlyGoal] = useState(() => { const v=localStorage.getItem('difarmas_monthly_goal'); return v ? Number(v) : 100000; });
+  const [fixedExpenses, setFixedExpenses] = useState(() => { const v=localStorage.getItem('difarmas_fixed_expenses'); return v ? Number(v) : 25000; });
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -51,6 +53,8 @@ function App() {
   const [payables, setPayables] = useState<Payable[]>(() => { try { const saved = localStorage.getItem('difarmas_payables'); return saved ? JSON.parse(saved) : []; } catch { return []; } });
 
   useEffect(() => { localStorage.setItem('difarmas_products', JSON.stringify(products)); }, [products]);
+  useEffect(() => { localStorage.setItem('difarmas_monthly_goal', String(monthlyGoal)); }, [monthlyGoal]);
+  useEffect(() => { localStorage.setItem('difarmas_fixed_expenses', String(fixedExpenses)); }, [fixedExpenses]);
   useEffect(() => { localStorage.setItem('difarmas_sales', JSON.stringify(sales)); }, [sales]);
   useEffect(() => { localStorage.setItem('difarmas_expenses', JSON.stringify(expenses)); }, [expenses]);
   useEffect(() => { localStorage.setItem('difarmas_receivables', JSON.stringify(receivables)); }, [receivables]);
@@ -81,13 +85,13 @@ function App() {
     </aside>
     <main className="main">
       <header className="topbar"><div><p className="eyebrow">DIFARMÁS · ERP</p><h1>{active === 'dashboard' ? 'Panel de control' : nav.find(n => n[0] === active)?.[1]}</h1></div><div className="status"><span/> Datos guardados localmente</div></header>
-      {active === 'dashboard' ? <Dashboard products={products} sales={sales} expenses={expenses}/> : active === 'inventario' ? <Inventory products={filtered} search={search} setSearch={setSearch} onNew={() => { setEditing(null); setShowForm(true); }} onEdit={p => { setEditing(p); setShowForm(true); }} /> : active === 'ventas' ? <POS products={products} cart={cart} setCart={setCart} saleType={saleType} setSaleType={setSaleType} payment={payment} setPayment={setPayment} search={saleSearch} setSearch={setSaleSearch} onComplete={recordSale}/> : active === 'compras' ? <Purchases products={products} cart={purchaseCart} setCart={setPurchaseCart} search={purchaseSearch} setSearch={setPurchaseSearch} supplier={purchaseSupplier} setSupplier={setPurchaseSupplier} onReceive={(items,paymentMethod,dueDate)=>{setProducts(current=>current.map(p=>{const item=items.find(x=>x.id===p.id); return item?{...p,stock:p.stock+item.qty,cost:item.unitCost,supplier:purchaseSupplier||p.supplier}:p})); if(paymentMethod==='Crédito'){const total=items.reduce((a,i)=>a+i.unitCost*i.qty,0);setPayables(current=>[...current,{id:Date.now(),supplier:purchaseSupplier,total,paid:0,dueDate,date:new Date().toISOString()}]);}}}/> : active === 'finanzas' ? <Finance sales={sales} expenses={expenses} setExpenses={setExpenses} receivables={receivables} setReceivables={setReceivables} payables={payables} setPayables={setPayables}/> : <ModulePlaceholder name={nav.find(n => n[0] === active)?.[1] || ''}/>} 
+      {active === 'dashboard' ? <Dashboard products={products} sales={sales} expenses={expenses} monthlyGoal={monthlyGoal} fixedExpenses={fixedExpenses}/><GoalsSettings monthlyGoal={monthlyGoal} setMonthlyGoal={setMonthlyGoal} fixedExpenses={fixedExpenses} setFixedExpenses={setFixedExpenses}/> : active === 'inventario' ? <Inventory products={filtered} search={search} setSearch={setSearch} onNew={() => { setEditing(null); setShowForm(true); }} onEdit={p => { setEditing(p); setShowForm(true); }} /> : active === 'ventas' ? <POS products={products} cart={cart} setCart={setCart} saleType={saleType} setSaleType={setSaleType} payment={payment} setPayment={setPayment} search={saleSearch} setSearch={setSaleSearch} onComplete={recordSale}/> : active === 'compras' ? <Purchases products={products} cart={purchaseCart} setCart={setPurchaseCart} search={purchaseSearch} setSearch={setPurchaseSearch} supplier={purchaseSupplier} setSupplier={setPurchaseSupplier} onReceive={(items,paymentMethod,dueDate)=>{setProducts(current=>current.map(p=>{const item=items.find(x=>x.id===p.id); return item?{...p,stock:p.stock+item.qty,cost:item.unitCost,supplier:purchaseSupplier||p.supplier}:p})); if(paymentMethod==='Crédito'){const total=items.reduce((a,i)=>a+i.unitCost*i.qty,0);setPayables(current=>[...current,{id:Date.now(),supplier:purchaseSupplier,total,paid:0,dueDate,date:new Date().toISOString()}]);}}}/> : active === 'finanzas' ? <Finance sales={sales} expenses={expenses} setExpenses={setExpenses} receivables={receivables} setReceivables={setReceivables} payables={payables} setPayables={setPayables}/> : <ModulePlaceholder name={nav.find(n => n[0] === active)?.[1] || ''}/>} 
       {showForm && <ProductModal product={editing} onClose={() => {setShowForm(false);setEditing(null)}} onSave={saveProduct}/>}
     </main>
   </div>;
 }
 
-function Dashboard({products,sales,expenses}:{products:Product[];sales:SaleRecord[];expenses:Expense[]}) {
+function Dashboard({products,sales,expenses,monthlyGoal,fixedExpenses}:{products:Product[];sales:SaleRecord[];expenses:Expense[];monthlyGoal:number;fixedExpenses:number}) {
   const salesTotal=sales.reduce((a,s)=>a+s.total,0);
   const grossProfit=sales.reduce((a,s)=>a+s.profit,0);
   const expenseTotal=expenses.reduce((a,e)=>a+e.amount,0);
@@ -96,16 +100,21 @@ function Dashboard({products,sales,expenses}:{products:Product[];sales:SaleRecor
   const lowStock=products.filter(p=>p.stock<=p.minStock);
   const todayKey=new Date().toDateString();
   const salesToday=sales.filter(s=>new Date(s.date).toDateString()===todayKey).reduce((a,s)=>a+s.total,0);
-  const goal=100000;
-  const dailyGoal=goal/26;
+  const goal=monthlyGoal;
+  const workDays=26;
+  const dailyGoal=goal/workDays;
   const progress=Math.min(100,(salesTotal/goal)*100);
+  const margin=salesTotal?grossProfit/salesTotal:0;
+  const breakEvenSales=margin>0?fixedExpenses/margin:0;
+  const breakEvenDaily=breakEvenSales/workDays;
+  const goalRemaining=Math.max(0,goal-salesTotal);
   const expiring=products.filter(p=>{const days=(new Date(p.expiry+'T00:00:00').getTime()-Date.now())/86400000;return days>=0&&days<=90;});
   const recentSales=[...sales].sort((a,b)=>new Date(a.date).getTime()-new Date(b.date).getTime()).slice(-7);
   const chartValues=recentSales.length?recentSales.map(s=>s.total):[0,0,0,0,0,0,0];
   const maxChart=Math.max(...chartValues,1);
   return <div className="content">
     <section className="hero"><div><span className="pill">MVP · DASHBOARD EN VIVO</span><h2>Controla DIFARMÁS desde un solo lugar.</h2><p>Indicadores conectados a ventas, gastos e inventario.</p></div><div className="hero-goal"><span>Meta mensual</span><strong>{money(goal)}</strong><small>{money(dailyGoal)} por día · {progress.toFixed(0)}% registrado</small></div></section>
-    <section className="grid metrics">
+    <section className="card goal-card"><div className="goal-head"><div><h3>Metas y punto de equilibrio</h3><p>Calculado con el margen bruto registrado y {workDays} días de operación.</p></div></div><div className="grid metrics"><article className="card metric"><span>Meta mensual</span><strong>{money(goal)}</strong><small>Faltan {money(goalRemaining)}</small></article><article className="card metric"><span>Meta diaria</span><strong>{money(dailyGoal)}</strong><small>Sobre {workDays} días</small></article><article className="card metric"><span>Punto de equilibrio</span><strong>{money(breakEvenSales)}</strong><small>Ventas mensuales estimadas</small></article><article className="card metric"><span>Equilibrio diario</span><strong>{money(breakEvenDaily)}</strong><small>Para cubrir gastos fijos</small></article></div></section><section className="grid metrics">
       <article className="card metric"><div className="metric-top"><span>Ventas del día</span><ShoppingCart size={20}/></div><strong>{money(salesToday)}</strong><small>{salesToday>0?'Ventas registradas hoy':'Sin ventas registradas hoy'}</small></article>
       <article className="card metric"><div className="metric-top"><span>Ventas registradas</span><TrendingUp size={20}/></div><strong>{money(salesTotal)}</strong><small>{sales.length} operaciones</small></article>
       <article className="card metric"><div className="metric-top"><span>Utilidad bruta</span><DollarSign size={20}/></div><strong>{money(grossProfit)}</strong><small>Margen {salesTotal?((grossProfit/salesTotal)*100).toFixed(1):'0.0'}%</small></article>
@@ -226,6 +235,12 @@ function ProductProfitability({sales}:{sales:SaleRecord[]}) {
     <div className="grid metrics profit-metrics"><article className="card metric"><span>Ventas con detalle</span><strong>{money(revenue)}</strong></article><article className="card metric"><span>Utilidad</span><strong>{money(profit)}</strong></article><article className="card metric"><span>Margen</span><strong>{revenue?((profit/revenue)*100).toFixed(1):'0.0'}%</strong></article><article className="card metric"><span>Mayor utilidad</span><strong>{best?best.name:'—'}</strong></article></div>
     {rows.length===0?<div className="cart-empty">Las nuevas ventas quedarán disponibles aquí con producto, costo, precio, unidades y utilidad. Las ventas históricas sin detalle no pueden desglosarse por producto.</div>:
     <div className="table-wrap"><table><thead><tr><th>{group}</th><th>Unidades</th><th>Ventas</th><th>Costo</th><th>Utilidad</th><th>Margen</th></tr></thead><tbody>{rows.map(r=><tr key={r.name}><td><strong>{r.name}</strong>{group!=='Producto'&&<small>{r.category} · {r.laboratory}</small>}</td><td>{r.units}</td><td>{money(r.revenue)}</td><td>{money(r.cost)}</td><td>{money(r.profit)}</td><td>{r.revenue?((r.profit/r.revenue)*100).toFixed(1):'0.0'}%</td></tr>)}</tbody></table></div>}
+  </section>;
+}
+
+function GoalsSettings({monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses}:{monthlyGoal:number;setMonthlyGoal:(v:number)=>void;fixedExpenses:number;setFixedExpenses:(v:number)=>void}) {
+  return <section className="card"><div className="card-title"><div><h3>Configuración de metas</h3><p>Estos valores alimentan el cálculo de meta y punto de equilibrio.</p></div><DollarSign size={20}/></div>
+    <div className="expense-form"><label>Meta mensual<input type="number" min="0" value={monthlyGoal||''} onChange={e=>setMonthlyGoal(Number(e.target.value))}/></label><label>Gastos fijos mensuales<input type="number" min="0" value={fixedExpenses||''} onChange={e=>setFixedExpenses(Number(e.target.value))}/></label></div>
   </section>;
 }
 
