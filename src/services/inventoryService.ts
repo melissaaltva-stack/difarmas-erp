@@ -1,6 +1,6 @@
-import type { Product, PurchaseItem } from '../domain/types';
+import type { CartItem, Product, PurchaseItem } from '../domain/types';
 
-export function applySaleToInventory(products: Product[], sold: PurchaseItem[]): Product[] {
+export function applySaleToInventory(products: Product[], sold: CartItem[]): Product[] {
   return products.map(product => {
     const item = sold.find(line => line.id === product.id);
     return item ? { ...product, stock: product.stock - item.qty } : product;
