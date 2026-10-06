@@ -38,3 +38,6 @@ GitHub Actions ejecuta automáticamente el build en cada push a main y Pull Requ
 **v1.0.0 — consolidación del ERP MVP.**
 
 La siguiente etapa recomendada es separar la lógica de negocio de App.tsx, agregar pruebas automatizadas y preparar la migración de localStorage hacia API/PostgreSQL.
+
+<!-- CI verification: 2026-10-05 -->
+<!-- CI cache fix verified -->
