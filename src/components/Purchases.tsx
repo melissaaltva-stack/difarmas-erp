@@ -1,4 +1,5 @@
-import { ShoppingCart } from 'lucide-react';
+import { useState } from 'react';
+import { ShoppingCart, Search, Boxes } from 'lucide-react';
 import type { PurchaseItem, Product } from '../domain/types';
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
 
