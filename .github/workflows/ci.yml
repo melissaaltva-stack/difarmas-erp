@@ -1,4 +1,5 @@
 name: CI
+# Production build verification for the ERP architecture refactor.
 run-name: Build DIFARMÁS ERP #${{ github.run_number }}
 
 on:
