@@ -522,3 +522,15 @@ function ManagementReports({sales,expenses}:{sales:SaleRecord[];expenses:Expense
     <div className="finance-grid"><div className="card"><div className="card-title"><div><h3>Top productos rentables</h3><p>Ordenados por utilidad registrada.</p></div></div>{topProducts.length?topProducts.map((p,i)=><div className="expense-row" key={p.name}><div><strong>#{i+1} {p.name}</strong><small>{p.units} unidades</small></div><strong>{money(p.profit)}</strong></div>):<div className="cart-empty">Registra nuevas ventas para generar el ranking.</div>}</div></div>
   </section>;
 }
+
+
+export function ManagementSuite({sales,expenses,receivables,payables,products}:{sales:SaleRecord[];expenses:Expense[];receivables:Receivable[];payables:Payable[];products:Product[]}) {
+  return <div className="content">
+    <div className="page-head"><div><span className="pill">MÓDULO GERENCIAL</span><h2>Gestión y análisis</h2><p>Herramientas de rentabilidad, compras, riesgo y planificación.</p></div></div>
+    <ProductProfitability sales={sales}/>
+    <SmartPurchasing products={products} sales={sales}/>
+    <FinancialRiskControl sales={sales} expenses={expenses} receivables={receivables} payables={payables} products={products}/>
+    <DynamicBreakEven sales={sales} expenses={expenses}/>
+    <ManagementReports sales={sales} expenses={expenses}/>
+  </div>;
+}
