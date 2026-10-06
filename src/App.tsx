@@ -1,36 +1,21 @@
-import * as React from 'react';
 import { useEffect, useMemo, useState } from 'react';
-import type { Module, CartItem, PurchaseItem, SaleLine, SaleRecord, Expense, Receivable, Payable, CashClosure, CashMovement, Customer, Product } from './domain/types';
+import type { Module, CartItem, PurchaseItem, SaleRecord, Expense, Receivable, Payable, Customer, Product } from './domain/types';
 import { loadJson, saveJson, loadNumber, saveNumber } from './utils/storage';
 import { applySaleToInventory, applyPurchaseToInventory } from './services/inventoryService';
 import { buildSaleRecord, createReceivableFromSale } from './services/salesService';
 import { createPayableFromPurchase } from './services/purchaseService';
 import { POS } from './components/POS';
 import { Purchases } from './components/Purchases';
-import { Inventory } from './components/Inventory';
-import { Finance } from './components/Finance';
+import { Inventory, ProductModal } from './components/Inventory';
+import { Finance, GoalsSettings } from './components/Finance';
 import { Dashboard } from './components/Dashboard';
-import { sumSales, sumProfit, sumExpenses, pendingReceivables, pendingPayables, cashSales, collectedReceivables, supplierPayments, calculateCashFlow, calculateExpectedCash, createCashClosure, addCashMovement } from './services/financeService';
-import { Activity, AlertTriangle, Boxes, DollarSign, LayoutDashboard, Pencil, Plus, Search, ShoppingCart, TrendingUp, Wallet, X, Users, Target, BrainCircuit, Scale, SlidersHorizontal, ShieldCheck, CheckCircle2, Clock3, ListChecks, ReceiptText, WalletCards, ArrowUpDown, Brain, LineChart, BarChart3, Megaphone, ShoppingBag, Award, Package, History, Calculator } from 'lucide-react';
-
-const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
-
-const localDateKey = (d = new Date()) => { const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; };
-const currentMonthKey = (d = new Date()) => localDateKey(d).slice(0,7);
-const isCurrentMonth = (date:string) => (date||'').slice(0,7) === currentMonthKey();
+import { Activity, Boxes, DollarSign, LayoutDashboard, ShoppingCart, TrendingUp, Wallet } from 'lucide-react';
 
 const initialProducts: Product[] = [
   { id: 1, code: '750100000001', name: 'Eutirox 50 mcg', category: 'Medicamentos', laboratory: 'Merck', presentation: 'Caja x 50 tabletas', cost: 250, retail: 330, wholesale: 310, stock: 18, minStock: 8, lot: 'EUT-2607', expiry: '2027-07-31', supplier: 'Distribuidora Nacional' },
   { id: 2, code: '750100000002', name: 'Neurobión 25,000', category: 'Vitaminas', laboratory: 'Merck', presentation: 'Ampolla', cost: 205, retail: 265, wholesale: 245, stock: 6, minStock: 10, lot: 'NEU-2610', expiry: '2027-10-31', supplier: 'Droguería Central' },
   { id: 3, code: '750100000003', name: 'Calcio 1,500 mg + D3', category: 'Vitaminas', laboratory: 'Genérico', presentation: 'Frasco', cost: 335.65, retail: 449, wholesale: 420, stock: 14, minStock: 6, lot: 'CAL-2608', expiry: '2028-01-31', supplier: 'Distribuidora Nacional' },
   { id: 4, code: '750100000004', name: 'Alevian Duo', category: 'Medicamentos', laboratory: 'Asofarma', presentation: 'Caja', cost: 1275, retail: 2550, wholesale: 2200, stock: 3, minStock: 3, lot: 'ALE-2605', expiry: '2027-05-31', supplier: 'Droguería Central' },
-];
-
-const metrics = [
-  { label: 'Ventas del día', value: 4280, icon: ShoppingCart, note: '+8.4% vs. ayer' },
-  { label: 'Ventas del mes', value: 81630, icon: TrendingUp, note: 'Meta mensual: L 100,000' },
-  { label: 'Utilidad bruta', value: 18650, icon: DollarSign, note: 'Margen aproximado 22.9%' },
-  { label: 'Gastos del mes', value: 19000, icon: Wallet, note: 'Control de gastos' },
 ];
 
 function App() {
