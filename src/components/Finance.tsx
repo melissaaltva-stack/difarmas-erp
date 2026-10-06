@@ -1,7 +1,11 @@
-import { useEffect, useState } from 'react';
-import { Activity, AlertTriangle, DollarSign, ShoppingCart, TrendingUp, Wallet, Search, Plus, Pencil, Package, History, Target, BrainCircuit, Scale, SlidersHorizontal, ShieldCheck, CheckCircle2, Clock3, ListChecks, ReceiptText, WalletCards, ArrowUpDown, Brain, LineChart, BarChart3, Megaphone, ShoppingBag, Award, Boxes, Users, X, Calculator } from 'lucide-react';
+import * as React from 'react';
+import { Activity, AlertTriangle, DollarSign, ShoppingCart, TrendingUp, Wallet, Search, Plus, Pencil, Package, History, Target, BrainCircuit, Scale, SlidersHorizontal, ShieldCheck, CheckCircle2, Clock3, ListChecks, ReceiptText, WalletCards, ArrowUpDown, Brain, LineChart, BarChart3, Megaphone, ShoppingBag, Award, Boxes, Users, X, Calculator, LayoutDashboard } from 'lucide-react';
 import type { SaleRecord, Expense, Receivable, Payable, CashClosure, CashMovement } from '../domain/types';
 import { saveJson } from '../utils/storage';
+const localDateKey = (d = new Date()) => { const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0'); return y+'-'+m+'-'+day; };
+const currentMonthKey = (d = new Date()) => localDateKey(d).slice(0,7);
+const isCurrentMonth = (date:string) => (date||'').slice(0,7) === currentMonthKey();
+
 import { sumSales, sumProfit, sumExpenses, pendingReceivables, pendingPayables, cashSales, collectedReceivables, supplierPayments, calculateCashFlow, calculateExpectedCash, createCashClosure, addCashMovement } from '../services/financeService';
 
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
