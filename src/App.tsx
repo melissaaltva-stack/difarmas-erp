@@ -1,23 +1,8 @@
 import * as React from 'react';
 import { useEffect, useMemo, useState } from 'react';
+import type { Module, CartItem, PurchaseItem, SaleLine, SaleRecord, Expense, Receivable, Payable, CashClosure, CashMovement, Customer, Product } from './domain/types';
+import { loadJson, saveJson, loadNumber, saveNumber } from './utils/storage';
 import { Activity, AlertTriangle, Boxes, DollarSign, LayoutDashboard, Pencil, Plus, Search, ShoppingCart, TrendingUp, Wallet, X, Users, Target, BrainCircuit, Scale, SlidersHorizontal, ShieldCheck, CheckCircle2, Clock3, ListChecks, ReceiptText, WalletCards, ArrowUpDown, Brain, LineChart, BarChart3, Megaphone, ShoppingBag, Award, Package, History, Calculator } from 'lucide-react';
-
-type Module = 'dashboard' | 'ventas' | 'inventario' | 'compras' | 'finanzas';
-type CartItem = Product & { qty: number; price: number };
-type PurchaseItem = Product & { qty: number; unitCost: number };
-type SaleLine = { productId:number; productName:string; category:string; laboratory:string; qty:number; unitCost:number; unitPrice:number; revenue:number; cost:number; profit:number };
-type SaleRecord = { id:number; total:number; cost:number; profit:number; payment:string; type:string; date:string; customer?:string; dueDate?:string; items?:SaleLine[] };
-type Expense = { id:number; description:string; amount:number; category:string; date:string };
-type Receivable = { id:number; saleId:number; customer:string; total:number; paid:number; dueDate:string; date:string; lastPaymentDate?:string };
-type Payable = { id:number; supplier:string; total:number; paid:number; dueDate:string; date:string; lastPaymentDate?:string };
-type CashClosure = { id:number; date:string; opening:number; cashSales:number; collections:number; expenses:number; supplierPayments:number; expected:number; counted:number; difference:number; note:string }; type CashMovement = { id:number; type:'Entrada'|'Salida'; description:string; amount:number; category:string; date:string };
-type Customer = { id:number; name:string; phone:string; creditLimit:number; active:boolean; notes:string };
-
-type Product = {
-  id: number; code: string; name: string; category: string; laboratory: string;
-  presentation: string; cost: number; retail: number; wholesale: number;
-  stock: number; minStock: number; lot: string; expiry: string; supplier: string;
-};
 
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
 
@@ -41,11 +26,11 @@ const metrics = [
 
 function App() {
   const [active, setActive] = useState<Module>('dashboard');
-  const [customers,setCustomers]=useState<Customer[]>(()=>JSON.parse(localStorage.getItem('difarmas_customers')||'[]'));
-  const [products, setProducts] = useState<Product[]>(() => { try { const saved = localStorage.getItem('difarmas_products'); return saved ? JSON.parse(saved) : initialProducts; } catch { return initialProducts; } });
+  const [customers,setCustomers]=useState<Customer[]>(()=>loadJson<Customer[]>('difarmas_customers',[]));
+  const [products, setProducts] = useState<Product[]>(() => loadJson<Product[]>('difarmas_products',initialProducts));
   const [search, setSearch] = useState('');
-  const [monthlyGoal, setMonthlyGoal] = useState(() => { const v=localStorage.getItem('difarmas_monthly_goal'); return v ? Number(v) : 100000; });
-  const [fixedExpenses, setFixedExpenses] = useState(() => { const v=localStorage.getItem('difarmas_fixed_expenses'); return v ? Number(v) : 25000; });
+  const [monthlyGoal, setMonthlyGoal] = useState(() => loadNumber('difarmas_monthly_goal',100000));
+  const [fixedExpenses, setFixedExpenses] = useState(() => loadNumber('difarmas_fixed_expenses',25000));
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -60,13 +45,13 @@ function App() {
   const [receivables, setReceivables] = useState<Receivable[]>(() => { try { const saved = localStorage.getItem('difarmas_receivables'); return saved ? JSON.parse(saved) : []; } catch { return []; } });
   const [payables, setPayables] = useState<Payable[]>(() => { try { const saved = localStorage.getItem('difarmas_payables'); return saved ? JSON.parse(saved) : []; } catch { return []; } });
 
-  useEffect(() => { localStorage.setItem('difarmas_products', JSON.stringify(products)); }, [products]);
-  useEffect(() => { localStorage.setItem('difarmas_monthly_goal', String(monthlyGoal)); }, [monthlyGoal]);
-  useEffect(() => { localStorage.setItem('difarmas_fixed_expenses', String(fixedExpenses)); }, [fixedExpenses]);
-  useEffect(() => { localStorage.setItem('difarmas_sales', JSON.stringify(sales)); }, [sales]);
-  useEffect(() => { localStorage.setItem('difarmas_expenses', JSON.stringify(expenses)); }, [expenses]);
-  useEffect(() => { localStorage.setItem('difarmas_receivables', JSON.stringify(receivables)); }, [receivables]);
-  useEffect(() => { localStorage.setItem('difarmas_payables', JSON.stringify(payables)); }, [payables]);
+  useEffect(() => { saveJson('difarmas_products', products); }, [products]);
+  useEffect(() => { saveNumber('difarmas_monthly_goal', monthlyGoal); }, [monthlyGoal]);
+  useEffect(() => { saveNumber('difarmas_fixed_expenses', fixedExpenses); }, [fixedExpenses]);
+  useEffect(() => { saveJson('difarmas_sales', sales); }, [sales]);
+  useEffect(() => { saveJson('difarmas_expenses', expenses); }, [expenses]);
+  useEffect(() => { saveJson('difarmas_receivables', receivables); }, [receivables]);
+  useEffect(() => { saveJson('difarmas_payables', payables); }, [payables]);
 
   const nav = [
     ['dashboard', 'Dashboard', LayoutDashboard], ['ventas', 'Ventas / POS', ShoppingCart],
