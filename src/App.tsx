@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import type { Module, CartItem, PurchaseItem, SaleLine, SaleRecord, Expense, Receivable, Payable, CashClosure, CashMovement, Customer, Product } from './domain/types';
 import { loadJson, saveJson, loadNumber, saveNumber } from './utils/storage';
-import { applySaleToInventory, applyPurchaseToInventory, purchaseTotal } from './services/inventoryService';
+import { applySaleToInventory, applyPurchaseToInventory } from './services/inventoryService';
 import { buildSaleRecord, createReceivableFromSale } from './services/salesService';
 import { createPayableFromPurchase } from './services/purchaseService';
 import { Activity, AlertTriangle, Boxes, DollarSign, LayoutDashboard, Pencil, Plus, Search, ShoppingCart, TrendingUp, Wallet, X, Users, Target, BrainCircuit, Scale, SlidersHorizontal, ShieldCheck, CheckCircle2, Clock3, ListChecks, ReceiptText, WalletCards, ArrowUpDown, Brain, LineChart, BarChart3, Megaphone, ShoppingBag, Award, Package, History, Calculator } from 'lucide-react';
