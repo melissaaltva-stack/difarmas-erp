@@ -32,7 +32,7 @@ function ProductProfitability({sales}:{sales:SaleRecord[]}) {
   </section>;
 }
 
-export function GoalsSettings({monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses}:{monthlyGoal:number;setMonthlyGoal:(v:number)=>void;fixedExpenses:number;setFixedExpenses:(v:number)=>void}) {
+export export function GoalsSettings({monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses}:{monthlyGoal:number;setMonthlyGoal:(v:number)=>void;fixedExpenses:number;setFixedExpenses:(v:number)=>void}) {
   return <section className="card"><div className="card-title"><div><h3>Configuración de metas</h3><p>Estos valores alimentan el cálculo de meta y punto de equilibrio.</p></div><DollarSign size={20}/></div>
     <div className="expense-form"><label>Meta mensual<input type="number" min="0" value={monthlyGoal||''} onChange={e=>setMonthlyGoal(Number(e.target.value))}/></label><label>Gastos fijos mensuales<input type="number" min="0" value={fixedExpenses||''} onChange={e=>setFixedExpenses(Number(e.target.value))}/></label></div>
   </section>;
