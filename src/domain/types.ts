@@ -9,4 +9,5 @@ export type Receivable = { id:number; saleId:number; customer:string; total:numb
 export type Payable = { id:number; supplier:string; total:number; paid:number; dueDate:string; date:string; lastPaymentDate?:string };
 export type CashClosure = { id:number; date:string; opening:number; cashSales:number; collections:number; expenses:number; supplierPayments:number; expected:number; counted:number; difference:number; note:string };
 export type CashMovement = { id:number; type:'Entrada'|'Salida'; description:string; amount:number; category:string; date:string };
+export type InventoryMovement = { id:number; productId:number; productName:string; type:'Venta'|'Compra'|'Ajuste'; quantity:number; stockBefore:number; stockAfter:number; unitCost:number; referenceId?:number; date:string; note?:string };
 export type Customer = { id:number; name:string; phone:string; creditLimit:number; active:boolean; notes:string };
