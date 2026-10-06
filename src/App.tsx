@@ -7,7 +7,8 @@ import { createPayableFromPurchase } from './services/purchaseService';
 import { POS } from './components/POS';
 import { Purchases } from './components/Purchases';
 import { Inventory, ProductModal } from './components/Inventory';
-import { Finance, GoalsSettings } from './components/Finance';
+import { Finance } from './components/Finance';
+import { GoalsSettings, ManagementSuite } from './components/ManagementSuite';
 import { Dashboard } from './components/Dashboard';
 import { Activity, Boxes, LayoutDashboard, ShoppingCart, Wallet } from 'lucide-react';
 
