@@ -9,7 +9,7 @@ import { Purchases } from './components/Purchases';
 import { Inventory, ProductModal } from './components/Inventory';
 import { Finance, GoalsSettings } from './components/Finance';
 import { Dashboard } from './components/Dashboard';
-import { Activity, Boxes, DollarSign, LayoutDashboard, ShoppingCart, TrendingUp, Wallet } from 'lucide-react';
+import { Activity, Boxes, LayoutDashboard, ShoppingCart, Wallet } from 'lucide-react';
 
 const initialProducts: Product[] = [
   { id: 1, code: '750100000001', name: 'Eutirox 50 mcg', category: 'Medicamentos', laboratory: 'Merck', presentation: 'Caja x 50 tabletas', cost: 250, retail: 330, wholesale: 310, stock: 18, minStock: 8, lot: 'EUT-2607', expiry: '2027-07-31', supplier: 'Distribuidora Nacional' },
