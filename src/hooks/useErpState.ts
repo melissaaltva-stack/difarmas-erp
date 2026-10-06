@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { CartItem, Customer, Expense, Module, Payable, Product, PurchaseItem, Receivable, SaleRecord } from '../domain/types';
+import type { CartItem, Customer, Expense, InventoryMovement, Module, Payable, Product, PurchaseItem, Receivable, SaleRecord } from '../domain/types';
 import { loadJson, saveJson, loadNumber, saveNumber } from '../utils/storage';
 import { applyPurchaseToInventory, applySaleToInventory } from '../services/inventoryService';
 import { buildSaleRecord, createReceivableFromSale } from '../services/salesService';
 import { createPayableFromPurchase } from '../services/purchaseService';
+import { createInventoryMovementsForPurchase, createInventoryMovementsForSale } from '../services/inventoryMovementService';
 
 const initialProducts: Product[] = [
   { id: 1, code: '750100000001', name: 'Eutirox 50 mcg', category: 'Medicamentos', laboratory: 'Merck', presentation: 'Caja x 50 tabletas', cost: 250, retail: 330, wholesale: 310, stock: 18, minStock: 8, lot: 'EUT-2607', expiry: '2027-07-31', supplier: 'Distribuidora Nacional' },
@@ -32,6 +33,7 @@ export function useErpState() {
   const [expenses, setExpenses] = useState<Expense[]>(()=>loadJson<Expense[]>('difarmas_expenses',[]));
   const [receivables, setReceivables] = useState<Receivable[]>(()=>loadJson<Receivable[]>('difarmas_receivables',[]));
   const [payables, setPayables] = useState<Payable[]>(()=>loadJson<Payable[]>('difarmas_payables',[]));
+  const [inventoryMovements, setInventoryMovements] = useState<InventoryMovement[]>(()=>loadJson<InventoryMovement[]>('difarmas_inventory_movements',[]));
 
   useEffect(()=>{saveJson('difarmas_customers',customers)},[customers]);
   useEffect(()=>{saveJson('difarmas_products',products)},[products]);
@@ -41,12 +43,14 @@ export function useErpState() {
   useEffect(()=>{saveJson('difarmas_expenses',expenses)},[expenses]);
   useEffect(()=>{saveJson('difarmas_receivables',receivables)},[receivables]);
   useEffect(()=>{saveJson('difarmas_payables',payables)},[payables]);
+  useEffect(()=>{saveJson('difarmas_inventory_movements',inventoryMovements)},[inventoryMovements]);
 
   const filtered=useMemo(()=>products.filter(p=>[p.code,p.name,p.category,p.laboratory].join(' ').toLowerCase().includes(search.toLowerCase())),[products,search]);
 
   const recordSale=(sold:CartItem[],customer='',dueDate='')=>{
     const sale=buildSaleRecord(sold,payment,saleType,customer,dueDate);
     setProducts(current=>applySaleToInventory(current,sold));
+    setInventoryMovements(current=>[...current,...createInventoryMovementsForSale(products,sold,sale.id)]);
     setSales(current=>[...current,sale]);
     if(payment==='Crédito') setReceivables(current=>[...current,createReceivableFromSale(sale,customer,dueDate)]);
   };
@@ -57,9 +61,11 @@ export function useErpState() {
   };
 
   const receivePurchase=(items:PurchaseItem[],paymentMethod:string,dueDate:string)=>{
+    const referenceId = Date.now();
     setProducts(current=>applyPurchaseToInventory(current,items,purchaseSupplier));
+    setInventoryMovements(current=>[...current,...createInventoryMovementsForPurchase(products,items,referenceId)]);
     if(paymentMethod==='Crédito') setPayables(current=>[...current,createPayableFromPurchase(items,purchaseSupplier,dueDate)]);
   };
 
-  return {active,setActive,customers,setCustomers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,expenses,setExpenses,receivables,setReceivables,payables,setPayables,filtered,recordSale,saveProduct,receivePurchase};
+  return {active,setActive,customers,setCustomers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,filtered,recordSale,saveProduct,receivePurchase};
 }
