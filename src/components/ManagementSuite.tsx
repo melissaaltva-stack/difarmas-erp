@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { useMemo, useState } from 'react';
 import { TrendingUp, Search, DollarSign, ShoppingCart, Users, Target, BrainCircuit, Scale, SlidersHorizontal, ShieldCheck, LayoutDashboard, CheckCircle2, Clock3, ListChecks, ReceiptText, WalletCards, ArrowUpDown, Brain, LineChart, BarChart3, Megaphone, ShoppingBag, Award, Package, AlertTriangle, History, Calculator, Activity, Plus } from 'lucide-react';
 import type { CashClosure, CashMovement, Customer, Product, SaleRecord, Expense, Receivable, Payable } from '../domain/types';
