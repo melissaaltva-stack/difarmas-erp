@@ -1,0 +1,12 @@
+export type Module = 'dashboard' | 'ventas' | 'inventario' | 'compras' | 'finanzas';
+export type Product = { id:number; code:string; name:string; category:string; laboratory:string; presentation:string; cost:number; retail:number; wholesale:number; stock:number; minStock:number; lot:string; expiry:string; supplier:string };
+export type CartItem = Product & { qty:number; price:number };
+export type PurchaseItem = Product & { qty:number; unitCost:number };
+export type SaleLine = { productId:number; productName:string; category:string; laboratory:string; qty:number; unitCost:number; unitPrice:number; revenue:number; cost:number; profit:number };
+export type SaleRecord = { id:number; total:number; cost:number; profit:number; payment:string; type:string; date:string; customer?:string; dueDate?:string; items?:SaleLine[] };
+export type Expense = { id:number; description:string; amount:number; category:string; date:string };
+export type Receivable = { id:number; saleId:number; customer:string; total:number; paid:number; dueDate:string; date:string; lastPaymentDate?:string };
+export type Payable = { id:number; supplier:string; total:number; paid:number; dueDate:string; date:string; lastPaymentDate?:string };
+export type CashClosure = { id:number; date:string; opening:number; cashSales:number; collections:number; expenses:number; supplierPayments:number; expected:number; counted:number; difference:number; note:string };
+export type CashMovement = { id:number; type:'Entrada'|'Salida'; description:string; amount:number; category:string; date:string };
+export type Customer = { id:number; name:string; phone:string; creditLimit:number; active:boolean; notes:string };
