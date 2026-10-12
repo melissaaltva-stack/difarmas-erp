@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calculateExpectedCash, cashExpenses, cashSales, pendingReceivables } from './financeService';
+import { calculateExpectedCash, cashExpenses, cashMovementTotals, cashSales, pendingReceivables } from './financeService';
 import type { SaleRecord } from '../domain/types';
 import type { Expense, Receivable } from '../domain/types';
 
@@ -23,6 +23,15 @@ describe('financeService', () => {
     ];
     expect(cashExpenses(expenses)).toBe(1200);
   });
+  it('excludes bank movements from physical cash totals', () => {
+    const movements = [
+      { id: 1, type: 'Entrada', description: 'Aporte efectivo', amount: 100, category: 'Aporte', date: '2026-10-12' },
+      { id: 2, type: 'Salida', description: 'Retiro efectivo', amount: 25, category: 'Retiro', date: '2026-10-12' },
+      { id: 3, type: 'Entrada', description: 'Depósito bancario', amount: 500, category: 'Banco', date: '2026-10-12' },
+    ] as const;
+    expect(cashMovementTotals([...movements])).toEqual({ incoming: 100, outgoing: 25 });
+  });
+
   it('calculates pending receivables', () => {
     const rows: Receivable[] = [{ id: 1, saleId: 1, customer: 'Cliente', total: 1000, paid: 300, dueDate: '2026-10-20', date: '2026-10-01' }];
     expect(pendingReceivables(rows)).toBe(700);
