@@ -23,12 +23,12 @@ export function Finance({sales,expenses,setExpenses,receivables,setReceivables,p
   const receivablePending=pendingReceivables(receivables); const payablePending=pendingPayables(payables);
   const cashSalesTotal=cashSales(sales); const collected=collectedReceivables(receivables); const supplierPaymentsTotal=supplierPayments(payables);
   const cashFlow=calculateCashFlow(sales,receivables,expenses,payables);
-  const today=new Date().toISOString().slice(0,10);
+  const today=localDateKey();
   const dayMovementIn=movements.filter(m=>m.date.slice(0,10)===today&&m.type==='Entrada').reduce((a,m)=>a+m.amount,0); const dayMovementOut=movements.filter(m=>m.date.slice(0,10)===today&&m.type==='Salida').reduce((a,m)=>a+m.amount,0);
   const daySales=sales.filter(s=>s.date.slice(0,10)===today&&s.payment!=='Crédito').reduce((a,s)=>a+s.total,0);
-  const dayCollections=receivables.filter(r=>r.lastPaymentDate?.slice(0,10)===today).reduce((a,r)=>a+r.paid,0);
+  const dayCollections=receivables.filter(r=>r.lastPaymentDate?.slice(0,10)===today).reduce((a,r)=>a+Math.min(r.paid,r.total),0);
   const dayExpenses=expenses.filter(e=>e.date.slice(0,10)===today).reduce((a,e)=>a+e.amount,0);
-  const daySupplierPayments=payables.filter(r=>r.lastPaymentDate?.slice(0,10)===today).reduce((a,r)=>a+r.paid,0);
+  const daySupplierPayments=payables.filter(r=>r.lastPaymentDate?.slice(0,10)===today).reduce((a,r)=>a+Math.min(r.paid,r.total),0);
   const expected=calculateExpectedCash(opening,daySales,dayCollections,dayMovementIn,dayExpenses,daySupplierPayments,dayMovementOut);
   const addExpense=()=>{if(!description.trim()||amount<=0)return;setExpenses([...expenses,{id:Date.now(),description,amount,category,date:new Date().toISOString()}]);setDescription('');setAmount(0);};
   const collect=(r:Receivable)=>{const value=Math.min(paymentAmount[r.id]||0,Math.max(0,r.total-r.paid));if(value<=0)return;setReceivables(receivables.map(x=>x.id===r.id?{...x,paid:x.paid+value,lastPaymentDate:new Date().toISOString()}:x));setPaymentAmount({...paymentAmount,[r.id]:0});};
