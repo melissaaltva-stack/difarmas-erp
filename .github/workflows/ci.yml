@@ -1,5 +1,5 @@
 name: CI
-# Production build verification for the DIFARMÁS ERP refactor and inventory safeguards.
+# Production build verification for the DIFARMÁS ERP refactor, CRM, finance and inventory safeguards.
 run-name: Build DIFARMÁS ERP #${{ github.run_number }}
 
 on:
