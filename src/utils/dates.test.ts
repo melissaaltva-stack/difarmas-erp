@@ -12,6 +12,6 @@ describe('date utilities', () => {
   });
 
   it('falls back to the date prefix for invalid values', () => {
-    expect(dateKey('invalid-date-value')).toBe('invalid-d');
+    expect(dateKey('invalid-date-value')).toBe('invalid-da');
   });
 });
