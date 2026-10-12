@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { calculateExpectedCash, cashSales, pendingReceivables } from './financeService';
+import { calculateExpectedCash, cashExpenses, cashSales, pendingReceivables } from './financeService';
 import type { SaleRecord } from '../domain/types';
-import type { Receivable } from '../domain/types';
+import type { Expense, Receivable } from '../domain/types';
 
 describe('financeService', () => {
   it('calculates expected cash', () => {
@@ -14,6 +14,14 @@ describe('financeService', () => {
       { id: 3, total: 300, cost: 180, profit: 120, payment: 'Crédito', type: 'minorista', date: '2026-10-12T10:02:00.000Z' },
     ];
     expect(cashSales(sales)).toBe(100);
+  });
+  it('counts cash expenses but excludes bank transfers from physical cash', () => {
+    const expenses: Expense[] = [
+      { id: 1, description: 'Alquiler', amount: 1000, category: 'Alquiler', date: '2026-10-12', paymentMethod: 'Efectivo' },
+      { id: 2, description: 'Internet', amount: 500, category: 'Servicios', date: '2026-10-12', paymentMethod: 'Transferencia' },
+      { id: 3, description: 'Gasto histórico', amount: 200, category: 'Otros', date: '2026-10-12' },
+    ];
+    expect(cashExpenses(expenses)).toBe(1200);
   });
   it('calculates pending receivables', () => {
     const rows: Receivable[] = [{ id: 1, saleId: 1, customer: 'Cliente', total: 1000, paid: 300, dueDate: '2026-10-20', date: '2026-10-01' }];
