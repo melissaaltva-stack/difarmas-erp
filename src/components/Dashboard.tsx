@@ -1,10 +1,10 @@
 import { AlertTriangle, DollarSign, ShoppingCart, TrendingUp, Wallet } from 'lucide-react';
 import type { Product, SaleRecord, Expense } from '../domain/types';
+import { dateKey, localDateKey } from '../utils/dates';
 
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
-const localDateKey = (d = new Date()) => { const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; };
 const currentMonthKey = (d = new Date()) => localDateKey(d).slice(0,7);
-const isCurrentMonth = (date:string) => (date||'').slice(0,7) === currentMonthKey();
+const isCurrentMonth = (date:string) => dateKey(date).slice(0,7) === currentMonthKey();
 
 export function Dashboard({products,sales,expenses,monthlyGoal,fixedExpenses}:{products:Product[];sales:SaleRecord[];expenses:Expense[];monthlyGoal:number;fixedExpenses:number}) {
   const monthSales=sales.filter(s=>isCurrentMonth(s.date));
@@ -16,7 +16,7 @@ export function Dashboard({products,sales,expenses,monthlyGoal,fixedExpenses}:{p
   const inventoryValue=products.reduce((a,p)=>a+p.cost*p.stock,0);
   const lowStock=products.filter(p=>p.stock<=p.minStock);
   const todayKey=localDateKey();
-  const salesToday=sales.filter(s=>s.date.slice(0,10)===todayKey).reduce((a,s)=>a+s.total,0);
+  const salesToday=sales.filter(s=>dateKey(s.date)===todayKey).reduce((a,s)=>a+s.total,0);
   const goal=monthlyGoal;
   const workDays=26;
   const dailyGoal=goal/workDays;
