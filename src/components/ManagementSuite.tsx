@@ -525,7 +525,7 @@ function ManagementReports({sales,expenses}:{sales:SaleRecord[];expenses:Expense
 }
 
 
-export function ManagementSuite({sales,expenses,receivables,payables,products}:{sales:SaleRecord[];expenses:Expense[];receivables:Receivable[];payables:Payable[];products:Product[]}) {
+export function ManagementSuite({sales,expenses,receivables,payables,products,customers,setCustomers}:{sales,expenses,receivables,payables,products,customers,setCustomers}:{sales:SaleRecord[];expenses:Expense[];receivables:Receivable[];payables:Payable[];products:Product[];customers:Customer[];setCustomers:React.Dispatch<React.SetStateAction<Customer[]>>}) {
   return <div className="content">
     <div className="page-head"><div><span className="pill">MÓDULO GERENCIAL</span><h2>Gestión y análisis</h2><p>Herramientas de rentabilidad, compras, riesgo y planificación.</p></div></div>
     <ProductProfitability sales={sales}/>
@@ -533,5 +533,6 @@ export function ManagementSuite({sales,expenses,receivables,payables,products}:{
     <FinancialRiskControl sales={sales} expenses={expenses} receivables={receivables} payables={payables} products={products}/>
     <DynamicBreakEven sales={sales} expenses={expenses}/>
     <ManagementReports sales={sales} expenses={expenses}/>
+    <CustomerCRM customers={customers} setCustomers={setCustomers} sales={sales}/>
   </div>;
 }
