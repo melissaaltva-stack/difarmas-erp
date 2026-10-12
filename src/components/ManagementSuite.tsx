@@ -206,8 +206,8 @@ function MonthlyComparison({sales,expenses}:{sales:SaleRecord[];expenses:Expense
 
 function MonthlyNetProfitability({sales,expenses}:{sales:SaleRecord[];expenses:Expense[]}) {
  const map:Record<string,{sales:number;gross:number;expenses:number}>={};
- sales.forEach(x=>{const k=dateKey(x.date||'Sin fecha').slice(0,7)||'Sin fecha';if(!map[k])map[k]={sales:0,gross:0,expenses:0};map[k].sales+=x.total;map[k].gross+=x.profit});
- expenses.forEach(x=>{const k=dateKey(x.date||'Sin fecha').slice(0,7)||'Sin fecha';if(!map[k])map[k]={sales:0,gross:0,expenses:0};map[k].expenses+=x.amount});
+ sales.forEach(x=>{const k=x.date?dateKey(x.date).slice(0,7):'Sin fecha';if(!map[k])map[k]={sales:0,gross:0,expenses:0};map[k].sales+=x.total;map[k].gross+=x.profit});
+ expenses.forEach(x=>{const k=x.date?dateKey(x.date).slice(0,7):'Sin fecha';if(!map[k])map[k]={sales:0,gross:0,expenses:0};map[k].expenses+=x.amount});
  const rows=Object.entries(map).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,12);
  return <section className="card"><div className="card-title"><div><h3>Rentabilidad mensual</h3><p>Resultado neto por mes.</p></div><TrendingUp size={20}/></div>{rows.map(([month,v])=>{const net=v.gross-v.expenses;return <div className="list-row" key={month}><div><strong>{month}</strong><small>Ventas {money(v.sales)} · Bruta {money(v.gross)} · Gastos {money(v.expenses)}</small></div><span>{money(net)} · {v.sales?(net/v.sales*100).toFixed(1):0}%</span></div>})}</section>;
 }
