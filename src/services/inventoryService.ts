@@ -7,6 +7,8 @@ export function applySaleToInventory(products: Product[], sold: CartItem[]): Pro
   const invalid = sold.find(item => item.qty <= 0 || !Number.isFinite(item.qty));
   if (invalid) throw new Error('La cantidad de venta debe ser mayor que cero.');
 
+  if (products.some(product => !Number.isFinite(product.stock) || product.stock < 0)) throw new Error('El inventario contiene una existencia inválida.');
+
   const insufficient = sold.find(item => {
     const product = products.find(p => p.id === item.id);
     return !product || item.qty > product.stock;
