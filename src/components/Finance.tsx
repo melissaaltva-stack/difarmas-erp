@@ -8,7 +8,7 @@ const validPayment = (value:number, balance:number) => Number.isFinite(value) &&
 const currentMonthKey = (d = new Date()) => localDateKey(d).slice(0,7);
 const isCurrentMonth = (date:string) => (date||'').slice(0,7) === currentMonthKey();
 
-import { sumSales, sumProfit, sumExpenses, cashExpenses, pendingReceivables, pendingPayables, cashSales, collectedReceivables, supplierPayments, calculateExpectedCash, createCashClosure, addCashMovement } from '../services/financeService';
+import { sumSales, sumProfit, sumExpenses, cashExpenses, cashMovementTotals, pendingReceivables, pendingPayables, cashSales, collectedReceivables, supplierPayments, calculateExpectedCash, createCashClosure, addCashMovement } from '../services/financeService';
 
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
 
@@ -40,10 +40,10 @@ export function Finance({sales,purchases,expenses,setExpenses,receivables,setRec
     const cash=transactions.filter(t=>(t.paymentMethod??'Efectivo')==='Efectivo').reduce((total,t)=>total+t.amount,0);
     return sum+Math.max(0,r.paid-recorded)+cash;
   },0);
-  const cashMovementIn=movements.filter(m=>m.type==='Entrada').reduce((sum,m)=>sum+m.amount,0); const cashMovementOut=movements.filter(m=>m.type==='Salida').reduce((sum,m)=>sum+m.amount,0);
+  const { incoming: cashMovementIn, outgoing: cashMovementOut } = cashMovementTotals(movements);
   const cashFlow=cashSalesTotal+cashCollections+cashMovementIn-cashExpenseTotal-cashSupplierPayments-purchases.filter(p=>p.paymentMethod==='Efectivo').reduce((sum,p)=>sum+p.total,0)-cashMovementOut;
   const today=localDateKey();
-  const dayMovementIn=movements.filter(m=>dateKey(m.date)===today&&m.type==='Entrada').reduce((a,m)=>a+m.amount,0); const dayMovementOut=movements.filter(m=>dateKey(m.date)===today&&m.type==='Salida').reduce((a,m)=>a+m.amount,0);
+  const dayMovementIn=movements.filter(m=>m.category!=='Banco'&&dateKey(m.date)===today&&m.type==='Entrada').reduce((a,m)=>a+m.amount,0); const dayMovementOut=movements.filter(m=>m.category!=='Banco'&&dateKey(m.date)===today&&m.type==='Salida').reduce((a,m)=>a+m.amount,0);
   const daySales=sales.filter(s=>dateKey(s.date)===today&&s.payment==='Efectivo').reduce((a,s)=>a+s.total,0);
   const dayCollections=receivables.reduce((sum,r)=>{
     const accountTransactions=paymentTransactions.filter(t=>t.type==='Cobro'&&t.accountId===r.id);
