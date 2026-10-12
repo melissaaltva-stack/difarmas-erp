@@ -37,6 +37,15 @@ export function supplierPayments(payables: Payable[]): number {
   return payables.reduce((sum, item) => sum + item.paid, 0);
 }
 
+export function cashMovementTotals(movements: CashMovement[]): { incoming: number; outgoing: number } {
+  // Bank movements affect a bank balance, not the physical cash drawer.
+  const cashMovements = movements.filter(movement => movement.category !== 'Banco');
+  return {
+    incoming: cashMovements.filter(movement => movement.type === 'Entrada').reduce((sum, movement) => sum + movement.amount, 0),
+    outgoing: cashMovements.filter(movement => movement.type === 'Salida').reduce((sum, movement) => sum + movement.amount, 0),
+  };
+}
+
 export function calculateCashFlow(
   sales: SaleRecord[],
   receivables: Receivable[],
