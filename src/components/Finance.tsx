@@ -27,7 +27,7 @@ export function Finance({sales,purchases,expenses,setExpenses,receivables,setRec
   const cashFlow=calculateCashFlow(sales,receivables,expenses,payables)-purchases.filter(p=>p.paymentMethod!=='Crédito').reduce((sum,p)=>sum+p.total,0);
   const today=localDateKey();
   const dayMovementIn=movements.filter(m=>m.date.slice(0,10)===today&&m.type==='Entrada').reduce((a,m)=>a+m.amount,0); const dayMovementOut=movements.filter(m=>m.date.slice(0,10)===today&&m.type==='Salida').reduce((a,m)=>a+m.amount,0);
-  const daySales=sales.filter(s=>s.date.slice(0,10)===today&&s.payment!=='Crédito').reduce((a,s)=>a+s.total,0);
+  const daySales=sales.filter(s=>s.date.slice(0,10)===today&&s.payment==='Efectivo').reduce((a,s)=>a+s.total,0);
   const dayCollections=paymentTransactions.length
     ? paymentTransactions.filter(t=>t.date.slice(0,10)===today&&t.type==='Cobro').reduce((a,t)=>a+t.amount,0)
     : receivables.filter(r=>r.lastPaymentDate?.slice(0,10)===today).reduce((a,r)=>a+Math.min(r.paid,r.total),0);
