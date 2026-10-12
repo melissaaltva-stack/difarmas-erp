@@ -4,6 +4,8 @@ import { Activity, AlertTriangle, DollarSign, ShoppingCart, TrendingUp, Wallet, 
 import type { SaleRecord, Expense, Receivable, Payable, PurchaseRecord, CashClosure, CashMovement, PaymentTransaction } from '../domain/types';
 import { saveJson } from '../utils/storage';
 const localDateKey = (d = new Date()) => { const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0'); return y+'-'+m+'-'+day; };
+const dateKey = (value:string) => { const d=new Date(value); return Number.isNaN(d.getTime()) ? value.slice(0,10) : localDateKey(d); };
+const validPayment = (value:number, balance:number) => Number.isFinite(value) && value > 0 && value <= balance;
 const currentMonthKey = (d = new Date()) => localDateKey(d).slice(0,7);
 const isCurrentMonth = (date:string) => (date||'').slice(0,7) === currentMonthKey();
 
@@ -26,21 +28,21 @@ export function Finance({sales,purchases,expenses,setExpenses,receivables,setRec
   const cashSalesTotal=cashSales(sales); const collected=collectedReceivables(receivables); const supplierPaymentsTotal=supplierPayments(payables);
   const cashFlow=calculateCashFlow(sales,receivables,expenses,payables)-purchases.filter(p=>p.paymentMethod!=='Crédito').reduce((sum,p)=>sum+p.total,0);
   const today=localDateKey();
-  const dayMovementIn=movements.filter(m=>m.date.slice(0,10)===today&&m.type==='Entrada').reduce((a,m)=>a+m.amount,0); const dayMovementOut=movements.filter(m=>m.date.slice(0,10)===today&&m.type==='Salida').reduce((a,m)=>a+m.amount,0);
-  const daySales=sales.filter(s=>s.date.slice(0,10)===today&&s.payment==='Efectivo').reduce((a,s)=>a+s.total,0);
+  const dayMovementIn=movements.filter(m=>dateKey(m.date)===today&&m.type==='Entrada').reduce((a,m)=>a+m.amount,0); const dayMovementOut=movements.filter(m=>m.date.slice(0,10)===today&&m.type==='Salida').reduce((a,m)=>a+m.amount,0);
+  const daySales=sales.filter(s=>dateKey(s.date)===today&&s.payment==='Efectivo').reduce((a,s)=>a+s.total,0);
   const dayCollections=paymentTransactions.length
-    ? paymentTransactions.filter(t=>t.date.slice(0,10)===today&&t.type==='Cobro').reduce((a,t)=>a+t.amount,0)
+    ? paymentTransactions.filter(t=>dateKey(t.date)===today&&t.type==='Cobro').reduce((a,t)=>a+t.amount,0)
     : receivables.filter(r=>r.lastPaymentDate?.slice(0,10)===today).reduce((a,r)=>a+Math.min(r.paid,r.total),0);
-  const dayExpenses=expenses.filter(e=>e.date.slice(0,10)===today).reduce((a,e)=>a+e.amount,0);
-  const dayCashPurchases=purchases.filter(p=>p.date.slice(0,10)===today&&p.paymentMethod==='Efectivo').reduce((a,p)=>a+p.total,0);
+  const dayExpenses=expenses.filter(e=>dateKey(e.date)===today).reduce((a,e)=>a+e.amount,0);
+  const dayCashPurchases=purchases.filter(p=>dateKey(p.date)===today&&p.paymentMethod==='Efectivo').reduce((a,p)=>a+p.total,0);
   const daySupplierPayments=paymentTransactions.length
     ? paymentTransactions.filter(t=>t.date.slice(0,10)===today&&t.type==='Pago proveedor').reduce((a,t)=>a+t.amount,0)
     : payables.filter(r=>r.lastPaymentDate?.slice(0,10)===today).reduce((a,r)=>a+Math.min(r.paid,r.total),0);
   const expected=calculateExpectedCash(opening,daySales,dayCollections,dayMovementIn,dayExpenses+dayCashPurchases,daySupplierPayments,dayMovementOut);
-  const addExpense=()=>{if(!description.trim()||amount<=0)return;setExpenses([...expenses,{id:Date.now(),description,amount,category,date:new Date().toISOString()}]);setDescription('');setAmount(0);};
-  const collect=(r:Receivable)=>{const value=Math.min(paymentAmount[r.id]||0,Math.max(0,r.total-r.paid));if(!Number.isFinite(value)||value<=0)return;const date=new Date().toISOString();setReceivables(receivables.map(x=>x.id===r.id?{...x,paid:x.paid+value,lastPaymentDate:date}:x));setPaymentTransactions(current=>[{id:Date.now(),type:'Cobro',accountId:r.id,party:r.customer,amount:value,date},...current]);setPaymentAmount({...paymentAmount,[r.id]:0});};
-  const paySupplier=(r:Payable)=>{const value=Math.min(paymentAmount[r.id]||0,Math.max(0,r.total-r.paid));if(!Number.isFinite(value)||value<=0)return;const date=new Date().toISOString();setPayables(payables.map(x=>x.id===r.id?{...x,paid:x.paid+value,lastPaymentDate:date}:x));setPaymentTransactions(current=>[{id:Date.now(),type:'Pago proveedor',accountId:r.id,party:r.supplier,amount:value,date},...current]);setPaymentAmount({...paymentAmount,[r.id]:0});};
-  const closeCash=()=>{setClosures([createCashClosure(opening,daySales,dayCollections,dayExpenses,daySupplierPayments,expected,counted,note,new Date(),dayCashPurchases),...closures]);setOpening(counted);setCounted(0);setNote('');};
+  const addExpense=()=>{if(!description.trim()||!Number.isFinite(amount)||amount<=0)return;setExpenses([...expenses,{id:Date.now(),description,amount,category,date:new Date().toISOString()}]);setDescription('');setAmount(0);};
+  const collect=(r:Receivable)=>{const balance=Math.max(0,r.total-r.paid);const value=paymentAmount[r.id]||0;if(!validPayment(value,balance))return;const date=new Date().toISOString();setReceivables(receivables.map(x=>x.id===r.id?{...x,paid:x.paid+value,lastPaymentDate:date}:x));setPaymentTransactions(current=>[{id:Date.now(),type:'Cobro',accountId:r.id,party:r.customer,amount:value,date},...current]);setPaymentAmount({...paymentAmount,[r.id]:0});};
+  const paySupplier=(r:Payable)=>{const balance=Math.max(0,r.total-r.paid);const value=paymentAmount[r.id]||0;if(!validPayment(value,balance))return;const date=new Date().toISOString();setPayables(payables.map(x=>x.id===r.id?{...x,paid:x.paid+value,lastPaymentDate:date}:x));setPaymentTransactions(current=>[{id:Date.now(),type:'Pago proveedor',accountId:r.id,party:r.supplier,amount:value,date},...current]);setPaymentAmount({...paymentAmount,[r.id]:0});};
+  const closeCash=()=>{if(!Number.isFinite(opening)||opening<0||!Number.isFinite(counted)||counted<0)return;setClosures([createCashClosure(opening,daySales,dayCollections,dayExpenses,daySupplierPayments,expected,counted,note,new Date(),dayCashPurchases),...closures]);setOpening(counted);setCounted(0);setNote('');};
   return <div className="content"><div className="page-head"><div><span className="pill">MVP · FINANZAS + CAJA</span><h2>Finanzas y caja</h2><p>Control de ventas, cobros, pagos, flujo de caja y cierre diario.</p></div></div>
   <div className="grid metrics"><article className="card metric"><div className="metric-top"><span>Ventas</span><ShoppingCart size={20}/></div><strong>{money(salesTotal)}</strong><small>{sales.length} operaciones</small></article><article className="card metric"><div className="metric-top"><span>Utilidad bruta</span><TrendingUp size={20}/></div><strong>{money(profit)}</strong></article><article className="card metric"><div className="metric-top"><span>Por cobrar</span><DollarSign size={20}/></div><strong>{money(receivablePending)}</strong></article><article className="card metric"><div className="metric-top"><span>Por pagar</span><Wallet size={20}/></div><strong>{money(payablePending)}</strong></article></div>
   <div className="grid metrics"><article className="card metric"><div className="metric-top"><span>Flujo de caja</span><Activity size={20}/></div><strong>{money(cashFlow)}</strong><small>Entradas de efectivo − egresos</small></article><article className="card metric"><div className="metric-top"><span>Ventas contado</span><DollarSign size={20}/></div><strong>{money(cashSalesTotal)}</strong></article><article className="card metric"><div className="metric-top"><span>Cobros</span><DollarSign size={20}/></div><strong>{money(collected)}</strong></article><article className="card metric"><div className="metric-top"><span>Pagos proveedores</span><Wallet size={20}/></div><strong>{money(supplierPaymentsTotal)}</strong></article></div>
