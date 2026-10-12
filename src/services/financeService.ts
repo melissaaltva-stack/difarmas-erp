@@ -21,7 +21,7 @@ export function pendingPayables(payables: Payable[]): number {
 }
 
 export function cashSales(sales: SaleRecord[]): number {
-  return sales.filter(sale => sale.payment !== 'Crédito').reduce((sum, sale) => sum + sale.total, 0);
+  return sales.filter(sale => sale.payment === 'Efectivo').reduce((sum, sale) => sum + sale.total, 0);
 }
 
 export function collectedReceivables(receivables: Receivable[]): number {
