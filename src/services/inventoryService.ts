@@ -1,6 +1,8 @@
 import type { CartItem, Product, PurchaseItem } from '../domain/types';
 
 export function applySaleToInventory(products: Product[], sold: CartItem[]): Product[] {
+  if (!sold.length) throw new Error('La venta debe contener al menos un producto.');
+  if (new Set(sold.map(item => item.id)).size !== sold.length) throw new Error('El carrito contiene productos duplicados.');
   const invalid = sold.find(item => item.qty <= 0 || !Number.isFinite(item.qty));
   if (invalid) throw new Error('La cantidad de venta debe ser mayor que cero.');
 
@@ -17,6 +19,8 @@ export function applySaleToInventory(products: Product[], sold: CartItem[]): Pro
 }
 
 export function applyPurchaseToInventory(products: Product[], items: PurchaseItem[], supplier: string): Product[] {
+  if (!items.length) throw new Error('La compra debe contener al menos un producto.');
+  if (new Set(items.map(item => item.id)).size !== items.length) throw new Error('La compra contiene productos duplicados.');
   const invalid = items.find(item => item.qty <= 0 || !Number.isFinite(item.qty) || item.unitCost < 0 || !Number.isFinite(item.unitCost));
   if (invalid) throw new Error('Cantidad y costo de compra deben ser válidos.');
 
