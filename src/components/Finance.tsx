@@ -41,7 +41,8 @@ export function Finance({sales,purchases,expenses,setExpenses,receivables,setRec
     const cash=transactions.filter(t=>(t.paymentMethod??'Efectivo')==='Efectivo').reduce((total,t)=>total+t.amount,0);
     return sum+Math.max(0,r.paid-recorded)+cash;
   },0);
-  const cashFlow=cashSalesTotal+cashCollections-cashExpenseTotal-cashSupplierPayments-purchases.filter(p=>p.paymentMethod==='Efectivo').reduce((sum,p)=>sum+p.total,0);
+  const cashMovementIn=movements.filter(m=>m.type==='Entrada').reduce((sum,m)=>sum+m.amount,0); const cashMovementOut=movements.filter(m=>m.type==='Salida').reduce((sum,m)=>sum+m.amount,0);
+  const cashFlow=cashSalesTotal+cashCollections+cashMovementIn-cashExpenseTotal-cashSupplierPayments-purchases.filter(p=>p.paymentMethod==='Efectivo').reduce((sum,p)=>sum+p.total,0)-cashMovementOut;
   const today=localDateKey();
   const dayMovementIn=movements.filter(m=>dateKey(m.date)===today&&m.type==='Entrada').reduce((a,m)=>a+m.amount,0); const dayMovementOut=movements.filter(m=>dateKey(m.date)===today&&m.type==='Salida').reduce((a,m)=>a+m.amount,0);
   const daySales=sales.filter(s=>dateKey(s.date)===today&&s.payment==='Efectivo').reduce((a,s)=>a+s.total,0);
