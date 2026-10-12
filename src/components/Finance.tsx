@@ -9,7 +9,7 @@ const validPayment = (value:number, balance:number) => Number.isFinite(value) &&
 const currentMonthKey = (d = new Date()) => localDateKey(d).slice(0,7);
 const isCurrentMonth = (date:string) => (date||'').slice(0,7) === currentMonthKey();
 
-import { sumSales, sumProfit, sumExpenses, pendingReceivables, pendingPayables, cashSales, collectedReceivables, supplierPayments, calculateCashFlow, calculateExpectedCash, createCashClosure, addCashMovement } from '../services/financeService';
+import { sumSales, sumProfit, sumExpenses, pendingReceivables, pendingPayables, cashSales, collectedReceivables, supplierPayments, calculateExpectedCash, createCashClosure, addCashMovement } from '../services/financeService';
 
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
 
