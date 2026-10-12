@@ -1,0 +1,95 @@
+import { useEffect, useMemo, useState } from 'react';
+import type { CartItem, Customer, Expense, InventoryMovement, Module, Payable, Product, PurchaseItem, PurchaseRecord, Receivable, SaleRecord } from '../domain/types';
+import { loadJson, saveJson, loadNumber, saveNumber } from '../utils/storage';
+import { applyPurchaseToInventory, applySaleToInventory } from '../services/inventoryService';
+import { buildSaleRecord, createReceivableFromSale } from '../services/salesService';
+import { createPayableFromPurchase } from '../services/purchaseService';
+import { createInventoryMovementsForPurchase, createInventoryMovementsForSale } from '../services/inventoryMovementService';
+
+const initialProducts: Product[] = [
+  { id: 1, code: '750100000001', name: 'Eutirox 50 mcg', category: 'Medicamentos', laboratory: 'Merck', presentation: 'Caja x 50 tabletas', cost: 250, retail: 330, wholesale: 310, stock: 18, minStock: 8, lot: 'EUT-2607', expiry: '2027-07-31', supplier: 'Distribuidora Nacional' },
+  { id: 2, code: '750100000002', name: 'Neurobión 25,000', category: 'Vitaminas', laboratory: 'Merck', presentation: 'Ampolla', cost: 205, retail: 265, wholesale: 245, stock: 6, minStock: 10, lot: 'NEU-2610', expiry: '2027-10-31', supplier: 'Droguería Central' },
+  { id: 3, code: '750100000003', name: 'Calcio 1,500 mg + D3', category: 'Vitaminas', laboratory: 'Genérico', presentation: 'Frasco', cost: 335.65, retail: 449, wholesale: 420, stock: 14, minStock: 6, lot: 'CAL-2608', expiry: '2028-01-31', supplier: 'Distribuidora Nacional' },
+  { id: 4, code: '750100000004', name: 'Alevian Duo', category: 'Medicamentos', laboratory: 'Asofarma', presentation: 'Caja', cost: 1275, retail: 2550, wholesale: 2200, stock: 3, minStock: 3, lot: 'ALE-2605', expiry: '2027-05-31', supplier: 'Droguería Central' },
+];
+
+export function useErpState() {
+  const [active, setActive] = useState<Module>('dashboard');
+  const [customers,setCustomers]=useState<Customer[]>(()=>loadJson<Customer[]>('difarmas_customers',[]));
+  const [products, setProducts] = useState<Product[]>(() => loadJson<Product[]>('difarmas_products',initialProducts));
+  const [search, setSearch] = useState('');
+  const [monthlyGoal, setMonthlyGoal] = useState(() => loadNumber('difarmas_monthly_goal',100000));
+  const [fixedExpenses, setFixedExpenses] = useState(() => loadNumber('difarmas_fixed_expenses',25000));
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState<Product | null>(null);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [saleType, setSaleType] = useState<'minorista'|'mayorista'>('minorista');
+  const [payment, setPayment] = useState<'Efectivo'|'Transferencia'|'Crédito'>('Efectivo');
+  const [saleSearch, setSaleSearch] = useState('');
+  const [purchaseCart, setPurchaseCart] = useState<PurchaseItem[]>([]);
+  const [purchaseSearch, setPurchaseSearch] = useState('');
+  const [purchaseSupplier, setPurchaseSupplier] = useState('');
+  const [sales, setSales] = useState<SaleRecord[]>(()=>loadJson<SaleRecord[]>('difarmas_sales',[]));
+  const [purchases, setPurchases] = useState<PurchaseRecord[]>(()=>loadJson<PurchaseRecord[]>('difarmas_purchases',[]));
+  const [expenses, setExpenses] = useState<Expense[]>(()=>loadJson<Expense[]>('difarmas_expenses',[]));
+  const [receivables, setReceivables] = useState<Receivable[]>(()=>loadJson<Receivable[]>('difarmas_receivables',[]));
+  const [payables, setPayables] = useState<Payable[]>(()=>loadJson<Payable[]>('difarmas_payables',[]));
+  const [inventoryMovements, setInventoryMovements] = useState<InventoryMovement[]>(()=>loadJson<InventoryMovement[]>('difarmas_inventory_movements',[]));
+
+  useEffect(()=>{saveJson('difarmas_customers',customers)},[customers]);
+  useEffect(()=>{saveJson('difarmas_products',products)},[products]);
+  useEffect(()=>{saveNumber('difarmas_monthly_goal',monthlyGoal)},[monthlyGoal]);
+  useEffect(()=>{saveNumber('difarmas_fixed_expenses',fixedExpenses)},[fixedExpenses]);
+  useEffect(()=>{saveJson('difarmas_sales',sales)},[sales]);
+  useEffect(()=>{saveJson('difarmas_purchases',purchases)},[purchases]);
+  useEffect(()=>{saveJson('difarmas_expenses',expenses)},[expenses]);
+  useEffect(()=>{saveJson('difarmas_receivables',receivables)},[receivables]);
+  useEffect(()=>{saveJson('difarmas_payables',payables)},[payables]);
+  useEffect(()=>{saveJson('difarmas_inventory_movements',inventoryMovements)},[inventoryMovements]);
+
+  const filtered=useMemo(()=>products.filter(p=>[p.code,p.name,p.category,p.laboratory].join(' ').toLowerCase().includes(search.toLowerCase())),[products,search]);
+
+  const recordSale=(sold:CartItem[],customer='',dueDate=''):boolean=>{
+    if (!sold.length || sold.some(item => !Number.isFinite(item.qty) || item.qty <= 0)) return false;
+    if (sold.some(item => !products.some(p => p.id === item.id && p.stock >= item.qty))) return false;
+    let updated: Product[];
+    try { updated = applySaleToInventory(products,sold); } catch { return false; }
+    const sale=buildSaleRecord(sold,payment,saleType,customer,dueDate);
+    setProducts(updated);
+    setInventoryMovements(current=>[...current,...createInventoryMovementsForSale(products,sold,sale.id)]);
+    setSales(current=>[...current,sale]);
+    if(payment==='Crédito') setReceivables(current=>[...current,createReceivableFromSale(sale,customer,dueDate)]);
+    return true;
+  };
+
+  const saveProduct=(product:Product)=>{
+    if (!product.name.trim() || [product.cost,product.retail,product.wholesale,product.stock,product.minStock].some(v=>!Number.isFinite(v)||v<0)) return;
+    if (editing) {
+      const previous = products.find(p=>p.id===editing.id);
+      const saved = {...product,id:editing.id};
+      setProducts(current=>current.map(p=>p.id===editing.id?saved:p));
+      if (previous && previous.stock !== saved.stock) {
+        const difference = saved.stock - previous.stock;
+        setInventoryMovements(current=>[...current,{id:Date.now(),productId:saved.id,productName:saved.name,type:'Ajuste',quantity:Math.abs(difference),stockBefore:previous.stock,stockAfter:saved.stock,unitCost:saved.cost,date:new Date().toISOString(),note:difference>0?'Ajuste de entrada manual':'Ajuste de salida manual'}]);
+      }
+    } else {
+      setProducts(current=>[...current,{...product,id:Date.now()}]);
+    }
+    setEditing(null); setShowForm(false);
+  };
+
+  const receivePurchase=(items:PurchaseItem[],paymentMethod:string,dueDate:string):boolean=>{
+    if (!items.length || items.some(item => !Number.isFinite(item.qty) || item.qty <= 0 || !Number.isFinite(item.unitCost) || item.unitCost < 0)) return false;
+    let updated: Product[];
+    try { updated = applyPurchaseToInventory(products,items,purchaseSupplier); } catch { return false; }
+    const referenceId = Date.now();
+    setProducts(updated);
+    setInventoryMovements(current=>[...current,...createInventoryMovementsForPurchase(products,items,referenceId)]);
+    const total=items.reduce((sum,item)=>sum+item.qty*item.unitCost,0);
+    setPurchases(current=>[{id:referenceId,supplier:purchaseSupplier,total,paymentMethod:paymentMethod as 'Efectivo'|'Transferencia'|'Crédito',date:new Date().toISOString()},...current]);
+    if(paymentMethod==='Crédito') setPayables(current=>[...current,createPayableFromPurchase(items,purchaseSupplier,dueDate)]);
+    return true;
+  };
+
+  return {active,setActive,customers,setCustomers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,purchases,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,filtered,recordSale,saveProduct,receivePurchase};
+}

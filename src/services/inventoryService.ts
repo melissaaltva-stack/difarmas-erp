@@ -1,0 +1,42 @@
+import type { CartItem, Product, PurchaseItem } from '../domain/types';
+
+export function applySaleToInventory(products: Product[], sold: CartItem[]): Product[] {
+  if (!sold.length) throw new Error('La venta debe contener al menos un producto.');
+  if (new Set(sold.map(item => item.id)).size !== sold.length) throw new Error('El carrito contiene productos duplicados.');
+  if (sold.some(item => !products.some(product => product.id === item.id))) throw new Error('No se encontró un producto del carrito en el inventario.');
+  const invalid = sold.find(item => item.qty <= 0 || !Number.isFinite(item.qty));
+  if (invalid) throw new Error('La cantidad de venta debe ser mayor que cero.');
+
+  if (products.some(product => !Number.isFinite(product.stock) || product.stock < 0)) throw new Error('El inventario contiene una existencia inválida.');
+
+  const insufficient = sold.find(item => {
+    const product = products.find(p => p.id === item.id);
+    return !product || item.qty > product.stock;
+  });
+  if (insufficient) throw new Error('Stock insuficiente para el producto seleccionado.');
+
+  return products.map(product => {
+    const item = sold.find(line => line.id === product.id);
+    return item ? { ...product, stock: product.stock - item.qty } : product;
+  });
+}
+
+export function applyPurchaseToInventory(products: Product[], items: PurchaseItem[], supplier: string): Product[] {
+  if (!items.length) throw new Error('La compra debe contener al menos un producto.');
+  if (new Set(items.map(item => item.id)).size !== items.length) throw new Error('La compra contiene productos duplicados.');
+  if (items.some(item => !products.some(product => product.id === item.id))) throw new Error('No se encontró un producto de la compra en el inventario.');
+  const invalid = items.find(item => item.qty <= 0 || !Number.isFinite(item.qty) || item.unitCost < 0 || !Number.isFinite(item.unitCost));
+  if (invalid) throw new Error('Cantidad y costo de compra deben ser válidos.');
+
+  return products.map(product => {
+    const item = items.find(line => line.id === product.id);
+    if (!item) return product;
+    const newStock = product.stock + item.qty;
+    const averageCost = ((product.cost * product.stock) + (item.unitCost * item.qty)) / newStock;
+    return { ...product, stock: newStock, cost: Number(averageCost.toFixed(2)), supplier: supplier.trim() || product.supplier };
+  });
+}
+
+export function purchaseTotal(items: PurchaseItem[]): number {
+  return items.reduce((sum, item) => sum + item.unitCost * item.qty, 0);
+}

@@ -11,3 +11,7 @@
 .alert{display:flex;gap:11px;padding:13px 0;border-bottom:1px solid #eef1f4}.alert:last-child{border-bottom:0}.alert p{margin:4px 0 0;color:#667085;font-size:13px}.dot{width:9px;height:9px;border-radius:50%;margin-top:6px;background:currentColor}.warning{color:#d97706}.danger{color:#dc2626}.info{color:#2563eb}
 .live-bars{height:180px}.live-bars .bar{min-height:4px}.finance-summary{display:grid;gap:14px}.finance-summary>div{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid #eef1f4}.finance-summary span{color:#667085}
 @media (max-width:900px){.dashboard-grid{grid-template-columns:1fr}.goal-head{align-items:flex-start;flex-direction:column}}
+
+
+/* Inventory safeguards */
+.inventory-alerts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.alert-card{display:flex;gap:10px;align-items:flex-start;padding:13px;color:#986515}.alert-card strong,.alert-card small{display:block}.alert-card strong{font-size:12px}.alert-card small{font-size:10px;line-height:1.45;color:#667085;margin-top:4px}.alert-card.danger{color:#b42318}.form-error{font-size:12px;color:#b42318;background:#fff1f0;border:1px solid #fecdca;padding:10px;border-radius:8px;line-height:1.45}.stock.low{background:#fff1f0;color:#b42318}@media(max-width:1000px){.inventory-alerts{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.inventory-alerts{grid-template-columns:1fr}}
