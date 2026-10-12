@@ -6,7 +6,7 @@ export function applySaleToInventory(products: Product[], sold: CartItem[]): Pro
 
   const insufficient = sold.find(item => {
     const product = products.find(p => p.id === item.id);
-    return product && item.qty > product.stock;
+    return !product || item.qty > product.stock;
   });
   if (insufficient) throw new Error('Stock insuficiente para el producto seleccionado.');
 
