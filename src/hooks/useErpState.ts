@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { CartItem, Customer, Expense, InventoryMovement, Module, Payable, Product, PurchaseItem, Receivable, SaleRecord } from '../domain/types';
+import type { CartItem, Customer, Expense, InventoryMovement, Module, Payable, Product, PurchaseItem, PurchaseRecord, Receivable, SaleRecord } from '../domain/types';
 import { loadJson, saveJson, loadNumber, saveNumber } from '../utils/storage';
 import { applyPurchaseToInventory, applySaleToInventory } from '../services/inventoryService';
 import { buildSaleRecord, createReceivableFromSale } from '../services/salesService';
@@ -30,6 +30,7 @@ export function useErpState() {
   const [purchaseSearch, setPurchaseSearch] = useState('');
   const [purchaseSupplier, setPurchaseSupplier] = useState('');
   const [sales, setSales] = useState<SaleRecord[]>(()=>loadJson<SaleRecord[]>('difarmas_sales',[]));
+  const [purchases, setPurchases] = useState<PurchaseRecord[]>(()=>loadJson<PurchaseRecord[]>('difarmas_purchases',[]));
   const [expenses, setExpenses] = useState<Expense[]>(()=>loadJson<Expense[]>('difarmas_expenses',[]));
   const [receivables, setReceivables] = useState<Receivable[]>(()=>loadJson<Receivable[]>('difarmas_receivables',[]));
   const [payables, setPayables] = useState<Payable[]>(()=>loadJson<Payable[]>('difarmas_payables',[]));
@@ -40,6 +41,7 @@ export function useErpState() {
   useEffect(()=>{saveNumber('difarmas_monthly_goal',monthlyGoal)},[monthlyGoal]);
   useEffect(()=>{saveNumber('difarmas_fixed_expenses',fixedExpenses)},[fixedExpenses]);
   useEffect(()=>{saveJson('difarmas_sales',sales)},[sales]);
+  useEffect(()=>{saveJson('difarmas_purchases',purchases)},[purchases]);
   useEffect(()=>{saveJson('difarmas_expenses',expenses)},[expenses]);
   useEffect(()=>{saveJson('difarmas_receivables',receivables)},[receivables]);
   useEffect(()=>{saveJson('difarmas_payables',payables)},[payables]);
@@ -83,9 +85,11 @@ export function useErpState() {
     const referenceId = Date.now();
     setProducts(updated);
     setInventoryMovements(current=>[...current,...createInventoryMovementsForPurchase(products,items,referenceId)]);
+    const total=items.reduce((sum,item)=>sum+item.qty*item.unitCost,0);
+    setPurchases(current=>[{id:referenceId,supplier:purchaseSupplier,total,paymentMethod:paymentMethod as 'Efectivo'|'Transferencia'|'Crédito',date:new Date().toISOString()},...current]);
     if(paymentMethod==='Crédito') setPayables(current=>[...current,createPayableFromPurchase(items,purchaseSupplier,dueDate)]);
     return true;
   };
 
-  return {active,setActive,customers,setCustomers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,filtered,recordSale,saveProduct,receivePurchase};
+  return {active,setActive,customers,setCustomers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,purchases,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,filtered,recordSale,saveProduct,receivePurchase};
 }
