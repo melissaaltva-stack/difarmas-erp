@@ -19,7 +19,9 @@ export function Finance({sales,purchases,expenses,setExpenses,receivables,setRec
   const [opening,setOpening]=useState(0); const [counted,setCounted]=useState(0); const [note,setNote]=useState('');
   const [closures,setClosures]=useState<CashClosure[]>(()=>{try{const s=localStorage.getItem('difarmas_cash_closures');return s?JSON.parse(s):[]}catch{return []}});
   const [movements,setMovements]=useState<CashMovement[]>(()=>{try{const s=localStorage.getItem('difarmas_cash_movements');return s?JSON.parse(s):[]}catch{return []}});
-  const [paymentTransactions,setPaymentTransactions]=useState<PaymentTransaction[]>(()=>{try{const s=localStorage.getItem('difarmas_payment_transactions');return s?JSON.parse(s):[]}catch{return []}});\n  const paymentLocks=useRef<Set<string>>(new Set());\n  useEffect(()=>{paymentLocks.current.clear();},[receivables,payables,paymentTransactions]);
+  const [paymentTransactions,setPaymentTransactions]=useState<PaymentTransaction[]>(()=>{try{const s=localStorage.getItem('difarmas_payment_transactions');return s?JSON.parse(s):[]}catch{return []}});
+  const paymentLocks=useRef<Set<string>>(new Set());
+  useEffect(()=>{paymentLocks.current.clear();},[receivables,payables,paymentTransactions]);
   useEffect(()=>{localStorage.setItem('difarmas_cash_closures',JSON.stringify(closures))},[closures]);
   useEffect(()=>{localStorage.setItem('difarmas_cash_movements',JSON.stringify(movements))},[movements]);
   useEffect(()=>{localStorage.setItem('difarmas_payment_transactions',JSON.stringify(paymentTransactions))},[paymentTransactions]);
