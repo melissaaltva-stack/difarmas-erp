@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CartItem, Customer, Expense, InventoryMovement, Module, Payable, Product, PurchaseItem, PurchaseRecord, Receivable, SaleRecord } from '../domain/types';
 import { loadJson, saveJson, loadNumber, saveNumber } from '../utils/storage';
 import { applyPurchaseToInventory, applySaleToInventory } from '../services/inventoryService';
@@ -35,6 +35,11 @@ export function useErpState() {
   const [receivables, setReceivables] = useState<Receivable[]>(()=>loadJson<Receivable[]>('difarmas_receivables',[]));
   const [payables, setPayables] = useState<Payable[]>(()=>loadJson<Payable[]>('difarmas_payables',[]));
   const [inventoryMovements, setInventoryMovements] = useState<InventoryMovement[]>(()=>loadJson<InventoryMovement[]>('difarmas_inventory_movements',[]));
+  const saleInProgress = useRef(false);
+  const purchaseInProgress = useRef(false);
+
+  useEffect(()=>{saleInProgress.current=false},[sales]);
+  useEffect(()=>{purchaseInProgress.current=false},[purchases]);
 
   useEffect(()=>{saveJson('difarmas_customers',customers)},[customers]);
   useEffect(()=>{saveJson('difarmas_products',products)},[products]);
@@ -50,10 +55,12 @@ export function useErpState() {
   const filtered=useMemo(()=>products.filter(p=>[p.code,p.name,p.category,p.laboratory].join(' ').toLowerCase().includes(search.toLowerCase())),[products,search]);
 
   const recordSale=(sold:CartItem[],customer='',dueDate=''):boolean=>{
+    if (saleInProgress.current) return false;
     if (!sold.length || sold.some(item => !Number.isFinite(item.qty) || item.qty <= 0)) return false;
     if (sold.some(item => !products.some(p => p.id === item.id && p.stock >= item.qty))) return false;
     let updated: Product[];
     try { updated = applySaleToInventory(products,sold); } catch { return false; }
+    saleInProgress.current=true;
     const sale=buildSaleRecord(sold,payment,saleType,customer,dueDate);
     setProducts(updated);
     setInventoryMovements(current=>[...current,...createInventoryMovementsForSale(products,sold,sale.id)]);
@@ -79,9 +86,11 @@ export function useErpState() {
   };
 
   const receivePurchase=(items:PurchaseItem[],paymentMethod:string,dueDate:string):boolean=>{
+    if (purchaseInProgress.current) return false;
     if (!items.length || items.some(item => !Number.isFinite(item.qty) || item.qty <= 0 || !Number.isFinite(item.unitCost) || item.unitCost < 0)) return false;
     let updated: Product[];
     try { updated = applyPurchaseToInventory(products,items,purchaseSupplier); } catch { return false; }
+    purchaseInProgress.current=true;
     const referenceId = Date.now();
     setProducts(updated);
     setInventoryMovements(current=>[...current,...createInventoryMovementsForPurchase(products,items,referenceId)]);
