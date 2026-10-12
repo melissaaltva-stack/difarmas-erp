@@ -12,6 +12,11 @@ export function sumExpenses(expenses: Expense[]): number {
   return expenses.reduce((sum, expense) => sum + expense.amount, 0);
 }
 
+// Legacy expenses without a payment method are treated as cash for compatibility.
+export function cashExpenses(expenses: Expense[]): number {
+  return expenses.filter(expense => (expense.paymentMethod ?? 'Efectivo') === 'Efectivo').reduce((sum, expense) => sum + expense.amount, 0);
+}
+
 export function pendingReceivables(receivables: Receivable[]): number {
   return receivables.reduce((sum, item) => sum + Math.max(0, item.total - item.paid), 0);
 }
