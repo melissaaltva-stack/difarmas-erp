@@ -63,6 +63,7 @@ export function createCashClosure(
   counted: number,
   note: string,
   now = new Date(),
+  purchasesCash = 0,
 ): CashClosure {
   return {
     id: Date.now(),
@@ -72,6 +73,7 @@ export function createCashClosure(
     collections,
     expenses,
     supplierPayments: supplierPaymentsValue,
+    purchasesCash,
     expected,
     counted,
     difference: counted - expected,
