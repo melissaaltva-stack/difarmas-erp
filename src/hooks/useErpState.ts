@@ -61,7 +61,18 @@ export function useErpState() {
   };
 
   const saveProduct=(product:Product)=>{
-    setProducts(current=>editing?current.map(p=>p.id===product.id?product:p):[...current,{...product,id:Date.now()}]);
+    if (!product.name.trim() || [product.cost,product.retail,product.wholesale,product.stock,product.minStock].some(v=>!Number.isFinite(v)||v<0)) return;
+    if (editing) {
+      const previous = products.find(p=>p.id===editing.id);
+      const saved = {...product,id:editing.id};
+      setProducts(current=>current.map(p=>p.id===editing.id?saved:p));
+      if (previous && previous.stock !== saved.stock) {
+        const difference = saved.stock - previous.stock;
+        setInventoryMovements(current=>[...current,{id:Date.now(),productId:saved.id,productName:saved.name,type:'Ajuste',quantity:Math.abs(difference),stockBefore:previous.stock,stockAfter:saved.stock,unitCost:saved.cost,date:new Date().toISOString(),note:difference>0?'Ajuste de entrada manual':'Ajuste de salida manual'}]);
+      }
+    } else {
+      setProducts(current=>[...current,{...product,id:Date.now()}]);
+    }
     setEditing(null); setShowForm(false);
   };
 
