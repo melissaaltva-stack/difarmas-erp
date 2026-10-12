@@ -28,7 +28,13 @@ export function Finance({sales,purchases,expenses,setExpenses,receivables,setRec
   const salesTotal=sumSales(sales); const profit=sumProfit(sales); const expenseTotal=sumExpenses(expenses);
   const receivablePending=pendingReceivables(receivables); const payablePending=pendingPayables(payables);
   const cashSalesTotal=cashSales(sales); const collected=collectedReceivables(receivables); const supplierPaymentsTotal=supplierPayments(payables);
-  const cashFlow=calculateCashFlow(sales,receivables,expenses,payables)-purchases.filter(p=>p.paymentMethod!=='Crédito').reduce((sum,p)=>sum+p.total,0);
+  const cashCollections=paymentTransactions.length
+    ? paymentTransactions.filter(t=>t.type==='Cobro'&&(t.paymentMethod??'Efectivo')==='Efectivo').reduce((sum,t)=>sum+t.amount,0)
+    : collectedReceivables(receivables);
+  const cashSupplierPayments=paymentTransactions.length
+    ? paymentTransactions.filter(t=>t.type==='Pago proveedor'&&(t.paymentMethod??'Efectivo')==='Efectivo').reduce((sum,t)=>sum+t.amount,0)
+    : supplierPayments(payables);
+  const cashFlow=cashSalesTotal+cashCollections-expenseTotal-cashSupplierPayments-purchases.filter(p=>p.paymentMethod==='Efectivo').reduce((sum,p)=>sum+p.total,0);
   const today=localDateKey();
   const dayMovementIn=movements.filter(m=>dateKey(m.date)===today&&m.type==='Entrada').reduce((a,m)=>a+m.amount,0); const dayMovementOut=movements.filter(m=>dateKey(m.date)===today&&m.type==='Salida').reduce((a,m)=>a+m.amount,0);
   const daySales=sales.filter(s=>dateKey(s.date)===today&&s.payment==='Efectivo').reduce((a,s)=>a+s.total,0);
