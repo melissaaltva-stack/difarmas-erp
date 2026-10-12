@@ -47,12 +47,17 @@ export function useErpState() {
 
   const filtered=useMemo(()=>products.filter(p=>[p.code,p.name,p.category,p.laboratory].join(' ').toLowerCase().includes(search.toLowerCase())),[products,search]);
 
-  const recordSale=(sold:CartItem[],customer='',dueDate='')=>{
+  const recordSale=(sold:CartItem[],customer='',dueDate=''):boolean=>{
+    if (!sold.length || sold.some(item => !Number.isFinite(item.qty) || item.qty <= 0)) return false;
+    if (sold.some(item => !products.some(p => p.id === item.id && p.stock >= item.qty))) return false;
+    let updated: Product[];
+    try { updated = applySaleToInventory(products,sold); } catch { return false; }
     const sale=buildSaleRecord(sold,payment,saleType,customer,dueDate);
-    setProducts(current=>applySaleToInventory(current,sold));
+    setProducts(updated);
     setInventoryMovements(current=>[...current,...createInventoryMovementsForSale(products,sold,sale.id)]);
     setSales(current=>[...current,sale]);
     if(payment==='Crédito') setReceivables(current=>[...current,createReceivableFromSale(sale,customer,dueDate)]);
+    return true;
   };
 
   const saveProduct=(product:Product)=>{
@@ -60,11 +65,15 @@ export function useErpState() {
     setEditing(null); setShowForm(false);
   };
 
-  const receivePurchase=(items:PurchaseItem[],paymentMethod:string,dueDate:string)=>{
+  const receivePurchase=(items:PurchaseItem[],paymentMethod:string,dueDate:string):boolean=>{
+    if (!items.length || items.some(item => !Number.isFinite(item.qty) || item.qty <= 0 || !Number.isFinite(item.unitCost) || item.unitCost < 0)) return false;
+    let updated: Product[];
+    try { updated = applyPurchaseToInventory(products,items,purchaseSupplier); } catch { return false; }
     const referenceId = Date.now();
-    setProducts(current=>applyPurchaseToInventory(current,items,purchaseSupplier));
+    setProducts(updated);
     setInventoryMovements(current=>[...current,...createInventoryMovementsForPurchase(products,items,referenceId)]);
     if(paymentMethod==='Crédito') setPayables(current=>[...current,createPayableFromPurchase(items,purchaseSupplier,dueDate)]);
+    return true;
   };
 
   return {active,setActive,customers,setCustomers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,filtered,recordSale,saveProduct,receivePurchase};
