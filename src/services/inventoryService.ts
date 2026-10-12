@@ -31,7 +31,7 @@ export function applyPurchaseToInventory(products: Product[], items: PurchaseIte
     if (!item) return product;
     const newStock = product.stock + item.qty;
     const averageCost = ((product.cost * product.stock) + (item.unitCost * item.qty)) / newStock;
-    return { ...product, stock: newStock, cost: Number(averageCost.toFixed(2)), supplier: supplier || product.supplier };
+    return { ...product, stock: newStock, cost: Number(averageCost.toFixed(2)), supplier: supplier.trim() || product.supplier };
   });
 }
 
