@@ -500,7 +500,7 @@ function SmartAlerts({products,sales,receivables,payables,monthlyGoal}:{products
   const low=products.filter(p=>p.stock<=p.minStock);
   const expiring=products.filter(p=>{const d=(new Date(p.expiry+'T00:00:00').getTime()-now.getTime())/86400000;return d>=0&&d<=90;});
   const overdue=receivables.filter(r=>r.paid<r.total&&r.dueDate<today);
-  const due=payables.filter(r=>r.paid<r.total&&r.dueDate<=new Date(now.getTime()+7*86400000).toISOString().slice(0,10));
+  const due=payables.filter(r=>r.paid<r.total&&r.dueDate<=localDateKey(new Date(now.getTime()+7*86400000)));
   const sold=useMemo(() => { const m=new Map<number,number>(); sales.forEach(s => (s.items || []).forEach(i => m.set(i.productId,(m.get(i.productId)||0)+i.qty))); return m; },[sales]);
   const noSales=products.filter(p=>p.stock>p.minStock&&(sold.get(p.id)||0)===0);
   const alerts=[['danger','Meta diaria',required>monthlyGoal/26?money(required)+' por día para alcanzar la meta.':'Ritmo compatible con la meta de referencia.'],['warning','Stock bajo',low.length?low.length+' producto(s) requieren reposición.':'Sin productos bajo mínimo.'],['warning','Próximos a vencer',expiring.length?expiring.length+' producto(s) vencen en 90 días o menos.':'Sin vencimientos próximos.'],['danger','Cobros vencidos',overdue.length?overdue.length+' cuenta(s) están vencidas.':'Sin cuentas vencidas.'],['warning','Pagos próximos',due.length?due.length+' cuenta(s) vencen en 7 días.':'Sin pagos próximos.'],['info','Baja rotación',noSales.length?noSales.length+' producto(s) no registran ventas detalladas.':'Sin alertas de baja rotación.']];
