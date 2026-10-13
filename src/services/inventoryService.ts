@@ -4,10 +4,10 @@ export function applySaleToInventory(products: Product[], sold: CartItem[]): Pro
   if (!sold.length) throw new Error('La venta debe contener al menos un producto.');
   if (new Set(sold.map(item => item.id)).size !== sold.length) throw new Error('El carrito contiene productos duplicados.');
   if (sold.some(item => !products.some(product => product.id === item.id))) throw new Error('No se encontró un producto del carrito en el inventario.');
-  const invalid = sold.find(item => item.qty <= 0 || !Number.isFinite(item.qty));
-  if (invalid) throw new Error('La cantidad de venta debe ser mayor que cero.');
+  const invalid = sold.find(item => !Number.isFinite(item.qty) || item.qty <= 0 || !Number.isFinite(item.price) || item.price < 0 || !Number.isFinite(item.cost) || item.cost < 0 || !Number.isFinite(item.price * item.qty) || !Number.isFinite(item.cost * item.qty));
+  if (invalid) throw new Error('Cantidad, precio y costo de venta deben ser válidos.');
 
-  if (products.some(product => !Number.isFinite(product.stock) || product.stock < 0)) throw new Error('El inventario contiene una existencia inválida.');
+  if (products.some(product => !Number.isFinite(product.stock) || product.stock < 0 || !Number.isFinite(product.cost) || product.cost < 0)) throw new Error('El inventario contiene una existencia o costo inválido.');
 
   const insufficient = sold.find(item => {
     const product = products.find(p => p.id === item.id);
@@ -25,8 +25,9 @@ export function applyPurchaseToInventory(products: Product[], items: PurchaseIte
   if (!items.length) throw new Error('La compra debe contener al menos un producto.');
   if (new Set(items.map(item => item.id)).size !== items.length) throw new Error('La compra contiene productos duplicados.');
   if (items.some(item => !products.some(product => product.id === item.id))) throw new Error('No se encontró un producto de la compra en el inventario.');
-  const invalid = items.find(item => item.qty <= 0 || !Number.isFinite(item.qty) || item.unitCost < 0 || !Number.isFinite(item.unitCost));
+  const invalid = items.find(item => !Number.isFinite(item.qty) || item.qty <= 0 || !Number.isFinite(item.unitCost) || item.unitCost < 0 || !Number.isFinite(item.qty * item.unitCost));
   if (invalid) throw new Error('Cantidad y costo de compra deben ser válidos.');
+  if (products.some(product => !Number.isFinite(product.stock) || product.stock < 0 || !Number.isFinite(product.cost) || product.cost < 0)) throw new Error('El inventario contiene una existencia o costo inválido.');
 
   return products.map(product => {
     const item = items.find(line => line.id === product.id);

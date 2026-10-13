@@ -28,6 +28,11 @@ describe('inventoryService', () => {
     expect(() => applySaleToInventory([product], [cartItem(2), cartItem(2)])).toThrow(/duplicados/);
   });
 
+  it('rejects invalid sale prices and costs', () => {
+    expect(() => applySaleToInventory([product], [{ ...cartItem(1), price: Number.NaN }])).toThrow(/precio y costo/);
+    expect(() => applySaleToInventory([{ ...product, cost: -1 }], [cartItem(1)])).toThrow(/costo inválido/);
+  });
+
   it('updates stock and weighted-average cost after a purchase', () => {
     const result = applyPurchaseToInventory([product], [purchaseItem(5, 20)], 'Proveedor B')[0];
     expect(result.stock).toBe(10);
@@ -37,5 +42,13 @@ describe('inventoryService', () => {
 
   it('rejects purchase items that are not in inventory', () => {
     expect(() => applyPurchaseToInventory([product], [{ ...purchaseItem(1, 10), id: 99 }], 'Proveedor')).toThrow(/No se encontró/);
+  });
+
+  it('rejects purchases when existing inventory cost is invalid', () => {
+    expect(() => applyPurchaseToInventory([{ ...product, cost: Number.NaN }], [purchaseItem(1, 10)], 'Proveedor')).toThrow(/costo inválido/);
+  });
+
+  it('rejects purchase totals that overflow to infinity', () => {
+    expect(() => applyPurchaseToInventory([product], [purchaseItem(Number.MAX_VALUE, Number.MAX_VALUE)], 'Proveedor')).toThrow(/Cantidad y costo/);
   });
 });
