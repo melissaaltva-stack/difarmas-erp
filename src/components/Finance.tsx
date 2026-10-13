@@ -6,7 +6,7 @@ import { saveJson } from '../utils/storage';
 import { dateKey, localDateKey } from '../utils/dates';
 const validPayment = (value:number, balance:number) => Number.isFinite(value) && value > 0 && value <= balance;
 const currentMonthKey = (d = new Date()) => localDateKey(d).slice(0,7);
-const isCurrentMonth = (date:string) => (date||'').slice(0,7) === currentMonthKey();
+const isCurrentMonth = (date:string) => dateKey(date).slice(0,7) === currentMonthKey();
 
 import { sumSales, sumProfit, sumExpenses, cashExpenses, cashMovementTotals, pendingReceivables, pendingPayables, cashSales, collectedReceivables, supplierPayments, calculateExpectedCash, createCashClosure, addCashMovement } from '../services/financeService';
 
