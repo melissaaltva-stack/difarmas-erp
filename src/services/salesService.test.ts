@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { CartItem, SaleRecord } from '../domain/types';
+import type { CartItem } from '../domain/types';
 import { buildSaleRecord, createReceivableFromSale } from './salesService';
 
 const item = (overrides: Partial<CartItem> = {}): CartItem => ({
@@ -37,7 +37,7 @@ describe('salesService', () => {
     expect(sale.cost).toBe(40);
     expect(sale.profit).toBe(15);
     expect(sale.items).toHaveLength(2);
-    expect(sale.items[0]).toMatchObject({ productId: 1, qty: 2, revenue: 30, cost: 20, profit: 10 });
+    expect(sale.items?.[0]).toMatchObject({ productId: 1, qty: 2, revenue: 30, cost: 20, profit: 10 });
     expect(sale.customer).toBeUndefined();
     expect(sale.dueDate).toBeUndefined();
   });
