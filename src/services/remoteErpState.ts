@@ -54,27 +54,84 @@ function normalizeSnapshot(value: unknown): ErpSnapshot {
   };
 }
 
+// Keep the last server revision observed by this browser session. Conditional
+// updates prevent an older tab/device from silently replacing a newer snapshot.
+const lastSeenRevision = new Map<string, string>();
+
 export async function loadErpSnapshot(userId: string): Promise<ErpSnapshot | null> {
   const client = requireSupabase();
   const { data, error } = await client
     .from('erp_state')
-    .select('user_id,state')
+    .select('user_id,state,updated_at')
     .eq('user_id', userId)
     .maybeSingle();
 
   if (error) throw error;
-  if (!data) return null;
+  if (!data) {
+    lastSeenRevision.delete(userId);
+    return null;
+  }
   if (data.user_id !== userId) throw new Error('La cuenta no coincide con el propietario de los datos.');
+  if (typeof data.updated_at !== 'string') throw new Error('No se pudo verificar la versión de los datos en Supabase.');
+  lastSeenRevision.set(userId, data.updated_at);
   return normalizeSnapshot(data.state);
 }
 
-export async function saveErpSnapshot(userId: string, snapshot: ErpSnapshot): Promise<void> {
+const saveQueues = new Map<string, Promise<void>>();
+
+async function saveErpSnapshotNow(userId: string, snapshot: ErpSnapshot): Promise<void> {
   const client = requireSupabase();
-  const { error } = await client
+  const expectedRevision = lastSeenRevision.get(userId);
+
+  // Ensure each successful write changes the revision, even when two saves
+  // happen within the same millisecond.
+  const nextRevision = new Date(Math.max(Date.now(), expectedRevision ? Date.parse(expectedRevision) + 1 : 0)).toISOString();
+  const payload = { user_id: userId, state: snapshot, updated_at: nextRevision };
+
+  if (!expectedRevision) {
+    // First save must be insert-only. An upsert here could overwrite a record
+    // created by another device after this browser's initial read.
+    const { data, error } = await client
+      .from('erp_state')
+      .insert(payload)
+      .select('updated_at')
+      .single();
+    if (error) {
+      if (error.code === '23505') {
+        throw new Error('Los datos fueron creados desde otra sesión. Recarga el ERP para sincronizar antes de guardar.');
+      }
+      throw error;
+    }
+    if (typeof data?.updated_at !== 'string') throw new Error('Supabase no devolvió la versión guardada.');
+    lastSeenRevision.set(userId, data.updated_at);
+    return;
+  }
+
+  const { data, error } = await client
     .from('erp_state')
-    .upsert(
-      { user_id: userId, state: snapshot, updated_at: new Date().toISOString() },
-      { onConflict: 'user_id' },
-    );
+    .update({ state: snapshot, updated_at: nextRevision })
+    .eq('user_id', userId)
+    .eq('updated_at', expectedRevision)
+    .select('updated_at')
+    .maybeSingle();
+
   if (error) throw error;
+  if (!data || typeof data.updated_at !== 'string') {
+    throw new Error('Se detectaron cambios más recientes desde otra sesión. No se sobrescribieron; recarga el ERP antes de continuar.');
+  }
+  lastSeenRevision.set(userId, data.updated_at);
+}
+
+
+// Serialize saves from this browser session. The revision check still protects
+// against other tabs/devices, while this queue prevents this tab's own autosaves
+// from racing each other.
+export function saveErpSnapshot(userId: string, snapshot: ErpSnapshot): Promise<void> {
+  const previous = saveQueues.get(userId) ?? Promise.resolve();
+  const next = previous.catch(() => undefined).then(() => saveErpSnapshotNow(userId, snapshot));
+  saveQueues.set(userId, next);
+  void next.finally(() => {
+    if (saveQueues.get(userId) === next) saveQueues.delete(userId);
+  }).catch(() => undefined);
+  return next;
 }
