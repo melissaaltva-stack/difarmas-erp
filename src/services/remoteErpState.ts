@@ -77,7 +77,9 @@ export async function loadErpSnapshot(userId: string): Promise<ErpSnapshot | nul
   return normalizeSnapshot(data.state);
 }
 
-export async function saveErpSnapshot(userId: string, snapshot: ErpSnapshot): Promise<void> {
+const saveQueues = new Map<string, Promise<void>>();
+
+async function saveErpSnapshotNow(userId: string, snapshot: ErpSnapshot): Promise<void> {
   const client = requireSupabase();
   const expectedRevision = lastSeenRevision.get(userId);
 
@@ -118,4 +120,18 @@ export async function saveErpSnapshot(userId: string, snapshot: ErpSnapshot): Pr
     throw new Error('Se detectaron cambios más recientes desde otra sesión. No se sobrescribieron; recarga el ERP antes de continuar.');
   }
   lastSeenRevision.set(userId, data.updated_at);
+}
+
+
+// Serialize saves from this browser session. The revision check still protects
+// against other tabs/devices, while this queue prevents this tab's own autosaves
+// from racing each other.
+export function saveErpSnapshot(userId: string, snapshot: ErpSnapshot): Promise<void> {
+  const previous = saveQueues.get(userId) ?? Promise.resolve();
+  const next = previous.catch(() => undefined).then(() => saveErpSnapshotNow(userId, snapshot));
+  saveQueues.set(userId, next);
+  void next.finally(() => {
+    if (saveQueues.get(userId) === next) saveQueues.delete(userId);
+  }).catch(() => undefined);
+  return next;
 }
