@@ -1,5 +1,5 @@
 name: CI
-# Production build verification for the DIFARMÁS ERP refactor, CRM, finance, inventory safeguards and stock-adjustment history and CRM prop typing.
+# Production build verification and dependency security audit for DIFARMÁS ERP.
 run-name: Build DIFARMÁS ERP #${{ github.run_number }}
 
 on:
@@ -17,6 +17,25 @@ jobs:
         with:
           node-version: 20
       - run: npm install
+      - name: Report dependency vulnerabilities
+        shell: bash
+        run: |
+          npm audit --json > npm-audit-report.json || true
+          node --input-type=commonjs <<'NODE'
+          const fs = require('fs');
+          const report = JSON.parse(fs.readFileSync('npm-audit-report.json', 'utf8'));
+          const counts = report.metadata?.vulnerabilities ?? {};
+          console.log('npm audit summary:', JSON.stringify(counts));
+          for (const [name, item] of Object.entries(report.vulnerabilities ?? {})) {
+            console.log(JSON.stringify({
+              package: name,
+              severity: item.severity,
+              direct: item.isDirect,
+              range: item.range,
+              fixAvailable: item.fixAvailable,
+              via: item.via.map(v => typeof v === 'string' ? v : {name: v.name, title: v.title, range: v.range, url: v.url})
+            }));
+          }
+          NODE
       - run: npm run build
       - run: npm test
-
