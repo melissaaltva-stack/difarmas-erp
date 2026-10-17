@@ -52,6 +52,15 @@ describe('remoteErpState', () => {
     await expect(loadErpSnapshot('user-1')).rejects.toThrow(/products.*no es válido/);
   });
 
+  it('rejects malformed optional finance arrays instead of silently dropping them', async () => {
+    mocks.query.maybeSingle.mockResolvedValue({
+      data: { user_id: 'user-1', updated_at: '2026-10-17T12:00:00.000Z', state: { ...emptySnapshot, cashMovements: 'invalid' } },
+      error: null,
+    });
+    const { loadErpSnapshot } = await import('./remoteErpState');
+    await expect(loadErpSnapshot('user-1')).rejects.toThrow(/cashMovements.*no es válido/);
+  });
+
   it('rejects a snapshot that belongs to a different account', async () => {
     mocks.query.maybeSingle.mockResolvedValue({
       data: { user_id: 'other-user', updated_at: '2026-10-17T12:00:00.000Z', state: emptySnapshot },
