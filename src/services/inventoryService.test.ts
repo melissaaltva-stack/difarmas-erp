@@ -51,4 +51,14 @@ describe('inventoryService', () => {
   it('rejects purchase totals that overflow to infinity', () => {
     expect(() => applyPurchaseToInventory([product], [purchaseItem(Number.MAX_VALUE, Number.MAX_VALUE)], 'Proveedor')).toThrow(/Cantidad y costo/);
   });
+
+  it('rejects a purchase that would overflow the resulting stock', () => {
+    const highStock = { ...product, stock: Number.MAX_VALUE, cost: 0 };
+    expect(() => applyPurchaseToInventory([highStock], [purchaseItem(Number.MAX_VALUE, 0)], 'Proveedor')).toThrow(/fuera de rango/);
+  });
+
+  it('rejects a purchase whose inventory valuation overflows', () => {
+    const highStock = { ...product, stock: Number.MAX_VALUE, cost: 10 };
+    expect(() => applyPurchaseToInventory([highStock], [purchaseItem(1, 10)], 'Proveedor')).toThrow(/fuera de rango/);
+  });
 });
