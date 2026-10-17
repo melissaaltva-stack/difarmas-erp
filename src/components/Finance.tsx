@@ -2,7 +2,6 @@ import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Activity, AlertTriangle, DollarSign, ShoppingCart, TrendingUp, Wallet, Search, Plus, Pencil, Package, History, Target, BrainCircuit, Scale, SlidersHorizontal, ShieldCheck, CheckCircle2, Clock3, ListChecks, ReceiptText, WalletCards, ArrowUpDown, Brain, LineChart, BarChart3, Megaphone, ShoppingBag, Award, Boxes, Users, X, Calculator, LayoutDashboard } from 'lucide-react';
 import type { SaleRecord, Expense, Receivable, Payable, PurchaseRecord, CashClosure, CashMovement, PaymentTransaction } from '../domain/types';
-import { saveJson } from '../utils/storage';
 import { dateKey, localDateKey } from '../utils/dates';
 const validPayment = (value:number, balance:number) => Number.isFinite(value) && value > 0 && value <= balance;
 const currentMonthKey = (d = new Date()) => localDateKey(d).slice(0,7);
@@ -12,19 +11,15 @@ import { sumSales, sumProfit, sumExpenses, cashExpenses, cashMovementTotals, pen
 
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
 
-export function Finance({sales,purchases,expenses,setExpenses,receivables,setReceivables,payables,setPayables}:{sales:SaleRecord[];purchases:PurchaseRecord[];expenses:Expense[];setExpenses:(e:Expense[])=>void;receivables:Receivable[];setReceivables:(e:Receivable[])=>void;payables:Payable[];setPayables:(e:Payable[])=>void}) {
+export function Finance({sales,purchases,expenses,setExpenses,receivables,setReceivables,payables,setPayables,closures,setClosures,movements,setMovements,paymentTransactions,setPaymentTransactions}:{sales:SaleRecord[];purchases:PurchaseRecord[];expenses:Expense[];setExpenses:(e:Expense[])=>void;receivables:Receivable[];setReceivables:(e:Receivable[])=>void;payables:Payable[];setPayables:(e:Payable[])=>void;closures:CashClosure[];setClosures:React.Dispatch<React.SetStateAction<CashClosure[]>>;movements:CashMovement[];setMovements:React.Dispatch<React.SetStateAction<CashMovement[]>>;paymentTransactions:PaymentTransaction[];setPaymentTransactions:React.Dispatch<React.SetStateAction<PaymentTransaction[]>>}) {
   const [description,setDescription]=useState(''); const [amount,setAmount]=useState(0); const [category,setCategory]=useState('Operación'); const [expensePaymentMethod,setExpensePaymentMethod]=useState<'Efectivo'|'Transferencia'>('Efectivo');
   const [paymentAmount,setPaymentAmount]=useState<Record<number,number>>({}); const [supplierPaymentMethod,setSupplierPaymentMethod]=useState<'Efectivo'|'Transferencia'>('Efectivo'); const [collectionPaymentMethod,setCollectionPaymentMethod]=useState<'Efectivo'|'Transferencia'>('Efectivo');
   const [opening,setOpening]=useState(0); const [counted,setCounted]=useState(0); const [note,setNote]=useState('');
-  const [closures,setClosures]=useState<CashClosure[]>(()=>{try{const s=localStorage.getItem('difarmas_cash_closures');return s?JSON.parse(s):[]}catch{return []}});
-  const [movements,setMovements]=useState<CashMovement[]>(()=>{try{const s=localStorage.getItem('difarmas_cash_movements');return s?JSON.parse(s):[]}catch{return []}});
-  const [paymentTransactions,setPaymentTransactions]=useState<PaymentTransaction[]>(()=>{try{const s=localStorage.getItem('difarmas_payment_transactions');return s?JSON.parse(s):[]}catch{return []}});
+
   const paymentLocks=useRef<Set<string>>(new Set()); const closingRef=useRef(false); const [isClosing,setIsClosing]=useState(false);
   useEffect(()=>{paymentLocks.current.clear();},[receivables,payables,paymentTransactions]);
   useEffect(()=>{closingRef.current=false;setIsClosing(false);},[closures]);
-  useEffect(()=>{localStorage.setItem('difarmas_cash_closures',JSON.stringify(closures))},[closures]);
-  useEffect(()=>{localStorage.setItem('difarmas_cash_movements',JSON.stringify(movements))},[movements]);
-  useEffect(()=>{localStorage.setItem('difarmas_payment_transactions',JSON.stringify(paymentTransactions))},[paymentTransactions]);
+
   const salesTotal=sumSales(sales); const profit=sumProfit(sales); const expenseTotal=sumExpenses(expenses); const cashExpenseTotal=cashExpenses(expenses);
   const receivablePending=pendingReceivables(receivables); const payablePending=pendingPayables(payables);
   const cashSalesTotal=cashSales(sales); const collected=collectedReceivables(receivables); const supplierPaymentsTotal=supplierPayments(payables);

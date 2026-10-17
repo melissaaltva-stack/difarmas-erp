@@ -1,5 +1,5 @@
 import type {
-  Customer, Expense, InventoryMovement, Payable, Product, PurchaseRecord,
+  CashClosure, CashMovement, Customer, Expense, InventoryMovement, Payable, PaymentTransaction, Product, PurchaseRecord,
   Receivable, SaleRecord,
 } from '../domain/types';
 import { requireSupabase } from './supabaseClient';
@@ -15,6 +15,9 @@ export type ErpSnapshot = {
   inventoryMovements: InventoryMovement[];
   monthlyGoal: number;
   fixedExpenses: number;
+  cashClosures?: CashClosure[];
+  cashMovements?: CashMovement[];
+  paymentTransactions?: PaymentTransaction[];
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -45,6 +48,9 @@ function normalizeSnapshot(value: unknown): ErpSnapshot {
     inventoryMovements: (value.inventoryMovements ?? []) as InventoryMovement[],
     monthlyGoal,
     fixedExpenses,
+    cashClosures: Array.isArray(value.cashClosures) ? value.cashClosures as CashClosure[] : undefined,
+    cashMovements: Array.isArray(value.cashMovements) ? value.cashMovements as CashMovement[] : undefined,
+    paymentTransactions: Array.isArray(value.paymentTransactions) ? value.paymentTransactions as PaymentTransaction[] : undefined,
   };
 }
 
