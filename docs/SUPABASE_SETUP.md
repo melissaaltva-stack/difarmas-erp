@@ -24,7 +24,7 @@ Crea un archivo `.env.local` para desarrollo local usando `.env.example` como pl
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_PUBLISHABLE_KEY`
 
-En Netlify abre **Site configuration → Environment variables** (el nombre puede variar) y agrega las mismas dos variables. Después ejecuta un nuevo deploy, porque Vite incorpora las variables durante la compilación.
+Para el despliegue actual en GitHub Pages, abre **Settings → Secrets and variables → Actions** en el repositorio y crea estos repository secrets: `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY`. El workflow de GitHub Pages valida que ambos existan y los incorpora durante la compilación. Después de cambiar los secrets, vuelve a ejecutar el workflow **Deploy DIFARMÁS ERP to GitHub Pages**.
 
 No publiques `.env.local` ni compartas contraseñas. No agregues variables `service_role` al frontend.
 
@@ -46,6 +46,6 @@ Para que computadora y celular vean los mismos datos, entra con la misma cuenta 
 ## Alcance y limitaciones de esta primera fase
 
 - El MVP guarda una instantánea JSON por cuenta, protegida por RLS. Es una etapa puente para centralizar el estado actual sin reescribir todos los módulos.
-- Dos dispositivos que editen exactamente al mismo tiempo podrían sobrescribir cambios recientes; evita edición simultánea hasta implementar sincronización en tiempo real y control de versiones.
+- Las escrituras usan control optimista de versiones: si otra sesión cambia el estado después de la última lectura, el guardado se rechaza con un aviso para recargar en lugar de sobrescribir silenciosamente los datos. Aun así, no hay sincronización en tiempo real; coordina las ediciones simultáneas y verifica los datos después de un conflicto.
 - Esta fase no crea roles de empleados ni un espacio de trabajo compartido entre distintas cuentas. Para varios usuarios, el siguiente paso debe ser un modelo de empresa/equipo con membresías y permisos por rol.
 - Las claves de configuración del frontend no sustituyen RLS. No uses datos reales hasta haber ejecutado la migración y probado el acceso con una cuenta autorizada.
