@@ -2,7 +2,6 @@ import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Activity, AlertTriangle, DollarSign, ShoppingCart, TrendingUp, Wallet, Search, Plus, Pencil, Package, History, Target, BrainCircuit, Scale, SlidersHorizontal, ShieldCheck, CheckCircle2, Clock3, ListChecks, ReceiptText, WalletCards, ArrowUpDown, Brain, LineChart, BarChart3, Megaphone, ShoppingBag, Award, Boxes, Users, X, Calculator, LayoutDashboard } from 'lucide-react';
 import type { SaleRecord, Expense, Receivable, Payable, PurchaseRecord, CashClosure, CashMovement, PaymentTransaction } from '../domain/types';
-import { saveJson } from '../utils/storage';
 import { dateKey, localDateKey } from '../utils/dates';
 const validPayment = (value:number, balance:number) => Number.isFinite(value) && value > 0 && value <= balance;
 const currentMonthKey = (d = new Date()) => localDateKey(d).slice(0,7);
