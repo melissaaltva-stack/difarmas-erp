@@ -41,6 +41,7 @@ export function useErpState(userId: string) {
   const [paymentTransactions, setPaymentTransactions] = useState<PaymentTransaction[]>(()=>loadJson<PaymentTransaction[]>('difarmas_payment_transactions',[]));
   const [remoteReady, setRemoteReady] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'loading'|'saving'|'synced'|'error'>('loading');
+  const [syncError, setSyncError] = useState<string | null>(null);
   const saleInProgress = useRef(false);
   const purchaseInProgress = useRef(false);
 
@@ -72,6 +73,7 @@ export function useErpState(userId: string) {
     let activeRequest = true;
     setRemoteReady(false);
     setSyncStatus('loading');
+    setSyncError(null);
 
     // localStorage is shared by all accounts in this browser. Never seed one
     // account from another account's local cache.
@@ -113,11 +115,13 @@ export function useErpState(userId: string) {
       localStorage.setItem('difarmas_owner_user_id', userId);
       setRemoteReady(true);
       setSyncStatus('saving');
-    }).catch(() => {
+      setSyncError(null);
+    }).catch((error: unknown) => {
       if (!activeRequest) return;
       // Fail closed for cloud writes: never overwrite a remote record if it could
       // not be read. The local app remains visible but clearly reports the error.
       setSyncStatus('error');
+      setSyncError(error instanceof Error ? error.message : 'No se pudieron leer los datos de Supabase. Verifica la conexión y la configuración.');
     });
     return () => { activeRequest = false; };
   }, [userId]);
@@ -125,10 +129,14 @@ export function useErpState(userId: string) {
   useEffect(() => {
     if (!remoteReady) return;
     setSyncStatus('saving');
+    setSyncError(null);
     const timer = window.setTimeout(() => {
       saveErpSnapshot(userId, snapshot)
-        .then(() => setSyncStatus('synced'))
-        .catch(() => setSyncStatus('error'));
+        .then(() => { setSyncStatus('synced'); setSyncError(null); })
+        .catch((error: unknown) => {
+          setSyncStatus('error');
+          setSyncError(error instanceof Error ? error.message : 'No se pudieron guardar los datos en Supabase.');
+        });
     }, 500);
     return () => window.clearTimeout(timer);
   }, [remoteReady, userId, snapshot]);
@@ -181,5 +189,5 @@ export function useErpState(userId: string) {
     return true;
   };
 
-  return {active,setActive,customers,setCustomers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,purchases,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,cashClosures,setCashClosures,cashMovements,setCashMovements,paymentTransactions,setPaymentTransactions,filtered,recordSale,saveProduct,receivePurchase,syncStatus};
+  return {active,setActive,customers,setCustomers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,purchases,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,cashClosures,setCashClosures,cashMovements,setCashMovements,paymentTransactions,setPaymentTransactions,filtered,recordSale,saveProduct,receivePurchase,syncStatus,syncError};
 }
