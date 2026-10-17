@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Search, ShoppingCart } from 'lucide-react';
 import type { CartItem, Product } from '../domain/types';
+import { localDateKey } from '../utils/dates';
 
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
 
@@ -9,7 +10,7 @@ export function POS({products,cart,setCart,saleType,setSaleType,payment,setPayme
   const total=cart.reduce((sum,i)=>sum+i.price*i.qty,0);
   const profit=cart.reduce((sum,i)=>sum+(i.price-i.cost)*i.qty,0);
   const [customer,setCustomer]=useState('');
-  const [dueDate,setDueDate]=useState(()=>{const d=new Date();d.setDate(d.getDate()+30);return d.toISOString().slice(0,10);});
+  const [dueDate,setDueDate]=useState(()=>{const d=new Date();d.setDate(d.getDate()+30);return localDateKey(d);});
   const add=(p:Product)=>{if(p.stock<=0)return;setCart(cart.some(i=>i.id===p.id)?cart.map(i=>i.id===p.id?{...i,qty:Math.min(i.qty+1,p.stock),price:saleType==='mayorista'?p.wholesale:p.retail}:i):[...cart,{...p,qty:1,price:saleType==='mayorista'?p.wholesale:p.retail}]);setSearch('');};
   const change=(id:number,delta:number)=>setCart(cart.map(i=>i.id===id?{...i,qty:Math.max(1,Math.min(i.qty+delta,i.stock))}:i));
   const remove=(id:number)=>setCart(cart.filter(i=>i.id!==id));
