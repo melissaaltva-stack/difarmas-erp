@@ -33,8 +33,15 @@ export function applyPurchaseToInventory(products: Product[], items: PurchaseIte
     const item = items.find(line => line.id === product.id);
     if (!item) return product;
     const newStock = product.stock + item.qty;
-    const averageCost = ((product.cost * product.stock) + (item.unitCost * item.qty)) / newStock;
-    return { ...product, stock: newStock, cost: Number(averageCost.toFixed(2)), supplier: supplier.trim() || product.supplier };
+    const previousInventoryValue = product.cost * product.stock;
+    const purchaseValue = item.unitCost * item.qty;
+    const averageCost = (previousInventoryValue + purchaseValue) / newStock;
+    if (!Number.isFinite(newStock) || newStock <= 0 || !Number.isFinite(previousInventoryValue) || !Number.isFinite(purchaseValue) || !Number.isFinite(averageCost)) {
+      throw new Error('La compra produciría una existencia o costo fuera de rango. Verifica los datos.');
+    }
+    const roundedCost = Number(averageCost.toFixed(2));
+    if (!Number.isFinite(roundedCost)) throw new Error('El costo promedio calculado no es válido.');
+    return { ...product, stock: newStock, cost: roundedCost, supplier: supplier.trim() || product.supplier };
   });
 }
 
