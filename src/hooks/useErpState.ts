@@ -66,6 +66,24 @@ export function useErpState(userId: string) {
     let activeRequest = true;
     setRemoteReady(false);
     setSyncStatus('loading');
+
+    // localStorage is shared by all accounts in this browser. Never seed one
+    // account from another account's local cache.
+    const previousOwner = localStorage.getItem('difarmas_owner_user_id');
+    const accountChanged = Boolean(previousOwner && previousOwner !== userId);
+    if (accountChanged) {
+      setCustomers([]);
+      setProducts(initialProducts);
+      setSales([]);
+      setPurchases([]);
+      setExpenses([]);
+      setReceivables([]);
+      setPayables([]);
+      setInventoryMovements([]);
+      setMonthlyGoal(100000);
+      setFixedExpenses(25000);
+    }
+
     loadErpSnapshot(userId).then(remote => {
       if (!activeRequest) return;
       if (remote) {
@@ -80,6 +98,7 @@ export function useErpState(userId: string) {
         setMonthlyGoal(remote.monthlyGoal);
         setFixedExpenses(remote.fixedExpenses);
       }
+      localStorage.setItem('difarmas_owner_user_id', userId);
       setRemoteReady(true);
       setSyncStatus('saving');
     }).catch(() => {
