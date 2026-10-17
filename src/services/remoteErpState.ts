@@ -32,6 +32,11 @@ function normalizeSnapshot(value: unknown): ErpSnapshot {
       throw new Error(`El campo ${key} de los datos guardados no es válido.`);
     }
   }
+  for (const key of ['cashClosures', 'cashMovements', 'paymentTransactions'] as const) {
+    if (value[key] !== undefined && !Array.isArray(value[key])) {
+      throw new Error(`El campo ${key} de los datos guardados no es válido.`);
+    }
+  }
   const monthlyGoal = Number(value.monthlyGoal ?? 100000);
   const fixedExpenses = Number(value.fixedExpenses ?? 25000);
   if (!Number.isFinite(monthlyGoal) || !Number.isFinite(fixedExpenses)) {
@@ -48,9 +53,9 @@ function normalizeSnapshot(value: unknown): ErpSnapshot {
     inventoryMovements: (value.inventoryMovements ?? []) as InventoryMovement[],
     monthlyGoal,
     fixedExpenses,
-    cashClosures: Array.isArray(value.cashClosures) ? value.cashClosures as CashClosure[] : undefined,
-    cashMovements: Array.isArray(value.cashMovements) ? value.cashMovements as CashMovement[] : undefined,
-    paymentTransactions: Array.isArray(value.paymentTransactions) ? value.paymentTransactions as PaymentTransaction[] : undefined,
+    cashClosures: value.cashClosures as CashClosure[] | undefined,
+    cashMovements: value.cashMovements as CashMovement[] | undefined,
+    paymentTransactions: value.paymentTransactions as PaymentTransaction[] | undefined,
   };
 }
 
