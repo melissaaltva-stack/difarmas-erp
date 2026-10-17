@@ -43,6 +43,15 @@ describe('remoteErpState', () => {
     expect(result).toMatchObject({ ...emptySnapshot, products: [{ id: 1 }], monthlyGoal: 50000 });
   });
 
+  it('rejects malformed arrays instead of treating corrupted data as empty', async () => {
+    mocks.query.maybeSingle.mockResolvedValue({
+      data: { user_id: 'user-1', updated_at: '2026-10-17T12:00:00.000Z', state: { ...emptySnapshot, products: 'not-an-array' } },
+      error: null,
+    });
+    const { loadErpSnapshot } = await import('./remoteErpState');
+    await expect(loadErpSnapshot('user-1')).rejects.toThrow(/products.*no es válido/);
+  });
+
   it('rejects a snapshot that belongs to a different account', async () => {
     mocks.query.maybeSingle.mockResolvedValue({
       data: { user_id: 'other-user', updated_at: '2026-10-17T12:00:00.000Z', state: emptySnapshot },
@@ -50,6 +59,24 @@ describe('remoteErpState', () => {
     });
     const { loadErpSnapshot } = await import('./remoteErpState');
     await expect(loadErpSnapshot('user-1')).rejects.toThrow(/propietario/);
+  });
+
+  it('creates a first snapshot and then updates only the revision it loaded', async () => {
+    const firstRevision = '2026-10-17T12:00:00.000Z';
+    const secondRevision = '2026-10-17T12:00:01.000Z';
+    mocks.query.maybeSingle
+      .mockResolvedValueOnce({ data: null, error: null })
+      .mockResolvedValueOnce({ data: { updated_at: secondRevision }, error: null });
+    mocks.query.single.mockResolvedValue({ data: { updated_at: firstRevision }, error: null });
+
+    const { loadErpSnapshot, saveErpSnapshot } = await import('./remoteErpState');
+    await loadErpSnapshot('user-1');
+    await saveErpSnapshot('user-1', emptySnapshot);
+    await saveErpSnapshot('user-1', { ...emptySnapshot, monthlyGoal: 50000 });
+
+    expect(mocks.query.insert).toHaveBeenCalledWith(expect.objectContaining({ user_id: 'user-1', state: emptySnapshot }));
+    expect(mocks.query.update).toHaveBeenCalledWith(expect.objectContaining({ state: { ...emptySnapshot, monthlyGoal: 50000 } }));
+    expect(mocks.query.eq).toHaveBeenCalledWith('updated_at', firstRevision);
   });
 
   it('does not overwrite a cloud record created after the initial read', async () => {
