@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { CartItem, Customer, Expense, InventoryMovement, Module, Payable, Product, PurchaseItem, PurchaseRecord, Receivable, SaleRecord } from '../domain/types';
+import type { CartItem, CashClosure, CashMovement, Customer, Expense, InventoryMovement, Module, Payable, PaymentTransaction, Product, PurchaseItem, PurchaseRecord, Receivable, SaleRecord } from '../domain/types';
 import { loadJson, saveJson, loadNumber, saveNumber } from '../utils/storage';
 import { applyPurchaseToInventory, applySaleToInventory } from '../services/inventoryService';
 import { buildSaleRecord, createReceivableFromSale } from '../services/salesService';
@@ -36,6 +36,9 @@ export function useErpState(userId: string) {
   const [receivables, setReceivables] = useState<Receivable[]>(()=>loadJson<Receivable[]>('difarmas_receivables',[]));
   const [payables, setPayables] = useState<Payable[]>(()=>loadJson<Payable[]>('difarmas_payables',[]));
   const [inventoryMovements, setInventoryMovements] = useState<InventoryMovement[]>(()=>loadJson<InventoryMovement[]>('difarmas_inventory_movements',[]));
+  const [cashClosures, setCashClosures] = useState<CashClosure[]>(()=>loadJson<CashClosure[]>('difarmas_cash_closures',[]));
+  const [cashMovements, setCashMovements] = useState<CashMovement[]>(()=>loadJson<CashMovement[]>('difarmas_cash_movements',[]));
+  const [paymentTransactions, setPaymentTransactions] = useState<PaymentTransaction[]>(()=>loadJson<PaymentTransaction[]>('difarmas_payment_transactions',[]));
   const [remoteReady, setRemoteReady] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'loading'|'saving'|'synced'|'error'>('loading');
   const saleInProgress = useRef(false);
@@ -54,11 +57,14 @@ export function useErpState(userId: string) {
   useEffect(()=>{saveJson('difarmas_receivables',receivables)},[receivables]);
   useEffect(()=>{saveJson('difarmas_payables',payables)},[payables]);
   useEffect(()=>{saveJson('difarmas_inventory_movements',inventoryMovements)},[inventoryMovements]);
+  useEffect(()=>{saveJson('difarmas_cash_closures',cashClosures)},[cashClosures]);
+  useEffect(()=>{saveJson('difarmas_cash_movements',cashMovements)},[cashMovements]);
+  useEffect(()=>{saveJson('difarmas_payment_transactions',paymentTransactions)},[paymentTransactions]);
 
   const snapshot = useMemo<ErpSnapshot>(() => ({
     customers, products, sales, purchases, expenses, receivables, payables,
-    inventoryMovements, monthlyGoal, fixedExpenses,
-  }), [customers, products, sales, purchases, expenses, receivables, payables, inventoryMovements, monthlyGoal, fixedExpenses]);
+    inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions,
+  }), [customers, products, sales, purchases, expenses, receivables, payables, inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions]);
 
   // Load the signed-in user's snapshot before allowing remote writes. A first login
   // seeds the cloud record from this browser's existing local data.
@@ -80,6 +86,9 @@ export function useErpState(userId: string) {
       setReceivables([]);
       setPayables([]);
       setInventoryMovements([]);
+      setCashClosures([]);
+      setCashMovements([]);
+      setPaymentTransactions([]);
       setMonthlyGoal(100000);
       setFixedExpenses(25000);
     }
@@ -95,6 +104,9 @@ export function useErpState(userId: string) {
         setReceivables(remote.receivables);
         setPayables(remote.payables);
         setInventoryMovements(remote.inventoryMovements);
+        if (remote.cashClosures !== undefined) setCashClosures(remote.cashClosures);
+        if (remote.cashMovements !== undefined) setCashMovements(remote.cashMovements);
+        if (remote.paymentTransactions !== undefined) setPaymentTransactions(remote.paymentTransactions);
         setMonthlyGoal(remote.monthlyGoal);
         setFixedExpenses(remote.fixedExpenses);
       }
@@ -169,5 +181,5 @@ export function useErpState(userId: string) {
     return true;
   };
 
-  return {active,setActive,customers,setCustomers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,purchases,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,filtered,recordSale,saveProduct,receivePurchase,syncStatus};
+  return {active,setActive,customers,setCustomers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,purchases,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,cashClosures,setCashClosures,cashMovements,setCashMovements,paymentTransactions,setPaymentTransactions,filtered,recordSale,saveProduct,receivePurchase,syncStatus};
 }
