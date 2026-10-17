@@ -37,5 +37,6 @@ jobs:
             }));
           }
           NODE
+          npm audit --audit-level=moderate
       - run: npm run build
       - run: npm test
