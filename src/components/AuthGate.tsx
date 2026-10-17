@@ -7,6 +7,18 @@ type Props = {
   children: (user: User, signOut: () => Promise<void>) => ReactNode;
 };
 
+function getSignInErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    const message = error.message.trim();
+    if (message) return message;
+  }
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === 'string' && message.trim()) return message.trim();
+  }
+  return 'Ocurrió un error desconocido. Revisa la conexión e inténtalo de nuevo.';
+}
+
 export function AuthGate({ children }: Props) {
   const [user, setUser] = useState<User | null>(null);
   const [checking, setChecking] = useState(true);
@@ -47,8 +59,8 @@ export function AuthGate({ children }: Props) {
         password,
       });
       if (signInError) throw signInError;
-    } catch {
-      setError('No se pudo iniciar sesión. Verifica el correo, la contraseña y la configuración de Supabase.');
+    } catch (caught) {
+      setError(`No se pudo iniciar sesión: ${getSignInErrorMessage(caught)}`);
     } finally {
       setBusy(false);
     }
