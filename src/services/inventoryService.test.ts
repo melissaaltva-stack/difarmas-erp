@@ -16,6 +16,12 @@ describe('inventoryService', () => {
     expect(applySaleToInventory([product], [cartItem(2)])[0].stock).toBe(3);
   });
 
+  it('rejects a sale when individual lines are finite but the aggregate total overflows', () => {
+    const first = { ...cartItem(1), price: Number.MAX_VALUE * 0.75 };
+    const second = { ...cartItem(1), id: 2, price: Number.MAX_VALUE * 0.75 };
+    expect(() => applySaleToInventory([product, { ...product, id: 2 }], [first, second])).toThrow(/total o costo de la venta está fuera de rango/);
+  });
+
   it('rejects sales that exceed stock', () => {
     expect(() => applySaleToInventory([product], [cartItem(6)])).toThrow(/Stock insuficiente/);
   });
@@ -50,6 +56,12 @@ describe('inventoryService', () => {
 
   it('rejects purchase totals that overflow to infinity', () => {
     expect(() => applyPurchaseToInventory([product], [purchaseItem(Number.MAX_VALUE, Number.MAX_VALUE)], 'Proveedor')).toThrow(/Cantidad y costo/);
+  });
+
+  it('rejects an aggregate purchase total overflow across different products', () => {
+    const first = purchaseItem(1, Number.MAX_VALUE * 0.75);
+    const second = { ...purchaseItem(1, Number.MAX_VALUE * 0.75), id: 2 };
+    expect(() => applyPurchaseToInventory([product, { ...product, id: 2 }], [first, second], 'Proveedor')).toThrow(/total de la compra está fuera de rango/);
   });
 
   it('rejects a purchase that would overflow the resulting stock', () => {

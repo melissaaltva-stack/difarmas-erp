@@ -146,6 +146,7 @@ export function useErpState(userId: string) {
   const recordSale=(sold:CartItem[],customer='',dueDate=''):boolean=>{
     if (saleInProgress.current) return false;
     if (!sold.length || sold.some(item => !Number.isFinite(item.qty) || item.qty <= 0)) return false;
+    if (payment === 'Crédito' && (!customer.trim() || !dueDate.trim())) return false;
     if (sold.some(item => !products.some(p => p.id === item.id && p.stock >= item.qty))) return false;
     let updated: Product[];
     try { updated = applySaleToInventory(products,sold); } catch { return false; }

@@ -6,6 +6,11 @@ export function applySaleToInventory(products: Product[], sold: CartItem[]): Pro
   if (sold.some(item => !products.some(product => product.id === item.id))) throw new Error('No se encontró un producto del carrito en el inventario.');
   const invalid = sold.find(item => !Number.isFinite(item.qty) || item.qty <= 0 || !Number.isFinite(item.price) || item.price < 0 || !Number.isFinite(item.cost) || item.cost < 0 || !Number.isFinite(item.price * item.qty) || !Number.isFinite(item.cost * item.qty));
   if (invalid) throw new Error('Cantidad, precio y costo de venta deben ser válidos.');
+  const saleTotal = sold.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const saleCost = sold.reduce((sum, item) => sum + item.cost * item.qty, 0);
+  if (!Number.isFinite(saleTotal) || !Number.isFinite(saleCost) || !Number.isFinite(saleTotal - saleCost)) {
+    throw new Error('El total o costo de la venta está fuera de rango. Verifica los importes.');
+  }
 
   if (products.some(product => !Number.isFinite(product.stock) || product.stock < 0 || !Number.isFinite(product.cost) || product.cost < 0)) throw new Error('El inventario contiene una existencia o costo inválido.');
 
@@ -27,6 +32,7 @@ export function applyPurchaseToInventory(products: Product[], items: PurchaseIte
   if (items.some(item => !products.some(product => product.id === item.id))) throw new Error('No se encontró un producto de la compra en el inventario.');
   const invalid = items.find(item => !Number.isFinite(item.qty) || item.qty <= 0 || !Number.isFinite(item.unitCost) || item.unitCost < 0 || !Number.isFinite(item.qty * item.unitCost));
   if (invalid) throw new Error('Cantidad y costo de compra deben ser válidos.');
+  purchaseTotal(items);
   if (products.some(product => !Number.isFinite(product.stock) || product.stock < 0 || !Number.isFinite(product.cost) || product.cost < 0)) throw new Error('El inventario contiene una existencia o costo inválido.');
 
   return products.map(product => {
@@ -46,5 +52,7 @@ export function applyPurchaseToInventory(products: Product[], items: PurchaseIte
 }
 
 export function purchaseTotal(items: PurchaseItem[]): number {
-  return items.reduce((sum, item) => sum + item.unitCost * item.qty, 0);
+  const total = items.reduce((sum, item) => sum + item.unitCost * item.qty, 0);
+  if (!Number.isFinite(total)) throw new Error('El total de la compra está fuera de rango. Verifica cantidades y costos.');
+  return total;
 }
