@@ -17,6 +17,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -29,8 +31,8 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
         run: |
-          test -n "$VITE_SUPABASE_URL" || (echo "Missing repository secret: VITE_SUPABASE_URL" && exit 1)
-          test -n "$VITE_SUPABASE_PUBLISHABLE_KEY" || (echo "Missing repository secret: VITE_SUPABASE_PUBLISHABLE_KEY" && exit 1)
+          test -n "$VITE_SUPABASE_URL" || (echo "::error::VITE_SUPABASE_URL is empty or unavailable to this workflow" && exit 1)
+          test -n "$VITE_SUPABASE_PUBLISHABLE_KEY" || (echo "::error::VITE_SUPABASE_PUBLISHABLE_KEY is empty or unavailable to this workflow" && exit 1)
       - name: Install dependencies
         run: npm install
       - name: Build application
