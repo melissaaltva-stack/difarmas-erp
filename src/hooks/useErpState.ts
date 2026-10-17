@@ -5,6 +5,7 @@ import { applyPurchaseToInventory, applySaleToInventory } from '../services/inve
 import { buildSaleRecord, createReceivableFromSale } from '../services/salesService';
 import { createPayableFromPurchase } from '../services/purchaseService';
 import { createInventoryMovementsForPurchase, createInventoryMovementsForSale } from '../services/inventoryMovementService';
+import { loadErpSnapshot, saveErpSnapshot, type ErpSnapshot } from '../services/remoteErpState';
 
 const initialProducts: Product[] = [
   { id: 1, code: '750100000001', name: 'Eutirox 50 mcg', category: 'Medicamentos', laboratory: 'Merck', presentation: 'Caja x 50 tabletas', cost: 250, retail: 330, wholesale: 310, stock: 18, minStock: 8, lot: 'EUT-2607', expiry: '2027-07-31', supplier: 'Distribuidora Nacional' },
@@ -13,7 +14,7 @@ const initialProducts: Product[] = [
   { id: 4, code: '750100000004', name: 'Alevian Duo', category: 'Medicamentos', laboratory: 'Asofarma', presentation: 'Caja', cost: 1275, retail: 2550, wholesale: 2200, stock: 3, minStock: 3, lot: 'ALE-2605', expiry: '2027-05-31', supplier: 'Droguería Central' },
 ];
 
-export function useErpState() {
+export function useErpState(userId: string) {
   const [active, setActive] = useState<Module>('dashboard');
   const [customers,setCustomers]=useState<Customer[]>(()=>loadJson<Customer[]>('difarmas_customers',[]));
   const [products, setProducts] = useState<Product[]>(() => loadJson<Product[]>('difarmas_products',initialProducts));
@@ -35,6 +36,8 @@ export function useErpState() {
   const [receivables, setReceivables] = useState<Receivable[]>(()=>loadJson<Receivable[]>('difarmas_receivables',[]));
   const [payables, setPayables] = useState<Payable[]>(()=>loadJson<Payable[]>('difarmas_payables',[]));
   const [inventoryMovements, setInventoryMovements] = useState<InventoryMovement[]>(()=>loadJson<InventoryMovement[]>('difarmas_inventory_movements',[]));
+  const [remoteReady, setRemoteReady] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<'loading'|'saving'|'synced'|'error'>('loading');
   const saleInProgress = useRef(false);
   const purchaseInProgress = useRef(false);
 
@@ -51,6 +54,53 @@ export function useErpState() {
   useEffect(()=>{saveJson('difarmas_receivables',receivables)},[receivables]);
   useEffect(()=>{saveJson('difarmas_payables',payables)},[payables]);
   useEffect(()=>{saveJson('difarmas_inventory_movements',inventoryMovements)},[inventoryMovements]);
+
+  const snapshot = useMemo<ErpSnapshot>(() => ({
+    customers, products, sales, purchases, expenses, receivables, payables,
+    inventoryMovements, monthlyGoal, fixedExpenses,
+  }), [customers, products, sales, purchases, expenses, receivables, payables, inventoryMovements, monthlyGoal, fixedExpenses]);
+
+  // Load the signed-in user's snapshot before allowing remote writes. A first login
+  // seeds the cloud record from this browser's existing local data.
+  useEffect(() => {
+    let activeRequest = true;
+    setRemoteReady(false);
+    setSyncStatus('loading');
+    loadErpSnapshot(userId).then(remote => {
+      if (!activeRequest) return;
+      if (remote) {
+        setCustomers(remote.customers);
+        setProducts(remote.products);
+        setSales(remote.sales);
+        setPurchases(remote.purchases);
+        setExpenses(remote.expenses);
+        setReceivables(remote.receivables);
+        setPayables(remote.payables);
+        setInventoryMovements(remote.inventoryMovements);
+        setMonthlyGoal(remote.monthlyGoal);
+        setFixedExpenses(remote.fixedExpenses);
+      }
+      setRemoteReady(true);
+      setSyncStatus('saving');
+    }).catch(() => {
+      if (!activeRequest) return;
+      // Fail closed for cloud writes: never overwrite a remote record if it could
+      // not be read. The local app remains visible but clearly reports the error.
+      setSyncStatus('error');
+    });
+    return () => { activeRequest = false; };
+  }, [userId]);
+
+  useEffect(() => {
+    if (!remoteReady) return;
+    setSyncStatus('saving');
+    const timer = window.setTimeout(() => {
+      saveErpSnapshot(userId, snapshot)
+        .then(() => setSyncStatus('synced'))
+        .catch(() => setSyncStatus('error'));
+    }, 500);
+    return () => window.clearTimeout(timer);
+  }, [remoteReady, userId, snapshot]);
 
   const filtered=useMemo(()=>products.filter(p=>[p.code,p.name,p.category,p.laboratory].join(' ').toLowerCase().includes(search.toLowerCase())),[products,search]);
 
@@ -100,5 +150,5 @@ export function useErpState() {
     return true;
   };
 
-  return {active,setActive,customers,setCustomers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,purchases,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,filtered,recordSale,saveProduct,receivePurchase};
+  return {active,setActive,customers,setCustomers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,purchases,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,filtered,recordSale,saveProduct,receivePurchase,syncStatus};
 }
