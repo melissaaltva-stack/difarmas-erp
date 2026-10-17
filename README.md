@@ -17,9 +17,9 @@ ERP web para la gestión integral de DIFARMÁS.
 - Pronósticos, escenarios y alertas
 - Tareas y centros de decisión ejecutiva
 
-## Persistencia
+## Persistencia y seguridad
 
-Los datos operativos del MVP se guardan localmente en el navegador mediante localStorage. La arquitectura queda preparada para una futura API y PostgreSQL.
+La rama de integración Supabase agrega inicio de sesión por correo/contraseña, persistencia centralizada por cuenta y Row Level Security (RLS). La primera fase conserva una instantánea JSON del estado operativo para evitar reescribir todos los módulos de una vez. Consulta `docs/SUPABASE_SETUP.md` y ejecuta `supabase/migrations/202610170001_erp_state.sql` antes de usar el modo nube. El almacenamiento local se mantiene como respaldo, pero el estado remoto de la cuenta autenticada pasa a ser la fuente principal.
 
 ## Calidad
 
