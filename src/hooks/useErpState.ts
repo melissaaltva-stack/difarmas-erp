@@ -23,7 +23,16 @@ const initialSettings:ErpSettings={businessName:'DIFARMÁS',businessSubtitle:'Fa
 ],users:[],
 currencies:[
 {code:'HNL',name:'Lempira hondureño',symbol:'L',exchangeRate:1,active:true},
-{code:'USD',name:'Dólar estadounidense',symbol:'
+{code:'USD',name:'Dólar estadounidense',symbol:'$',exchangeRate:26,active:true}
+],
+paymentMethods:[
+{id:'cash',name:'Efectivo',kind:'cash',active:true,requiresReference:false},
+{id:'transfer',name:'Transferencia bancaria',kind:'other',active:true,requiresReference:true},
+{id:'credit',name:'Crédito',kind:'credit',active:true,requiresReference:false},
+{id:'card',name:'Tarjeta',kind:'other',active:true,requiresReference:true}
+],
+billingInfo:{cai:'',authorizedRangeStart:'',authorizedRangeEnd:'',authorizationExpiry:'',establishmentCode:'',emissionPoint:'',documentTypeCode:'01',isvRate:15,fiscalLegend:'Documento interno. Configure la autorización fiscal vigente del SAR antes de emitir comprobantes fiscales.'}
+};
 
 export function useErpState(userId: string) {
   const [active, setActive] = useState<Module>('dashboard');
@@ -179,212 +188,6 @@ export function useErpState(userId: string) {
     setInventoryMovements(current=>[...current,...createInventoryMovementsForSale(products,sold,sale.id)]);
     setSales(current=>[...current,sale]);
     if((settings.paymentMethods??[]).find(method=>method.name===payment)?.kind==='credit'||payment==='Crédito') setReceivables(current=>[...current,createReceivableFromSale(sale,customer,dueDate)]);
-    return true;
-  };
-
-  const saveProduct=(product:Product)=>{
-    if (!product.name.trim() || [product.cost,product.retail,product.wholesale,product.stock,product.minStock].some(v=>!Number.isFinite(v)||v<0)) return;
-    if (editing) {
-      const previous = products.find(p=>p.id===editing.id);
-      const saved = {...product,id:editing.id};
-      setProducts(current=>current.map(p=>p.id===editing.id?saved:p));
-      if (previous && previous.stock !== saved.stock) {
-        const difference = saved.stock - previous.stock;
-        setInventoryMovements(current=>[...current,{id:Date.now(),productId:saved.id,productName:saved.name,type:'Ajuste',quantity:Math.abs(difference),stockBefore:previous.stock,stockAfter:saved.stock,unitCost:saved.cost,date:new Date().toISOString(),note:difference>0?'Ajuste de entrada manual':'Ajuste de salida manual'}]);
-      }
-    } else {
-      setProducts(current=>[...current,{...product,id:Date.now()}]);
-    }
-    setEditing(null); setShowForm(false);
-  };
-
-  const receivePurchase=(items:PurchaseItem[],paymentMethod:string,dueDate:string):boolean=>{
-    if (purchaseInProgress.current) return false;
-    if (!items.length || items.some(item => !Number.isFinite(item.qty) || item.qty <= 0 || !Number.isFinite(item.unitCost) || item.unitCost < 0)) return false;
-    let updated: Product[];
-    try { updated = applyPurchaseToInventory(products,items,purchaseSupplier); } catch { return false; }
-    purchaseInProgress.current=true;
-    const referenceId = Date.now();
-    setProducts(updated);
-    setInventoryMovements(current=>[...current,...createInventoryMovementsForPurchase(products,items,referenceId)]);
-    const total=items.reduce((sum,item)=>sum+item.qty*item.unitCost,0);
-    const receivedAt = new Date().toISOString();
-    setPurchases(current=>[{id:referenceId,supplier:purchaseSupplier,total,paymentMethod:paymentMethod as 'Efectivo'|'Transferencia'|'Crédito',date:receivedAt},...current]);
-    setPurchaseCostHistory(current=>[
-      ...items.map((item,index):PurchaseCostHistoryEntry=>({id:referenceId+index,purchaseId:referenceId,productId:item.id,productCode:item.code,productName:item.name,supplier:purchaseSupplier.trim(),unitCost:item.unitCost,quantity:item.qty,date:receivedAt})),
-      ...current,
-    ]);
-    if(paymentMethod==='Crédito') setPayables(current=>[...current,createPayableFromPurchase(items,purchaseSupplier,dueDate)]);
-    return true;
-  };
-
-  return {active,setActive,customers,setCustomers,suppliers,setSuppliers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,settings,setSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,purchases,purchaseCostHistory,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,cashClosures,setCashClosures,cashMovements,setCashMovements,paymentTransactions,setPaymentTransactions,filtered,recordSale,saveProduct,receivePurchase,syncStatus,syncError};
-}
-,exchangeRate:26,active:true}
-],
-paymentMethods:[
-{id:'cash',name:'Efectivo',kind:'cash',active:true,requiresReference:false},
-{id:'transfer',name:'Transferencia bancaria',kind:'other',active:true,requiresReference:true},
-{id:'credit',name:'Crédito',kind:'credit',active:true,requiresReference:false},
-{id:'card',name:'Tarjeta',kind:'other',active:true,requiresReference:true}
-],
-billingInfo:{cai:'',authorizedRangeStart:'',authorizedRangeEnd:'',authorizationExpiry:'',establishmentCode:'',emissionPoint:'',documentTypeCode:'01',isvRate:15,fiscalLegend:'La factura debe contener los datos fiscales autorizados por el SAR.'}
-};
-
-export function useErpState(userId: string) {
-  const [active, setActive] = useState<Module>('dashboard');
-  const [customers,setCustomers]=useState<Customer[]>(()=>loadJson<Customer[]>('difarmas_customers',[]));
-  const [suppliers,setSuppliers]=useState<Supplier[]>(()=>loadJson<Supplier[]>('difarmas_suppliers',[]));
-  const [products, setProducts] = useState<Product[]>(() => loadJson<Product[]>('difarmas_products',initialProducts));
-  const [search, setSearch] = useState('');
-  const [monthlyGoal, setMonthlyGoal] = useState(() => loadNumber('difarmas_monthly_goal',100000));
-  const [fixedExpenses, setFixedExpenses] = useState(() => loadNumber('difarmas_fixed_expenses',25000));
-  const [showForm, setShowForm] = useState(false);
-  const [editing, setEditing] = useState<Product | null>(null);
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [saleType, setSaleType] = useState<'minorista'|'mayorista'>('minorista');
-  const [payment, setPayment] = useState<'Efectivo'|'Transferencia'|'Crédito'>('Efectivo');
-  const [saleSearch, setSaleSearch] = useState('');
-  const [purchaseCart, setPurchaseCart] = useState<PurchaseItem[]>([]);
-  const [purchaseSearch, setPurchaseSearch] = useState('');
-  const [purchaseSupplier, setPurchaseSupplier] = useState('');
-  const [sales, setSales] = useState<SaleRecord[]>(()=>loadJson<SaleRecord[]>('difarmas_sales',[]));
-  const [purchases, setPurchases] = useState<PurchaseRecord[]>(()=>loadJson<PurchaseRecord[]>('difarmas_purchases',[]));
-  const [purchaseCostHistory, setPurchaseCostHistory] = useState<PurchaseCostHistoryEntry[]>(()=>loadJson<PurchaseCostHistoryEntry[]>('difarmas_purchase_cost_history',[]));
-  const [settings,setSettings] = useState<ErpSettings>(()=>loadJson<ErpSettings>('difarmas_settings',initialSettings));
-  const [expenses, setExpenses] = useState<Expense[]>(()=>loadJson<Expense[]>('difarmas_expenses',[]));
-  const [receivables, setReceivables] = useState<Receivable[]>(()=>loadJson<Receivable[]>('difarmas_receivables',[]));
-  const [payables, setPayables] = useState<Payable[]>(()=>loadJson<Payable[]>('difarmas_payables',[]));
-  const [inventoryMovements, setInventoryMovements] = useState<InventoryMovement[]>(()=>loadJson<InventoryMovement[]>('difarmas_inventory_movements',[]));
-  const [cashClosures, setCashClosures] = useState<CashClosure[]>(()=>loadJson<CashClosure[]>('difarmas_cash_closures',[]));
-  const [cashMovements, setCashMovements] = useState<CashMovement[]>(()=>loadJson<CashMovement[]>('difarmas_cash_movements',[]));
-  const [paymentTransactions, setPaymentTransactions] = useState<PaymentTransaction[]>(()=>loadJson<PaymentTransaction[]>('difarmas_payment_transactions',[]));
-  const [remoteReady, setRemoteReady] = useState(false);
-  const [syncStatus, setSyncStatus] = useState<'loading'|'saving'|'synced'|'error'>('loading');
-  const [syncError, setSyncError] = useState<string | null>(null);
-  const saleInProgress = useRef(false);
-  const purchaseInProgress = useRef(false);
-
-  useEffect(()=>{saleInProgress.current=false},[sales]);
-  useEffect(()=>{purchaseInProgress.current=false},[purchases]);
-
-  useEffect(()=>{saveJson('difarmas_customers',customers)},[customers]);
-  useEffect(()=>{saveJson('difarmas_suppliers',suppliers)},[suppliers]);
-  useEffect(()=>{saveJson('difarmas_products',products)},[products]);
-  useEffect(()=>{saveNumber('difarmas_monthly_goal',monthlyGoal)},[monthlyGoal]);
-  useEffect(()=>{saveNumber('difarmas_fixed_expenses',fixedExpenses)},[fixedExpenses]);
-  useEffect(()=>{saveJson('difarmas_sales',sales)},[sales]);
-  useEffect(()=>{saveJson('difarmas_purchases',purchases)},[purchases]);
-  useEffect(()=>{saveJson('difarmas_purchase_cost_history',purchaseCostHistory)},[purchaseCostHistory]);
-  useEffect(()=>{saveJson('difarmas_settings',settings)},[settings]);
-  useEffect(()=>{saveJson('difarmas_expenses',expenses)},[expenses]);
-  useEffect(()=>{saveJson('difarmas_receivables',receivables)},[receivables]);
-  useEffect(()=>{saveJson('difarmas_payables',payables)},[payables]);
-  useEffect(()=>{saveJson('difarmas_inventory_movements',inventoryMovements)},[inventoryMovements]);
-  useEffect(()=>{saveJson('difarmas_cash_closures',cashClosures)},[cashClosures]);
-  useEffect(()=>{saveJson('difarmas_cash_movements',cashMovements)},[cashMovements]);
-  useEffect(()=>{saveJson('difarmas_payment_transactions',paymentTransactions)},[paymentTransactions]);
-
-  const snapshot = useMemo<ErpSnapshot>(() => ({
-    customers, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables,
-    inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions,
-  }), [customers, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables, inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions]);
-
-  // Load the signed-in user's snapshot before allowing remote writes. A first login
-  // seeds the cloud record from this browser's existing local data.
-  useEffect(() => {
-    let activeRequest = true;
-    setRemoteReady(false);
-    setSyncStatus('loading');
-    setSyncError(null);
-
-    // localStorage is shared by all accounts in this browser. Never seed one
-    // account from another account's local cache.
-    const previousOwner = localStorage.getItem('difarmas_owner_user_id');
-    const accountChanged = Boolean(previousOwner && previousOwner !== userId);
-    if (accountChanged) {
-      setCustomers([]);
-      setSuppliers([]);
-      setProducts(initialProducts);
-      setSales([]);
-      setPurchases([]);
-      setPurchaseCostHistory([]);
-      setSettings(initialSettings);
-      setExpenses([]);
-      setReceivables([]);
-      setPayables([]);
-      setInventoryMovements([]);
-      setCashClosures([]);
-      setCashMovements([]);
-      setPaymentTransactions([]);
-      setMonthlyGoal(100000);
-      setFixedExpenses(25000);
-    }
-
-    loadErpSnapshot(userId).then(remote => {
-      if (!activeRequest) return;
-      if (remote) {
-        setCustomers(remote.customers);
-        setSuppliers(remote.suppliers ?? []);
-        setProducts(remote.products);
-        setSales(remote.sales);
-        setPurchases(remote.purchases);
-        setPurchaseCostHistory(remote.purchaseCostHistory ?? []);
-        setSettings(remote.settings ?? initialSettings);
-        setExpenses(remote.expenses);
-        setReceivables(remote.receivables);
-        setPayables(remote.payables);
-        setInventoryMovements(remote.inventoryMovements);
-        if (remote.cashClosures !== undefined) setCashClosures(remote.cashClosures);
-        if (remote.cashMovements !== undefined) setCashMovements(remote.cashMovements);
-        if (remote.paymentTransactions !== undefined) setPaymentTransactions(remote.paymentTransactions);
-        setMonthlyGoal(remote.monthlyGoal);
-        setFixedExpenses(remote.fixedExpenses);
-      }
-      localStorage.setItem('difarmas_owner_user_id', userId);
-      setRemoteReady(true);
-      setSyncStatus('saving');
-      setSyncError(null);
-    }).catch((error: unknown) => {
-      if (!activeRequest) return;
-      // Fail closed for cloud writes: never overwrite a remote record if it could
-      // not be read. The local app remains visible but clearly reports the error.
-      setSyncStatus('error');
-      setSyncError(error instanceof Error ? error.message : 'No se pudieron leer los datos de Supabase. Verifica la conexión y la configuración.');
-    });
-    return () => { activeRequest = false; };
-  }, [userId]);
-
-  useEffect(() => {
-    if (!remoteReady) return;
-    setSyncStatus('saving');
-    setSyncError(null);
-    const timer = window.setTimeout(() => {
-      saveErpSnapshot(userId, snapshot)
-        .then(() => { setSyncStatus('synced'); setSyncError(null); })
-        .catch((error: unknown) => {
-          setSyncStatus('error');
-          setSyncError(error instanceof Error ? error.message : 'No se pudieron guardar los datos en Supabase.');
-        });
-    }, 500);
-    return () => window.clearTimeout(timer);
-  }, [remoteReady, userId, snapshot]);
-
-  const filtered=useMemo(()=>products.filter(p=>[p.code,p.name,p.category,p.laboratory].join(' ').toLowerCase().includes(search.toLowerCase())),[products,search]);
-
-  const recordSale=(sold:CartItem[],customer='',dueDate=''):boolean=>{
-    if (saleInProgress.current) return false;
-    if (!sold.length || sold.some(item => !Number.isFinite(item.qty) || item.qty <= 0)) return false;
-    if (payment === 'Crédito' && (!customer.trim() || !dueDate.trim())) return false;
-    if (sold.some(item => !products.some(p => p.id === item.id && p.stock >= item.qty))) return false;
-    let updated: Product[];
-    try { updated = applySaleToInventory(products,sold); } catch { return false; }
-    saleInProgress.current=true;
-    const sale=buildSaleRecord(sold,payment,saleType,customer,dueDate);
-    setProducts(updated);
-    setInventoryMovements(current=>[...current,...createInventoryMovementsForSale(products,sold,sale.id)]);
-    setSales(current=>[...current,sale]);
-    if(payment==='Crédito') setReceivables(current=>[...current,createReceivableFromSale(sale,customer,dueDate)]);
     return true;
   };
 
