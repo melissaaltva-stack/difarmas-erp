@@ -4,6 +4,7 @@ import { Barcode, Camera, Search, ShoppingCart, X } from 'lucide-react';
 import type { CartItem, ErpSettings, Product } from '../domain/types';
 import { ExpiryRecommendations } from './ExpiryRecommendations';
 import { localDateKey } from '../utils/dates';
+import { validateFiscalAuthorization } from '../services/fiscalService';
 
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
 
@@ -55,20 +56,9 @@ export function POS({products,cart,setCart,saleType,setSaleType,payment,setPayme
     const numbering=settings.documentNumbering??{factura:{prefix:'FAC-',nextNumber:1},orden_compra:{prefix:'OC-',nextNumber:1},nota_debito:{prefix:'ND-',nextNumber:1},nota_credito:{prefix:'NC-',nextNumber:1},orden_entrega:{prefix:'OE-',nextNumber:1}};
     const invoiceSequence=Math.max(1,numbering.factura?.nextNumber??1);
     const fiscal=settings.billingInfo;
-    const fiscalConfigured=Boolean(fiscal?.cai&&fiscal.establishmentCode&&fiscal.emissionPoint&&fiscal.documentTypeCode&&fiscal.authorizedRangeStart&&fiscal.authorizedRangeEnd&&fiscal.authorizationExpiry);
-    if(fiscal?.cai){
-      if(!fiscalConfigured){setError('Completa el CAI, establecimiento, punto de emisión, rango autorizado y fecha límite antes de emitir una factura fiscal.');return;}
-      const configuredPoint=(fiscal?.establishmentCode??'')+(fiscal?.emissionPoint??'');
-      if(!/^\\d{4}$/.test(configuredPoint)||!/^\\d{2}$/.test(fiscal?.documentTypeCode??'')){setError('El código de establecimiento + punto de emisión debe sumar 4 dígitos y el código de documento debe tener 2 dígitos.');return;}
-      const startMatch=fiscal.authorizedRangeStart.match(/(\\d{8})$/);
-      const endMatch=fiscal.authorizedRangeEnd.match(/(\\d{8})$/);
-      const rangeStart=startMatch?Number(startMatch[1]):NaN;
-      const rangeEnd=endMatch?Number(endMatch[1]):NaN;
-      const expiry=Date.parse(fiscal.authorizationExpiry+'T23:59:59');
-      if(!Number.isFinite(rangeStart)||!Number.isFinite(rangeEnd)||rangeStart>rangeEnd){setError('Revisa el rango autorizado: debe terminar en la numeración correlativa de 8 dígitos.');return;}
-      if(!Number.isFinite(expiry)||expiry<Date.now()){setError('La autorización fiscal está vencida o la fecha límite no es válida. Actualiza los datos del SAR antes de emitir.');return;}
-      if(invoiceSequence<rangeStart||invoiceSequence>rangeEnd){setError('El próximo número está fuera del rango autorizado. Revisa la numeración en Configuración → Sistema.');return;}
-    }
+    const fiscalError=validateFiscalAuthorization(fiscal,invoiceSequence);
+    if(fiscalError){setError(fiscalError);return;}
+    const fiscalConfigured=Boolean(fiscal?.cai);
     if(onComplete(cart,customer.trim(),dueDate)){
       const fiscalPoint=(fiscal?.establishmentCode??'')+(fiscal?.emissionPoint??'');
       const invoiceNumber=fiscalConfigured
