@@ -55,6 +55,8 @@ export function POS({products,cart,setCart,saleType,setSaleType,payment,setPayme
     const fiscalConfigured=Boolean(fiscal?.cai&&fiscal.establishmentCode&&fiscal.emissionPoint&&fiscal.documentTypeCode&&fiscal.authorizedRangeStart&&fiscal.authorizedRangeEnd&&fiscal.authorizationExpiry);
     if(fiscal?.cai){
       if(!fiscalConfigured){setError('Completa el CAI, establecimiento, punto de emisión, rango autorizado y fecha límite antes de emitir una factura fiscal.');return;}
+      const configuredPoint=(fiscal?.establishmentCode??'')+(fiscal?.emissionPoint??'');
+      if(!/^\\d{4}$/.test(configuredPoint)||!/^\\d{2}$/.test(fiscal?.documentTypeCode??'')){setError('El código de establecimiento + punto de emisión debe sumar 4 dígitos y el código de documento debe tener 2 dígitos.');return;}
       const startMatch=fiscal.authorizedRangeStart.match(/(\\d{8})$/);
       const endMatch=fiscal.authorizedRangeEnd.match(/(\\d{8})$/);
       const rangeStart=startMatch?Number(startMatch[1]):NaN;
