@@ -78,3 +78,19 @@
 }
 
 .supplier-actions{display:flex;gap:6px}.danger-icon{color:#b34f4f}.supplier-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.supplier-notes{grid-column:1/-1}.form-grid select,.form-grid textarea{display:block;width:100%;margin-top:6px;border:1px solid #d9e5e2;border-radius:8px;padding:10px;outline:none;font:inherit;color:#233c37;background:#fff}.form-error{color:#b23f3f;font-size:12px;margin:12px 0 0}@media(max-width:560px){.supplier-metrics{grid-template-columns:1fr}.supplier-notes{grid-column:auto}}
+
+
+/* Expiry policy and FEFO recommendations */
+.expiry-policy{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;padding:14px;color:#16664f;background:#f0faf6;border-color:#c8e8dc}
+.expiry-policy>div{min-width:0}.expiry-policy strong{font-size:13px}.expiry-policy p{margin:5px 0 0;color:#52736a;font-size:12px;line-height:1.5}
+.purchase-row-expiry{grid-template-columns:minmax(160px,1.4fr) minmax(110px,.7fr) auto auto;align-items:start}
+.purchase-expiry-label,.purchase-cost-label{display:block;color:#607a74;font-size:10px;font-weight:700}
+.purchase-expiry-label input,.purchase-cost-label input{display:block;width:100%;min-width:0;margin-top:5px;padding:8px;border:1px solid #d9e5e2;border-radius:7px;font:inherit;color:#233c37}
+.expiry-error{display:block;color:#b42318!important;font-size:10px;margin-top:5px}
+.expiry-recommendations{margin:0 0 12px;padding:14px;border-color:#f0d5a6;background:#fffaf0;color:#8a5a12}
+.expiry-recommendations-title{display:flex;align-items:center;gap:8px;font-size:12px}
+.expiry-recommendations>p{margin:7px 0 10px;font-size:11px;line-height:1.5;color:#725f43}
+.expiry-recommendation{display:flex;align-items:flex-start;gap:8px;padding:9px 0;border-top:1px solid #f0e5cf}
+.expiry-recommendation span{display:block;min-width:0}.expiry-recommendation strong,.expiry-recommendation small{display:block}.expiry-recommendation strong{font-size:12px}.expiry-recommendation small{font-size:11px;line-height:1.45;margin-top:3px;color:#725f43}
+.expiry-recommendations .helper{margin-top:8px;color:#725f43}
+@media(max-width:700px){.purchase-row-expiry{grid-template-columns:1fr 1fr}.purchase-row-expiry>div:first-child{grid-column:1/-1}.purchase-row-expiry>strong{align-self:center}.purchase-row-expiry .qty{align-self:center}}
