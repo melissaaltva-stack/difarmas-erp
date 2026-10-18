@@ -15,7 +15,7 @@ function App({ userId, userEmail, signOut }: { userId: string; userEmail:string;
     active,setActive,products,search,setSearch,suppliers,setSuppliers,customers,setCustomers,inventoryMovements,cashMovements,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,
     showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,
     saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,
-    sales,purchases,purchaseCostHistory,expenses,setExpenses,receivables,setReceivables,payables,setPayables,customers,setCustomers,inventoryMovements,cashClosures,setCashClosures,cashMovements,setCashMovements,paymentTransactions,setPaymentTransactions,settings,setSettings,filtered,recordSale,saveProduct,receivePurchase,syncStatus,syncError
+    sales,purchases,purchaseCostHistory,expenses,setExpenses,receivables,setReceivables,payables,setPayables,cashClosures,setCashClosures,setCashMovements,paymentTransactions,setPaymentTransactions,settings,setSettings,filtered,recordSale,saveProduct,receivePurchase,syncStatus,syncError
   } = useErpState(userId);
 
   const nav = [
