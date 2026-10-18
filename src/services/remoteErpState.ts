@@ -1,5 +1,5 @@
 import type {
-  CashClosure, CashMovement, Customer, Supplier, Expense, InventoryMovement, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseRecord,
+  CashClosure, CashMovement, Customer, Supplier, ErpSettings, Expense, InventoryMovement, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseRecord,
   Receivable, SaleRecord,
 } from '../domain/types';
 import { requireSupabase } from './supabaseClient';
@@ -11,6 +11,7 @@ export type ErpSnapshot = {
   sales: SaleRecord[];
   purchases: PurchaseRecord[];
   purchaseCostHistory?: PurchaseCostHistoryEntry[];
+  settings?: ErpSettings;
   expenses: Expense[];
   receivables: Receivable[];
   payables: Payable[];
@@ -51,6 +52,7 @@ function normalizeSnapshot(value: unknown): ErpSnapshot {
     sales: (value.sales ?? []) as SaleRecord[],
     purchases: (value.purchases ?? []) as PurchaseRecord[],
     purchaseCostHistory: (value.purchaseCostHistory ?? []) as PurchaseCostHistoryEntry[],
+    settings: value.settings as ErpSettings | undefined,
     expenses: (value.expenses ?? []) as Expense[],
     receivables: (value.receivables ?? []) as Receivable[],
     payables: (value.payables ?? []) as Payable[],
