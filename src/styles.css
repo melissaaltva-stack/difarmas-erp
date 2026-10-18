@@ -202,3 +202,14 @@
   .catalog-product-image{height:125px!important}
   .catalog-product-image img{max-height:120px!important}
 }
+
+.ai-hero{margin:28px 34px 0;max-width:1500px;border-radius:18px;padding:26px 30px;background:linear-gradient(120deg,#123b3a,#267b68);color:white;display:flex;justify-content:space-between;align-items:center;gap:24px}
+.ai-hero h2{font-size:25px;margin:12px 0 7px}.ai-hero p{margin:0;color:#d0e8e1;max-width:720px;line-height:1.5}.ai-hero>svg{flex-shrink:0;color:#bcebdc}
+.ai-page .ai-metrics{margin-top:18px}.ai-page .metric{min-width:0}.ai-page .metric strong{font-size:24px;overflow-wrap:anywhere}.ai-page .metric small{display:block;color:#6d8580;line-height:1.4;margin-top:6px}
+.ai-warning{display:inline-flex;align-items:center;gap:4px;color:#a75d16;background:#fff2dc;border-radius:99px;padding:5px 8px;font-size:11px;margin-top:10px;width:max-content;max-width:100%}
+.ai-query{margin-top:18px}.ai-query h3{display:flex;align-items:center;gap:8px;margin:0 0 16px}.ai-query form{display:flex;gap:10px}.ai-query form input{flex:1;min-width:0;border:1px solid #d5e2de;border-radius:10px;padding:12px 14px;font:inherit}.ai-query form button{display:flex;align-items:center;gap:7px}
+.ai-prompts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.ai-prompts button{font-size:12px;padding:8px 11px}
+.ai-answer{margin-top:18px}.ai-answer-head{display:flex;align-items:center;gap:9px}.ai-answer-head strong{flex:1}.ai-answer pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;line-height:1.65;color:#263c38;margin:18px 0 0}
+.ai-disclaimer{font-size:12px;color:#6c817c;line-height:1.55;margin:18px 0}
+@media(max-width:800px){.ai-hero{margin:18px 16px 0;padding:20px}.ai-page.content{padding:18px 16px}.ai-page .ai-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.ai-query form{flex-direction:column}.ai-query form button{justify-content:center}}
+@media print{.ai-query,.ai-prompts,.ai-answer-head button{display:none!important}.ai-hero{background:#fff!important;color:#111!important;border:1px solid #ccc}.ai-hero p{color:#333!important}}
