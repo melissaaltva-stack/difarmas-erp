@@ -17,7 +17,8 @@
     "react-dom": "latest",
     "lucide-react": "latest",
     "@supabase/supabase-js": "^2.57.0",
-    "jsbarcode": "^3.12.1"
+    "jsbarcode": "^3.12.1",
+    "@zxing/browser": "^0.1.5"
   },
   "devDependencies": {
     "@types/react": "latest",
