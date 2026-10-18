@@ -15,8 +15,6 @@ const rolePermissions:Record<UserAccess['role'],Module[]> = {
   'Solo lectura':['dashboard','ventas','inventario','compras','finanzas','proveedores']
 };
 const roleOptions:UserAccess['role'][]=['Administrador','Supervisor','Ventas','Compras','Finanzas','Solo lectura'];
-const blankTemplate=(id:DocumentTemplate['id'],name:string):DocumentTemplate=>({id,name,title:name.toUpperCase(),subtitle:'',footer:'',paperSize:'A4',showLogo:true,showTaxLines:true,showSignatures:false,customFields:[]});
-
 export function Settings({settings,setSettings,userEmail,userId}:{settings:ErpSettings;setSettings:(s:ErpSettings)=>void;userEmail:string;userId:string}) {
   const [tab,setTab]=useState<'empresa'|'documentos'|'usuarios'|'sistema'>('documentos');
   const [selected,setSelected]=useState<DocumentTemplate['id']>('factura');
