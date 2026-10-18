@@ -1,7 +1,7 @@
 export type Module = 'dashboard' | 'ventas' | 'inventario' | 'compras' | 'finanzas' | 'proveedores' | 'configuracion';
 export type DocumentTemplate = { id:'factura'|'orden_compra'|'nota_debito'|'nota_credito'|'orden_entrega'; name:string; title:string; subtitle:string; footer:string; paperSize:'A4'|'A5'|'ticket'; showLogo:boolean; showTaxLines:boolean; showSignatures:boolean; customFields:string[] };
 export type UserAccess = { id:string; email:string; name:string; role:'Administrador'|'Supervisor'|'Ventas'|'Compras'|'Finanzas'|'Solo lectura'; permissions:Module[]; active:boolean };
-export type ErpSettings = { businessName:string; businessSubtitle:string; rtn:string; phone:string; address:string; email:string; primaryColor:string; currency:'HNL'; templates:DocumentTemplate[]; users:UserAccess[] };
+export type ErpSettings = { businessName:string; businessSubtitle:string; rtn:string; phone:string; address:string; email:string; primaryColor:string; currency:'HNL'; templates:DocumentTemplate[]; users:UserAccess[]; documentNumbering?:Record<DocumentTemplate['id'],{prefix:string;nextNumber:number}>; printOptions?:{orientation:'portrait'|'landscape';marginsMm:number;copies:number;showPrices:boolean} };
 export type Product = { id:number; code:string; name:string; imageUrl?:string; activeIngredients?:string[]; category:string; laboratory:string; presentation:string; cost:number; retail:number; wholesale:number; stock:number; minStock:number; lot:string; expiry:string; supplier:string };
 export type CartItem = Product & { qty:number; price:number };
 export type PurchaseItem = Product & { qty:number; unitCost:number };
