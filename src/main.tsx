@@ -7,7 +7,7 @@ import { AuthGate } from './components/AuthGate';
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <AuthGate>
-      {(user, signOut) => <App userId={user.id} signOut={signOut} />}
+      {(user, signOut) => <App userId={user.id} userEmail={user.email ?? ''} signOut={signOut} />}
     </AuthGate>
   </React.StrictMode>
 );
