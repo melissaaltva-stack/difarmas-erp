@@ -61,8 +61,8 @@ export function ProductModal({product,onClose,onSave,products=[]}:{product:Produ
   const [imageSearching,setImageSearching]=useState(false);
   const [imagePanelOpen,setImagePanelOpen]=useState(false);
   const [imageSearchError,setImageSearchError]=useState('');
-  const searchImages=async()=>{
-    const query=(imageQuery||form.name).trim();
+  const searchImages=async(queryOverride?:string)=>{
+    const query=(queryOverride??imageQuery??form.name).trim();
     if(!query){setImageSearchError('Escribe el nombre del producto para buscar imágenes.');return;}
     setImageSearching(true);setImageSearchError('');setImageResults([]);
     try{
