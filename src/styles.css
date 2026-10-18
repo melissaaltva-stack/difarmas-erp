@@ -42,25 +42,37 @@
 .camera-modal .helper{margin-top:12px;line-height:1.5}
 @media(max-width:560px){.camera-modal{padding:16px}.camera-view{min-height:180px}.camera-view video{max-height:48vh}}
 
-/* Factura y diálogo de impresión */
-.change-line{margin-top:10px;padding:10px 12px;background:#eaf8f1;border-radius:9px;color:#16664f}
+
+/* Factura DIFARMÁS: identidad visual coherente con el ERP */
+.change-line{margin-top:10px;padding:10px 12px;background:#e2f4ee;border:1px solid #c8e8dc;border-radius:9px;color:#16664f}
 .print-invoice{display:none}
 @media print{
-  @page{size:auto;margin:12mm}
-  body{background:#fff!important;color:#111!important}
+  @page{size:auto;margin:10mm}
+  html,body{margin:0!important;padding:0!important;background:#fff!important;color:#17252a!important;font-family:Inter,Arial,sans-serif!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   body *{visibility:hidden!important}
   .print-invoice,.print-invoice *{visibility:visible!important}
-  .print-invoice{display:block!important;position:absolute;inset:0 auto auto 0;width:100%;padding:0;font:12px/1.45 Arial,sans-serif;color:#111;background:#fff}
-  .print-invoice header{text-align:center;margin-bottom:22px}
-  .print-invoice header h1{font-size:24px;letter-spacing:2px;margin:0}
-  .print-invoice header p{margin:4px 0}
-  .invoice-meta{display:grid;gap:4px;margin-bottom:18px}
-  .print-invoice table{width:100%;border-collapse:collapse;margin:12px 0}
-  .print-invoice th,.print-invoice td{border-bottom:1px solid #ddd;padding:7px 4px;text-align:left;vertical-align:top}
+  .print-invoice{display:block!important;position:absolute;inset:0 auto auto 0;width:100%;padding:0;font:11px/1.5 Inter,Arial,sans-serif;color:#17252a;background:#fff}
+  .invoice-header{display:flex;align-items:center;justify-content:space-between;gap:14px;background:#102f2f;color:#fff;padding:18px 20px;border-bottom:4px solid #21a179;border-radius:10px 10px 0 0}
+  .invoice-brand{display:flex;align-items:center;gap:11px}
+  .invoice-brand-mark{display:grid;place-items:center;width:38px;height:38px;flex:0 0 38px;background:#21a179;color:#fff;border-radius:10px;font-size:22px;font-weight:900}
+  .invoice-header h1{font-size:21px;letter-spacing:.7px;margin:0;color:#fff}
+  .invoice-header p{font-size:8px;letter-spacing:1.1px;margin:3px 0 0;color:#b9d8d0}
+  .invoice-tag{border:1px solid #7bb7a5;border-radius:99px;padding:5px 10px;font-size:9px;font-weight:800;letter-spacing:1px;color:#dff5ed}
+  .invoice-meta{display:grid;grid-template-columns:1fr 1fr;gap:12px;background:#f4f7f7;border:1px solid #e2ebe9;border-top:0;border-radius:0 0 9px 9px;padding:13px 16px;margin-bottom:20px}
+  .invoice-meta>div{display:grid;gap:3px;min-width:0}
+  .invoice-meta small{font-size:8px;letter-spacing:.7px;color:#6d8984;font-weight:800}
+  .invoice-meta strong{font-size:10px;font-weight:700;overflow-wrap:anywhere}
+  .invoice-customer{grid-column:1/-1;padding-top:9px;border-top:1px solid #dce8e5}
+  .print-invoice table{width:100%;min-width:0;border-collapse:collapse;margin:0 0 18px;table-layout:auto}
+  .print-invoice thead th{background:#eaf4f1;color:#365c53;font-size:8px;text-transform:uppercase;letter-spacing:.5px;font-weight:800;border-bottom:1px solid #cfe1dc;padding:9px 7px;text-align:left}
+  .print-invoice tbody td{border-bottom:1px solid #e8efed;padding:9px 7px;text-align:left;vertical-align:top;font-size:10px;overflow-wrap:anywhere}
   .print-invoice th:not(:first-child),.print-invoice td:not(:first-child){text-align:right;white-space:nowrap}
-  .invoice-ingredients{display:block;font-size:10px;color:#555;margin-top:2px}
-  .invoice-total{margin:18px 0 0 auto;max-width:280px}
-  .invoice-total p{display:flex;justify-content:space-between;gap:18px;margin:6px 0}
-  .invoice-total p:first-child{border-top:1px solid #222;padding-top:10px;font-size:16px}
-  .print-invoice footer{text-align:center;border-top:1px dashed #aaa;margin-top:28px;padding-top:12px}
+  .invoice-ingredients{display:block;font-size:8px;color:#6d8984;margin-top:2px;white-space:normal}
+  .invoice-total{margin:18px 0 0 auto;width:min(280px,100%);background:#f4f7f7;border:1px solid #e2ebe9;border-radius:10px;padding:12px 14px}
+  .invoice-total p{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin:7px 0;font-size:10px}
+  .invoice-total p span{color:#607a74}
+  .invoice-total p strong{text-align:right}
+  .invoice-total p:first-child{border-bottom:1px solid #dce8e5;padding-bottom:10px;margin-top:0;font-size:12px}
+  .invoice-total p:first-child strong{font-size:17px;color:#16664f}
+  .print-invoice footer{text-align:center;background:#f4f7f7;color:#54706b;border-top:2px solid #21a179;border-radius:0 0 8px 8px;margin-top:24px;padding:12px 8px;font-size:9px}
 }
