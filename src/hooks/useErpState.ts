@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { CartItem, CashClosure, CashMovement, Customer, Expense, InventoryMovement, Module, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseItem, PurchaseRecord, Receivable, SaleRecord, Supplier } from '../domain/types';
+import type { CartItem, CashClosure, CashMovement, Customer, ErpSettings, Expense, InventoryMovement, Module, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseItem, PurchaseRecord, Receivable, SaleRecord, Supplier } from '../domain/types';
 import { loadJson, saveJson, loadNumber, saveNumber } from '../utils/storage';
 import { applyPurchaseToInventory, applySaleToInventory } from '../services/inventoryService';
 import { buildSaleRecord, createReceivableFromSale } from '../services/salesService';
@@ -13,6 +13,14 @@ const initialProducts: Product[] = [
   { id: 3, code: '750100000003', name: 'Calcio 1,500 mg + D3', category: 'Vitaminas', laboratory: 'Genérico', presentation: 'Frasco', cost: 335.65, retail: 449, wholesale: 420, stock: 14, minStock: 6, lot: 'CAL-2608', expiry: '2028-01-31', supplier: 'Distribuidora Nacional' },
   { id: 4, code: '750100000004', name: 'Alevian Duo', category: 'Medicamentos', laboratory: 'Asofarma', presentation: 'Caja', cost: 1275, retail: 2550, wholesale: 2200, stock: 3, minStock: 3, lot: 'ALE-2605', expiry: '2027-05-31', supplier: 'Droguería Central' },
 ];
+
+const initialSettings:ErpSettings={businessName:'DIFARMÁS',businessSubtitle:'Farmacia y distribución de medicamentos',rtn:'',phone:'',address:'',email:'',primaryColor:'#168568',currency:'HNL',templates:[
+{id:'factura',name:'Factura de venta',title:'FACTURA',subtitle:'COMPROBANTE DE VENTA',footer:'Gracias por su compra. ¡En DIFARMÁS estamos para servirle!',paperSize:'A4',showLogo:true,showTaxLines:true,showSignatures:false,customFields:['Cliente','Método de pago']},
+{id:'orden_compra',name:'Orden de compra',title:'ORDEN DE COMPRA',subtitle:'Solicitud de mercancía a proveedor',footer:'Favor confirmar disponibilidad, precios y fecha de entrega.',paperSize:'A4',showLogo:true,showTaxLines:true,showSignatures:true,customFields:['Proveedor','Fecha requerida','Condiciones de pago']},
+{id:'nota_debito',name:'Nota de débito',title:'NOTA DE DÉBITO',subtitle:'Ajuste de saldo por cobrar/pagar',footer:'Conserve este documento para sus registros contables.',paperSize:'A4',showLogo:true,showTaxLines:true,showSignatures:true,customFields:['Documento relacionado','Motivo','Monto del ajuste']},
+{id:'nota_credito',name:'Nota de crédito',title:'NOTA DE CRÉDITO',subtitle:'Ajuste, devolución o descuento',footer:'Conserve este documento para sus registros contables.',paperSize:'A4',showLogo:true,showTaxLines:true,showSignatures:true,customFields:['Documento relacionado','Motivo','Monto del ajuste']},
+{id:'orden_entrega',name:'Orden de entrega',title:'ORDEN DE ENTREGA',subtitle:'Preparación y entrega de mercancía',footer:'Verifique cantidades y estado de los productos al recibir.',paperSize:'A4',showLogo:true,showTaxLines:false,showSignatures:true,customFields:['Cliente','Dirección de entrega','Recibido por']}
+],users:[]};
 
 export function useErpState(userId: string) {
   const [active, setActive] = useState<Module>('dashboard');
@@ -34,6 +42,7 @@ export function useErpState(userId: string) {
   const [sales, setSales] = useState<SaleRecord[]>(()=>loadJson<SaleRecord[]>('difarmas_sales',[]));
   const [purchases, setPurchases] = useState<PurchaseRecord[]>(()=>loadJson<PurchaseRecord[]>('difarmas_purchases',[]));
   const [purchaseCostHistory, setPurchaseCostHistory] = useState<PurchaseCostHistoryEntry[]>(()=>loadJson<PurchaseCostHistoryEntry[]>('difarmas_purchase_cost_history',[]));
+  const [settings,setSettings] = useState<ErpSettings>(()=>loadJson<ErpSettings>('difarmas_settings',initialSettings));
   const [expenses, setExpenses] = useState<Expense[]>(()=>loadJson<Expense[]>('difarmas_expenses',[]));
   const [receivables, setReceivables] = useState<Receivable[]>(()=>loadJson<Receivable[]>('difarmas_receivables',[]));
   const [payables, setPayables] = useState<Payable[]>(()=>loadJson<Payable[]>('difarmas_payables',[]));
@@ -58,6 +67,7 @@ export function useErpState(userId: string) {
   useEffect(()=>{saveJson('difarmas_sales',sales)},[sales]);
   useEffect(()=>{saveJson('difarmas_purchases',purchases)},[purchases]);
   useEffect(()=>{saveJson('difarmas_purchase_cost_history',purchaseCostHistory)},[purchaseCostHistory]);
+  useEffect(()=>{saveJson('difarmas_settings',settings)},[settings]);
   useEffect(()=>{saveJson('difarmas_expenses',expenses)},[expenses]);
   useEffect(()=>{saveJson('difarmas_receivables',receivables)},[receivables]);
   useEffect(()=>{saveJson('difarmas_payables',payables)},[payables]);
@@ -67,9 +77,9 @@ export function useErpState(userId: string) {
   useEffect(()=>{saveJson('difarmas_payment_transactions',paymentTransactions)},[paymentTransactions]);
 
   const snapshot = useMemo<ErpSnapshot>(() => ({
-    customers, suppliers, products, sales, purchases, purchaseCostHistory, expenses, receivables, payables,
+    customers, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables,
     inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions,
-  }), [customers, suppliers, products, sales, purchases, purchaseCostHistory, expenses, receivables, payables, inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions]);
+  }), [customers, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables, inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions]);
 
   // Load the signed-in user's snapshot before allowing remote writes. A first login
   // seeds the cloud record from this browser's existing local data.
@@ -90,6 +100,7 @@ export function useErpState(userId: string) {
       setSales([]);
       setPurchases([]);
       setPurchaseCostHistory([]);
+      setSettings(initialSettings);
       setExpenses([]);
       setReceivables([]);
       setPayables([]);
@@ -110,6 +121,7 @@ export function useErpState(userId: string) {
         setSales(remote.sales);
         setPurchases(remote.purchases);
         setPurchaseCostHistory(remote.purchaseCostHistory ?? []);
+        setSettings(remote.settings ?? initialSettings);
         setExpenses(remote.expenses);
         setReceivables(remote.receivables);
         setPayables(remote.payables);
@@ -203,5 +215,5 @@ export function useErpState(userId: string) {
     return true;
   };
 
-  return {active,setActive,customers,setCustomers,suppliers,setSuppliers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,purchases,purchaseCostHistory,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,cashClosures,setCashClosures,cashMovements,setCashMovements,paymentTransactions,setPaymentTransactions,filtered,recordSale,saveProduct,receivePurchase,syncStatus,syncError};
+  return {active,setActive,customers,setCustomers,suppliers,setSuppliers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,settings,setSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,purchases,purchaseCostHistory,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,cashClosures,setCashClosures,cashMovements,setCashMovements,paymentTransactions,setPaymentTransactions,filtered,recordSale,saveProduct,receivePurchase,syncStatus,syncError};
 }
