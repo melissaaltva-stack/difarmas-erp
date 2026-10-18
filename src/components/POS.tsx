@@ -7,7 +7,7 @@ import { localDateKey } from '../utils/dates';
 
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
 
-export function POS({products,cart,setCart,saleType,setSaleType,payment,setPayment,search,setSearch,onComplete,settings}:{products:Product[];cart:CartItem[];setCart:(c:CartItem[])=>void;saleType:'minorista'|'mayorista';setSaleType:(v:'minorista'|'mayorista')=>void;payment:string;setPayment:(v:string)=>void;search:string;setSearch:(v:string)=>void;onComplete:(sold:CartItem[],customer?:string,dueDate?:string)=>boolean;settings:ErpSettings;setSettings:(s:ErpSettings)=>void}) {
+export function POS({products,cart,setCart,saleType,setSaleType,payment,setPayment,search,setSearch,onComplete,settings,setSettings}:{products:Product[];cart:CartItem[];setCart:(c:CartItem[])=>void;saleType:'minorista'|'mayorista';setSaleType:(v:'minorista'|'mayorista')=>void;payment:string;setPayment:(v:string)=>void;search:string;setSearch:(v:string)=>void;onComplete:(sold:CartItem[],customer?:string,dueDate?:string)=>boolean;settings:ErpSettings;setSettings:(s:ErpSettings)=>void}) {
   const invoiceTemplate=settings.templates.find(t=>t.id==='factura');
   const paymentMethods=settings.paymentMethods?.filter(method=>method.active)??[{id:'cash',name:'Efectivo',kind:'cash' as const,active:true,requiresReference:false},{id:'transfer',name:'Transferencia',kind:'other' as const,active:true,requiresReference:true},{id:'credit',name:'Crédito',kind:'credit' as const,active:true,requiresReference:false}];
   const selectedPaymentMethod=paymentMethods.find(method=>method.name===payment)??paymentMethods[0];
