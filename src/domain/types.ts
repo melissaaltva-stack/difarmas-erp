@@ -1,4 +1,4 @@
-export type Module = 'dashboard' | 'ventas' | 'inventario' | 'compras' | 'finanzas';
+export type Module = 'dashboard' | 'ventas' | 'inventario' | 'compras' | 'finanzas' | 'proveedores';
 export type Product = { id:number; code:string; name:string; activeIngredients?:string[]; category:string; laboratory:string; presentation:string; cost:number; retail:number; wholesale:number; stock:number; minStock:number; lot:string; expiry:string; supplier:string };
 export type CartItem = Product & { qty:number; price:number };
 export type PurchaseItem = Product & { qty:number; unitCost:number };
@@ -13,3 +13,4 @@ export type CashMovement = { id:number; type:'Entrada'|'Salida'; description:str
 export type PaymentTransaction = { id:number; type:'Cobro'|'Pago proveedor'; accountId:number; party:string; amount:number; date:string; paymentMethod?:'Efectivo'|'Transferencia' };
 export type InventoryMovement = { id:number; productId:number; productName:string; type:'Venta'|'Compra'|'Ajuste'; quantity:number; stockBefore:number; stockAfter:number; unitCost:number; referenceId?:number; date:string; note?:string };
 export type Customer = { id:number; name:string; phone:string; creditLimit:number; active:boolean; notes:string };
+export type Supplier = { id:number; name:string; contact:string; phone:string; email:string; rtn:string; address:string; paymentTerms:string; notes:string; active:boolean };

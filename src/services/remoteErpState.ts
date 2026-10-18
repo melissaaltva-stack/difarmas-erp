@@ -1,11 +1,12 @@
 import type {
-  CashClosure, CashMovement, Customer, Expense, InventoryMovement, Payable, PaymentTransaction, Product, PurchaseRecord,
+  CashClosure, CashMovement, Customer, Supplier, Expense, InventoryMovement, Payable, PaymentTransaction, Product, PurchaseRecord,
   Receivable, SaleRecord,
 } from '../domain/types';
 import { requireSupabase } from './supabaseClient';
 
 export type ErpSnapshot = {
   customers: Customer[];
+  suppliers?: Supplier[];
   products: Product[];
   sales: SaleRecord[];
   purchases: PurchaseRecord[];
@@ -44,6 +45,7 @@ function normalizeSnapshot(value: unknown): ErpSnapshot {
   }
   return {
     customers: (value.customers ?? []) as Customer[],
+    suppliers: (value.suppliers ?? []) as Supplier[],
     products: (value.products ?? []) as Product[],
     sales: (value.sales ?? []) as SaleRecord[],
     purchases: (value.purchases ?? []) as PurchaseRecord[],
