@@ -6,6 +6,7 @@ export type SaleLine = { productId:number; productName:string; category:string; 
 export type SaleRecord = { id:number; total:number; cost:number; profit:number; payment:string; type:string; date:string; customer?:string; dueDate?:string; items?:SaleLine[] };
 export type Expense = { id:number; description:string; amount:number; category:string; date:string; paymentMethod?:'Efectivo'|'Transferencia' };
 export type PurchaseRecord = { id:number; supplier:string; total:number; paymentMethod:'Efectivo'|'Transferencia'|'Crédito'; date:string };
+export type PurchaseCostHistoryEntry = { id:number; purchaseId:number; productId:number; productCode:string; productName:string; supplier:string; unitCost:number; quantity:number; date:string };
 export type Receivable = { id:number; saleId:number; customer:string; total:number; paid:number; dueDate:string; date:string; lastPaymentDate?:string };
 export type Payable = { id:number; supplier:string; total:number; paid:number; dueDate:string; date:string; lastPaymentDate?:string };
 export type CashClosure = { id:number; date:string; opening:number; cashSales:number; collections:number; expenses:number; supplierPayments:number; purchasesCash?:number; expected:number; counted:number; difference:number; note:string };
