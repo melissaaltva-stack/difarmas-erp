@@ -24,7 +24,9 @@ function App({ userId, userEmail, signOut }: { userId: string; userEmail:string;
   ] as const;
   const userAccess=settings.users.find(u=>u.email.trim().toLowerCase()===userEmail.trim().toLowerCase()&&u.active);
   const permissions=userAccess?.permissions??(settings.users.length===0?nav.map(item=>item[0]):['dashboard']);
-  const canSee=(module:string)=>permissions.includes(module as typeof permissions[number]);
+  // Existing user records may predate the reports module. Preserve role-based access for those accounts.
+  const reportRoles=['Administrador','Supervisor','Finanzas','Solo lectura'];
+  const canSee=(module:string)=>permissions.includes(module as typeof permissions[number])||(module==='reportes'&&!!userAccess&&reportRoles.includes(userAccess.role));
   const visibleNav=nav.filter(([id])=>canSee(id));
 
   return <div className="app">
@@ -43,5 +45,4 @@ function App({ userId, userEmail, signOut }: { userId: string; userEmail:string;
 }
 
 function ModulePlaceholder({name}:{name:string}) { return <div className="content"><div className="empty card"><Boxes size={42}/><h2>{name}</h2><p>Este módulo está preparado en la navegación. Será construido en la siguiente fase del MVP.</p><span className="pill">PRÓXIMO MÓDULO</span></div></div> }
-
 export default App;
