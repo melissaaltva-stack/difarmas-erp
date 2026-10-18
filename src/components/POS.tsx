@@ -7,12 +7,13 @@ import { localDateKey } from '../utils/dates';
 
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
 
-export function POS({products,cart,setCart,saleType,setSaleType,payment,setPayment,search,setSearch,onComplete,settings}:{products:Product[];cart:CartItem[];setCart:(c:CartItem[])=>void;saleType:'minorista'|'mayorista';setSaleType:(v:'minorista'|'mayorista')=>void;payment:string;setPayment:(v:'Efectivo'|'Transferencia'|'Crédito')=>void;search:string;setSearch:(v:string)=>void;onComplete:(sold:CartItem[],customer?:string,dueDate?:string)=>boolean;settings:ErpSettings}) {
+export function POS({products,cart,setCart,saleType,setSaleType,payment,setPayment,search,setSearch,onComplete,settings}:{products:Product[];cart:CartItem[];setCart:(c:CartItem[])=>void;saleType:'minorista'|'mayorista';setSaleType:(v:'minorista'|'mayorista')=>void;payment:string;setPayment:(v:string)=>void;search:string;setSearch:(v:string)=>void;onComplete:(sold:CartItem[],customer?:string,dueDate?:string)=>boolean;settings:ErpSettings;setSettings:(s:ErpSettings)=>void}) {
   const invoiceTemplate=settings.templates.find(t=>t.id==='factura');
   const paymentMethods=settings.paymentMethods?.filter(method=>method.active)??[{id:'cash',name:'Efectivo',kind:'cash' as const,active:true,requiresReference:false},{id:'transfer',name:'Transferencia',kind:'other' as const,active:true,requiresReference:true},{id:'credit',name:'Crédito',kind:'credit' as const,active:true,requiresReference:false}];
   const selectedPaymentMethod=paymentMethods.find(method=>method.name===payment)??paymentMethods[0];
   const isCredit=selectedPaymentMethod?.kind==='credit'||payment==='Crédito';
   const isCash=selectedPaymentMethod?.kind==='cash'||payment==='Efectivo';
+  useEffect(()=>{if(paymentMethods.length&&!paymentMethods.some(method=>method.name===payment)){setPayment(paymentMethods[0].name);}},[payment,paymentMethods,setPayment]);
   const results=products.filter(p=>[p.code,p.name,...(p.activeIngredients??[])].join(' ').toLowerCase().includes(search.toLowerCase())).slice(0,6);
   const total=cart.reduce((sum,i)=>sum+i.price*i.qty,0);
   const profit=cart.reduce((sum,i)=>sum+(i.price-i.cost)*i.qty,0);
@@ -49,7 +50,16 @@ export function POS({products,cart,setCart,saleType,setSaleType,payment,setPayme
     if(!isCredit&&(!amountReceived.trim()||!Number.isFinite(received)||received<total)){setError('Ingresa un monto recibido igual o mayor al total de la venta.');return;}
     if(cart.some(i=>i.qty>(products.find(p=>p.id===i.id)?.stock??0))){setError('El carrito supera el stock disponible. Actualiza las cantidades.');return;}
     if(onComplete(cart,customer.trim(),dueDate)){
-      setInvoice({number:String(Date.now()).slice(-8),date:new Date().toLocaleString('es-HN'),items:cart.map(i=>({...i})),total,payment,customer:customer.trim()||'Consumidor final',received:isCredit?0:received,change:changeDue});
+      const numbering=settings.documentNumbering??{factura:{prefix:'FAC-',nextNumber:1},orden_compra:{prefix:'OC-',nextNumber:1},nota_debito:{prefix:'ND-',nextNumber:1},nota_credito:{prefix:'NC-',nextNumber:1},orden_entrega:{prefix:'OE-',nextNumber:1}};
+      const invoiceSequence=Math.max(1,numbering.factura?.nextNumber??1);
+      const fiscal=settings.billingInfo;
+      const fiscalConfigured=Boolean(fiscal?.cai&&fiscal.establishmentCode&&fiscal.emissionPoint&&fiscal.documentTypeCode&&fiscal.authorizedRangeStart&&fiscal.authorizedRangeEnd&&fiscal.authorizationExpiry);
+      const fiscalPoint=(fiscal?.establishmentCode??'')+(fiscal?.emissionPoint??'');
+      const invoiceNumber=fiscalConfigured
+        ? `${fiscalPoint.padStart(4,'0')}-${(fiscal?.documentTypeCode??'01').padStart(2,'0')}-${String(invoiceSequence).padStart(8,'0')}`
+        : `${numbering.factura?.prefix??'FAC-'}${String(invoiceSequence).padStart(8,'0')}`;
+      setSettings({...settings,documentNumbering:{...numbering,factura:{...numbering.factura,prefix:numbering.factura?.prefix??'FAC-',nextNumber:invoiceSequence+1}}});
+      setInvoice({number:invoiceNumber,date:new Date().toLocaleString('es-HN'),items:cart.map(i=>({...i})),total,payment,customer:customer.trim()||'Consumidor final',received:isCredit?0:received,change:changeDue});
       setCart([]);setCustomer('');setAmountReceived('');
     }else{setError('No se pudo registrar la venta. Verifica el stock y las cantidades.');}
   };
