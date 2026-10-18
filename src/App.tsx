@@ -5,32 +5,37 @@ import { Finance } from './components/Finance';
 import { GoalsSettings, ManagementSuite } from './components/ManagementSuite';
 import { Dashboard } from './components/Dashboard';
 import { useErpState } from './hooks/useErpState';
-import { Activity, Boxes, LayoutDashboard, ShoppingCart, Wallet, Truck } from 'lucide-react';
+import { Activity, Boxes, LayoutDashboard, ShoppingCart, Wallet, Truck, Settings as SettingsIcon } from 'lucide-react';
+import { Settings } from './components/Settings';
 import { Suppliers } from './components/Suppliers';
 
-function App({ userId, signOut }: { userId: string; signOut: () => Promise<void> }) {
+function App({ userId, userEmail, signOut }: { userId: string; userEmail:string; signOut: () => Promise<void> }) {
   const {
     active,setActive,products,search,setSearch,suppliers,setSuppliers,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,
     showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,
     saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,
-    sales,purchases,purchaseCostHistory,expenses,setExpenses,receivables,setReceivables,payables,setPayables,customers,setCustomers,inventoryMovements,cashClosures,setCashClosures,cashMovements,setCashMovements,paymentTransactions,setPaymentTransactions,filtered,recordSale,saveProduct,receivePurchase,syncStatus,syncError
+    sales,purchases,purchaseCostHistory,expenses,setExpenses,receivables,setReceivables,payables,setPayables,customers,setCustomers,inventoryMovements,cashClosures,setCashClosures,cashMovements,setCashMovements,paymentTransactions,setPaymentTransactions,settings,setSettings,filtered,recordSale,saveProduct,receivePurchase,syncStatus,syncError
   } = useErpState(userId);
 
   const nav = [
     ['dashboard', 'Dashboard', LayoutDashboard], ['ventas', 'Ventas / POS', ShoppingCart],
-    ['inventario', 'Inventario', Boxes], ['compras', 'Compras', ShoppingCart], ['finanzas', 'Finanzas', Wallet], ['proveedores', 'Proveedores', Truck],
+    ['inventario', 'Inventario', Boxes], ['compras', 'Compras', ShoppingCart], ['finanzas', 'Finanzas', Wallet], ['proveedores', 'Proveedores', Truck], ['configuracion', 'Configuración', SettingsIcon],
   ] as const;
+  const userAccess=settings.users.find(u=>u.email.trim().toLowerCase()===userEmail.trim().toLowerCase()&&u.active);
+  const permissions=userAccess?.permissions??(settings.users.length===0?nav.map(item=>item[0]):['dashboard']);
+  const canSee=(module:string)=>permissions.includes(module as typeof permissions[number]);
+  const visibleNav=nav.filter(([id])=>canSee(id));
 
   return <div className="app">
     <aside className="sidebar">
       <div className="brand"><div className="brand-mark">D</div><div><strong>DIFARMÁS</strong><span>ERP</span></div></div>
       <div className="section-label">OPERACIÓN</div>
-      {nav.map(([id, label, Icon]) => <button key={id} className={active === id ? 'nav active' : 'nav'} onClick={() => setActive(id)}><Icon size={19}/>{label}</button>)}
+      {visibleNav.map(([id, label, Icon]) => <button key={id} className={active === id ? 'nav active' : 'nav'} onClick={() => setActive(id)}><Icon size={19}/>{label}</button>)}
       <div className="sidebar-footer"><Activity size={17}/> Sistema MVP v0.7</div>
     </aside>
     <main className="main">
       <header className="topbar"><div><p className="eyebrow">DIFARMÁS · ERP</p><h1>{active === 'dashboard' ? 'Panel de control' : nav.find(n => n[0] === active)?.[1]}</h1></div><div className="topbar-actions"><div className={`status ${syncStatus === 'error' ? 'status-error' : syncStatus === 'loading' || syncStatus === 'saving' ? 'status-pending' : ''}`}><span/>{syncStatus === 'loading' ? 'Cargando datos seguros…' : syncStatus === 'saving' ? 'Sincronizando…' : syncStatus === 'error' ? 'Error de sincronización' : 'Sincronizado con Supabase'}</div>{syncStatus === 'error' && syncError && <p role="alert" className="sync-error" title={syncError}>{syncError}</p>}<button className="secondary signout" onClick={() => { void signOut().catch(() => {}); }}>Cerrar sesión</button></div></header>
-      {active === 'dashboard' ? <><Dashboard products={products} sales={sales} expenses={expenses} monthlyGoal={monthlyGoal} fixedExpenses={fixedExpenses}/><GoalsSettings monthlyGoal={monthlyGoal} setMonthlyGoal={setMonthlyGoal} fixedExpenses={fixedExpenses} setFixedExpenses={setFixedExpenses}/></> : active === 'inventario' ? <Inventory products={filtered} search={search} setSearch={setSearch} movements={inventoryMovements} onNew={() => { setEditing(null); setShowForm(true); }} onEdit={p => { setEditing(p); setShowForm(true); }} /> : active === 'ventas' ? <POS products={products} cart={cart} setCart={setCart} saleType={saleType} setSaleType={setSaleType} payment={payment} setPayment={setPayment} search={saleSearch} setSearch={setSaleSearch} onComplete={recordSale}/> : active === 'compras' ? <Purchases products={products} cart={purchaseCart} setCart={setPurchaseCart} search={purchaseSearch} setSearch={setPurchaseSearch} supplier={purchaseSupplier} setSupplier={setPurchaseSupplier} suppliers={suppliers} costHistory={purchaseCostHistory} onReceive={receivePurchase}/> : active === 'proveedores' ? <Suppliers suppliers={suppliers} setSuppliers={setSuppliers}/> : active === 'finanzas' ? <><Finance sales={sales} purchases={purchases} expenses={expenses} setExpenses={setExpenses} receivables={receivables} setReceivables={setReceivables} payables={payables} setPayables={setPayables} closures={cashClosures} setClosures={setCashClosures} movements={cashMovements} setMovements={setCashMovements} paymentTransactions={paymentTransactions} setPaymentTransactions={setPaymentTransactions}/><ManagementSuite sales={sales} expenses={expenses} receivables={receivables} payables={payables} products={products} customers={customers} setCustomers={setCustomers}/></> : <ModulePlaceholder name={nav.find(n => n[0] === active)?.[1] || ''}/>}
+      {active === 'configuracion' ? <Settings settings={settings} setSettings={setSettings} userEmail={userEmail} userId={userId}/> : active === 'dashboard' ? <><Dashboard products={products} sales={sales} expenses={expenses} monthlyGoal={monthlyGoal} fixedExpenses={fixedExpenses}/><GoalsSettings monthlyGoal={monthlyGoal} setMonthlyGoal={setMonthlyGoal} fixedExpenses={fixedExpenses} setFixedExpenses={setFixedExpenses}/></> : active === 'inventario' ? <Inventory products={filtered} search={search} setSearch={setSearch} movements={inventoryMovements} onNew={() => { setEditing(null); setShowForm(true); }} onEdit={p => { setEditing(p); setShowForm(true); }} /> : active === 'ventas' ? <POS products={products} cart={cart} setCart={setCart} saleType={saleType} setSaleType={setSaleType} payment={payment} setPayment={setPayment} search={saleSearch} setSearch={setSaleSearch} onComplete={recordSale} settings={settings}/> : active === 'compras' ? <Purchases products={products} cart={purchaseCart} setCart={setPurchaseCart} search={purchaseSearch} setSearch={setPurchaseSearch} supplier={purchaseSupplier} setSupplier={setPurchaseSupplier} suppliers={suppliers} costHistory={purchaseCostHistory} onReceive={receivePurchase}/> : active === 'proveedores' ? <Suppliers suppliers={suppliers} setSuppliers={setSuppliers}/> : active === 'finanzas' ? <><Finance sales={sales} purchases={purchases} expenses={expenses} setExpenses={setExpenses} receivables={receivables} setReceivables={setReceivables} payables={payables} setPayables={setPayables} closures={cashClosures} setClosures={setCashClosures} movements={cashMovements} setMovements={setCashMovements} paymentTransactions={paymentTransactions} setPaymentTransactions={setPaymentTransactions}/><ManagementSuite sales={sales} expenses={expenses} receivables={receivables} payables={payables} products={products} customers={customers} setCustomers={setCustomers}/></> : <ModulePlaceholder name={nav.find(n => n[0] === active)?.[1] || ''}/>}
       {showForm && <ProductModal product={editing} products={products} onClose={() => {setShowForm(false);setEditing(null)}} onSave={saveProduct}/>}
     </main>
   </div>;

@@ -1,0 +1,87 @@
+import { useEffect, useState } from 'react';
+import { FileText, ShieldCheck, Building2, Save, Plus, Trash2, Users, Info } from 'lucide-react';
+import type { DocumentTemplate, ErpSettings, Module, UserAccess } from '../domain/types';
+
+const modules:{id:Module;label:string}[]=[
+  {id:'dashboard',label:'Panel de control'},{id:'ventas',label:'Ventas / POS'},{id:'inventario',label:'Inventario'},
+  {id:'compras',label:'Compras'},{id:'finanzas',label:'Finanzas'},{id:'proveedores',label:'Proveedores'},{id:'configuracion',label:'Configuración'}
+];
+const rolePermissions:Record<UserAccess['role'],Module[]> = {
+  Administrador:modules.map(m=>m.id),
+  Supervisor:['dashboard','ventas','inventario','compras','finanzas','proveedores'],
+  Ventas:['dashboard','ventas'],
+  Compras:['dashboard','inventario','compras','proveedores'],
+  Finanzas:['dashboard','finanzas','compras'],
+  'Solo lectura':['dashboard','ventas','inventario','compras','finanzas','proveedores']
+};
+const roleOptions:UserAccess['role'][]=['Administrador','Supervisor','Ventas','Compras','Finanzas','Solo lectura'];
+export function Settings({settings,setSettings,userEmail,userId}:{settings:ErpSettings;setSettings:(s:ErpSettings)=>void;userEmail:string;userId:string}) {
+  const [tab,setTab]=useState<'empresa'|'documentos'|'usuarios'|'sistema'>('documentos');
+  const [selected,setSelected]=useState<DocumentTemplate['id']>('factura');
+  const [notice,setNotice]=useState('');
+  const [newEmail,setNewEmail]=useState('');
+  const [newName,setNewName]=useState('');
+  const [newRole,setNewRole]=useState<UserAccess['role']>('Ventas');
+  const [newField,setNewField]=useState('');
+  const [editedUser,setEditedUser]=useState<string|null>(null);
+  const [draftTemplate,setDraftTemplate]=useState<DocumentTemplate|null>(null);
+  const [draftSettings,setDraftSettings]=useState(settings);
+  const currentTemplate=settings.templates.find(t=>t.id===selected)??settings.templates[0];
+
+  useEffect(()=>{
+    if(settings.users.length===0&&userEmail.trim()){
+      setSettings({...settings,users:[{id:userId,email:userEmail.trim().toLowerCase(),name:userEmail.split('@')[0],role:'Administrador',permissions:rolePermissions.Administrador,active:true}]});
+    }
+  // Initial bootstrap only; the current user becomes the first administrator when no users exist.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
+
+  useEffect(()=>{setDraftTemplate(currentTemplate?{...currentTemplate,customFields:[...currentTemplate.customFields]}:null)},[selected,settings.templates]);
+  useEffect(()=>{setDraftSettings(settings)},[settings]);
+
+  const saveBusiness=()=>{setSettings(draftSettings);setNotice('Datos de la empresa guardados.');};
+  const saveTemplate=()=>{if(!draftTemplate)return;setSettings({...settings,templates:settings.templates.map(t=>t.id===draftTemplate.id?draftTemplate:t)});setNotice('Formato de documento guardado.');};
+  const addUser=()=>{
+    const email=newEmail.trim().toLowerCase();
+    if(!email||!email.includes('@')){setNotice('Escribe un correo válido para identificar la cuenta.');return;}
+    if(settings.users.some(u=>u.email.toLowerCase()===email)){setNotice('Ese correo ya está registrado en la lista de permisos.');return;}
+    const entry:UserAccess={id:`user-${Date.now()}`,email,name:newName.trim()||email.split('@')[0],role:newRole,permissions:[...rolePermissions[newRole]],active:true};
+    setSettings({...settings,users:[...settings.users,entry]});setNewEmail('');setNewName('');setNewRole('Ventas');setNotice('Usuario agregado a la matriz de permisos. La cuenta de acceso debe crearse por separado en Supabase.');
+  };
+  const updateUser=(id:string,patch:Partial<UserAccess>)=>setSettings({...settings,users:settings.users.map(u=>u.id===id?{...u,...patch}:u)});
+  const changeRole=(user:UserAccess,role:UserAccess['role'])=>updateUser(user.id,{role,permissions:[...rolePermissions[role]]});
+  const updateTemplate=(patch:Partial<DocumentTemplate>)=>setDraftTemplate(current=>current?{...current,...patch}:current);
+  const addCustomField=()=>{const value=newField.trim();if(value&&draftTemplate&&!draftTemplate.customFields.includes(value)){updateTemplate({customFields:[...draftTemplate.customFields,value]});setNewField('');}};
+  const templates=[
+    {id:'factura',name:'Factura de venta'},{id:'orden_compra',name:'Orden de compra'},{id:'nota_debito',name:'Nota de débito'},
+    {id:'nota_credito',name:'Nota de crédito'},{id:'orden_entrega',name:'Orden de entrega'}
+  ] as const;
+
+  return <div className="content settings-page">
+    <div className="page-head"><div><span className="pill">ADMINISTRACIÓN DEL ERP</span><h2>Configuración</h2><p>Personaliza los documentos, los datos de DIFARMÁS y los permisos de acceso.</p></div><span className="settings-save-state"><ShieldCheck size={16}/> Guardado con el ERP</span></div>
+    <div className="settings-tabs" role="tablist">
+      <button className={tab==='documentos'?'active':''} onClick={()=>setTab('documentos')}><FileText size={17}/> Formatos de documentos</button>
+      <button className={tab==='empresa'?'active':''} onClick={()=>setTab('empresa')}><Building2 size={17}/> Datos de empresa</button>
+      <button className={tab==='usuarios'?'active':''} onClick={()=>setTab('usuarios')}><Users size={17}/> Usuarios y permisos</button>
+      <button className={tab==='sistema'?'active':''} onClick={()=>setTab('sistema')}><ShieldCheck size={17}/> Sistema</button>
+    </div>
+    {notice&&<div className="settings-notice" role="status">{notice}<button onClick={()=>setNotice('')} aria-label="Cerrar aviso">×</button></div>}
+    {tab==='documentos'&&<div className="settings-layout">
+      <aside className="card settings-document-list"><h3>Documentos</h3><p>Selecciona el formato que deseas configurar.</p>{templates.map(t=><button key={t.id} className={selected===t.id?'selected':''} onClick={()=>setSelected(t.id as DocumentTemplate['id'])}><FileText size={17}/><span>{t.name}<small>{settings.templates.find(x=>x.id===t.id)?.paperSize??'A4'} · Editable</small></span></button>)}</aside>
+      <section className="card settings-editor">
+        {draftTemplate&&<><div className="settings-section-head"><div><h3>Editar {draftTemplate.name.toLowerCase()}</h3><p>Define los textos, el tamaño y los elementos visibles del formato.</p></div><button className="primary" onClick={saveTemplate}><Save size={16}/> Guardar formato</button></div>
+        <div className="document-preview" style={{borderTopColor:settings.primaryColor}}><div className="document-preview-brand">{draftTemplate.showLogo&&<span style={{background:settings.primaryColor}}>D</span>}<div><strong>{settings.businessName||'DIFARMÁS'}</strong><small>{settings.businessSubtitle}</small></div><b style={{color:settings.primaryColor}}>{draftTemplate.title||draftTemplate.name}</b></div><p className="preview-subtitle">{draftTemplate.subtitle}</p><div className="preview-lines"><i/><i/><i/><i/></div><div className="preview-total">TOTAL __________________</div>{draftTemplate.showSignatures&&<div className="preview-signatures"><span>_________________ Firma autorizada</span><span>_________________ Recibido por</span></div>}<small className="preview-footer">{draftTemplate.footer}</small></div>
+        <div className="settings-form-grid"><label>Nombre interno<input value={draftTemplate.name} onChange={e=>updateTemplate({name:e.target.value})}/></label><label>Título impreso<input value={draftTemplate.title} onChange={e=>updateTemplate({title:e.target.value})}/></label><label className="settings-span-two">Subtítulo<input value={draftTemplate.subtitle} onChange={e=>updateTemplate({subtitle:e.target.value})}/></label><label>Tamaño de papel<select value={draftTemplate.paperSize} onChange={e=>updateTemplate({paperSize:e.target.value as DocumentTemplate['paperSize']})}><option value="A4">A4</option><option value="A5">A5</option><option value="ticket">Ticket térmico</option></select></label><label className="settings-span-two">Texto al pie<textarea rows={2} value={draftTemplate.footer} onChange={e=>updateTemplate({footer:e.target.value})}/></label></div>
+        <div className="settings-toggle-list"><label><input type="checkbox" checked={draftTemplate.showLogo} onChange={e=>updateTemplate({showLogo:e.target.checked})}/> Mostrar logotipo / marca</label><label><input type="checkbox" checked={draftTemplate.showTaxLines} onChange={e=>updateTemplate({showTaxLines:e.target.checked})}/> Mostrar líneas de impuestos</label><label><input type="checkbox" checked={draftTemplate.showSignatures} onChange={e=>updateTemplate({showSignatures:e.target.checked})}/> Incluir espacios para firmas</label></div>
+        <div className="settings-custom-fields"><h4>Campos personalizados</h4><p>Define campos que necesitará este tipo de documento.</p><div className="settings-add-field"><input value={newField} onChange={e=>setNewField(e.target.value)} placeholder="Ej. Número de autorización" onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();addCustomField();}}}/><button className="secondary" onClick={addCustomField}><Plus size={15}/> Agregar campo</button></div><div className="settings-field-chips">{draftTemplate.customFields.map(field=><span key={field}>{field}<button onClick={()=>updateTemplate({customFields:draftTemplate.customFields.filter(f=>f!==field)})} aria-label={`Eliminar ${field}`}>×</button></span>)}</div></div>
+        <p className="settings-hint"><Info size={16}/> La configuración de los cinco tipos de documentos queda guardada. En esta versión, la factura de venta ya utiliza los datos y textos configurados; los otros formatos quedan listos para conectarse a sus respectivos flujos de emisión.</p>
+        </>}
+      </section>
+    </div>}
+    {tab==='empresa'&&<section className="card settings-editor"><div className="settings-section-head"><div><h3>Datos comerciales</h3><p>Estos datos se mostrarán en los documentos que utilicen la plantilla.</p></div><button className="primary" onClick={saveBusiness}><Save size={16}/> Guardar datos</button></div><div className="settings-form-grid"><label>Nombre comercial<input value={draftSettings.businessName} onChange={e=>setDraftSettings({...draftSettings,businessName:e.target.value})}/></label><label>Descripción / subtítulo<input value={draftSettings.businessSubtitle} onChange={e=>setDraftSettings({...draftSettings,businessSubtitle:e.target.value})}/></label><label>RTN<input value={draftSettings.rtn} onChange={e=>setDraftSettings({...draftSettings,rtn:e.target.value})}/></label><label>Teléfono<input value={draftSettings.phone} onChange={e=>setDraftSettings({...draftSettings,phone:e.target.value})}/></label><label className="settings-span-two">Dirección<input value={draftSettings.address} onChange={e=>setDraftSettings({...draftSettings,address:e.target.value})}/></label><label>Correo comercial<input type="email" value={draftSettings.email} onChange={e=>setDraftSettings({...draftSettings,email:e.target.value})}/></label><label>Color principal<input type="color" value={draftSettings.primaryColor} onChange={e=>setDraftSettings({...draftSettings,primaryColor:e.target.value})}/></label></div></section>}
+    {tab==='usuarios'&&<div className="settings-users-layout"><section className="card settings-editor"><div className="settings-section-head"><div><h3>Agregar usuario a la matriz</h3><p>Asigna un rol y personaliza los módulos a los que tendrá acceso.</p></div></div><div className="settings-form-grid"><label>Nombre<input value={newName} onChange={e=>setNewName(e.target.value)} placeholder="Nombre del colaborador"/></label><label>Correo de la cuenta<input type="email" value={newEmail} onChange={e=>setNewEmail(e.target.value)} placeholder="usuario@empresa.com"/></label><label>Rol inicial<select value={newRole} onChange={e=>setNewRole(e.target.value as UserAccess['role'])}>{roleOptions.map(r=><option key={r}>{r}</option>)}</select></label><div className="settings-form-action"><button className="primary" onClick={addUser}><Plus size={16}/> Agregar permisos</button></div></div><p className="settings-hint"><Info size={16}/> Esta acción no crea una contraseña ni una cuenta de inicio de sesión. Crea la asignación de permisos; el administrador debe crear/invitar la cuenta desde Supabase.</p></section>
+      <section className="card settings-editor"><div className="settings-section-head"><div><h3>Usuarios registrados ({settings.users.length})</h3><p>Los cambios se guardan en la configuración del ERP.</p></div></div>{settings.users.length===0?<p className="settings-empty">Aún no hay usuarios asignados.</p>:settings.users.map(user=><div className="access-user" key={user.id}><div className="access-user-head"><div className="access-avatar">{(user.name||user.email).slice(0,1).toUpperCase()}</div><div className="access-user-identity"><strong>{user.name}</strong><small>{user.email}</small></div><label className="access-active"><input type="checkbox" checked={user.active} onChange={e=>updateUser(user.id,{active:e.target.checked})}/> Activo</label><button className="icon-btn access-delete" onClick={()=>setSettings({...settings,users:settings.users.filter(u=>u.id!==user.id)})} title="Eliminar asignación" aria-label="Eliminar asignación"><Trash2 size={16}/></button></div><div className="access-user-controls"><label>Rol<select value={user.role} onChange={e=>changeRole(user,e.target.value as UserAccess['role'])}>{roleOptions.map(r=><option key={r}>{r}</option>)}</select></label><button className="secondary" onClick={()=>setEditedUser(editedUser===user.id?null:user.id)}>{editedUser===user.id?'Ocultar permisos':'Editar permisos'}</button></div>{editedUser===user.id&&<div className="access-permissions">{modules.map(m=><label key={m.id}><input type="checkbox" checked={user.permissions.includes(m.id)} onChange={e=>updateUser(user.id,{permissions:e.target.checked?[...user.permissions,m.id]:user.permissions.filter(p=>p!==m.id)})}/>{m.label}</label>)}</div>}</div>)}</section>
+    </div>}
+    {tab==='sistema'&&<section className="card settings-editor"><div className="settings-section-head"><div><h3>Controles recomendados</h3><p>Opciones generales y estado de los módulos de configuración.</p></div></div><div className="settings-system-grid"><div><ShieldCheck size={21}/><strong>Acceso por correo y rol</strong><p>Define qué módulos aparecen para cada usuario registrado en la matriz.</p></div><div><FileText size={21}/><strong>Plantillas reutilizables</strong><p>Factura, orden de compra, notas de débito y crédito, y orden de entrega.</p></div><div><Save size={21}/><strong>Guardado sincronizado</strong><p>La configuración se guarda junto al estado del ERP y se sincroniza con Supabase.</p></div></div><p className="settings-security-warning"><ShieldCheck size={17}/> Importante: los permisos actuales controlan la navegación de la interfaz, no sustituyen la autorización del servidor. Para seguridad real por usuario, deben aplicarse políticas RLS en Supabase y administrar las cuentas con permisos administrativos seguros; esta pantalla no almacena contraseñas.</p></section>}
+  </div>;
+}
