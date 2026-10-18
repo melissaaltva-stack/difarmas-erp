@@ -38,6 +38,10 @@ export function POS({products,cart,setCart,saleType,setSaleType,payment,setPayme
 
 function CameraScanner({onDetected,onClose}:{onDetected:(code:string)=>void;onClose:()=>void}) {
   const videoRef=useRef<HTMLVideoElement|null>(null);
+  const detectedRef=useRef(onDetected);
+  const closeRef=useRef(onClose);
+  detectedRef.current=onDetected;
+  closeRef.current=onClose;
   const [cameraError,setCameraError]=useState('');
   useEffect(()=>{
     let cancelled=false;
@@ -50,13 +54,13 @@ function CameraScanner({onDetected,onClose}:{onDetected:(code:string)=>void;onCl
         const code=result.getText();
         cancelled=true;
         controls?.stop();
-        onDetected(code);
-        onClose();
+        detectedRef.current(code);
+        closeRef.current();
       }
     }).then(started=>{controls=started;if(cancelled)started.stop();}).catch(()=>{
       if(!cancelled)setCameraError('No se pudo iniciar la cámara. Verifica los permisos del navegador y que el sitio use HTTPS.');
     });
     return ()=>{cancelled=true;controls?.stop();};
-  },[onDetected,onClose]);
+  },[]);
   return <div className="modal-backdrop camera-backdrop" role="dialog" aria-modal="true" aria-label="Escanear código con cámara"><div className="modal camera-modal"><div className="modal-head"><div><h2>Escanear con cámara</h2><p>Centra el código de barras dentro del recuadro.</p></div><button className="icon-btn" onClick={onClose} aria-label="Cerrar cámara"><X size={18}/></button></div><div className="camera-view"><video ref={videoRef} muted playsInline autoPlay/><div className="camera-guide"/></div>{cameraError?<p className="form-error" role="alert">{cameraError}</p>:<p className="helper">Mantén el teléfono estable y con buena iluminación. Al reconocer el código, se agregará el producto automáticamente.</p>}<div className="modal-actions"><button className="secondary" onClick={onClose}>Cancelar</button></div></div></div>;
 }
