@@ -67,7 +67,7 @@ export function useErpState(userId: string) {
   const snapshot = useMemo<ErpSnapshot>(() => ({
     customers, suppliers, products, sales, purchases, expenses, receivables, payables,
     inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions,
-  }), [customers, products, sales, purchases, expenses, receivables, payables, inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions]);
+  }), [customers, suppliers, products, sales, purchases, expenses, receivables, payables, inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions]);
 
   // Load the signed-in user's snapshot before allowing remote writes. A first login
   // seeds the cloud record from this browser's existing local data.
