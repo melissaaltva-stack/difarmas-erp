@@ -106,4 +106,23 @@ describe('remoteErpState', () => {
     await expect(saveErpSnapshot('user-1', emptySnapshot)).rejects.toThrow(/cambios más recientes/);
     expect(mocks.query.update).toHaveBeenCalledWith(expect.objectContaining({ state: emptySnapshot }));
   });
+
+  it('preserves cash closures, cash movements, and collection/payment transactions from the cloud snapshot', async () => {
+    const finance = {
+      cashClosures: [{ id: 101, date: '2026-10-18', expected: 500, counted: 490, difference: -10 }],
+      cashMovements: [{ id: 102, type: 'Entrada', description: 'Aporte', amount: 200, category: 'Aporte', date: '2026-10-18' }],
+      paymentTransactions: [{ id: 103, type: 'Cobro', accountId: 9, party: 'Cliente', amount: 75, date: '2026-10-18', paymentMethod: 'Efectivo' }],
+    };
+    mocks.query.maybeSingle.mockResolvedValue({
+      data: {
+        user_id: 'user-1',
+        updated_at: '2026-10-18T12:00:00.000Z',
+        state: { ...emptySnapshot, ...finance },
+      },
+      error: null,
+    });
+    const { loadErpSnapshot } = await import('./remoteErpState');
+    const result = await loadErpSnapshot('user-1');
+    expect(result).toMatchObject(finance);
+  });
 });
