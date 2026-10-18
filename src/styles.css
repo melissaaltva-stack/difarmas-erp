@@ -159,3 +159,29 @@
 .product-image-trigger{white-space:nowrap;padding:10px 11px;min-height:38px;font-size:11px}
 .product-image-editor.form-grid-full,.form-grid>.product-image-editor{grid-column:1/-1}
 @media(max-width:560px){.product-name-image-row{align-items:stretch;flex-direction:column}.product-image-trigger{align-self:flex-start}.product-image-editor{padding:10px}}
+
+
+/* Financial account modules and print-friendly reports */
+.account-payment{display:flex;flex-wrap:wrap;gap:5px;min-width:230px;margin-top:7px}
+.account-payment input,.account-payment select{min-width:88px;max-width:120px;padding:7px;border:1px solid #d6e1df;border-radius:7px;background:#fff;color:#17252a;font:inherit;font-size:12px}
+.account-payment button{display:inline-flex;align-items:center;gap:4px;padding:7px 9px;font-size:12px;white-space:nowrap}
+.toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:14px 0}
+.toolbar>select,.toolbar select{border:1px solid #d6e1df;border-radius:9px;background:#fff;padding:10px;color:#17252a}
+.toolbar .search-box{flex:1;min-width:220px}
+.report-print{margin-top:16px}
+.report-footnote{margin-top:24px;padding-top:12px;border-top:1px solid #d6e1df;color:#62716f;font-size:12px}
+@media print{
+  @page{size:auto;margin:12mm}
+  body{background:#fff!important;color:#111!important}
+  .sidebar,.topbar,.page-head button,.no-print,.settings-notice,.toolbar,.account-payment,.signout{display:none!important}
+  .app,.main,.content{display:block!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;background:#fff!important;box-shadow:none!important}
+  .card{break-inside:avoid;box-shadow:none!important;border:1px solid #ddd!important;background:#fff!important}
+  .report-print{border:0!important}
+  table{width:100%!important;border-collapse:collapse!important;font-size:10px!important}
+  th,td{border:1px solid #ccc!important;padding:5px!important;color:#111!important}
+  thead{display:table-header-group}
+  tr{break-inside:avoid}
+  .grid.metrics{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .metric strong{font-size:15px!important}
+  .pill{border:1px solid #bbb!important;color:#111!important;background:#fff!important}
+}
