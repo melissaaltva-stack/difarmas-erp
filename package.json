@@ -23,6 +23,6 @@
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "vitest": "^4.1.12",
-    "@types/jsbarcode": "^3.11.9"
+    "@types/jsbarcode": "^3.11.3"
   }
 }
