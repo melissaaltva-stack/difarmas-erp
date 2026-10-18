@@ -114,3 +114,17 @@
 .cost-alert strong{display:block;font-size:11px}.cost-alert p{font-size:10px;line-height:1.5;margin:4px 0 0;color:#725f43}
 .cost-alert-danger{background:#fff1f0;border-color:#fecdca;color:#b42318}.cost-alert-danger p{color:#7a3030}
 @media(max-width:760px){.cost-review-row{grid-template-columns:1fr 1fr;gap:9px}.cost-product{grid-column:1/-1}.margin-comparison{grid-column:1/-1}.cost-review-heading{flex-wrap:wrap}}
+
+
+/* Purchase price history by product and supplier */
+.purchase-history{margin:0 0 12px;padding:16px;border-color:#dce9e5}
+.purchase-history-heading{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:8px}
+.purchase-history-heading h3{font-size:15px;margin:0}.purchase-history-heading p{font-size:11px;line-height:1.5;color:#718a85;margin:5px 0 0}
+.purchase-history-heading>span{font-size:10px;font-weight:800;color:#16664f;background:#eaf7f2;padding:5px 8px;border-radius:99px;white-space:nowrap}
+.purchase-history-product{padding:12px 0;border-top:1px solid #edf2f1}.purchase-history-product-head strong,.purchase-history-product-head small{display:block}.purchase-history-product-head strong{font-size:12px}.purchase-history-product-head small{font-size:10px;color:#82958f;margin-top:3px}
+.purchase-history-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+.purchase-history-stats>div{min-width:0;background:#f7faf9;border-radius:8px;padding:10px}.purchase-history-stats small{display:block;font-size:10px;color:#718a85;line-height:1.4}.purchase-history-stats strong{display:block;font-size:13px;margin:4px 0;overflow-wrap:anywhere;color:#1b4b40}
+.purchase-history-details{margin-top:10px}.purchase-history-details summary{cursor:pointer;font-size:11px;font-weight:700;color:#16664f;padding:7px 0}
+.purchase-history-table{overflow:auto}.purchase-history-table-row{display:grid;grid-template-columns:.8fr 1.3fr 1fr .5fr;gap:8px;padding:8px 5px;border-top:1px solid #edf2f1;font-size:10px;min-width:350px}.purchase-history-table-row span{overflow-wrap:anywhere}.purchase-history-table-head{font-weight:800;color:#607a74;background:#f7faf9}
+.purchase-history-empty{font-size:11px;line-height:1.5;color:#718a85;background:#f7faf9;padding:10px;border-radius:8px}
+@media(max-width:560px){.purchase-history-stats{grid-template-columns:1fr}.purchase-history-heading{align-items:flex-start}.purchase-history-table-row{grid-template-columns:.8fr 1.2fr 1fr .5fr}}
