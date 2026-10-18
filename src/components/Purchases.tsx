@@ -4,7 +4,7 @@ import type { PurchaseItem, Product, Supplier } from '../domain/types';
 import { localDateKey } from '../utils/dates';
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
 
-export function Purchases({products,cart,setCart,search,setSearch,supplier,setSupplier,onReceive}:{products:Product[];cart:PurchaseItem[];setCart:(c:PurchaseItem[])=>void;search:string;setSearch:(v:string)=>void;supplier:string;setSupplier:(v:string)=>void;suppliers?:Supplier[];onReceive:(items:PurchaseItem[],paymentMethod:'Efectivo'|'Transferencia'|'Crédito',dueDate:string)=>boolean}) {
+export function Purchases({products,cart,setCart,search,setSearch,supplier,setSupplier,suppliers=[],onReceive}:{products:Product[];cart:PurchaseItem[];setCart:(c:PurchaseItem[])=>void;search:string;setSearch:(v:string)=>void;supplier:string;setSupplier:(v:string)=>void;suppliers?:Supplier[];onReceive:(items:PurchaseItem[],paymentMethod:'Efectivo'|'Transferencia'|'Crédito',dueDate:string)=>boolean}) {
   const results=products.filter(p=>[p.code,p.name].join(' ').toLowerCase().includes(search.toLowerCase())).slice(0,6);
   const total=cart.reduce((sum,i)=>sum+i.unitCost*i.qty,0);
   const [paymentMethod,setPaymentMethod]=useState<'Efectivo'|'Transferencia'|'Crédito'>('Efectivo');
