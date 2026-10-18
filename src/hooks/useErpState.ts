@@ -37,7 +37,7 @@ export function useErpState(userId: string) {
   const [editing, setEditing] = useState<Product | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [saleType, setSaleType] = useState<'minorista'|'mayorista'>('minorista');
-  const [payment, setPayment] = useState<'Efectivo'|'Transferencia'|'Crédito'>('Efectivo');
+  const [payment, setPayment] = useState<string>('Efectivo');
   const [saleSearch, setSaleSearch] = useState('');
   const [purchaseCart, setPurchaseCart] = useState<PurchaseItem[]>([]);
   const [purchaseSearch, setPurchaseSearch] = useState('');
@@ -169,7 +169,7 @@ export function useErpState(userId: string) {
   const recordSale=(sold:CartItem[],customer='',dueDate=''):boolean=>{
     if (saleInProgress.current) return false;
     if (!sold.length || sold.some(item => !Number.isFinite(item.qty) || item.qty <= 0)) return false;
-    if (payment === 'Crédito' && (!customer.trim() || !dueDate.trim())) return false;
+    if (((settings.paymentMethods??[]).find(method=>method.name===payment)?.kind==='credit'||payment==='Crédito') && (!customer.trim() || !dueDate.trim())) return false;
     if (sold.some(item => !products.some(p => p.id === item.id && p.stock >= item.qty))) return false;
     let updated: Product[];
     try { updated = applySaleToInventory(products,sold); } catch { return false; }
@@ -178,7 +178,7 @@ export function useErpState(userId: string) {
     setProducts(updated);
     setInventoryMovements(current=>[...current,...createInventoryMovementsForSale(products,sold,sale.id)]);
     setSales(current=>[...current,sale]);
-    if(payment==='Crédito') setReceivables(current=>[...current,createReceivableFromSale(sale,customer,dueDate)]);
+    if((settings.paymentMethods??[]).find(method=>method.name===payment)?.kind==='credit'||payment==='Crédito') setReceivables(current=>[...current,createReceivableFromSale(sale,customer,dueDate)]);
     return true;
   };
 
