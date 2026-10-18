@@ -16,11 +16,13 @@
     "react": "latest",
     "react-dom": "latest",
     "lucide-react": "latest",
-    "@supabase/supabase-js": "^2.57.0"
+    "@supabase/supabase-js": "^2.57.0",
+    "jsbarcode": "^3.12.1"
   },
   "devDependencies": {
     "@types/react": "latest",
     "@types/react-dom": "latest",
-    "vitest": "^4.1.12"
+    "vitest": "^4.1.12",
+    "@types/jsbarcode": "^3.11.3"
   }
 }
