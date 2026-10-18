@@ -25,3 +25,10 @@
 @media(max-width:560px){.inventory-actions{width:100%}.inventory-actions button{flex:1;font-size:11px;padding:10px 8px}.barcode-field{align-items:stretch;flex-direction:column}.print-labels{grid-template-columns:1fr}}
 @page{size:auto;margin:7mm}
 @media print{body *{visibility:hidden!important}.label-backdrop,.label-backdrop *{visibility:visible!important}.label-backdrop{position:absolute!important;inset:0!important;display:block!important;background:#fff!important;padding:0!important;margin:0!important}.labels-modal{width:100%!important;max-width:none!important;max-height:none!important;overflow:visible!important;padding:0!important;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important}.labels-modal .modal-head,.labels-modal .modal-actions,.labels-modal .form-error{display:none!important}.print-labels{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:3mm!important}.barcode-label{break-inside:avoid;min-height:28mm;border:1px solid #bbb!important;border-radius:0!important;padding:2mm!important}.barcode-label svg{max-height:12mm!important}.label-name{font-size:9pt!important}.label-presentation{font-size:7pt!important}.label-price{font-size:9pt!important}}
+
+/* POS barcode scanner */
+.scan-submit{flex:0 0 34px}
+.scan-help{margin:0 4px 12px;line-height:1.5}
+.scan-feedback{margin:0 0 12px}
+.search-pos:focus-within{border-color:#56a78f;box-shadow:0 0 0 3px #239c7b18}
+@media(max-width:560px){.search-pos{gap:7px}.scan-help{font-size:10px}}
