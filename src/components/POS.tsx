@@ -32,12 +32,14 @@ export function POS({products,cart,setCart,saleType,setSaleType,payment,setPayme
   const received=Number(amountReceived);
   const changeDue=isCash&&Number.isFinite(received)?Math.max(0,received-total):0;
   const add=(p:Product)=>{
+    const expiryAlert=getExpiryAlert(p.expiry);
+    if(expiryAlert&&expiryAlert.daysRemaining<0){setError(`⛔ ${p.name}: producto vencido. No se puede agregar a la venta; revisa y retira el lote según el procedimiento de la farmacia.`);return;}
     if(p.stock<=0){setError(`“${p.name}” no tiene existencias disponibles.`);return;}
     const current=cart.find(i=>i.id===p.id);
     if(current&&current.qty>=p.stock){setError(`Stock máximo alcanzado para “${p.name}” (${p.stock}).`);return;}
     setCart(current?cart.map(i=>i.id===p.id?{...i,qty:Math.min(i.qty+1,p.stock),price:saleType==='mayorista'?p.wholesale:p.retail}:i):[...cart,{...p,qty:1,price:saleType==='mayorista'?p.wholesale:p.retail}]);
     setSearch('');
-    setError('');
+    setError(expiryAlert?.message ?? '');
   };
   const scanOrSearch=(value:string)=>{
     const code=value.trim();
