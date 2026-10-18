@@ -49,11 +49,22 @@ export function POS({products,cart,setCart,saleType,setSaleType,payment,setPayme
     if(isCredit&&!customer.trim()){setError('Indica el cliente para registrar una venta al crédito.');return;}
     if(!isCredit&&(!amountReceived.trim()||!Number.isFinite(received)||received<total)){setError('Ingresa un monto recibido igual o mayor al total de la venta.');return;}
     if(cart.some(i=>i.qty>(products.find(p=>p.id===i.id)?.stock??0))){setError('El carrito supera el stock disponible. Actualiza las cantidades.');return;}
+    const numbering=settings.documentNumbering??{factura:{prefix:'FAC-',nextNumber:1},orden_compra:{prefix:'OC-',nextNumber:1},nota_debito:{prefix:'ND-',nextNumber:1},nota_credito:{prefix:'NC-',nextNumber:1},orden_entrega:{prefix:'OE-',nextNumber:1}};
+    const invoiceSequence=Math.max(1,numbering.factura?.nextNumber??1);
+    const fiscal=settings.billingInfo;
+    const fiscalConfigured=Boolean(fiscal?.cai&&fiscal.establishmentCode&&fiscal.emissionPoint&&fiscal.documentTypeCode&&fiscal.authorizedRangeStart&&fiscal.authorizedRangeEnd&&fiscal.authorizationExpiry);
+    if(fiscal?.cai){
+      if(!fiscalConfigured){setError('Completa el CAI, establecimiento, punto de emisión, rango autorizado y fecha límite antes de emitir una factura fiscal.');return;}
+      const startMatch=fiscal.authorizedRangeStart.match(/(\\d{8})$/);
+      const endMatch=fiscal.authorizedRangeEnd.match(/(\\d{8})$/);
+      const rangeStart=startMatch?Number(startMatch[1]):NaN;
+      const rangeEnd=endMatch?Number(endMatch[1]):NaN;
+      const expiry=Date.parse(fiscal.authorizationExpiry+'T23:59:59');
+      if(!Number.isFinite(rangeStart)||!Number.isFinite(rangeEnd)||rangeStart>rangeEnd){setError('Revisa el rango autorizado: debe terminar en la numeración correlativa de 8 dígitos.');return;}
+      if(!Number.isFinite(expiry)||expiry<Date.now()){setError('La autorización fiscal está vencida o la fecha límite no es válida. Actualiza los datos del SAR antes de emitir.');return;}
+      if(invoiceSequence<rangeStart||invoiceSequence>rangeEnd){setError('El próximo número está fuera del rango autorizado. Revisa la numeración en Configuración → Sistema.');return;}
+    }
     if(onComplete(cart,customer.trim(),dueDate)){
-      const numbering=settings.documentNumbering??{factura:{prefix:'FAC-',nextNumber:1},orden_compra:{prefix:'OC-',nextNumber:1},nota_debito:{prefix:'ND-',nextNumber:1},nota_credito:{prefix:'NC-',nextNumber:1},orden_entrega:{prefix:'OE-',nextNumber:1}};
-      const invoiceSequence=Math.max(1,numbering.factura?.nextNumber??1);
-      const fiscal=settings.billingInfo;
-      const fiscalConfigured=Boolean(fiscal?.cai&&fiscal.establishmentCode&&fiscal.emissionPoint&&fiscal.documentTypeCode&&fiscal.authorizedRangeStart&&fiscal.authorizedRangeEnd&&fiscal.authorizationExpiry);
       const fiscalPoint=(fiscal?.establishmentCode??'')+(fiscal?.emissionPoint??'');
       const invoiceNumber=fiscalConfigured
         ? `${fiscalPoint.padStart(4,'0')}-${(fiscal?.documentTypeCode??'01').padStart(2,'0')}-${String(invoiceSequence).padStart(8,'0')}`
