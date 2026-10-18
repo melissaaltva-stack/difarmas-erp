@@ -41,3 +41,26 @@
 .camera-guide{position:absolute;left:12%;right:12%;top:35%;height:30%;border:2px solid #6de0b5;border-radius:12px;box-shadow:0 0 0 999px #071b1b28;pointer-events:none}
 .camera-modal .helper{margin-top:12px;line-height:1.5}
 @media(max-width:560px){.camera-modal{padding:16px}.camera-view{min-height:180px}.camera-view video{max-height:48vh}}
+
+/* Factura y diálogo de impresión */
+.change-line{margin-top:10px;padding:10px 12px;background:#eaf8f1;border-radius:9px;color:#16664f}
+.print-invoice{display:none}
+@media print{
+  @page{size:auto;margin:12mm}
+  body{background:#fff!important;color:#111!important}
+  body *{visibility:hidden!important}
+  .print-invoice,.print-invoice *{visibility:visible!important}
+  .print-invoice{display:block!important;position:absolute;inset:0 auto auto 0;width:100%;padding:0;font:12px/1.45 Arial,sans-serif;color:#111;background:#fff}
+  .print-invoice header{text-align:center;margin-bottom:22px}
+  .print-invoice header h1{font-size:24px;letter-spacing:2px;margin:0}
+  .print-invoice header p{margin:4px 0}
+  .invoice-meta{display:grid;gap:4px;margin-bottom:18px}
+  .print-invoice table{width:100%;border-collapse:collapse;margin:12px 0}
+  .print-invoice th,.print-invoice td{border-bottom:1px solid #ddd;padding:7px 4px;text-align:left;vertical-align:top}
+  .print-invoice th:not(:first-child),.print-invoice td:not(:first-child){text-align:right;white-space:nowrap}
+  .invoice-ingredients{display:block;font-size:10px;color:#555;margin-top:2px}
+  .invoice-total{margin:18px 0 0 auto;max-width:280px}
+  .invoice-total p{display:flex;justify-content:space-between;gap:18px;margin:6px 0}
+  .invoice-total p:first-child{border-top:1px solid #222;padding-top:10px;font-size:16px}
+  .print-invoice footer{text-align:center;border-top:1px dashed #aaa;margin-top:28px;padding-top:12px}
+}
