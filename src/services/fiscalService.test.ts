@@ -7,7 +7,7 @@ const validFiscal: FiscalBillingInfo = {
   authorizedRangeStart: '0001-01-00000001',
   authorizedRangeEnd: '0001-01-00001000',
   authorizationExpiry: '2099-12-31',
-  establishmentCode: '0001',
+  establishmentCode: '01',
   emissionPoint: '01',
   documentTypeCode: '01',
   isvRate: 15,
@@ -28,7 +28,7 @@ describe('validateFiscalAuthorization', () => {
   });
 
   it('rejects malformed establishment/document codes', () => {
-    expect(validateFiscalAuthorization({ ...validFiscal, establishmentCode: 'A001' }, 1)).toMatch(/4 dígitos/);
+    expect(validateFiscalAuthorization({ ...validFiscal, establishmentCode: 'A1' }, 1)).toMatch(/4 dígitos/);
   });
 
   it('rejects malformed ranges and out-of-range correlativos', () => {
