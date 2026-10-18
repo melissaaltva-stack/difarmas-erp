@@ -1,5 +1,5 @@
 export type Module = 'dashboard' | 'ventas' | 'inventario' | 'compras' | 'finanzas';
-export type Product = { id:number; code:string; name:string; category:string; laboratory:string; presentation:string; cost:number; retail:number; wholesale:number; stock:number; minStock:number; lot:string; expiry:string; supplier:string };
+export type Product = { id:number; code:string; name:string; activeIngredients?:string[]; category:string; laboratory:string; presentation:string; cost:number; retail:number; wholesale:number; stock:number; minStock:number; lot:string; expiry:string; supplier:string };
 export type CartItem = Product & { qty:number; price:number };
 export type PurchaseItem = Product & { qty:number; unitCost:number };
 export type SaleLine = { productId:number; productName:string; category:string; laboratory:string; qty:number; unitCost:number; unitPrice:number; revenue:number; cost:number; profit:number };
