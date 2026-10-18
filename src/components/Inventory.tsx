@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import JsBarcode from 'jsbarcode';
-import { Search, Plus, Pencil, History, X, AlertTriangle, Printer, Barcode, CheckSquare } from 'lucide-react';
+import { Search, Plus, Pencil, History, X, AlertTriangle, Printer, Barcode } from 'lucide-react';
 import type { InventoryMovement, Product } from '../domain/types';
 
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
