@@ -459,3 +459,18 @@ input:disabled,select:disabled,textarea:disabled{opacity:.65;cursor:not-allowed}
   .checkout-received-field input { min-height:60px; font-size:23px; }
   .received-quick-actions button { min-height:42px; font-size:12px; }
 }
+
+/* Modal de cobro y selección de factura */
+.payment-checkout-modal{width:min(560px,calc(100vw - 28px));max-height:calc(100vh - 28px);overflow:auto;padding:clamp(18px,4vw,28px)}
+.payment-modal-total{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:18px 0;padding:18px;border:1px solid #b9dfd0;border-radius:15px;background:linear-gradient(135deg,#edf9f3,#fff);color:#315d4e}
+.payment-modal-total span{font-size:14px;font-weight:700}
+.payment-modal-total strong{font-size:clamp(25px,5vw,34px);font-weight:850;color:#126044;font-variant-numeric:tabular-nums}
+.payment-checkout-modal .checkout-label{display:block;margin:15px 0;font-size:13px;font-weight:700;color:#31594d}
+.payment-checkout-modal .checkout-label select{display:block;width:100%;min-height:48px;margin-top:7px;padding:12px 14px;font-size:15px}
+.payment-checkout-modal .checkout-received-field input{min-height:66px;font-size:28px}
+.payment-modal-change{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 15px;margin:12px 0;border-radius:11px;background:#eff8f2;color:#245743}
+.payment-modal-change strong{font-size:21px;font-variant-numeric:tabular-nums}
+.payment-modal-note{padding:12px;border-radius:10px;background:#f3f7ff;color:#435d87;font-size:13px;line-height:1.5}
+.payment-modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+.payment-modal-actions button{min-height:46px}
+@media(max-width:560px){.payment-checkout-modal{padding:17px}.payment-modal-total{padding:15px}.payment-modal-actions{flex-direction:column-reverse}.payment-modal-actions button{width:100%}}
