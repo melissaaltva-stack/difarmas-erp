@@ -32,7 +32,8 @@ function App({ userId, userEmail, signOut }: { userId: string; userEmail:string;
   const customerRoles=['Administrador','Supervisor','Ventas','Solo lectura'];
   // Older saved permission lists do not include the new Clientes module. Keep it visible for roles that should have customer access.
   const socialRoles=['Administrador','Supervisor','Ventas','Solo lectura'];
-  const canSee=(module:string)=>permissions.includes(module as typeof permissions[number])||(module==='reportes'&&!!userAccess&&reportRoles.includes(userAccess.role))||(module==='clientes'&&!!userAccess&&customerRoles.includes(userAccess.role))||(module==='redes_sociales'&&!!userAccess&&socialRoles.includes(userAccess.role));
+  const aiRoles=['Administrador','Supervisor','Finanzas','Solo lectura'];
+  const canSee=(module:string)=>permissions.includes(module as typeof permissions[number])||(module==='reportes'&&!!userAccess&&reportRoles.includes(userAccess.role))||(module==='clientes'&&!!userAccess&&customerRoles.includes(userAccess.role))||(module==='redes_sociales'&&!!userAccess&&socialRoles.includes(userAccess.role))||(module==='asistente_ia'&&!!userAccess&&aiRoles.includes(userAccess.role));
   const visibleNav=nav.filter(([id])=>canSee(id));
 
   return <div className="app">
