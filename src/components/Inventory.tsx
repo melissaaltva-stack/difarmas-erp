@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import JsBarcode from 'jsbarcode';
-import { Search, Plus, Pencil, History, X, AlertTriangle, Printer, Barcode, Image as ImageIcon } from 'lucide-react';
+import { Search, Plus, Pencil, History, X, AlertTriangle, Printer, Barcode, Image as ImageIcon, CalendarClock } from 'lucide-react';
 import type { InventoryMovement, Product } from '../domain/types';
 
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
@@ -24,11 +24,23 @@ export function Inventory({products, search, setSearch, movements, onNew, onEdit
   const expiring = products.filter(p => daysUntil(p.expiry) >= 0 && daysUntil(p.expiry) <= 90);
   const expired = products.filter(p => daysUntil(p.expiry) < 0);
   const lowMargin = products.filter(p => margin(p.retail, p.cost) < 15);
+  const [expiryFilter, setExpiryFilter] = useState<'all'|'expired'|'30'|'60'|'90'|'180'|'missing'>('all');
   const [selected, setSelected] = useState<number[]>([]);
   const [labelsOpen, setLabelsOpen] = useState(false);
   const selectedProducts = useMemo(() => products.filter(p => selected.includes(p.id) && p.code.trim()), [products, selected]);
+  const expiryDays = (p:Product) => daysUntil(p.expiry);
+  const missingExpiry = products.filter(p => !p.expiry || !Number.isFinite(expiryDays(p)));
+  const expiredValue = expired.reduce((sum,p)=>sum+Math.max(0,p.stock)*Math.max(0,p.cost),0);
+  const upcomingValue = products.filter(p=>expiryDays(p)>=0&&expiryDays(p)<=180).reduce((sum,p)=>sum+Math.max(0,p.stock)*Math.max(0,p.cost),0);
+  const visibleProducts = products.filter(p => {
+    const days=expiryDays(p);
+    if(expiryFilter==='expired') return days<0;
+    if(expiryFilter==='missing') return !p.expiry || !Number.isFinite(days);
+    if(expiryFilter==='all') return true;
+    return days>=0 && days<=Number(expiryFilter);
+  });
   const toggle = (id:number, checked:boolean) => setSelected(current => checked ? [...new Set([...current,id])] : current.filter(x => x !== id));
-  const selectVisible = (checked:boolean) => setSelected(current => checked ? [...new Set([...current,...products.map(p=>p.id)])] : current.filter(id => !products.some(p=>p.id===id)));
+  const selectVisible = (checked:boolean) => setSelected(current => checked ? [...new Set([...current,...visibleProducts.map(p=>p.id)])] : current.filter(id => !visibleProducts.some(p=>p.id===id)));
   return <div className="content">
     <div className="page-head"><div><span className="pill">MÓDULO 2</span><h2>Productos e inventario</h2><p>Existencias, costos, margen, lotes, vencimientos y etiquetas.</p></div><div className="inventory-actions"><button className="secondary" onClick={()=>setLabelsOpen(true)} disabled={selected.length===0}><Printer size={17}/> Imprimir etiquetas ({selected.length})</button><button className="primary" onClick={onNew}><Plus size={17}/> Nuevo producto</button></div></div>
     <div className="inventory-toolbar card"><div className="search"><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar por código, producto, categoría..." /></div><span className="count">{products.length} productos</span></div>
@@ -38,7 +50,18 @@ export function Inventory({products, search, setSearch, movements, onNew, onEdit
       {expiring.length > 0 && <div className="card alert-card"><AlertTriangle size={18}/><div><strong>{expiring.length} vence(n) en 90 días</strong><small>{expiring.slice(0,3).map(p=>p.name).join(', ')}</small></div></div>}
       {lowMargin.length > 0 && <div className="card alert-card"><AlertTriangle size={18}/><div><strong>{lowMargin.length} con margen minorista menor a 15%</strong><small>Revisa precio o costo antes de modificarlo.</small></div></div>}
     </div>
-    <div className="card table-wrap"><table><thead><tr><th><input aria-label="Seleccionar todos los productos visibles" type="checkbox" checked={products.length>0&&products.every(p=>selected.includes(p.id))} onChange={e=>selectVisible(e.target.checked)}/></th><th>Producto</th><th>Categoría</th><th>Costo promedio</th><th>Minorista</th><th>Margen</th><th>Mayorista</th><th>Margen</th><th>Stock</th><th>Vencimiento</th><th></th></tr></thead><tbody>{products.map(p=>{const days=daysUntil(p.expiry);const retailMargin=margin(p.retail,p.cost);const wholesaleMargin=margin(p.wholesale,p.cost);return <tr key={p.id}><td><input aria-label={`Seleccionar ${p.name}`} type="checkbox" checked={selected.includes(p.id)} onChange={e=>toggle(p.id,e.target.checked)}/></td><td><div className="product-cell">{p.imageUrl&&<img src={p.imageUrl} alt="" loading="lazy"/>}<div><strong>{p.name}</strong><small>{p.code||'Sin código'} · {p.presentation}</small></div></div></td><td>{p.category}</td><td>{money(p.cost)}</td><td>{money(p.retail)}</td><td><span className={retailMargin<15?'stock low':'stock'}>{retailMargin.toFixed(1)}%</span></td><td>{money(p.wholesale)}</td><td><span className={wholesaleMargin<15?'stock low':'stock'}>{wholesaleMargin.toFixed(1)}%</span></td><td><span className={p.stock<=p.minStock?'stock low':'stock'}>{p.stock}</span><small>Mín. {p.minStock}</small></td><td><span className={days<0?'stock low':days<=90?'stock low':'stock'}>{p.expiry?new Date(p.expiry+'T00:00:00').toLocaleDateString('es-HN'):'Sin fecha'}</span></td><td><button className="icon-btn" title="Editar" onClick={()=>onEdit(p)}><Pencil size={16}/></button></td></tr>})}</tbody></table></div>
+    <section className="card expiry-control-panel">
+      <div className="expiry-control-heading"><div><h3>Control de vencimientos</h3><p>Filtra los productos por fecha y revisa el valor de inventario comprometido. Los cálculos usan el costo registrado y las existencias actuales.</p></div><CalendarClock size={20}/></div>
+      <div className="expiry-summary">
+        <div><small>Valor al costo vencido</small><strong>{money(expiredValue)}</strong><span>{expired.length} producto(s)</span></div>
+        <div><small>Valor al costo que vence en 180 días</small><strong>{money(upcomingValue)}</strong><span>{products.filter(p=>expiryDays(p)>=0&&expiryDays(p)<=180).length} producto(s)</span></div>
+        <div><small>Sin vencimiento registrado</small><strong>{missingExpiry.length}</strong><span>Revisar ficha del producto</span></div>
+      </div>
+      <div className="expiry-filter-row" aria-label="Filtrar inventario por vencimiento">
+        {([{id:'all',label:'Todos'},{id:'expired',label:'Vencidos'},{id:'30',label:'Próximos 30 días'},{id:'60',label:'Próximos 60 días'},{id:'90',label:'Próximos 90 días'},{id:'180',label:'Próximos 180 días'},{id:'missing',label:'Sin fecha'}] as const).map(option=><button key={option.id} className={expiryFilter===option.id?'primary':'secondary'} onClick={()=>setExpiryFilter(option.id)}>{option.label}</button>)}
+      </div>
+    </section>
+    <div className="card table-wrap"><div className="card-title"><div><h3>Inventario por vencimiento</h3><p>{visibleProducts.length} producto(s) · usa Editar para corregir lote o fecha.</p></div><CalendarClock size={20}/></div><table><thead><tr><th><input aria-label="Seleccionar todos los productos visibles" type="checkbox" checked={visibleProducts.length>0&&visibleProducts.every(p=>selected.includes(p.id))} onChange={e=>selectVisible(e.target.checked)}/></th><th>Producto</th><th>Categoría</th><th>Costo promedio</th><th>Minorista</th><th>Margen</th><th>Mayorista</th><th>Margen</th><th>Stock</th><th>Vencimiento</th><th></th></tr></thead><tbody>{visibleProducts.map(p=>{const days=daysUntil(p.expiry);const retailMargin=margin(p.retail,p.cost);const wholesaleMargin=margin(p.wholesale,p.cost);return <tr key={p.id}><td><input aria-label={`Seleccionar ${p.name}`} type="checkbox" checked={selected.includes(p.id)} onChange={e=>toggle(p.id,e.target.checked)}/></td><td><div className="product-cell">{p.imageUrl&&<img src={p.imageUrl} alt="" loading="lazy"/>}<div><strong>{p.name}</strong><small>{p.code||'Sin código'} · {p.presentation}</small></div></div></td><td>{p.category}</td><td>{money(p.cost)}</td><td>{money(p.retail)}</td><td><span className={retailMargin<15?'stock low':'stock'}>{retailMargin.toFixed(1)}%</span></td><td>{money(p.wholesale)}</td><td><span className={wholesaleMargin<15?'stock low':'stock'}>{wholesaleMargin.toFixed(1)}%</span></td><td><span className={p.stock<=p.minStock?'stock low':'stock'}>{p.stock}</span><small>Mín. {p.minStock}</small></td><td><span className={days<0?'stock low':days<=90?'stock low':'stock'}>{p.expiry?new Date(p.expiry+'T00:00:00').toLocaleDateString('es-HN'):'Sin fecha'}</span></td><td><button className="icon-btn" title="Editar" onClick={()=>onEdit(p)}><Pencil size={16}/></button></td></tr>})}</tbody></table></div>
     <div className="card table-wrap"><div className="card-title"><div><h3>Historial de movimientos</h3><p>Últimas entradas y salidas registradas.</p></div><History size={20}/></div><table><thead><tr><th>Fecha</th><th>Producto</th><th>Tipo</th><th>Cantidad</th><th>Stock antes</th><th>Stock después</th><th>Costo unitario</th></tr></thead><tbody>{movements.slice().reverse().slice(0,20).map(m=><tr key={m.id}><td>{new Date(m.date).toLocaleString('es-HN')}</td><td><strong>{m.productName}</strong></td><td>{m.type}</td><td>{m.quantity}</td><td>{m.stockBefore}</td><td>{m.stockAfter}</td><td>{money(m.unitCost)}</td></tr>)}{movements.length===0&&<tr><td colSpan={7}>Aún no hay movimientos registrados.</td></tr>}</tbody></table></div>
     {labelsOpen && <div className="modal-backdrop label-backdrop"><div className="modal labels-modal"><div className="modal-head no-print"><div><h2>Etiquetas de productos</h2><p>{selectedProducts.length} etiqueta(s) listas. Selecciona imprimir en tamaño real o ajustado a la hoja.</p></div><button className="icon-btn" onClick={()=>setLabelsOpen(false)}><X/></button></div>
       {selectedProducts.length===0 ? <div className="form-error">Los productos seleccionados no tienen código de barras. Edita el producto o genera un código antes de imprimir.</div> : <div className="print-labels">{selectedProducts.map(p=><BarcodeLabel key={p.id} product={p}/>)}</div>}
