@@ -350,3 +350,15 @@ input:disabled,select:disabled,textarea:disabled{opacity:.65;cursor:not-allowed}
 @media(prefers-reduced-motion:reduce){
   input,select,textarea,.search,.search-pos,.social-search,button.primary,button.secondary,.primary,.secondary,.type,.nav,.icon-btn{transition:none}
 }
+
+
+.expiry-control-panel{margin:14px 0;padding:16px}
+.expiry-control-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;color:#17664e}
+.expiry-control-heading h3{margin:0;font-size:15px;color:#214c41}
+.expiry-control-heading p{margin:5px 0 0;font-size:12px;line-height:1.5;color:#667085}
+.expiry-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}
+.expiry-summary>div{display:flex;flex-direction:column;gap:4px;padding:12px;border:1px solid #e3ece8;border-radius:10px;background:#fbfdfc}
+.expiry-summary small,.expiry-summary span{font-size:11px;color:#667085}
+.expiry-summary strong{font-size:17px;color:#24443b}
+.expiry-filter-row{display:flex;flex-wrap:wrap;gap:8px}
+@media(max-width:650px){.expiry-summary{grid-template-columns:1fr}.expiry-filter-row button{flex:1 1 calc(50% - 8px)}}
