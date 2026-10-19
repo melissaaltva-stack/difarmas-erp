@@ -22,5 +22,5 @@ export type CashClosure = { id:number; date:string; opening:number; cashSales:nu
 export type CashMovement = { id:number; type:'Entrada'|'Salida'; description:string; amount:number; category:string; date:string };
 export type PaymentTransaction = { id:number; type:'Cobro'|'Pago proveedor'; accountId:number; party:string; amount:number; date:string; paymentMethod?:'Efectivo'|'Transferencia' };
 export type InventoryMovement = { id:number; productId:number; productName:string; type:'Venta'|'Compra'|'Ajuste'; quantity:number; stockBefore:number; stockAfter:number; unitCost:number; referenceId?:number; date:string; note?:string };
-export type Customer = { id:number; name:string; phone:string; creditLimit:number; active:boolean; notes:string };
+export type Customer = { id:number; name:string; phone:string; creditLimit:number; active:boolean; notes:string; rtn?:string; email?:string; address?:string; customerType?:'Persona natural'|'Empresa' };
 export type Supplier = { id:number; name:string; contact:string; phone:string; email:string; rtn:string; address:string; paymentTerms:string; notes:string; active:boolean };
