@@ -213,3 +213,33 @@
 .ai-disclaimer{font-size:12px;color:#6c817c;line-height:1.55;margin:18px 0}
 @media(max-width:800px){.ai-hero{margin:18px 16px 0;padding:20px}.ai-page.content{padding:18px 16px}.ai-page .ai-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.ai-query form{flex-direction:column}.ai-query form button{justify-content:center}}
 @media print{.ai-query,.ai-prompts,.ai-answer-head button{display:none!important}.ai-hero{background:#fff!important;color:#111!important;border:1px solid #ccc}.ai-hero p{color:#333!important}}
+
+
+/* POS invoice formats: thermal ticket and US letter page */
+@media print {
+  .print-invoice-ticket { page: difarmas-ticket; width: 72mm !important; max-width: 72mm !important; font-size: 9px !important; }
+  .print-invoice-ticket .invoice-header { gap: 5px !important; padding: 8px 6px !important; border-radius: 0 !important; }
+  .print-invoice-ticket .invoice-brand { gap: 5px !important; }
+  .print-invoice-ticket .invoice-brand-mark { width: 24px !important; height: 24px !important; flex-basis: 24px !important; font-size: 14px !important; border-radius: 4px !important; }
+  .print-invoice-ticket .invoice-header h1 { font-size: 13px !important; letter-spacing: 0 !important; }
+  .print-invoice-ticket .invoice-header p { font-size: 6px !important; letter-spacing: .3px !important; }
+  .print-invoice-ticket .invoice-tag { font-size: 7px !important; padding: 3px 4px !important; border-radius: 3px !important; }
+  .print-invoice-ticket .invoice-meta { grid-template-columns: 1fr !important; gap: 5px !important; padding: 7px 6px !important; margin-bottom: 8px !important; border-radius: 0 !important; }
+  .print-invoice-ticket .invoice-customer { grid-column: auto !important; padding-top: 4px !important; }
+  .print-invoice-ticket .invoice-meta small { font-size: 6px !important; }
+  .print-invoice-ticket .invoice-meta strong { font-size: 8px !important; }
+  .print-invoice-ticket table { margin-bottom: 8px !important; table-layout: fixed !important; }
+  .print-invoice-ticket .print-invoice thead th,
+  .print-invoice-ticket thead th { font-size: 6px !important; padding: 4px 2px !important; letter-spacing: 0 !important; }
+  .print-invoice-ticket tbody td { font-size: 7px !important; padding: 4px 2px !important; white-space: normal !important; }
+  .print-invoice-ticket th:not(:first-child), .print-invoice-ticket td:not(:first-child) { white-space: normal !important; }
+  .print-invoice-ticket .invoice-ingredients { font-size: 6px !important; }
+  .print-invoice-ticket .invoice-fiscal-data { font-size: 7px !important; padding: 5px !important; margin-bottom: 7px !important; }
+  .print-invoice-ticket .invoice-total { width: 100% !important; margin-top: 8px !important; padding: 7px !important; border-radius: 0 !important; }
+  .print-invoice-ticket .invoice-total p { font-size: 8px !important; gap: 5px !important; }
+  .print-invoice-ticket .invoice-total p:first-child strong { font-size: 12px !important; }
+  .print-invoice-ticket footer { margin-top: 8px !important; padding: 7px 4px !important; border-radius: 0 !important; font-size: 7px !important; }
+  .print-invoice-carta { page: difarmas-letter; width: 100% !important; max-width: none !important; }
+}
+@page difarmas-ticket { size: 80mm auto; margin: 3mm; }
+@page difarmas-letter { size: letter portrait; margin: 10mm; }
