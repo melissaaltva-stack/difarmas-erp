@@ -247,3 +247,7 @@
 /* Independently configurable invoice layouts from Settings */
 @media print { .print-invoice-ticket,.print-invoice-carta { margin: var(--invoice-print-margin, 3mm) auto !important; } }
 .invoice-format-settings{margin-top:22px;padding-top:18px;border-top:1px solid #e4ece8}.invoice-format-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.invoice-format-card{min-width:0;border:1px solid #dce8e3;border-radius:12px;padding:16px;background:#fbfdfc}.invoice-format-card h4{font-size:14px;margin:0;color:#214d42}.invoice-format-card>p{font-size:11px;color:#718780;line-height:1.5;margin:6px 0 14px}.invoice-format-toggles{flex-direction:column;gap:10px}.invoice-format-toggles label{align-items:flex-start;line-height:1.45}@media(max-width:900px){.invoice-format-grid{grid-template-columns:1fr}}
+
+
+/* Customer registry */
+.customer-avatar{width:34px;height:34px;flex:0 0 34px;border-radius:10px;display:grid;place-items:center;background:#e0f2ec;color:#176b53}.customer-actions{display:flex;align-items:center;gap:8px;white-space:nowrap}.customer-modal{width:min(760px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto}.customer-modal .form-grid{margin:16px 0}.customer-modal textarea{width:100%;resize:vertical}@media(max-width:700px){.customer-actions{flex-wrap:wrap}.customer-modal{padding:18px}.customer-modal .form-grid{grid-template-columns:1fr}}
