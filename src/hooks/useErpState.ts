@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { CartItem, CashClosure, CashMovement, Customer, ErpSettings, Expense, InventoryMovement, Module, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseItem, PurchaseRecord, Receivable, SaleRecord, Supplier, MissingProductRequest } from '../domain/types';
+import type { CartItem, CashClosure, CashMovement, Customer, ErpSettings, Expense, InventoryMovement, Module, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseItem, PurchaseRecord, Receivable, SaleRecord, Supplier, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord } from '../domain/types';
 import { loadJson, saveJson, loadNumber, saveNumber } from '../utils/storage';
 import { applyPurchaseToInventory, applySaleToInventory } from '../services/inventoryService';
 import { buildSaleRecord, createReceivableFromSale } from '../services/salesService';
@@ -63,6 +63,8 @@ export function useErpState(userId: string) {
   const [cashMovements, setCashMovements] = useState<CashMovement[]>(()=>loadJson<CashMovement[]>('difarmas_cash_movements',[]));
   const [paymentTransactions, setPaymentTransactions] = useState<PaymentTransaction[]>(()=>loadJson<PaymentTransaction[]>('difarmas_payment_transactions',[]));
   const [missingProductRequests, setMissingProductRequests] = useState<MissingProductRequest[]>(()=>loadJson<MissingProductRequest[]>('difarmas_missing_product_requests',[]));
+  const [supplierReturns, setSupplierReturns] = useState<SupplierReturnRecord[]>(()=>loadJson<SupplierReturnRecord[]>('difarmas_supplier_returns',[]));
+  const [saleAdjustments, setSaleAdjustments] = useState<SaleAdjustmentRecord[]>(()=>loadJson<SaleAdjustmentRecord[]>('difarmas_sale_adjustments',[]));
   const [remoteReady, setRemoteReady] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'loading'|'saving'|'synced'|'error'>('loading');
   const [syncError, setSyncError] = useState<string | null>(null);
@@ -89,11 +91,13 @@ export function useErpState(userId: string) {
   useEffect(()=>{saveJson('difarmas_cash_movements',cashMovements)},[cashMovements]);
   useEffect(()=>{saveJson('difarmas_payment_transactions',paymentTransactions)},[paymentTransactions]);
   useEffect(()=>{saveJson('difarmas_missing_product_requests',missingProductRequests)},[missingProductRequests]);
+  useEffect(()=>{saveJson('difarmas_supplier_returns',supplierReturns)},[supplierReturns]);
+  useEffect(()=>{saveJson('difarmas_sale_adjustments',saleAdjustments)},[saleAdjustments]);
 
   const snapshot = useMemo<ErpSnapshot>(() => ({
     customers, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables,
-    inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests,
-  }), [customers, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables, inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests]);
+    inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests, supplierReturns, saleAdjustments,
+  }), [customers, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables, inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests, supplierReturns, saleAdjustments]);
 
   // Load the signed-in user's snapshot before allowing remote writes. A first login
   // seeds the cloud record from this browser's existing local data.
@@ -123,6 +127,8 @@ export function useErpState(userId: string) {
       setCashMovements([]);
       setPaymentTransactions([]);
       setMissingProductRequests([]);
+      setSupplierReturns([]);
+      setSaleAdjustments([]);
       setMonthlyGoal(100000);
       setFixedExpenses(25000);
     }
@@ -145,6 +151,8 @@ export function useErpState(userId: string) {
         if (remote.cashMovements !== undefined) setCashMovements(remote.cashMovements);
         if (remote.paymentTransactions !== undefined) setPaymentTransactions(remote.paymentTransactions);
         setMissingProductRequests(remote.missingProductRequests ?? []);
+        setSupplierReturns(remote.supplierReturns ?? []);
+        setSaleAdjustments(remote.saleAdjustments ?? []);
         setMonthlyGoal(remote.monthlyGoal);
         setFixedExpenses(remote.fixedExpenses);
       }
@@ -202,6 +210,51 @@ export function useErpState(userId: string) {
     return true;
   };
 
+  const recordSupplierDispatch=(record:SupplierReturnRecord):boolean=>{
+    if(!record.items.length)return false;
+    if(record.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!products.some(p=>p.id===item.productId&&p.stock>=item.quantity)))return false;
+    const updated=products.map(product=>{
+      const item=record.items.find(line=>line.productId===product.id);
+      return item?{...product,stock:product.stock-item.quantity}:product;
+    });
+    const movements:InventoryMovement[]=record.items.flatMap(item=>{
+      const product=products.find(p=>p.id===item.productId);
+      if(!product)return [];
+      return [{id:Date.now()+item.productId,productId:item.productId,productName:item.productName,type:'Ajuste' as const,quantity:item.quantity,stockBefore:product.stock,stockAfter:product.stock-item.quantity,unitCost:item.unitCost,referenceId:record.id,date:new Date().toISOString(),note:'Devolución enviada al proveedor: '+record.reason}];
+    });
+    setProducts(updated);
+    setInventoryMovements(current=>[...current,...movements]);
+    return true;
+  };
+
+  const recordSaleAdjustment=(adjustment:SaleAdjustmentRecord):boolean=>{
+    if(saleAdjustments.some(item=>item.id===adjustment.id)||!sales.some(sale=>sale.id===adjustment.saleId)||!adjustment.items.length||!Number.isFinite(adjustment.amount)||adjustment.amount<=0)return false;
+    if(adjustment.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!Number.isFinite(item.unitPrice)||item.unitPrice<0))return false;
+    const adjustedItems=saleAdjustments.filter(item=>item.saleId===adjustment.saleId&&item.type!=='Anulación').flatMap(item=>item.items);
+    for(const line of adjustment.items){
+      const sold=sales.find(sale=>sale.id===adjustment.saleId)?.items?.find(item=>item.productId===line.productId);
+      const already=adjustedItems.filter(item=>item.productId===line.productId).reduce((sum,item)=>sum+item.quantity,0);
+      if(!sold||already+line.quantity>sold.qty)return false;
+    }
+    if(adjustment.type==='Anulación'&&saleAdjustments.some(item=>item.saleId===adjustment.saleId&&item.type==='Anulación'))return false;
+    let updated=products;
+    const movements:InventoryMovement[]=[];
+    for(const line of adjustment.items){
+      if(!line.returnToStock)continue;
+      const product=updated.find(p=>p.id===line.productId);
+      if(!product)return false;
+      movements.push({id:Date.now()+line.productId,productId:line.productId,productName:line.productName,type:'Ajuste',quantity:line.quantity,stockBefore:product.stock,stockAfter:product.stock+line.quantity,unitCost:line.unitCost,referenceId:adjustment.id,date:new Date().toISOString(),note:'Devolución de venta '+adjustment.invoiceNumber});
+      updated=updated.map(p=>p.id===line.productId?{...p,stock:p.stock+line.quantity}:p);
+    }
+    setProducts(updated);
+    setInventoryMovements(current=>[...current,...movements]);
+    if(adjustment.paymentMethod.toLowerCase().includes('efectivo')){
+      setCashMovements(current=>[{id:adjustment.id,type:'Salida',description:'Reembolso por '+adjustment.type+' '+adjustment.invoiceNumber,amount:adjustment.amount,category:'Devoluciones de ventas',date:new Date().toISOString()},...current]);
+    }
+    setSaleAdjustments(current=>[adjustment,...current]);
+    return true;
+  };
+
   const saveProduct=(product:Product)=>{
     if (!product.name.trim() || [product.cost,product.retail,product.wholesale,product.stock,product.minStock].some(v=>!Number.isFinite(v)||v<0)) return;
     if (editing) {
@@ -238,5 +291,5 @@ export function useErpState(userId: string) {
     return true;
   };
 
-  return {active,setActive,customers,setCustomers,suppliers,setSuppliers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,settings,setSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,purchases,purchaseCostHistory,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,cashClosures,setCashClosures,cashMovements,setCashMovements,paymentTransactions,setPaymentTransactions,missingProductRequests,setMissingProductRequests,recordMissingProduct,filtered,recordSale,saveProduct,receivePurchase,syncStatus,syncError};
+  return {active,setActive,customers,setCustomers,suppliers,setSuppliers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,settings,setSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,purchases,purchaseCostHistory,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,cashClosures,setCashClosures,cashMovements,setCashMovements,paymentTransactions,setPaymentTransactions,missingProductRequests,setMissingProductRequests,supplierReturns,setSupplierReturns,saleAdjustments,setSaleAdjustments,recordSupplierDispatch,recordSaleAdjustment,recordMissingProduct,filtered,recordSale,saveProduct,receivePurchase,syncStatus,syncError};
 }
