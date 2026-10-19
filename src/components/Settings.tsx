@@ -4,15 +4,15 @@ import type { CurrencyConfig, DocumentTemplate, ErpSettings, Module, PaymentMeth
 
 const modules:{id:Module;label:string}[]=[
   {id:'dashboard',label:'Panel de control'},{id:'ventas',label:'Ventas / POS'},{id:'redes_sociales',label:'Redes sociales / Ventas'},{id:'inventario',label:'Inventario'},
-  {id:'clientes',label:'Clientes'},{id:'compras',label:'Compras'},{id:'finanzas',label:'Finanzas'},{id:'cuentas_cobrar',label:'Cuentas por cobrar'},{id:'cuentas_pagar',label:'Cuentas por pagar'},{id:'reportes',label:'Reportes e impresión'},{id:'proveedores',label:'Proveedores'},{id:'configuracion',label:'Configuración'}
+  {id:'clientes',label:'Clientes'},{id:'compras',label:'Compras'},{id:'finanzas',label:'Finanzas'},{id:'cuentas_cobrar',label:'Cuentas por cobrar'},{id:'cuentas_pagar',label:'Cuentas por pagar'},{id:'reportes',label:'Reportes e impresión'},{id:'asistente_ia',label:'Asistente IA'},{id:'proveedores',label:'Proveedores'},{id:'configuracion',label:'Configuración'}
 ];
 const rolePermissions:Record<UserAccess['role'],Module[]> = {
   Administrador:modules.map(m=>m.id),
-  Supervisor:['dashboard','ventas','redes_sociales','clientes','inventario','compras','finanzas','cuentas_cobrar','cuentas_pagar','reportes','proveedores'],
+  Supervisor:['dashboard','ventas','redes_sociales','clientes','inventario','compras','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','proveedores'],
   Ventas:['dashboard','ventas','redes_sociales','clientes'],
   Compras:['dashboard','inventario','compras','proveedores'],
-  Finanzas:['dashboard','finanzas','cuentas_cobrar','cuentas_pagar','reportes','compras'],
-  'Solo lectura':['dashboard','ventas','redes_sociales','clientes','inventario','compras','finanzas','cuentas_cobrar','cuentas_pagar','reportes','proveedores']
+  Finanzas:['dashboard','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','compras'],
+  'Solo lectura':['dashboard','ventas','redes_sociales','clientes','inventario','compras','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','proveedores']
 };
 const roleOptions:UserAccess['role'][]=['Administrador','Supervisor','Ventas','Compras','Finanzas','Solo lectura'];
 export function Settings({settings,setSettings,userEmail,userId}:{settings:ErpSettings;setSettings:(s:ErpSettings)=>void;userEmail:string;userId:string}) {
