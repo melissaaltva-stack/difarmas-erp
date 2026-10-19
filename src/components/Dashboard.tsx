@@ -20,7 +20,7 @@ export function Dashboard({products,sales,expenses,monthlyGoal,fixedExpenses}:{p
   const goal=monthlyGoal;
   const workDays=26;
   const dailyGoal=goal/workDays;
-  const progress=Math.min(100,(salesTotal/goal)*100);
+  const progress=goal>0?Math.min(100,(salesTotal/goal)*100):0;
   const margin=salesTotal?grossProfit/salesTotal:0;
   const breakEvenSales=margin>0?fixedExpenses/margin:0;
   const breakEvenDaily=breakEvenSales/workDays;
