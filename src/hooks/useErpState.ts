@@ -175,7 +175,7 @@ export function useErpState(userId: string) {
 
   const filtered=useMemo(()=>products.filter(p=>[p.code,p.name,p.category,p.laboratory].join(' ').toLowerCase().includes(search.toLowerCase())),[products,search]);
 
-  const recordSale=(sold:CartItem[],customer='',dueDate=''):boolean=>{
+  const recordSale=(sold:CartItem[],customer='',dueDate='',customerRtn=''):boolean=>{
     if (saleInProgress.current) return false;
     if (!sold.length || sold.some(item => !Number.isFinite(item.qty) || item.qty <= 0)) return false;
     if (((settings.paymentMethods??[]).find(method=>method.name===payment)?.kind==='credit'||payment==='Crédito') && (!customer.trim() || !dueDate.trim())) return false;
@@ -183,7 +183,7 @@ export function useErpState(userId: string) {
     let updated: Product[];
     try { updated = applySaleToInventory(products,sold); } catch { return false; }
     saleInProgress.current=true;
-    const sale=buildSaleRecord(sold,payment,saleType,customer,dueDate);
+    const sale:SaleRecord={...buildSaleRecord(sold,payment,saleType,customer,dueDate),customer:customer.trim()||undefined,customerRtn:customerRtn.trim()||undefined};
     setProducts(updated);
     setInventoryMovements(current=>[...current,...createInventoryMovementsForSale(products,sold,sale.id)]);
     setSales(current=>[...current,sale]);
