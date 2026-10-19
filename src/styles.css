@@ -508,3 +508,8 @@ input:disabled,select:disabled,textarea:disabled{opacity:.65;cursor:not-allowed}
 .invoice-selected-banner small{font-size:11px;color:#718982;margin-top:4px}
 .invoice-selected-banner button{white-space:nowrap;flex-shrink:0}
 @media(max-width:560px){.invoice-return-results .invoice-result-row{padding:11px 10px;gap:8px}.invoice-result-side strong{font-size:11px}.invoice-selected-banner{align-items:flex-start;flex-direction:column}.invoice-selected-banner button{width:100%}}
+
+/* Panel de cambios y devoluciones accesible desde la barra de proveedores */
+.supplier-returns-modal{width:min(1200px,100%);max-height:92vh;}
+.supplier-returns-modal>.content{padding:0;min-width:0;}
+@media(max-width:760px){.supplier-returns-modal{padding:14px;max-height:95vh}.supplier-returns-modal .form-grid{grid-template-columns:1fr}}
