@@ -1,6 +1,6 @@
-# DIFARMÁS ERP v1.0.0
+# Farmi v1.0.0
 
-ERP web para la gestión integral de DIFARMÁS.
+ERP web para la gestión integral de Farmi.
 
 ## Módulos principales
 
