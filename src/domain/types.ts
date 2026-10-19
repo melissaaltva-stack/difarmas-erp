@@ -1,4 +1,4 @@
-export type Module = 'dashboard' | 'ventas' | 'inventario' | 'clientes' | 'compras' | 'finanzas' | 'cuentas_cobrar' | 'cuentas_pagar' | 'reportes' | 'asistente_ia' | 'proveedores' | 'configuracion';
+export type Module = 'dashboard' | 'ventas' | 'redes_sociales' | 'inventario' | 'clientes' | 'compras' | 'finanzas' | 'cuentas_cobrar' | 'cuentas_pagar' | 'reportes' | 'asistente_ia' | 'proveedores' | 'configuracion';
 export type DocumentTemplate = { id:'factura'|'orden_compra'|'nota_debito'|'nota_credito'|'orden_entrega'; name:string; title:string; subtitle:string; footer:string; paperSize:'A4'|'A5'|'ticket'; showLogo:boolean; showTaxLines:boolean; showSignatures:boolean; customFields:string[] };
 export type UserAccess = { id:string; email:string; name:string; role:'Administrador'|'Supervisor'|'Ventas'|'Compras'|'Finanzas'|'Solo lectura'; permissions:Module[]; active:boolean };
 export type CurrencyConfig = { code:string; name:string; symbol:string; exchangeRate:number; active:boolean };
