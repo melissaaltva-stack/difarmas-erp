@@ -404,6 +404,11 @@ input:disabled,select:disabled,textarea:disabled{opacity:.65;cursor:not-allowed}
 
 /* Buscador de clientes en punto de venta */
 .customer-picker{position:relative}
-.customer-search-results{position:absolute;z-index:30;top:100%;left:0;right:0;max-height:260px;overflow-y:auto;margin-top:2px;box-shadow:0 12px 28px rgba(15,40,32,.16);border:1px solid #dce7e2}
-.customer-search-results button{gap:12px}
+.customer-search-results{position:absolute;z-index:100;top:100%;left:0;right:0;max-height:300px;overflow-y:auto;margin-top:4px;box-shadow:0 12px 28px rgba(15,40,32,.18);border:1px solid #c8ddd5;background:#fff}
+.customer-search-results button{gap:12px;border-bottom:1px solid #edf2f1;color:#23483d}
+.customer-search-results button:last-child{border-bottom:0}
+.customer-search-results button b{white-space:nowrap;color:#167b61;font-size:11px}
 .customer-search-results .helper{padding:10px;margin:0}
+.customer-search-hint{background:#f3faf6;color:#477568!important;border-bottom:1px solid #e2eee8}
+.customer-picker .checkout-label input{display:block;width:100%;margin-top:6px;padding:10px 12px;border:1px solid #bfcfc9;border-radius:8px;background:#fff;color:#203c34;font:inherit;font-size:12px;outline:none}
+.customer-picker .checkout-label input:focus{border-color:#167b61;box-shadow:0 0 0 3px rgba(22,123,97,.12)}
