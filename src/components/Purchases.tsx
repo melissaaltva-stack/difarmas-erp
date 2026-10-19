@@ -1,12 +1,13 @@
-import { useState } from 'react';
-import { ShoppingCart, Search, Boxes, CalendarClock, TrendingUp, TrendingDown, Minus, AlertTriangle } from 'lucide-react';
-import type { PurchaseItem, Product, Supplier, PurchaseCostHistoryEntry } from '../domain/types';
+import { useMemo, useState } from 'react';
+import { ShoppingCart, Search, Boxes, CalendarClock, TrendingUp, TrendingDown, Minus, AlertTriangle, Sparkles, Plus } from 'lucide-react';
+import type { PurchaseItem, Product, Supplier, PurchaseCostHistoryEntry, SaleRecord } from '../domain/types';
+import { buildPurchaseRecommendations } from '../services/purchaseRecommendationService';
 import { localDateKey } from '../utils/dates';
 import { isExpiryAtLeastSixMonths, sixMonthExpiryThreshold } from '../services/expiryService';
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
 const percent = (value:number) => `${value.toLocaleString('es-HN',{maximumFractionDigits:1,minimumFractionDigits:1})}%`;
 
-export function Purchases({products,cart,setCart,search,setSearch,supplier,setSupplier,suppliers=[],costHistory=[],onReceive}:{products:Product[];cart:PurchaseItem[];setCart:(c:PurchaseItem[])=>void;search:string;setSearch:(v:string)=>void;supplier:string;setSupplier:(v:string)=>void;suppliers?:Supplier[];costHistory?:PurchaseCostHistoryEntry[];onReceive:(items:PurchaseItem[],paymentMethod:'Efectivo'|'Transferencia'|'Crédito',dueDate:string)=>boolean}) {
+export function Purchases({products,sales,cart,setCart,search,setSearch,supplier,setSupplier,suppliers=[],costHistory=[],onReceive}:{products:Product[];sales:SaleRecord[];cart:PurchaseItem[];setCart:(c:PurchaseItem[])=>void;search:string;setSearch:(v:string)=>void;supplier:string;setSupplier:(v:string)=>void;suppliers?:Supplier[];costHistory?:PurchaseCostHistoryEntry[];onReceive:(items:PurchaseItem[],paymentMethod:'Efectivo'|'Transferencia'|'Crédito',dueDate:string)=>boolean}) {
   const results=products.filter(p=>[p.code,p.name].join(' ').toLowerCase().includes(search.toLowerCase())).slice(0,6);
   const total=cart.reduce((sum,i)=>sum+i.unitCost*i.qty,0);
   const [paymentMethod,setPaymentMethod]=useState<'Efectivo'|'Transferencia'|'Crédito'>('Efectivo');
@@ -21,8 +22,22 @@ export function Purchases({products,cart,setCart,search,setSearch,supplier,setSu
   const priceChanges=cart.map(item=>{const product=products.find(p=>p.id===item.id);const oldCost=product?.cost??item.cost;const delta=item.unitCost-oldCost;const changePct=oldCost>0?delta/oldCost*100:(item.unitCost>0?100:0);const oldMargin=product&&product.retail>0?(product.retail-oldCost)/product.retail*100:null;const newMargin=product&&product.retail>0?(product.retail-item.unitCost)/product.retail*100:null;return {item,oldCost,delta,changePct,oldMargin,newMargin};});
   const increases=priceChanges.filter(x=>x.delta>0.005);
   const marginWarnings=priceChanges.filter(x=>x.newMargin!==null&&x.newMargin<0);
+  const recommendations=useMemo(()=>buildPurchaseRecommendations(products,sales),[products,sales]);
+  const addRecommended=(product:Product,quantity:number)=>{
+    setCart(current=>current.some(item=>item.id===product.id)
+      ? current.map(item=>item.id===product.id?{...item,qty:item.qty+quantity}:item)
+      : [...current,{...product,expiry:'',qty:quantity,unitCost:product.cost}]);
+    setSearch('');
+    setError('');
+  };
   return <div className="content"><div className="page-head"><div><span className="pill">MVP · MÓDULO 4</span><h2>Compras y recepción</h2><p>Compara costos anteriores y nuevos, controla aumentos y registra vencimientos antes de recibir mercancía.</p></div></div>
   <div className="card expiry-policy"><CalendarClock size={19}/><div><strong>Política de vencimiento: mínimo 6 meses</strong><p>No se puede recibir un producto cuya fecha de vencimiento sea anterior al <b>{minExpiry}</b>. Registra la fecha impresa en el envase de la mercancía que llega.</p></div></div>
+  <section className="card ai-purchase-recommendations">
+    <div className="ai-purchase-heading"><div className="ai-purchase-icon"><Sparkles size={20}/></div><div><h3>Compras sugeridas inteligentes</h3><p>Analiza ventas de los últimos 60 días, existencia, stock mínimo y cobertura estimada. No genera pedidos automáticamente.</p></div><span className="ai-purchase-count">{recommendations.length} sugerencia(s)</span></div>
+    {recommendations.length===0?<div className="ai-purchase-empty"><strong>No se detectan reposiciones prioritarias.</strong><p>Verifica que las ventas tengan detalle por producto y que el stock mínimo esté configurado.</p></div>:<div className="ai-purchase-list">{recommendations.slice(0,8).map(item=><article className="ai-purchase-row" key={item.product.id}><div className="ai-purchase-product"><strong>{item.product.name}</strong><small>{item.product.code||'Sin código'} · Stock {item.product.stock} · Mín. {item.product.minStock}</small><span className={item.priority==='Alta'?'ai-priority high':item.priority==='Media'?'ai-priority medium':'ai-priority'}>Prioridad {item.priority}</span></div><div className="ai-purchase-quantity"><small>Cantidad sugerida</small><strong>{item.suggestedQuantity} u.</strong><small>Estimado: {money(item.estimatedCost)}</small></div><div className="ai-purchase-reason"><p>{item.reason}</p>{item.limitedData&&<small>Datos limitados: recomendación basada en el mínimo, no en pronóstico de ventas.</small>}</div><button className="secondary ai-add-suggestion" onClick={()=>addRecommended(item.product,item.suggestedQuantity)}><Plus size={15}/> Agregar</button></article>)}</div>}
+    {recommendations.length>8&&<p className="helper">Se muestran las 8 prioridades principales de {recommendations.length} sugerencias.</p>}
+    <small className="helper">La recomendación es una estimación operativa; revisa vencimientos por lote, pedidos pendientes, presupuesto y disponibilidad del proveedor antes de comprar.</small>
+  </section>
   <div className="purchase-grid"><section><div className="card purchase-head"><label>Proveedor<input list="supplier-directory" value={supplier} onChange={e=>setSupplier(e.target.value)} placeholder="Nombre del proveedor"/><datalist id="supplier-directory">{suppliers.filter(s=>s.active).map(s=><option key={s.id} value={s.name}/>)}</datalist></label><div className="search"><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar producto para agregar..." /></div></div>{search&&<div className="results card">{results.map(p=><button key={p.id} onClick={()=>add(p)}><span><strong>{p.name}</strong><small>{p.code} · Costo registrado {money(p.cost)}</small></span><b>Agregar</b></button>)}</div>}
   {cart.length>0&&<div className="card cost-review"><div className="cost-review-heading"><div><h3>Comparación de costos</h3><p>Compara el costo actual registrado en el inventario con el costo que ofrece este proveedor.</p></div><span className="cost-count">{increases.length} aumento(s)</span></div>
   {priceChanges.map(({item,oldCost,delta,changePct,oldMargin,newMargin})=><div className="cost-review-row" key={item.id}><div className="cost-product"><strong>{item.name}</strong><small>{item.code}</small></div><div><small>Costo actual</small><strong>{money(oldCost)}</strong></div><div><small>Costo nuevo</small><strong>{money(item.unitCost)}</strong></div><div className={delta>0.005?'cost-change-up':delta< -0.005?'cost-change-down':'cost-change-same'}>{delta>0.005?<TrendingUp size={15}/>:delta< -0.005?<TrendingDown size={15}/>:<Minus size={15}/>}<strong>{delta>0?'+':''}{money(delta)}</strong><small>{oldCost===0?(item.unitCost>0?'Nuevo costo':'Sin cambio'):(changePct>0?'+':'')+percent(changePct)}</small></div><div className="margin-comparison"><small>Margen al precio minorista actual</small><span>{oldMargin===null?'—':percent(oldMargin)} → <strong className={newMargin!==null&&newMargin<0?'negative-margin':''}>{newMargin===null?'—':percent(newMargin)}</strong></span></div></div>)}
