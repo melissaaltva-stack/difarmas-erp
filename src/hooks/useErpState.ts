@@ -144,7 +144,7 @@ export function useErpState(userId: string) {
         if (remote.cashClosures !== undefined) setCashClosures(remote.cashClosures);
         if (remote.cashMovements !== undefined) setCashMovements(remote.cashMovements);
         if (remote.paymentTransactions !== undefined) setPaymentTransactions(remote.paymentTransactions);
-        if (remote.missingProductRequests !== undefined) setMissingProductRequests(remote.missingProductRequests);
+        setMissingProductRequests(remote.missingProductRequests ?? []);
         setMonthlyGoal(remote.monthlyGoal);
         setFixedExpenses(remote.fixedExpenses);
       }
