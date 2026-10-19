@@ -421,3 +421,41 @@ input:disabled,select:disabled,textarea:disabled{opacity:.65;cursor:not-allowed}
 .customer-create-option strong { display:flex; align-items:center; gap:6px; }
 .customer-create-option small { color:var(--muted, #64748b); font-size:12px; }
 .customer-create-option>b { white-space:nowrap; color:var(--primary, #2563eb); }
+
+
+/* POS: clearer RTN and received amount controls */
+.checkout-rtn-field input {
+  display:block; width:100%; min-height:48px; margin-top:7px; padding:12px 14px;
+  border:1px solid #b9cec7; border-radius:11px; background:#fbfefd; color:#173d33;
+  font:inherit; font-size:15px; letter-spacing:.25px; outline:none;
+  transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.checkout-rtn-field input:focus {
+  border-color:#167b61; background:#fff; box-shadow:0 0 0 4px rgba(22,123,97,.14);
+}
+.checkout-rtn-field input::placeholder { color:#91a59e; font-size:13px; }
+.checkout-received-field { margin-top:16px; color:#244e42; }
+.checkout-received-field .field-hint { float:right; font-size:11px; font-weight:500; color:#7b908b; }
+.checkout-received-field input {
+  display:block; width:100%; min-height:62px; margin-top:7px; padding:12px 15px;
+  border:2px solid #9dc8b9; border-radius:13px; background:linear-gradient(135deg,#f5fcf8,#fff);
+  color:#12543f; font:inherit; font-size:25px; font-weight:800; font-variant-numeric:tabular-nums;
+  outline:none; transition:border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.checkout-received-field input:focus {
+  border-color:#167b61; box-shadow:0 0 0 4px rgba(22,123,97,.15); background:#fff; transform:translateY(-1px);
+}
+.checkout-received-field input::placeholder { color:#a5b8b0; font-size:17px; font-weight:500; }
+.received-quick-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; margin:9px 0 2px; }
+.received-quick-actions button {
+  min-height:37px; padding:8px 10px; border:1px solid #d4e8df; border-radius:9px;
+  background:#f4faf7; color:#22634f; font-size:12px; font-weight:700; cursor:pointer;
+  transition:background .15s ease,border-color .15s ease,transform .15s ease;
+}
+.received-quick-actions button:hover { background:#e2f4eb; border-color:#83bda8; transform:translateY(-1px); }
+.received-quick-actions button:focus-visible { outline:3px solid rgba(22,123,97,.25); outline-offset:2px; }
+@media(max-width:560px) {
+  .checkout-rtn-field input { min-height:50px; font-size:16px; }
+  .checkout-received-field input { min-height:60px; font-size:23px; }
+  .received-quick-actions button { min-height:42px; font-size:12px; }
+}
