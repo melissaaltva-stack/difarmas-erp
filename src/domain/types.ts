@@ -1,5 +1,5 @@
 export type MissingProductRequest = { id:number; name:string; presentation:string; quantity:number; notes:string; requestedAt:string; status:'Pendiente'|'Comprado'|'Descartado' };
-export type Module = 'dashboard' | 'ventas' | 'redes_sociales' | 'inventario' | 'clientes' | 'compras' | 'finanzas' | 'cuentas_cobrar' | 'cuentas_pagar' | 'reportes' | 'asistente_ia' | 'proveedores' | 'configuracion';
+export type Module = 'dashboard' | 'ventas' | 'redes_sociales' | 'inventario' | 'clientes' | 'compras' | 'finanzas' | 'cuentas_cobrar' | 'cuentas_pagar' | 'reportes' | 'asistente_ia' | 'proveedores' | 'devoluciones_proveedores' | 'configuracion';
 export type DocumentTemplate = { id:'factura'|'orden_compra'|'nota_debito'|'nota_credito'|'orden_entrega'; name:string; title:string; subtitle:string; footer:string; paperSize:'A4'|'A5'|'ticket'; showLogo:boolean; showTaxLines:boolean; showSignatures:boolean; customFields:string[] };
 export type UserAccess = { id:string; email:string; name:string; role:'Administrador'|'Supervisor'|'Ventas'|'Compras'|'Finanzas'|'Solo lectura'; permissions:Module[]; active:boolean };
 export type CurrencyConfig = { code:string; name:string; symbol:string; exchangeRate:number; active:boolean };
@@ -14,6 +14,10 @@ export type CartItem = Product & { qty:number; price:number };
 export type PurchaseItem = Product & { qty:number; unitCost:number };
 export type SaleLine = { productId:number; productName:string; category:string; laboratory:string; qty:number; unitCost:number; unitPrice:number; revenue:number; cost:number; profit:number };
 export type SaleRecord = { id:number; total:number; cost:number; profit:number; payment:string; type:string; date:string; customer?:string; customerRtn?:string; dueDate?:string; items?:SaleLine[] };
+export type SupplierReturnItem = { productId:number; productName:string; code:string; quantity:number; unitCost:number; reason:string };
+export type SupplierReturnRecord = { id:number; supplier:string; purchaseReference:string; date:string; status:'Pendiente'|'Enviado al proveedor'|'Cambio recibido'|'Nota de crédito recibida'|'Rechazado'; items:SupplierReturnItem[]; totalCost:number; reason:string; notes:string };
+export type SaleAdjustmentItem = { productId:number; productName:string; quantity:number; unitPrice:number; unitCost:number; returnToStock:boolean };
+export type SaleAdjustmentRecord = { id:number; saleId:number; invoiceNumber:string; type:'Devolución parcial'|'Devolución total'|'Anulación'; date:string; reason:string; items:SaleAdjustmentItem[]; amount:number; paymentMethod:string; notes:string };
 export type Expense = { id:number; description:string; amount:number; category:string; date:string; paymentMethod?:'Efectivo'|'Transferencia' };
 export type PurchaseRecord = { id:number; supplier:string; total:number; paymentMethod:'Efectivo'|'Transferencia'|'Crédito'; date:string };
 export type PurchaseCostHistoryEntry = { id:number; purchaseId:number; productId:number; productCode:string; productName:string; supplier:string; unitCost:number; quantity:number; date:string };
