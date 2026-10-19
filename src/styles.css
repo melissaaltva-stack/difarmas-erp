@@ -400,3 +400,10 @@ input:disabled,select:disabled,textarea:disabled{opacity:.65;cursor:not-allowed}
 .invoice-brand-image{width:48px;height:48px;flex:0 0 48px;object-fit:contain;border-radius:6px}
 @media print{.invoice-brand-image{width:42px;height:42px;flex-basis:42px}}
 @media(max-width:600px){.business-logo-editor{align-items:flex-start;flex-direction:column}.business-logo-preview{width:100%;height:110px;flex-basis:auto}}
+
+
+/* Buscador de clientes en punto de venta */
+.customer-picker{position:relative}
+.customer-search-results{position:absolute;z-index:30;top:100%;left:0;right:0;max-height:260px;overflow-y:auto;margin-top:2px;box-shadow:0 12px 28px rgba(15,40,32,.16);border:1px solid #dce7e2}
+.customer-search-results button{gap:12px}
+.customer-search-results .helper{padding:10px;margin:0}
