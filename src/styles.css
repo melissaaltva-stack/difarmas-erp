@@ -362,3 +362,26 @@ input:disabled,select:disabled,textarea:disabled{opacity:.65;cursor:not-allowed}
 .expiry-summary strong{font-size:17px;color:#24443b}
 .expiry-filter-row{display:flex;flex-wrap:wrap;gap:8px}
 @media(max-width:650px){.expiry-summary{grid-template-columns:1fr}.expiry-filter-row button{flex:1 1 calc(50% - 8px)}}
+
+
+/* Sales returns and supplier-return workflow */
+.sales-return-panel { margin-bottom: 18px; }
+.sales-return-detail { display: grid; gap: 14px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border, #e5e7eb); }
+.sales-return-detail .form-grid { margin: 12px 0; }
+.sales-return-detail .table-wrap, .sales-return-history .table-wrap { overflow-x: auto; width: 100%; }
+.sales-return-detail table, .sales-return-history table { width: 100%; border-collapse: collapse; }
+.sales-return-detail th, .sales-return-detail td, .sales-return-history th, .sales-return-history td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border, #e5e7eb); vertical-align: middle; }
+.sales-return-detail th, .sales-return-history th { font-size: 12px; color: var(--muted, #64748b); background: var(--surface-muted, #f8fafc); }
+.sales-return-detail td input[type="number"] { width: 90px; min-width: 72px; }
+.inline-check { display: flex; align-items: center; gap: 9px; font-size: 14px; }
+.inline-check input { width: 17px; height: 17px; }
+.sales-return-history { margin-top: 16px; border-top: 1px solid var(--border, #e5e7eb); padding-top: 14px; }
+.sales-return-history summary { cursor: pointer; font-weight: 600; padding: 8px 0; }
+.sales-return-detail .grand { margin-top: 4px; }
+.table-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.table-actions button { padding: 6px 8px; font-size: 12px; }
+@media (max-width: 700px) {
+  .sales-return-detail .form-grid { grid-template-columns: 1fr; }
+  .sales-return-detail th, .sales-return-detail td, .sales-return-history th, .sales-return-history td { padding: 8px; }
+  .table-actions { flex-direction: column; align-items: stretch; }
+}
