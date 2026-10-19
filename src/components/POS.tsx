@@ -25,7 +25,13 @@ export function POS({products,customers,cart,setCart,saleType,setSaleType,paymen
   const [customer,setCustomer]=useState('');
   const [customerRtn,setCustomerRtn]=useState('');
   const [showCustomerResults,setShowCustomerResults]=useState(false);
-  const matchingCustomers=customers.filter(c=>c.active&&[c.name,c.phone,c.rtn??'',c.email??''].join(' ').toLocaleLowerCase().includes(customer.toLocaleLowerCase())).slice(0,8);
+  // Normalize accents and extra spaces so names such as "José" also match "Jose".
+  const normalizeCustomerSearch=(value:string)=>value.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').trim().toLocaleLowerCase();
+  const matchingCustomers=customers
+    .filter(c=>c.active!==false)
+    .filter(c=>!customer.trim()||normalizeCustomerSearch([c.name,c.phone,c.rtn??'',c.email??''].join(' ')).includes(normalizeCustomerSearch(customer)))
+    .sort((a,b)=>a.name.localeCompare(b.name,'es',{sensitivity:'base'}))
+    .slice(0,8);
   const selectCustomer=(c:Customer)=>{setCustomer(c.name);setCustomerRtn(c.rtn??'');setShowCustomerResults(false);};
   const [dueDate,setDueDate]=useState(()=>{const d=new Date();d.setDate(d.getDate()+30);return localDateKey(d);});
   const [error,setError]=useState('');
