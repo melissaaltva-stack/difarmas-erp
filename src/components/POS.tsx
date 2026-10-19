@@ -9,7 +9,7 @@ import { validateFiscalAuthorization } from '../services/fiscalService';
 
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
 
-export function POS({products,cart,setCart,saleType,setSaleType,payment,setPayment,search,setSearch,onComplete,settings,setSettings,onRecordMissingProduct,sales,saleAdjustments,onRecordAdjustment}:{products:Product[];cart:CartItem[];setCart:(c:CartItem[])=>void;saleType:'minorista'|'mayorista';setSaleType:(v:'minorista'|'mayorista')=>void;payment:string;setPayment:(v:string)=>void;search:string;setSearch:(v:string)=>void;onComplete:(sold:CartItem[],customer?:string,dueDate?:string,customerRtn?:string)=>boolean;settings:ErpSettings;setSettings:(s:ErpSettings)=>void;onRecordMissingProduct:(request:{name:string;presentation:string;quantity:number;notes:string})=>boolean;sales:SaleRecord[];saleAdjustments:SaleAdjustmentRecord[];onRecordAdjustment:(record:SaleAdjustmentRecord)=>boolean}) {
+export function POS({products,cart,setCart,saleType,setSaleType,payment,setPayment,search,setSearch,onComplete,settings,setSettings,onRecordMissingProduct,sales,saleAdjustments,onRecordAdjustment}:{products:Product[];cart:CartItem[];setCart:(c:CartItem[])=>void;saleType:'minorista'|'mayorista';setSaleType:(v:'minorista'|'mayorista')=>void;payment:string;setPayment:(v:string)=>void;search:string;setSearch:(v:string)=>void;onComplete:(sold:CartItem[],customer?:string,dueDate?:string,customerRtn?:string,invoiceNumber?:string)=>boolean;settings:ErpSettings;setSettings:(s:ErpSettings)=>void;onRecordMissingProduct:(request:{name:string;presentation:string;quantity:number;notes:string})=>boolean;sales:SaleRecord[];saleAdjustments:SaleAdjustmentRecord[];onRecordAdjustment:(record:SaleAdjustmentRecord)=>boolean}) {
   const defaultInvoicePrintFormats:NonNullable<ErpSettings['invoicePrintFormats']>={ticket:{title:'FACTURA / TICKET',subtitle:'COMPROBANTE DE VENTA',footer:'Gracias por su compra. ¡En DIFARMÁS estamos para servirle!',showLogo:true,showFiscalData:true,showCustomer:true,showPrices:true,showPaymentDetails:true,showSignatures:false,marginsMm:3},carta:{title:'FACTURA',subtitle:'COMPROBANTE DE VENTA',footer:'Gracias por su compra. ¡En DIFARMÁS estamos para servirle!',showLogo:true,showFiscalData:true,showCustomer:true,showPrices:true,showPaymentDetails:true,showSignatures:false,marginsMm:10}};
   const invoiceTemplate=settings.templates.find(t=>t.id==='factura');
   const paymentMethods=settings.paymentMethods?.filter(method=>method.active)??[{id:'cash',name:'Efectivo',kind:'cash' as const,active:true,requiresReference:false},{id:'transfer',name:'Transferencia',kind:'other' as const,active:true,requiresReference:true},{id:'credit',name:'Crédito',kind:'credit' as const,active:true,requiresReference:false}];
@@ -97,11 +97,11 @@ export function POS({products,cart,setCart,saleType,setSaleType,payment,setPayme
     const fiscalError=validateFiscalAuthorization(fiscal,invoiceSequence);
     if(fiscalError){setError(fiscalError);return;}
     const fiscalConfigured=Boolean(fiscal?.cai);
-    if(onComplete(cart,customer.trim(),dueDate,customerRtn.trim())){
-      const fiscalPoint=(fiscal?.establishmentCode??'')+(fiscal?.emissionPoint??'');
-      const invoiceNumber=fiscalConfigured
-        ? `${fiscalPoint.padStart(4,'0')}-${(fiscal?.documentTypeCode??'01').padStart(2,'0')}-${String(invoiceSequence).padStart(8,'0')}`
-        : `${numbering.factura?.prefix??'FAC-'}${String(invoiceSequence).padStart(8,'0')}`;
+    const fiscalPoint=(fiscal?.establishmentCode??'')+(fiscal?.emissionPoint??'');
+    const invoiceNumber=fiscalConfigured
+      ? `${fiscalPoint.padStart(4,'0')}-${(fiscal?.documentTypeCode??'01').padStart(2,'0')}-${String(invoiceSequence).padStart(8,'0')}`
+      : `${numbering.factura?.prefix??'FAC-'}${String(invoiceSequence).padStart(8,'0')}`;
+    if(onComplete(cart,customer.trim(),dueDate,customerRtn.trim(),invoiceNumber)){
       setSettings({...settings,documentNumbering:{...numbering,factura:{...numbering.factura,prefix:numbering.factura?.prefix??'FAC-',nextNumber:invoiceSequence+1}}});
       setInvoice({number:invoiceNumber,date:new Date().toLocaleString('es-HN'),items:cart.map(i=>({...i})),total,payment,customer:customer.trim()||'Consumidor final',customerRtn:customerRtn.trim(),received:isCredit?0:received,change:changeDue,format:printFormat});
       setCart([]);setCustomer('');setCustomerRtn('');setAmountReceived('');
