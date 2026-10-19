@@ -28,7 +28,9 @@ function App({ userId, userEmail, signOut }: { userId: string; userEmail:string;
   const permissions=userAccess?.permissions??(settings.users.length===0?nav.map(item=>item[0]):['dashboard']);
   // Existing user records may predate the reports module. Preserve role-based access for those accounts.
   const reportRoles=['Administrador','Supervisor','Finanzas','Solo lectura'];
-  const canSee=(module:string)=>permissions.includes(module as typeof permissions[number])||(module==='reportes'&&!!userAccess&&reportRoles.includes(userAccess.role));
+  const customerRoles=['Administrador','Supervisor','Ventas','Solo lectura'];
+  // Older saved permission lists do not include the new Clientes module. Keep it visible for roles that should have customer access.
+  const canSee=(module:string)=>permissions.includes(module as typeof permissions[number])||(module==='reportes'&&!!userAccess&&reportRoles.includes(userAccess.role))||(module==='clientes'&&!!userAccess&&customerRoles.includes(userAccess.role));
   const visibleNav=nav.filter(([id])=>canSee(id));
 
   return <div className="app">
