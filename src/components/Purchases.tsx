@@ -24,9 +24,9 @@ export function Purchases({products,sales,cart,setCart,search,setSearch,supplier
   const marginWarnings=priceChanges.filter(x=>x.newMargin!==null&&x.newMargin<0);
   const recommendations=useMemo(()=>buildPurchaseRecommendations(products,sales),[products,sales]);
   const addRecommended=(product:Product,quantity:number)=>{
-    setCart(current=>current.some(item=>item.id===product.id)
-      ? current.map(item=>item.id===product.id?{...item,qty:item.qty+quantity}:item)
-      : [...current,{...product,expiry:'',qty:quantity,unitCost:product.cost}]);
+    setCart(cart.some(item=>item.id===product.id)
+      ? cart.map(item=>item.id===product.id?{...item,qty:item.qty+quantity}:item)
+      : [...cart,{...product,expiry:'',qty:quantity,unitCost:product.cost}]);
     setSearch('');
     setError('');
   };
