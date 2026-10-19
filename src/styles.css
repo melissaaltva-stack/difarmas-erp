@@ -385,3 +385,18 @@ input:disabled,select:disabled,textarea:disabled{opacity:.65;cursor:not-allowed}
   .sales-return-detail th, .sales-return-detail td, .sales-return-history th, .sales-return-history td { padding: 8px; }
   .table-actions { flex-direction: column; align-items: stretch; }
 }
+
+/* Company logo upload and invoice branding */
+.business-logo-editor{display:flex;align-items:center;gap:18px;margin:0 0 20px;padding:16px;border:1px solid #dce8e3;border-radius:14px;background:#fbfdfc}
+.business-logo-preview{width:116px;height:100px;flex:0 0 116px;display:grid;place-items:center;border:1px dashed #bfd4cc;border-radius:12px;background:#fff;overflow:hidden}
+.business-logo-preview img{width:100%;height:100%;object-fit:contain;padding:8px}
+.business-logo-placeholder{display:flex;flex-direction:column;align-items:center;gap:7px;color:#8aa29a;font-size:11px}
+.business-logo-controls{display:flex;flex-wrap:wrap;align-items:center;gap:9px;min-width:0}
+.business-logo-controls strong{width:100%;font-size:14px;color:#24443b}
+.business-logo-controls p{width:100%;margin:0 0 3px;font-size:12px;line-height:1.5;color:#718780}
+.business-logo-upload{position:relative;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer}
+.business-logo-upload input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.document-preview-logo{width:44px;height:44px;object-fit:contain;border-radius:6px}
+.invoice-brand-image{width:48px;height:48px;flex:0 0 48px;object-fit:contain;border-radius:6px}
+@media print{.invoice-brand-image{width:42px;height:42px;flex-basis:42px}}
+@media(max-width:600px){.business-logo-editor{align-items:flex-start;flex-direction:column}.business-logo-preview{width:100%;height:110px;flex-basis:auto}}
