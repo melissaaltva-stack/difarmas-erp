@@ -52,4 +52,5 @@ function App({ userId, userEmail, signOut }: { userId: string; userEmail:string;
 }
 
 function ModulePlaceholder({name}:{name:string}) { return <div className="content"><div className="empty card"><Boxes size={42}/><h2>{name}</h2><p>Este módulo está preparado en la navegación. Será construido en la siguiente fase del MVP.</p><span className="pill">PRÓXIMO MÓDULO</span></div></div> }
+// Cambios y devoluciones se gestionan ahora dentro del módulo Proveedores.
 export default App;
