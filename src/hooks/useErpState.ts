@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { CartItem, CashClosure, CashMovement, Customer, ErpSettings, Expense, InventoryMovement, Module, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseItem, PurchaseRecord, Receivable, SaleRecord, Supplier } from '../domain/types';
+import type { CartItem, CashClosure, CashMovement, Customer, ErpSettings, Expense, InventoryMovement, Module, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseItem, PurchaseRecord, Receivable, SaleRecord, Supplier, MissingProductRequest } from '../domain/types';
 import { loadJson, saveJson, loadNumber, saveNumber } from '../utils/storage';
 import { applyPurchaseToInventory, applySaleToInventory } from '../services/inventoryService';
 import { buildSaleRecord, createReceivableFromSale } from '../services/salesService';
@@ -62,6 +62,7 @@ export function useErpState(userId: string) {
   const [cashClosures, setCashClosures] = useState<CashClosure[]>(()=>loadJson<CashClosure[]>('difarmas_cash_closures',[]));
   const [cashMovements, setCashMovements] = useState<CashMovement[]>(()=>loadJson<CashMovement[]>('difarmas_cash_movements',[]));
   const [paymentTransactions, setPaymentTransactions] = useState<PaymentTransaction[]>(()=>loadJson<PaymentTransaction[]>('difarmas_payment_transactions',[]));
+  const [missingProductRequests, setMissingProductRequests] = useState<MissingProductRequest[]>(()=>loadJson<MissingProductRequest[]>('difarmas_missing_product_requests',[]));
   const [remoteReady, setRemoteReady] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'loading'|'saving'|'synced'|'error'>('loading');
   const [syncError, setSyncError] = useState<string | null>(null);
@@ -87,11 +88,12 @@ export function useErpState(userId: string) {
   useEffect(()=>{saveJson('difarmas_cash_closures',cashClosures)},[cashClosures]);
   useEffect(()=>{saveJson('difarmas_cash_movements',cashMovements)},[cashMovements]);
   useEffect(()=>{saveJson('difarmas_payment_transactions',paymentTransactions)},[paymentTransactions]);
+  useEffect(()=>{saveJson('difarmas_missing_product_requests',missingProductRequests)},[missingProductRequests]);
 
   const snapshot = useMemo<ErpSnapshot>(() => ({
     customers, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables,
-    inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions,
-  }), [customers, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables, inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions]);
+    inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests,
+  }), [customers, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables, inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests]);
 
   // Load the signed-in user's snapshot before allowing remote writes. A first login
   // seeds the cloud record from this browser's existing local data.
@@ -120,6 +122,7 @@ export function useErpState(userId: string) {
       setCashClosures([]);
       setCashMovements([]);
       setPaymentTransactions([]);
+      setMissingProductRequests([]);
       setMonthlyGoal(100000);
       setFixedExpenses(25000);
     }
@@ -141,6 +144,7 @@ export function useErpState(userId: string) {
         if (remote.cashClosures !== undefined) setCashClosures(remote.cashClosures);
         if (remote.cashMovements !== undefined) setCashMovements(remote.cashMovements);
         if (remote.paymentTransactions !== undefined) setPaymentTransactions(remote.paymentTransactions);
+        setMissingProductRequests(remote.missingProductRequests ?? []);
         setMonthlyGoal(remote.monthlyGoal);
         setFixedExpenses(remote.fixedExpenses);
       }
@@ -174,6 +178,13 @@ export function useErpState(userId: string) {
   }, [remoteReady, userId, snapshot]);
 
   const filtered=useMemo(()=>products.filter(p=>[p.code,p.name,p.category,p.laboratory].join(' ').toLowerCase().includes(search.toLowerCase())),[products,search]);
+
+  const recordMissingProduct=(request:Omit<MissingProductRequest,'id'|'requestedAt'|'status'>):boolean=>{
+    const name=request.name.trim();
+    if(!name||!Number.isFinite(request.quantity)||request.quantity<1)return false;
+    setMissingProductRequests(current=>[{...request,name,id:Date.now(),requestedAt:new Date().toISOString(),status:'Pendiente'},...current]);
+    return true;
+  };
 
   const recordSale=(sold:CartItem[],customer='',dueDate='',customerRtn=''):boolean=>{
     if (saleInProgress.current) return false;
@@ -227,5 +238,5 @@ export function useErpState(userId: string) {
     return true;
   };
 
-  return {active,setActive,customers,setCustomers,suppliers,setSuppliers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,settings,setSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,purchases,purchaseCostHistory,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,cashClosures,setCashClosures,cashMovements,setCashMovements,paymentTransactions,setPaymentTransactions,filtered,recordSale,saveProduct,receivePurchase,syncStatus,syncError};
+  return {active,setActive,customers,setCustomers,suppliers,setSuppliers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,settings,setSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,purchases,purchaseCostHistory,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,cashClosures,setCashClosures,cashMovements,setCashMovements,paymentTransactions,setPaymentTransactions,missingProductRequests,setMissingProductRequests,recordMissingProduct,filtered,recordSale,saveProduct,receivePurchase,syncStatus,syncError};
 }
