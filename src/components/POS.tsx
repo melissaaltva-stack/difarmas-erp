@@ -49,6 +49,7 @@ export function POS({products,customers,cart,setCart,saleType,setSaleType,paymen
   const [invoice,setInvoice]=useState<{number:string;date:string;items:CartItem[];total:number;payment:string;customer:string;customerRtn:string;received:number;change:number;format:'ticket'|'carta'}|null>(null);
   const [showCamera,setShowCamera]=useState(false);
   const [showPaymentModal,setShowPaymentModal]=useState(false);
+  const [printAfterCheckout,setPrintAfterCheckout]=useState(false);
   const [showMissingForm,setShowMissingForm]=useState(false);
   const [missingName,setMissingName]=useState('');
   const [missingPresentation,setMissingPresentation]=useState('');
@@ -104,6 +105,7 @@ export function POS({products,customers,cart,setCart,saleType,setSaleType,paymen
   const change=(id:number,delta:number)=>setCart(cart.map(i=>i.id===id?{...i,qty:Math.max(1,Math.min(i.qty+delta,i.stock))}:i));
   const remove=(id:number)=>setCart(cart.filter(i=>i.id!==id));
   const checkout=()=>{setError('');if(cart.length)setShowPaymentModal(true);};
+  useEffect(()=>{if(!printAfterCheckout||!invoice)return;const timer=window.setTimeout(()=>{window.print();setPrintAfterCheckout(false);},250);return ()=>window.clearTimeout(timer);},[printAfterCheckout,invoice]);
   const completeCheckout=()=>{
     setError('');
     if(!cart.length)return;
@@ -123,7 +125,7 @@ export function POS({products,customers,cart,setCart,saleType,setSaleType,paymen
     if(onComplete(cart,customer.trim(),dueDate,customerRtn.trim(),invoiceNumber)){
       setSettings({...settings,documentNumbering:{...numbering,factura:{...numbering.factura,prefix:numbering.factura?.prefix??'FAC-',nextNumber:invoiceSequence+1}}});
       setInvoice({number:invoiceNumber,date:new Date().toLocaleString('es-HN'),items:cart.map(i=>({...i})),total,payment,customer:customer.trim()||'Consumidor final',customerRtn:customerRtn.trim(),received:isCredit?0:received,change:changeDue,format:printFormat});
-      setCart([]);setCustomer('');setCustomerRtn('');setAmountReceived('');
+      setCart([]);setCustomer('');setCustomerRtn('');setAmountReceived('');setPrintAfterCheckout(true);
     }else{setError('No se pudo registrar la venta. Verifica el stock y las cantidades.');}
   };
   return <div className="content"><div className="page-head"><div><span className="pill">MVP · MÓDULO 3</span><h2>Punto de venta</h2><p>Venta rápida con precio minorista o mayorista.</p></div><div className="sale-type"><button className={saleType==='minorista'?'type active':'type'} onClick={()=>setSaleType('minorista')}>Minorista</button><button className={saleType==='mayorista'?'type active':'type'} onClick={()=>setSaleType('mayorista')}>Mayorista</button></div></div>
