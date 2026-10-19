@@ -474,3 +474,36 @@ input:disabled,select:disabled,textarea:disabled{opacity:.65;cursor:not-allowed}
 .payment-modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
 .payment-modal-actions button{min-height:46px}
 @media(max-width:560px){.payment-checkout-modal{padding:17px}.payment-modal-total{padding:15px}.payment-modal-actions{flex-direction:column-reverse}.payment-modal-actions button{width:100%}}
+
+/* Dynamic invoice lookup for POS returns and cancellations */
+.invoice-search-box{margin:16px 0 10px}
+.invoice-search-box>.checkout-label{margin-top:0;margin-bottom:7px;font-size:12px;color:#365b53}
+.invoice-search-control{display:flex;align-items:center;gap:10px;padding:0 12px;border:1px solid #cbded8;border-radius:12px;background:#fff;min-height:48px;color:#628079;transition:border-color .18s,box-shadow .18s,background .18s}
+.invoice-search-control:focus-within{border-color:#168064;box-shadow:0 0 0 3px #1680641c;background:#fcfffe}
+.invoice-search-control input{flex:1;min-width:0;border:0!important;outline:0!important;background:transparent!important;box-shadow:none!important;padding:12px 0!important;margin:0!important;font:inherit;color:#183a33}
+.invoice-search-control input::placeholder{color:#91a59f}
+.invoice-search-clear{display:grid;place-items:center;width:30px;height:30px;flex-shrink:0;border:0;border-radius:8px;background:#edf4f1;color:#52736a;cursor:pointer}
+.invoice-search-clear:hover{background:#dcece6;color:#155c48}
+.invoice-search-hint{margin:7px 2px 0}
+.invoice-return-results{padding:0!important;overflow:hidden;border-radius:13px;margin:0 0 14px!important}
+.invoice-results-heading{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#f5f9f7;border-bottom:1px solid #e4eeea;color:#315b50;font-size:12px}
+.invoice-results-heading span{font-size:10px;color:#718982;background:#e6f1ed;padding:4px 8px;border-radius:20px}
+.invoice-return-results .invoice-result-row{display:flex;gap:16px;align-items:center;padding:13px 14px;border-bottom:1px solid #edf2f0;border-radius:0;transition:background .15s}
+.invoice-return-results .invoice-result-row:last-of-type{border-bottom:0}
+.invoice-return-results .invoice-result-row:hover{background:#f1f8f5}
+.invoice-result-main{display:block;min-width:0;flex:1}
+.invoice-result-main strong,.invoice-result-main small,.invoice-result-side strong,.invoice-result-side small{display:block}
+.invoice-result-main strong{font-size:13px;color:#1c4d40}
+.invoice-result-main small{font-size:10px;color:#718982;margin-top:4px;white-space:normal;overflow-wrap:anywhere}
+.invoice-result-side{text-align:right;flex-shrink:0}
+.invoice-result-side strong{font-size:12px;color:#1b6a52}
+.invoice-result-side small{font-size:10px;color:#168064;margin-top:5px}
+.invoice-search-empty{padding:18px 14px;margin:0;color:#748982;font-size:12px;line-height:1.5}
+.invoice-selected-banner{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:12px 0 16px;padding:14px 16px;border:1px solid #b8ded0;border-radius:13px;background:linear-gradient(110deg,#f0faf5,#fff);box-shadow:0 3px 12px #173e3e08}
+.invoice-selected-banner>div{min-width:0}
+.invoice-selected-banner span,.invoice-selected-banner strong,.invoice-selected-banner small{display:block}
+.invoice-selected-banner span{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:#638278;font-weight:800}
+.invoice-selected-banner strong{font-size:15px;color:#155c48;margin-top:4px;overflow-wrap:anywhere}
+.invoice-selected-banner small{font-size:11px;color:#718982;margin-top:4px}
+.invoice-selected-banner button{white-space:nowrap;flex-shrink:0}
+@media(max-width:560px){.invoice-return-results .invoice-result-row{padding:11px 10px;gap:8px}.invoice-result-side strong{font-size:11px}.invoice-selected-banner{align-items:flex-start;flex-direction:column}.invoice-selected-banner button{width:100%}}
