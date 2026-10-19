@@ -1,0 +1,29 @@
+name: Storefront preview checks
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tienda/**'
+      - '.github/workflows/store-ci.yml'
+  push:
+    branches: [feature/tienda-online-preview]
+    paths:
+      - 'tienda/**'
+      - '.github/workflows/store-ci.yml'
+
+jobs:
+  build-storefront:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tienda
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: tienda/package-lock.json
+      - run: npm install
+      - run: npm run build
