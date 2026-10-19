@@ -3,16 +3,16 @@ import { FileText, ShieldCheck, Building2, Save, Plus, Trash2, Users, Info } fro
 import type { CurrencyConfig, DocumentTemplate, ErpSettings, Module, PaymentMethodConfig, UserAccess } from '../domain/types';
 
 const modules:{id:Module;label:string}[]=[
-  {id:'dashboard',label:'Panel de control'},{id:'ventas',label:'Ventas / POS'},{id:'inventario',label:'Inventario'},
+  {id:'dashboard',label:'Panel de control'},{id:'ventas',label:'Ventas / POS'},{id:'redes_sociales',label:'Redes sociales / Ventas'},{id:'inventario',label:'Inventario'},
   {id:'clientes',label:'Clientes'},{id:'compras',label:'Compras'},{id:'finanzas',label:'Finanzas'},{id:'cuentas_cobrar',label:'Cuentas por cobrar'},{id:'cuentas_pagar',label:'Cuentas por pagar'},{id:'reportes',label:'Reportes e impresión'},{id:'proveedores',label:'Proveedores'},{id:'configuracion',label:'Configuración'}
 ];
 const rolePermissions:Record<UserAccess['role'],Module[]> = {
   Administrador:modules.map(m=>m.id),
-  Supervisor:['dashboard','ventas','clientes','inventario','compras','finanzas','cuentas_cobrar','cuentas_pagar','reportes','proveedores'],
-  Ventas:['dashboard','ventas','clientes'],
+  Supervisor:['dashboard','ventas','redes_sociales','clientes','inventario','compras','finanzas','cuentas_cobrar','cuentas_pagar','reportes','proveedores'],
+  Ventas:['dashboard','ventas','redes_sociales','clientes'],
   Compras:['dashboard','inventario','compras','proveedores'],
   Finanzas:['dashboard','finanzas','cuentas_cobrar','cuentas_pagar','reportes','compras'],
-  'Solo lectura':['dashboard','ventas','clientes','inventario','compras','finanzas','cuentas_cobrar','cuentas_pagar','reportes','proveedores']
+  'Solo lectura':['dashboard','ventas','redes_sociales','clientes','inventario','compras','finanzas','cuentas_cobrar','cuentas_pagar','reportes','proveedores']
 };
 const roleOptions:UserAccess['role'][]=['Administrador','Supervisor','Ventas','Compras','Finanzas','Solo lectura'];
 export function Settings({settings,setSettings,userEmail,userId}:{settings:ErpSettings;setSettings:(s:ErpSettings)=>void;userEmail:string;userId:string}) {
