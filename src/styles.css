@@ -412,3 +412,12 @@ input:disabled,select:disabled,textarea:disabled{opacity:.65;cursor:not-allowed}
 .customer-search-hint{background:#f3faf6;color:#477568!important;border-bottom:1px solid #e2eee8}
 .customer-picker .checkout-label input{display:block;width:100%;margin-top:6px;padding:10px 12px;border:1px solid #bfcfc9;border-radius:8px;background:#fff;color:#203c34;font:inherit;font-size:12px;outline:none}
 .customer-picker .checkout-label input:focus{border-color:#167b61;box-shadow:0 0 0 3px rgba(22,123,97,.12)}
+
+
+/* Quick-create customer option in POS autocomplete */
+.customer-create-option { width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 12px; border:0; border-top:1px solid var(--border, #e5e7eb); background:var(--surface, #fff); color:inherit; text-align:left; cursor:pointer; }
+.customer-create-option:hover { background:var(--surface-muted, #f8fafc); }
+.customer-create-option span { display:flex; flex-direction:column; gap:4px; min-width:0; }
+.customer-create-option strong { display:flex; align-items:center; gap:6px; }
+.customer-create-option small { color:var(--muted, #64748b); font-size:12px; }
+.customer-create-option>b { white-space:nowrap; color:var(--primary, #2563eb); }
