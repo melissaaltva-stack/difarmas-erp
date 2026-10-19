@@ -1,5 +1,5 @@
 import type { Product } from '../domain/types';
-import { localDateKey } from '../utils/dates';
+import { isValidDateOnly, localDateKey } from '../utils/dates';
 
 export function sixMonthExpiryThreshold(now = new Date()): string {
   const threshold = new Date(now.getFullYear(), now.getMonth() + 6, 1);
@@ -9,7 +9,7 @@ export function sixMonthExpiryThreshold(now = new Date()): string {
 }
 
 export function isExpiryAtLeastSixMonths(expiry: string, now = new Date()): boolean {
-  return Boolean(expiry) && /^\d{4}-\d{2}-\d{2}$/.test(expiry) && expiry >= sixMonthExpiryThreshold(now);
+  return isValidDateOnly(expiry) && expiry >= sixMonthExpiryThreshold(now);
 }
 
 const normalizeIngredient = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLocaleLowerCase().replace(/\s+/g, ' ');

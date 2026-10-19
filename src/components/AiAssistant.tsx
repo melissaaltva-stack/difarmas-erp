@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
 import { BrainCircuit, Sparkles, AlertTriangle, Package, TrendingUp, Wallet, CalendarClock, Search } from 'lucide-react';
 import type { Product, SaleRecord, PurchaseRecord, Expense, Receivable, Payable, InventoryMovement } from '../domain/types';
+import { localDateKey } from '../utils/dates';
 
 type Props = { products: Product[]; sales: SaleRecord[]; purchases: PurchaseRecord[]; expenses: Expense[]; receivables: Receivable[]; payables: Payable[]; movements: InventoryMovement[] };
 const cash=(n:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL'}).format(n);
-const dayKey=()=>new Date().toISOString().slice(0,10);
+const dayKey=()=>localDateKey();
 const daysTo=(date:string)=>{if(!date)return Infinity;const d=new Date(date.length===10?date+'T12:00:00':date);return Number.isNaN(d.getTime())?Infinity:Math.ceil((d.getTime()-new Date(dayKey()+'T12:00:00').getTime())/86400000);};
 
 export function AiAssistant({products,sales,purchases,expenses,receivables,payables,movements}:Props){

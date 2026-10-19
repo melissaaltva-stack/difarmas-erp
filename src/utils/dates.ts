@@ -9,6 +9,13 @@ export function localDateKey(date = new Date()): string {
  * Date-only values represent a calendar day, not midnight UTC.
  * Timestamp values are converted to the user's local calendar day.
  */
+export function isValidDateOnly(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+}
+
 export function dateKey(value: string): string {
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
   const date = new Date(value);

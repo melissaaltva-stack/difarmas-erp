@@ -36,6 +36,10 @@ describe('validateFiscalAuthorization', () => {
     expect(validateFiscalAuthorization(validFiscal, 1001)).toMatch(/fuera del rango/);
   });
 
+  it('rejects impossible authorization dates', () => {
+    expect(validateFiscalAuthorization({ ...validFiscal, authorizationExpiry: '2027-02-31' }, 1, new Date('2026-10-18T12:00:00'))).toMatch(/fecha límite no es válida/);
+  });
+
   it('rejects expired authorizations', () => {
     expect(validateFiscalAuthorization({ ...validFiscal, authorizationExpiry: '2020-01-01' }, 1, new Date('2026-10-18T12:00:00'))).toMatch(/vencida/);
   });
