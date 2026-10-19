@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { MessageCircle, Plus, Search, Send, Instagram, Facebook, ShoppingBag, CheckCircle2, Clock3, UserRound, ExternalLink, Copy, Trash2 } from 'lucide-react';
+import { MessageCircle, Plus, Search, Send, ShoppingBag, CheckCircle2, Clock3, UserRound, ExternalLink, Copy, Trash2 } from 'lucide-react';
 import type { Customer, ErpSettings, Product } from '../domain/types';
 
 type Channel = 'WhatsApp' | 'Instagram' | 'Facebook' | 'TikTok' | 'Otro';
@@ -15,7 +15,7 @@ const defaultLinks:SocialLinks={whatsapp:'',instagram:'',facebook:'',tiktok:''};
 const money=(n:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL',maximumFractionDigits:2}).format(n);
 const safeLoad=<T,>(key:string,fallback:T):T=>{try{const value=localStorage.getItem(key);return value?JSON.parse(value) as T:fallback;}catch{return fallback;}};
 const phoneDigits=(phone:string)=>phone.replace(/\D/g,'');
-const channelIcon=(channel:Channel)=>channel==='WhatsApp'?MessageCircle:channel==='Instagram'?Instagram:channel==='Facebook'?Facebook:ShoppingBag;
+const channelIcon=(channel:Channel)=>channel==='WhatsApp'?MessageCircle:channel==='Instagram'?MessageCircle:channel==='Facebook'?MessageCircle:ShoppingBag;
 
 export function SocialSales({products,customers,settings}:{products:Product[];customers:Customer[];settings:ErpSettings}) {
   const [leads,setLeads]=useState<Lead[]>(()=>safeLoad<Lead[]>(STORE_KEY,[]));
@@ -63,14 +63,14 @@ export function SocialSales({products,customers,settings}:{products:Product[];cu
         <label>Facebook (URL de la página)<input value={links.facebook} onChange={e=>setLinks({...links,facebook:e.target.value})} placeholder="https://facebook.com/tu_pagina"/></label>
         <label>TikTok (URL del perfil)<input value={links.tiktok} onChange={e=>setLinks({...links,tiktok:e.target.value})} placeholder="https://tiktok.com/@tu_perfil"/></label>
       </div>
-      <div className="social-profile-actions">{(links.whatsapp||settings.phone) ? <a className="secondary" href={'https://wa.me/'+whatsappNumber} target="_blank" rel="noreferrer"><MessageCircle size={15}/> Abrir WhatsApp</a>:null}{links.instagram&&<a className="secondary" href={links.instagram} target="_blank" rel="noreferrer"><Instagram size={15}/> Instagram</a>}{links.facebook&&<a className="secondary" href={links.facebook} target="_blank" rel="noreferrer"><Facebook size={15}/> Facebook</a>}{links.tiktok&&<a className="secondary" href={links.tiktok} target="_blank" rel="noreferrer"><ShoppingBag size={15}/> TikTok</a>}</div>
+      <div className="social-profile-actions">{(links.whatsapp||settings.phone) ? <a className="secondary" href={'https://wa.me/'+whatsappNumber} target="_blank" rel="noreferrer"><MessageCircle size={15}/> Abrir WhatsApp</a>:null}{links.instagram&&<a className="secondary" href={links.instagram} target="_blank" rel="noreferrer"><MessageCircle size={15}/> Instagram</a>}{links.facebook&&<a className="secondary" href={links.facebook} target="_blank" rel="noreferrer"><MessageCircle size={15}/> Facebook</a>}{links.tiktok&&<a className="secondary" href={links.tiktok} target="_blank" rel="noreferrer"><ShoppingBag size={15}/> TikTok</a>}</div>
     </section>
     <div className="social-workspace">
       <section className="card social-inbox">
         <div className="card-title"><div><h3>Bandeja de conversaciones</h3><p>Consulta, busca y cambia la etapa de cada cliente.</p></div></div>
         <label className="search-box social-search"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar nombre, teléfono o consulta"/></label>
         <div className="social-filters"><select value={filter} onChange={e=>setFilter(e.target.value as 'Todos'|Stage)}><option>Todos</option>{stages.map(s=><option key={s}>{s}</option>)}</select><span>{filtered.length} resultados</span></div>
-        <div className="social-lead-list">{filtered.map(lead=>{const Icon=channelIcon(lead.channel);return <button key={lead.id} className={selectedId===lead.id?'social-lead selected':'social-lead'} onClick={()=>{setSelectedId(lead.id);setMessage('');}}><span className="social-channel-icon"><Icon size={17}/></span><span className="social-lead-main"><strong>{lead.customerName}</strong><small>{lead.channel} · {lead.topic}</small><small>{new Date(lead.updatedAt).toLocaleString('es-HN',{dateStyle:'short',timeStyle:'short'})}</small></span><span className={'social-stage stage-'+lead.status.toLowerCase().replaceAll(' ','-')}>{lead.status}</span></button>})}{filtered.length===0&&<div className="social-empty"><UserRound size={26}/><strong>No hay conversaciones</strong><p>Registra un mensaje entrante para iniciar el seguimiento.</p></div>}</div>
+        <div className="social-lead-list">{filtered.map(lead=>{const Icon=channelIcon(lead.channel);return <button key={lead.id} className={selectedId===lead.id?'social-lead selected':'social-lead'} onClick={()=>{setSelectedId(lead.id);setMessage('');}}><span className="social-channel-icon"><Icon size={17}/></span><span className="social-lead-main"><strong>{lead.customerName}</strong><small>{lead.channel} · {lead.topic}</small><small>{new Date(lead.updatedAt).toLocaleString('es-HN',{dateStyle:'short',timeStyle:'short'})}</small></span><span className={'social-stage stage-'+lead.status.toLowerCase().replace(/ /g,'-')}>{lead.status}</span></button>})}{filtered.length===0&&<div className="social-empty"><UserRound size={26}/><strong>No hay conversaciones</strong><p>Registra un mensaje entrante para iniciar el seguimiento.</p></div>}</div>
       </section>
       <section className="card social-detail">
         {!selected?<div className="social-empty social-empty-large"><MessageCircle size={38}/><h3>Selecciona una conversación</h3><p>O crea una nueva para registrar la consulta de un cliente.</p><button className="primary" onClick={openNew}><Plus size={16}/> Nueva conversación</button></div>:<>
