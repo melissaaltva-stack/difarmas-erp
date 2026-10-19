@@ -1,4 +1,5 @@
 import type { FiscalBillingInfo } from '../domain/types';
+import { isValidDateOnly } from '../utils/dates';
 
 /**
  * Validates the configured fiscal authorization before a POS invoice is issued.
@@ -36,7 +37,9 @@ export function validateFiscalAuthorization(
     return 'Revisa el rango autorizado: debe terminar en la numeración correlativa de 8 dígitos.';
   }
 
-  const expiry = Date.parse(fiscal.authorizationExpiry + 'T23:59:59');
+  const expiry = isValidDateOnly(fiscal.authorizationExpiry)
+    ? Date.parse(fiscal.authorizationExpiry + 'T23:59:59')
+    : NaN;
   if (!Number.isFinite(expiry) || expiry < now.getTime()) {
     return 'La autorización fiscal está vencida o la fecha límite no es válida. Actualiza los datos del SAR antes de emitir.';
   }
