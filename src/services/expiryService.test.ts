@@ -14,6 +14,7 @@ describe('expiry safeguards',()=>{
     expect(isExpiryAtLeastSixMonths('2027-04-16',now)).toBe(false);
     expect(isExpiryAtLeastSixMonths('2027-04-17',now)).toBe(true);
     expect(isExpiryAtLeastSixMonths('',now)).toBe(false);
+    expect(isExpiryAtLeastSixMonths('2027-02-31',now)).toBe(false);
   });
   it('recommends an in-stock product with the same active ingredient and earlier expiry',()=>{
     const later=product({id:1,name:'Marca B',expiry:'2027-12-31'});
