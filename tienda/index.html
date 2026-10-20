@@ -43,7 +43,7 @@
     <section class="hero"><div><div class="eyebrow">Cuidamos de ti y tu familia</div><h1>Tu farmacia de confianza,<br>ahora en línea.</h1><p>Explora nuestro catálogo y envíanos tu pedido por WhatsApp. Te ayudaremos a confirmar precios y disponibilidad.</p><button class="primary" id="browse">Explorar productos <span>→</span></button></div><div class="hero-art"><div class="medical-card"><div class="cross">✚</div><span>DIFARMÁS</span></div></div></section>
     <section class="trust"><div><span class="ico">💚</span><span><b>Atención personalizada</b>Te ayudamos a elegir</span></div><div><span class="ico">📦</span><span><b>Disponibilidad por confirmar</b>Consulta antes de pagar</span></div><div><span class="ico">💬</span><span><b>Pedido fácil por WhatsApp</b>Confirmación directa</span></div></section>
     <section id="catalog"><div class="section-top"><div><h2>Encuentra lo que necesitas</h2><p>Catálogo de demostración · precios de referencia sujetos a confirmación</p></div></div>
-      <div class="filters" id="filters"><button class="filter active" data-category="Todos">Todos</button><button class="filter" data-category="Medicamentos">Medicamentos</button><button class="filter" data-category="Vitaminas">Vitaminas</button><button class="filter" data-category="Bienestar">Bienestar</button><button class="filter" data-category="Cuidado personal">Cuidado personal</button></div>
+      <div class="filters" id="filters" role="group" aria-label="Filtrar productos por categoría"><button type="button" class="filter active" data-category="Todos" aria-pressed="true">Todos</button><button type="button" class="filter" data-category="Medicamentos" aria-pressed="false">Medicamentos</button><button type="button" class="filter" data-category="Vitaminas" aria-pressed="false">Vitaminas</button><button type="button" class="filter" data-category="Bienestar" aria-pressed="false">Bienestar</button><button type="button" class="filter" data-category="Cuidado personal" aria-pressed="false">Cuidado personal</button></div>
       <div class="grid" id="products"></div>
     </section>
     <div class="safety"><strong>Importante para tu seguridad</strong>Los productos, precios e imágenes de este prototipo deben verificarse antes de la publicación final. La disponibilidad se confirma con DIFARMÁS. Los medicamentos sujetos a receta requieren validación conforme a las normas aplicables en Honduras. No realices pagos hasta recibir confirmación por los canales oficiales.</div>
@@ -68,8 +68,11 @@
     ];
     const cart = new Map(); let category = 'Todos'; let query = '';
     const money = n => new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL',maximumFractionDigits:2}).format(n).replace('HNL','L');
+    const normalizeText = value => String(value ?? '').toLocaleLowerCase('es').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').trim();
     function renderProducts(){
-      const shown = products.filter(p=>(category==='Todos'||p.category===category)&& (p.name+' '+p.category+' '+p.description).toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'').includes(query.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'')));
+      const normalizedQuery = normalizeText(query);
+      const normalizedCategory = normalizeText(category);
+      const shown = products.filter(p=>(normalizedCategory==='todos'||normalizeText(p.category)===normalizedCategory)&& normalizeText(p.name+' '+p.category+' '+p.description).includes(normalizedQuery));
       document.getElementById('products').innerHTML = shown.length ? shown.map(p=>'<article class="product"><div class="product-art"><span class="pill">'+p.tag+'</span><div class="pack"><span class="mini-cross">'+p.mark+'</span><small>DIFARMÁS</small></div></div><h3>'+p.name+'</h3><div class="desc">'+p.description+'</div><div class="price-row"><div class="price">'+(p.price==null?'Consultar':money(p.price))+'<small>'+(p.price==null?'':' · ref.')+'</small></div><button class="add" data-add="'+p.id+'" aria-label="Agregar '+p.name+'">+</button></div></article>').join('') : '<div class="empty">No encontramos productos con esa búsqueda. Prueba otro nombre o categoría.</div>';
       document.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>add(Number(b.dataset.add))));
     }
@@ -85,7 +88,7 @@
     function openCart(){document.getElementById('overlay').classList.add('open');document.getElementById('overlay').setAttribute('aria-hidden','false');renderCart();}
     function closeCart(){document.getElementById('overlay').classList.remove('open');document.getElementById('overlay').setAttribute('aria-hidden','true');}
     document.getElementById('search').addEventListener('input',e=>{query=e.target.value;renderProducts();});
-    document.getElementById('filters').addEventListener('click',e=>{const b=e.target.closest('[data-category]');if(!b)return;category=b.dataset.category;document.querySelectorAll('.filter').forEach(x=>x.classList.toggle('active',x===b));renderProducts();});
+    document.getElementById('filters').addEventListener('click',e=>{const b=e.target.closest('button[data-category]');if(!b)return;category=b.dataset.category;document.querySelectorAll('#filters [data-category]').forEach(x=>{const selected=x===b;x.classList.toggle('active',selected);x.setAttribute('aria-pressed',String(selected));});renderProducts();});
     document.getElementById('open-cart').addEventListener('click',openCart);document.getElementById('close-cart').addEventListener('click',closeCart);
     document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeCart();});
     document.getElementById('browse').addEventListener('click',()=>document.getElementById('catalog').scrollIntoView({behavior:'smooth'}));
