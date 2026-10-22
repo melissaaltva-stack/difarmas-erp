@@ -720,3 +720,6 @@ html, body, #root {
   border-color: #55a887;
   box-shadow: 0 0 0 3px rgba(42, 151, 106, 0.12), 0 3px 7px rgba(24, 67, 52, 0.12);
 }
+
+/* Hide the sidebar menu scrollbar while preserving scrolling */
+.sidebar{overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}.sidebar::-webkit-scrollbar{display:none;width:0;height:0}
