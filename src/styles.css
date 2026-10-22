@@ -743,3 +743,27 @@ html, body, #root {
 #purchases-panel .ai-purchase-launch{margin:0 0 14px}
 #purchases-panel .purchase-head{gap:14px}
 @media(max-width:1000px){#purchases-panel .purchase-grid{grid-template-columns:minmax(0,1fr)}#purchases-panel .checkout{position:static;order:6}}
+
+
+/* Nueva compra: orden explícito del flujo y campos de documento del proveedor */
+#purchases-panel .purchase-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(285px,340px);gap:18px;align-items:start}
+#purchases-panel .purchase-grid>section{display:flex!important;flex-direction:column!important;gap:16px;min-width:0}
+#purchases-panel .purchase-grid>section>.purchase-head{order:1!important}
+#purchases-panel .purchase-grid>section>.results{order:2!important}
+#purchases-panel .purchase-grid>section>#purchase-detail{order:3!important}
+#purchases-panel .purchase-grid>section>.cost-review{order:4!important}
+#purchases-panel .purchase-grid>section>.purchase-history{order:5!important}
+#purchases-panel .purchase-grid>section>.purchase-notes-label{order:6!important}
+#purchases-panel .purchase-head{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:end;gap:14px}
+#purchases-panel .purchase-head>label{display:flex;flex-direction:column;gap:7px;min-width:0;font-size:12px;font-weight:750;color:#36594e}
+#purchases-panel .purchase-head input{width:100%;min-width:0;min-height:43px;padding:10px 12px;border:1.5px solid #a5bcb1;border-radius:9px;background:#fff}
+#purchases-panel .purchase-head .search{grid-column:1/-1;max-width:none;width:100%;min-height:46px;padding:0 12px;border:1.5px solid #a5bcb1;border-radius:10px}
+#purchases-panel .purchase-head .search input{border:0!important;box-shadow:none!important}
+#purchases-panel .purchase-invoice-summary{display:grid;gap:5px;padding:12px;border-radius:10px;background:#f1f8f4;border:1px solid #d6e9df;margin:12px 0;color:#55766a;font-size:12px}
+#purchases-panel .purchase-invoice-summary strong{font-size:14px;color:#205b45;overflow-wrap:anywhere}
+#purchases-panel .purchase-invoice-summary small{color:#72877f}
+#purchases-panel .purchase-notes-label{display:flex;flex-direction:column;gap:7px;padding:16px;border:1px solid #e2ebe9;border-radius:12px;background:#fff;font-size:12px;font-weight:750;color:#36594e}
+#purchases-panel .purchase-notes-label textarea{width:100%;resize:vertical;padding:11px;border:1.5px solid #a5bcb1;border-radius:9px;font:inherit;font-weight:400}
+#purchases-panel .checkout{position:sticky;top:16px;align-self:start}
+@media(max-width:1000px){#purchases-panel .purchase-grid{grid-template-columns:minmax(0,1fr)}#purchases-panel .checkout{position:static;order:7}}
+@media(max-width:600px){#purchases-panel .purchase-head{grid-template-columns:minmax(0,1fr)}#purchases-panel .purchase-head .search{grid-column:auto}}
