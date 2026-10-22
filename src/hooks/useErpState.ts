@@ -271,7 +271,7 @@ export function useErpState(userId: string) {
     setEditing(null); setShowForm(false);
   };
 
-  const receivePurchase=(items:PurchaseItem[],paymentMethod:string,dueDate:string):boolean=>{
+  const receivePurchase=(items:PurchaseItem[],paymentMethod:string,dueDate:string,invoiceNumber='',invoiceDate='',notes=''):boolean=>{
     if (purchaseInProgress.current) return false;
     if (!items.length || items.some(item => !Number.isFinite(item.qty) || item.qty <= 0 || !Number.isFinite(item.unitCost) || item.unitCost < 0)) return false;
     let updated: Product[];
@@ -282,7 +282,7 @@ export function useErpState(userId: string) {
     setInventoryMovements(current=>[...current,...createInventoryMovementsForPurchase(products,items,referenceId)]);
     const total=items.reduce((sum,item)=>sum+item.qty*item.unitCost,0);
     const receivedAt = new Date().toISOString();
-    setPurchases(current=>[{id:referenceId,supplier:purchaseSupplier,total,paymentMethod:paymentMethod as 'Efectivo'|'Transferencia'|'Crédito',date:receivedAt},...current]);
+    setPurchases(current=>[{id:referenceId,supplier:purchaseSupplier,total,paymentMethod:paymentMethod as 'Efectivo'|'Transferencia'|'Crédito',date:receivedAt,invoiceNumber,invoiceDate,notes},...current]);
     setPurchaseCostHistory(current=>[
       ...items.map((item,index):PurchaseCostHistoryEntry=>({id:referenceId+index,purchaseId:referenceId,productId:item.id,productCode:item.code,productName:item.name,supplier:purchaseSupplier.trim(),unitCost:item.unitCost,quantity:item.qty,date:receivedAt})),
       ...current,
