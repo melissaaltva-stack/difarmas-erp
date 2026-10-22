@@ -4,10 +4,15 @@ import type { PurchaseItem, Product, Supplier, PurchaseCostHistoryEntry, SaleRec
 import { buildPurchaseRecommendations } from '../services/purchaseRecommendationService';
 import { localDateKey } from '../utils/dates';
 import { isExpiryAtLeastSixMonths, sixMonthExpiryThreshold } from '../services/expiryService';
+import { Suppliers } from './Suppliers';
+import type { SupplierReturnRecord } from '../domain/types';
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
 const percent = (value:number) => `${value.toLocaleString('es-HN',{maximumFractionDigits:1,minimumFractionDigits:1})}%`;
 
-export function Purchases({products,sales,cart,setCart,search,setSearch,supplier,setSupplier,suppliers=[],costHistory=[],onReceive}:{products:Product[];sales:SaleRecord[];cart:PurchaseItem[];setCart:(c:PurchaseItem[])=>void;search:string;setSearch:(v:string)=>void;supplier:string;setSupplier:(v:string)=>void;suppliers?:Supplier[];costHistory?:PurchaseCostHistoryEntry[];onReceive:(items:PurchaseItem[],paymentMethod:'Efectivo'|'Transferencia'|'Crédito',dueDate:string)=>boolean}) {
+export function Purchases({products,sales,cart,setCart,search,setSearch,supplier,setSupplier,suppliers=[],setSuppliers,records=[],setRecords,onDispatch,showSuppliers=true,costHistory=[],onReceive}:{products:Product[];sales:SaleRecord[];cart:PurchaseItem[];setCart:(c:PurchaseItem[])=>void;search:string;setSearch:(v:string)=>void;supplier:string;setSupplier:(v:string)=>void;suppliers?:Supplier[];setSuppliers:(items:Supplier[])=>void;records?:SupplierReturnRecord[];setRecords:(items:SupplierReturnRecord[])=>void;onDispatch:(record:SupplierReturnRecord)=>boolean;showSuppliers?:boolean;costHistory?:PurchaseCostHistoryEntry[];onReceive:(items:PurchaseItem[],paymentMethod:'Efectivo'|'Transferencia'|'Crédito',dueDate:string)=>boolean}) {
+  const [section,setSection]=useState<'compras'|'proveedores'>('compras');
+  const sectionTabs=<div className="purchase-section-tabs"><button className={section==='compras'?'primary':'secondary'} onClick={()=>setSection('compras')}><ShoppingCart size={16}/> Compras</button>{showSuppliers&&<button className={section==='proveedores'?'primary':'secondary'} onClick={()=>setSection('proveedores')}><Boxes size={16}/> Proveedores</button>}</div>;
+  if(section==='proveedores'&&showSuppliers)return <div className="content">{sectionTabs}<Suppliers suppliers={suppliers} setSuppliers={setSuppliers} products={products} records={records} setRecords={setRecords} onDispatch={onDispatch}/></div>;
   const results=products.filter(p=>[p.code,p.name].join(' ').toLowerCase().includes(search.toLowerCase())).slice(0,6);
   const total=cart.reduce((sum,i)=>sum+i.unitCost*i.qty,0);
   const [paymentMethod,setPaymentMethod]=useState<'Efectivo'|'Transferencia'|'Crédito'>('Efectivo');
@@ -31,6 +36,7 @@ export function Purchases({products,sales,cart,setCart,search,setSearch,supplier
     setError('');
   };
   return <div className="content"><div className="page-head"><div><span className="pill">MVP · MÓDULO 4</span><h2>Compras y recepción</h2><p>Compara costos anteriores y nuevos, controla aumentos y registra vencimientos antes de recibir mercancía.</p></div></div>
+  {sectionTabs}
   <div className="card expiry-policy"><CalendarClock size={19}/><div><strong>Política de vencimiento: mínimo 6 meses</strong><p>No se puede recibir un producto cuya fecha de vencimiento sea anterior al <b>{minExpiry}</b>. Registra la fecha impresa en el envase de la mercancía que llega.</p></div></div>
   <section className="card ai-purchase-recommendations">
     <div className="ai-purchase-heading"><div className="ai-purchase-icon"><Sparkles size={20}/></div><div><h3>Compras sugeridas inteligentes</h3><p>Analiza ventas de los últimos 60 días, existencia, stock mínimo y cobertura estimada. No genera pedidos automáticamente.</p></div><span className="ai-purchase-count">{recommendations.length} sugerencia(s)</span></div>
