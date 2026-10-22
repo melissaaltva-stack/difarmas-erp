@@ -723,3 +723,8 @@ html, body, #root {
 
 /* Hide the sidebar menu scrollbar while preserving scrolling */
 .sidebar{overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}.sidebar::-webkit-scrollbar{display:none;width:0;height:0}
+
+
+/* Contorno más marcado en los campos para mejorar su visibilidad */
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea, .search, .search-pos, .form-grid label input, .checkout select, .purchase-head input, .expense-form input, .expense-form select, .standard-invoice input, .standard-invoice select){border-color:#a5bcb1!important;border-width:1.5px!important;}
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea):focus,:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea):focus-visible{border-color:#247c5e!important;box-shadow:0 0 0 2px rgba(36,124,94,.16),0 2px 5px rgba(24,67,52,.08)!important;}
