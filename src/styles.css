@@ -555,3 +555,11 @@ input:disabled,select:disabled,textarea:disabled{opacity:.65;cursor:not-allowed}
 .nav-submenu button{width:100%;border:0;background:transparent;color:#b9d1cd;text-align:left;font:inherit;font-size:12px;line-height:1.35;padding:9px 10px;border-radius:7px;cursor:pointer}
 .nav-submenu button:hover,.nav-submenu button:focus-visible{background:#1a4946;color:#fff;outline:none}
 #purchase-policy,#purchase-ai,#purchase-order,#purchase-detail,#purchase-reception{scroll-margin-top:22px}
+
+
+/* Submenú anidado: Nueva compra */
+.nav-subgroup{display:flex;flex-direction:column;gap:3px;min-width:0}
+.nav-submenu-parent{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.nav-submenu-parent span{margin-left:auto;color:#a9c9c1}
+.nav-submenu-nested{margin:0 0 4px 10px;padding-left:9px;border-left:1px solid #52796f}
+.nav-submenu-nested button{font-size:11px;padding:8px 9px}
