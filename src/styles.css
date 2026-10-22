@@ -556,3 +556,64 @@ input:disabled,select:disabled,textarea:disabled{opacity:.65;cursor:not-allowed}
 .nav-submenu button:hover,.nav-submenu button:focus-visible{background:#1a4946;color:#fff;outline:none}
 #purchase-policy,#purchase-ai,#purchase-order,#purchase-detail,#purchase-reception{scroll-margin-top:22px}
 
+
+
+/* Estabilizar el layout al cambiar de sección y desplegar submenús */
+.app{
+  align-items:stretch;
+  width:100%;
+  min-width:0;
+}
+.sidebar{
+  flex:0 0 248px;
+  width:248px;
+  min-width:248px;
+  height:100vh;
+  position:sticky;
+  top:0;
+  align-self:flex-start;
+  overflow-x:hidden;
+  overflow-y:auto;
+  scrollbar-gutter:stable;
+}
+.main{
+  flex:1 1 0;
+  width:0;
+  min-width:0;
+  overflow-x:clip;
+}
+.content{
+  width:100%;
+  min-width:0;
+  margin-inline:auto;
+}
+.nav-submenu{
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+.nav-submenu button{
+  min-width:0;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+.finance-grid,
+.finance-table,
+.content>.card,
+.content>.grid{
+  min-width:0;
+  max-width:100%;
+}
+.finance-table{
+  overflow-x:auto;
+}
+@media(max-width:900px){
+  .sidebar{
+    flex:0 0 72px;
+    width:72px;
+    min-width:72px;
+  }
+}
+@media(max-width:560px){
+  .sidebar{display:none}
+  .main{width:100%}
+}
