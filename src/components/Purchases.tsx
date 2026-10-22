@@ -36,7 +36,7 @@ export function Purchases({products,sales,cart,setCart,search,setSearch,supplier
     setSearch('');
     setError('');
   };
-  return <div className="content">
+  return <div className="content"><div className="page-head"><div><h2>Nueva compra</h2></div></div>
   <div id="purchases-panel">
   <div className="card expiry-policy" id="purchase-policy"><CalendarClock size={19}/><div><strong>Política de vencimiento: mínimo 6 meses</strong><p>No se puede recibir un producto cuya fecha de vencimiento sea anterior al <b>{minExpiry}</b>. Registra la fecha impresa en el envase de la mercancía que llega.</p></div></div>
   <div className="ai-purchase-launch" id="purchase-ai"><button className="primary" type="button" onClick={()=>setShowSuggestedPurchases(open=>!open)}><Sparkles size={17}/>{showSuggestedPurchases?'Ocultar compras sugeridas con IA':'Compras sugeridas con IA'}</button></div>
