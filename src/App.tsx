@@ -49,9 +49,6 @@ function App({ userId, userEmail, signOut }: { userId: string; userEmail:string;
           <button type="button" onClick={()=>goToPurchaseSection('purchase-order')}>Nueva compra</button>
           {canSee('compras')&&<button type="button" onClick={()=>{setActive('compras');setPurchasesExpanded(true);setPurchaseSectionRequest(n=>n+1);}}>Proveedores</button>}
         </div>}
-          </div>
-          {canSee('compras')&&<button type="button" onClick={()=>{setActive('compras');setPurchasesExpanded(true);setPurchaseSectionRequest(n=>n+1);}}>Proveedores</button>}
-        </div>}
       </div> : <button key={id} className={active === id ? 'nav active' : 'nav'} onClick={() => setActive(id)}><Icon size={19}/>{label}</button>)}
       <div className="sidebar-footer"><Activity size={17}/> Sistema MVP v0.7</div>
     </aside>
