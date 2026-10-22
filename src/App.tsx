@@ -44,7 +44,7 @@ function App({ userId, userEmail, signOut }: { userId: string; userEmail:string;
       <div className="brand"><div className="brand-mark">F</div><div><strong>Farmi</strong><span>Sistema de gestión</span></div></div>
       <div className="section-label">OPERACIÓN</div>
       {visibleNav.map(([id, label, Icon]) => id==='compras' ? <div className="nav-group" key={id}>
-        <button type="button" className={active==='compras'?'nav active nav-parent':'nav nav-parent'} aria-expanded={purchasesExpanded} aria-controls="purchases-subnav" onClick={()=>{setActive('compras');setPurchasesExpanded(open=>!open);}}><Icon size={19}/><span>Compras</span><span className="nav-chevron">{purchasesExpanded?'▾':'▸'}</span></button>
+        <button type="button" className="nav nav-parent" aria-expanded={purchasesExpanded} aria-controls="purchases-subnav" onClick={()=>setPurchasesExpanded(open=>!open)}><Icon size={19}/><span>Compras</span><span className="nav-chevron">{purchasesExpanded?'▾':'▸'}</span></button>
         {purchasesExpanded&&<div className="nav-submenu" id="purchases-subnav">
           <button type="button" onClick={()=>goToPurchaseSection('purchase-order')}>Nueva compra</button>
           {canSee('compras')&&<button type="button" onClick={()=>{setActive('compras');setPurchasesExpanded(true);setPurchaseSectionRequest(n=>n+1);}}>Proveedores</button>}
