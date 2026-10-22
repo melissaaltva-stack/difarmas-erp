@@ -12,7 +12,6 @@ const percent = (value:number) => `${value.toLocaleString('es-HN',{maximumFracti
 export function Purchases({products,sales,cart,setCart,search,setSearch,supplier,setSupplier,suppliers=[],setSuppliers,records=[],setRecords,onDispatch,showSuppliers=true,costHistory=[],onReceive}:{products:Product[];sales:SaleRecord[];cart:PurchaseItem[];setCart:(c:PurchaseItem[])=>void;search:string;setSearch:(v:string)=>void;supplier:string;setSupplier:(v:string)=>void;suppliers?:Supplier[];setSuppliers:(items:Supplier[])=>void;records?:SupplierReturnRecord[];setRecords:(items:SupplierReturnRecord[])=>void;onDispatch:(record:SupplierReturnRecord)=>boolean;showSuppliers?:boolean;costHistory?:PurchaseCostHistoryEntry[];onReceive:(items:PurchaseItem[],paymentMethod:'Efectivo'|'Transferencia'|'Crédito',dueDate:string)=>boolean}) {
   const [section,setSection]=useState<'compras'|'proveedores'>('compras');
   const sectionTabs=<div className="purchase-section-tabs"><button className={section==='compras'?'primary':'secondary'} onClick={()=>setSection('compras')}><ShoppingCart size={16}/> Compras</button>{showSuppliers&&<button className={section==='proveedores'?'primary':'secondary'} onClick={()=>setSection('proveedores')}><Boxes size={16}/> Proveedores</button>}</div>;
-  if(section==='proveedores'&&showSuppliers)return <div className="content">{sectionTabs}<Suppliers suppliers={suppliers} setSuppliers={setSuppliers} products={products} records={records} setRecords={setRecords} onDispatch={onDispatch}/></div>;
   const results=products.filter(p=>[p.code,p.name].join(' ').toLowerCase().includes(search.toLowerCase())).slice(0,6);
   const total=cart.reduce((sum,i)=>sum+i.unitCost*i.qty,0);
   const [paymentMethod,setPaymentMethod]=useState<'Efectivo'|'Transferencia'|'Crédito'>('Efectivo');
@@ -28,6 +27,7 @@ export function Purchases({products,sales,cart,setCart,search,setSearch,supplier
   const increases=priceChanges.filter(x=>x.delta>0.005);
   const marginWarnings=priceChanges.filter(x=>x.newMargin!==null&&x.newMargin<0);
   const recommendations=useMemo(()=>buildPurchaseRecommendations(products,sales),[products,sales]);
+  if(section==='proveedores'&&showSuppliers)return <div className="content">{sectionTabs}<Suppliers suppliers={suppliers} setSuppliers={setSuppliers} products={products} records={records} setRecords={setRecords} onDispatch={onDispatch}/></div>;
   const addRecommended=(product:Product,quantity:number)=>{
     setCart(cart.some(item=>item.id===product.id)
       ? cart.map(item=>item.id===product.id?{...item,qty:item.qty+quantity}:item)
