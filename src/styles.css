@@ -728,3 +728,18 @@ html, body, #root {
 /* Contorno más marcado en los campos para mejorar su visibilidad */
 :where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea, .search, .search-pos, .form-grid label input, .checkout select, .purchase-head input, .expense-form input, .expense-form select, .standard-invoice input, .standard-invoice select){border-color:#a5bcb1!important;border-width:1.5px!important;}
 :where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea):focus,:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea):focus-visible{border-color:#247c5e!important;box-shadow:0 0 0 2px rgba(36,124,94,.16),0 2px 5px rgba(24,67,52,.08)!important;}
+
+
+/* Nueva compra: flujo de trabajo más claro, sin alterar la lógica */
+#purchases-panel .purchase-grid>section{display:flex;flex-direction:column;align-items:stretch;min-width:0}
+#purchases-panel .purchase-head{order:1}
+#purchases-panel .purchase-grid .results{order:2}
+#purchases-panel #purchase-detail{order:3}
+#purchases-panel .cost-review{order:4}
+#purchases-panel .purchase-history{order:5}
+#purchases-panel #purchase-detail{scroll-margin-top:18px}
+#purchases-panel .checkout{align-self:start;position:sticky;top:16px}
+#purchases-panel .expiry-policy{display:flex;gap:12px;align-items:flex-start}
+#purchases-panel .ai-purchase-launch{margin:0 0 14px}
+#purchases-panel .purchase-head{gap:14px}
+@media(max-width:1000px){#purchases-panel .purchase-grid{grid-template-columns:minmax(0,1fr)}#purchases-panel .checkout{position:static;order:6}}
