@@ -36,7 +36,8 @@ function App({ userId, userEmail, signOut }: { userId: string; userEmail:string;
   const canSee=(module:string)=>permissions.includes(module as typeof permissions[number])||(module==='reportes'&&!!userAccess&&reportRoles.includes(userAccess.role))||(module==='clientes'&&!!userAccess&&customerRoles.includes(userAccess.role))||(module==='redes_sociales'&&!!userAccess&&socialRoles.includes(userAccess.role))||(module==='asistente_ia'&&!!userAccess&&aiRoles.includes(userAccess.role));
   const visibleNav=nav.filter(([id])=>id!=='proveedores'&&canSee(id));
   const [purchasesExpanded,setPurchasesExpanded]=useState(false);
-  const [purchaseSectionRequest,setPurchaseSectionRequest]=useState(0);\n  const [purchaseRequestedSection,setPurchaseRequestedSection]=useState<'compras'|'proveedores'>('compras');
+  const [purchaseSectionRequest,setPurchaseSectionRequest]=useState(0);
+  const [purchaseRequestedSection,setPurchaseRequestedSection]=useState<'compras'|'proveedores'>('compras');
   const goToPurchaseSection=(target:string)=>{setPurchaseRequestedSection('compras');setPurchaseSectionRequest(n=>n+1);setActive('compras');setPurchasesExpanded(true);window.setTimeout(()=>document.getElementById(target)?.scrollIntoView({behavior:'smooth',block:'start'}),180);};
 
   return <div className="app">
