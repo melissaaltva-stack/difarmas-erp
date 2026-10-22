@@ -9,9 +9,9 @@ import type { SupplierReturnRecord } from '../domain/types';
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
 const percent = (value:number) => `${value.toLocaleString('es-HN',{maximumFractionDigits:1,minimumFractionDigits:1})}%`;
 
-export function Purchases({products,sales,cart,setCart,search,setSearch,supplier,setSupplier,suppliers=[],setSuppliers,records=[],setRecords,onDispatch,showSuppliers=true,costHistory=[],onReceive,sectionRequest=0}:{products:Product[];sales:SaleRecord[];cart:PurchaseItem[];setCart:(c:PurchaseItem[])=>void;search:string;setSearch:(v:string)=>void;supplier:string;setSupplier:(v:string)=>void;suppliers?:Supplier[];setSuppliers:(items:Supplier[])=>void;records?:SupplierReturnRecord[];setRecords:(items:SupplierReturnRecord[])=>void;onDispatch:(record:SupplierReturnRecord)=>boolean;showSuppliers?:boolean;costHistory?:PurchaseCostHistoryEntry[];onReceive:(items:PurchaseItem[],paymentMethod:'Efectivo'|'Transferencia'|'Crédito',dueDate:string)=>boolean;sectionRequest?:number}) {
+export function Purchases({products,sales,cart,setCart,search,setSearch,supplier,setSupplier,suppliers=[],setSuppliers,records=[],setRecords,onDispatch,showSuppliers=true,costHistory=[],onReceive,sectionRequest='compras'}:{products:Product[];sales:SaleRecord[];cart:PurchaseItem[];setCart:(c:PurchaseItem[])=>void;search:string;setSearch:(v:string)=>void;supplier:string;setSupplier:(v:string)=>void;suppliers?:Supplier[];setSuppliers:(items:Supplier[])=>void;records?:SupplierReturnRecord[];setRecords:(items:SupplierReturnRecord[])=>void;onDispatch:(record:SupplierReturnRecord)=>boolean;showSuppliers?:boolean;costHistory?:PurchaseCostHistoryEntry[];onReceive:(items:PurchaseItem[],paymentMethod:'Efectivo'|'Transferencia'|'Crédito',dueDate:string)=>boolean;sectionRequest?:'compras'|'proveedores'}) {
   const [section,setSection]=useState<'compras'|'proveedores'>('compras');
-  useEffect(()=>{if(sectionRequest>0)setSection('proveedores');},[sectionRequest]);
+  useEffect(()=>{setSection(sectionRequest);},[sectionRequest]);
   const [showSuggestedPurchases,setShowSuggestedPurchases]=useState(false);
   const sectionTabs=<div className="purchase-section-tabs" role="tablist" aria-label="Secciones de compras">
     <button type="button" role="tab" id="purchases-tab" aria-selected={section==='compras'} aria-controls="purchases-panel" tabIndex={section==='compras'?0:-1} className={section==='compras'?'primary':'secondary'} onClick={()=>setSection('compras')}><ShoppingCart size={16}/> Compras</button>
@@ -40,7 +40,7 @@ export function Purchases({products,sales,cart,setCart,search,setSearch,supplier
     setSearch('');
     setError('');
   };
-  return <div className="content"><div className="page-head"><div><span className="pill">MVP · MÓDULO 4</span><h2>Compras y recepción</h2><p>Compara costos anteriores y nuevos, controla aumentos y registra vencimientos antes de recibir mercancía.</p></div></div>
+  return <div className="content"><div className="page-head"><div><span className="pill">MVP · MÓDULO 4</span><p>Compara costos anteriores y nuevos, controla aumentos y registra vencimientos antes de recibir mercancía.</p></div></div>
   {sectionTabs}
   <div id="purchases-panel" role="tabpanel" aria-labelledby="purchases-tab">
   <div className="card expiry-policy" id="purchase-policy"><CalendarClock size={19}/><div><strong>Política de vencimiento: mínimo 6 meses</strong><p>No se puede recibir un producto cuya fecha de vencimiento sea anterior al <b>{minExpiry}</b>. Registra la fecha impresa en el envase de la mercancía que llega.</p></div></div>
