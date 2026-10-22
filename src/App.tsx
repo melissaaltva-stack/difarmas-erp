@@ -6,7 +6,7 @@ import { Finance } from './components/Finance';
 import { GoalsSettings, ManagementSuite } from './components/ManagementSuite';
 import { Dashboard } from './components/Dashboard';
 import { useErpState } from './hooks/useErpState';
-import { Activity, Boxes, LayoutDashboard, ShoppingCart, Wallet, Settings as SettingsIcon, HandCoins, CreditCard, Printer, BrainCircuit, UsersRound, MessagesSquare } from 'lucide-react';
+import { Activity, Boxes, LayoutDashboard, ShoppingCart, Wallet, Truck, Settings as SettingsIcon, HandCoins, CreditCard, Printer, BrainCircuit, UsersRound, MessagesSquare } from 'lucide-react';
 import { Settings } from './components/Settings';
 import { Customers } from './components/Customers';
 import { SocialSales } from './components/SocialSales';
