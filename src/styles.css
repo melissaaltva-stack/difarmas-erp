@@ -513,3 +513,18 @@ input:disabled,select:disabled,textarea:disabled{opacity:.65;cursor:not-allowed}
 .supplier-returns-modal{width:min(1200px,100%);max-height:92vh;}
 .supplier-returns-modal>.content{padding:0;min-width:0;}
 @media(max-width:760px){.supplier-returns-modal{padding:14px;max-height:95vh}.supplier-returns-modal .form-grid{grid-template-columns:1fr}}
+
+
+/* Navegación interna de Compras */
+.purchase-section-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 18px;
+}
+.purchase-section-tabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
