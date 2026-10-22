@@ -544,3 +544,14 @@ input:disabled,select:disabled,textarea:disabled{opacity:.65;cursor:not-allowed}
 .purchase-history-table-row{min-width:520px}
 @media(max-width:900px){.purchase-grid{grid-template-columns:minmax(0,1fr)}.checkout{position:static}.cost-review-row{grid-template-columns:repeat(2,minmax(0,1fr))}.margin-comparison{grid-column:1/-1}}
 @media(max-width:600px){.content{padding:16px}.purchase-section-tabs{gap:8px}.purchase-section-tabs button{flex:1 1 auto;padding:10px 12px}.purchase-head{grid-template-columns:minmax(0,1fr);gap:12px}.cost-review-heading,.purchase-history-heading{align-items:flex-start}.cost-review-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}.purchase-history-stats{grid-template-columns:minmax(0,1fr)}.ai-purchase-heading{gap:9px}.ai-purchase-count{margin-left:0}.purchase-row-expiry{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.purchase-row-expiry>div:first-child{grid-column:1/-1}}
+
+
+/* Expandable Compras navigation with actionable internal sections */
+.nav-group{display:flex;flex-direction:column;gap:4px;min-width:0}
+.nav-parent{width:100%;}
+.nav-parent>span:first-of-type{flex:1;text-align:left}
+.nav-chevron{font-size:15px;line-height:1;margin-left:auto;color:#a9c9c1}
+.nav-submenu{display:flex;flex-direction:column;gap:3px;margin:0 0 5px 17px;padding:5px 0 5px 12px;border-left:1px solid #38645b}
+.nav-submenu button{width:100%;border:0;background:transparent;color:#b9d1cd;text-align:left;font:inherit;font-size:12px;line-height:1.35;padding:9px 10px;border-radius:7px;cursor:pointer}
+.nav-submenu button:hover,.nav-submenu button:focus-visible{background:#1a4946;color:#fff;outline:none}
+#purchase-policy,#purchase-ai,#purchase-order,#purchase-detail,#purchase-reception{scroll-margin-top:22px}
