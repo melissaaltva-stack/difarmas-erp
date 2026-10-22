@@ -617,3 +617,12 @@ input:disabled,select:disabled,textarea:disabled{opacity:.65;cursor:not-allowed}
   .sidebar{display:none}
   .main{width:100%}
 }
+
+
+/* La página principal y los módulos ocupan todo el ancho disponible */
+.content{
+  width:100%;
+  max-width:none;
+  min-width:0;
+  margin:0;
+}
