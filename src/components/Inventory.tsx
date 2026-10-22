@@ -74,7 +74,7 @@ export function Inventory({products, search, setSearch, movements, onNew, onEdit
         <p className="label-picker-note">{selectedProducts.length} producto(s) seleccionado(s) con código listo para imprimir. Los productos sin código necesitan que se les asigne uno antes de generar etiquetas.</p>
       </div>
       {selectedProducts.length>0 ? <div className="print-labels">{selectedProducts.map(p=><BarcodeLabel key={p.id} product={p}/>)}</div> : <div className="form-error no-print">Selecciona al menos un producto que tenga código de barras para preparar las etiquetas.</div>}
-      <div className="modal-actions no-print"><button className="secondary" onClick={()=>setLabelsOpen(false)}>Cerrar</button><button className="primary" disabled={selectedProducts.length===0} onClick={()=>window.print()}><Printer size={16}/> Imprimir {selectedProducts.length} etiqueta(s)</button></div></div></div>
+      <div className="modal-actions no-print"><button className="secondary" onClick={()=>setLabelsOpen(false)}>Cerrar</button><button className="primary" disabled={selectedProducts.length===0} onClick={()=>window.print()}><Printer size={16}/> Imprimir {selectedProducts.length} etiqueta(s)</button></div></div></div>}
   </div>;
 }
 
