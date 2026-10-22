@@ -706,3 +706,17 @@ html, body, #root {
 .invoice-print-sheet{display:none}
 @media(max-width:850px){.invoice-layout{grid-template-columns:1fr}.standard-invoice .page-intro{align-items:flex-start;flex-direction:column}.invoice-cart .table-wrap{overflow:auto}}
 @media print{body:has(.invoice-print-sheet) *{visibility:hidden!important}.invoice-print-sheet,.invoice-print-sheet *{visibility:visible!important}.invoice-print-sheet{display:block!important;position:absolute;left:0;top:0;width:100%;padding:8mm;color:#111;background:#fff;font-size:12px}.invoice-print-header{display:flex;justify-content:space-between;gap:20px}.invoice-print-header img{max-width:90px;max-height:55px;object-fit:contain}.invoice-print-sheet h2{font-size:18px}.invoice-print-sheet p{font-size:11px}.invoice-print-sheet .print-total{text-align:right;margin-top:20px}.invoice-print-sheet .invoice-fiscal-note{color:#555;background:#fff;border:1px solid #ccc}}
+
+
+/* Campos del ERP: sombras suaves para distinguir cada control del fondo */
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea, .field, .form-field, .input-group, .label-picker-search, .invoice-search, .standard-invoice input:not(.invoice-qty), .standard-invoice select) {
+  box-shadow: 0 2px 5px rgba(24, 67, 52, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border-color: #d4e1db;
+  transition: box-shadow .16s ease, border-color .16s ease, background-color .16s ease;
+}
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea, .field, .form-field, .input-group, .label-picker-search, .invoice-search, .standard-invoice input:not(.invoice-qty), .standard-invoice select):focus,
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea):focus-visible {
+  outline: none;
+  border-color: #55a887;
+  box-shadow: 0 0 0 3px rgba(42, 151, 106, 0.12), 0 3px 7px rgba(24, 67, 52, 0.12);
+}
