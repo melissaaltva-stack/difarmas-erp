@@ -13,10 +13,6 @@ export function Purchases({products,sales,cart,setCart,search,setSearch,supplier
   const [section,setSection]=useState<'compras'|'proveedores'>('compras');
   useEffect(()=>{setSection(requestedSection);},[sectionRequest,requestedSection]);
   const [showSuggestedPurchases,setShowSuggestedPurchases]=useState(false);
-  const sectionTabs=<div className="purchase-section-tabs" role="tablist" aria-label="Secciones de compras">
-    <button type="button" role="tab" id="purchases-tab" aria-selected={section==='compras'} aria-controls="purchases-panel" tabIndex={section==='compras'?0:-1} className={section==='compras'?'primary':'secondary'} onClick={()=>setSection('compras')}><ShoppingCart size={16}/> Compras</button>
-    {showSuppliers&&<button type="button" role="tab" id="suppliers-tab" aria-selected={section==='proveedores'} aria-controls="suppliers-panel" tabIndex={section==='proveedores'?0:-1} className={section==='proveedores'?'primary':'secondary'} onClick={()=>setSection('proveedores')}><Boxes size={16}/> Proveedores</button>}
-  </div>;
   const results=products.filter(p=>[p.code,p.name].join(' ').toLowerCase().includes(search.toLowerCase())).slice(0,6);
   const total=cart.reduce((sum,i)=>sum+i.unitCost*i.qty,0);
   const [paymentMethod,setPaymentMethod]=useState<'Efectivo'|'Transferencia'|'Crédito'>('Efectivo');
@@ -32,7 +28,7 @@ export function Purchases({products,sales,cart,setCart,search,setSearch,supplier
   const increases=priceChanges.filter(x=>x.delta>0.005);
   const marginWarnings=priceChanges.filter(x=>x.newMargin!==null&&x.newMargin<0);
   const recommendations=useMemo(()=>buildPurchaseRecommendations(products,sales),[products,sales]);
-  if(section==='proveedores'&&showSuppliers)return <div className="content">{sectionTabs}<div id="suppliers-panel" role="tabpanel" aria-labelledby="suppliers-tab"><Suppliers suppliers={suppliers} setSuppliers={setSuppliers} products={products} records={records} setRecords={setRecords} onDispatch={onDispatch}/></div></div>;
+  if(section==='proveedores'&&showSuppliers)return <div className="content"><div id="suppliers-panel"><Suppliers suppliers={suppliers} setSuppliers={setSuppliers} products={products} records={records} setRecords={setRecords} onDispatch={onDispatch}/></div></div>;
   const addRecommended=(product:Product,quantity:number)=>{
     setCart(cart.some(item=>item.id===product.id)
       ? cart.map(item=>item.id===product.id?{...item,qty:item.qty+quantity}:item)
@@ -41,8 +37,7 @@ export function Purchases({products,sales,cart,setCart,search,setSearch,supplier
     setError('');
   };
   return <div className="content"><div className="page-head"><div><span className="pill">MVP · MÓDULO 4</span><p>Compara costos anteriores y nuevos, controla aumentos y registra vencimientos antes de recibir mercancía.</p></div></div>
-  {sectionTabs}
-  <div id="purchases-panel" role="tabpanel" aria-labelledby="purchases-tab">
+  <div id="purchases-panel">
   <div className="card expiry-policy" id="purchase-policy"><CalendarClock size={19}/><div><strong>Política de vencimiento: mínimo 6 meses</strong><p>No se puede recibir un producto cuya fecha de vencimiento sea anterior al <b>{minExpiry}</b>. Registra la fecha impresa en el envase de la mercancía que llega.</p></div></div>
   <div className="ai-purchase-launch" id="purchase-ai"><button className="primary" type="button" onClick={()=>setShowSuggestedPurchases(open=>!open)}><Sparkles size={17}/>{showSuggestedPurchases?'Ocultar compras sugeridas con IA':'Compras sugeridas con IA'}</button></div>
   {showSuggestedPurchases&&<section className="card ai-purchase-recommendations">
