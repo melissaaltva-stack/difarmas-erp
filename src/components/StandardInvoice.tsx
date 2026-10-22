@@ -18,7 +18,7 @@ export function StandardInvoice({products,customers,sales,settings,payment,setPa
  const add=(p:Product)=>{setCart(current=>{const old=current.find(x=>x.id===p.id);if(old){if(old.qty>=p.stock)return current;return current.map(x=>x.id===p.id?{...x,qty:x.qty+1}:x);}return [...current,{...p,qty:1,price:p.retail}];});setError('');};
  const updateQty=(id:number,qty:number)=>setCart(current=>current.map(p=>p.id===id?{...p,qty:Math.max(1,Math.min(p.stock,Math.floor(qty)||1))}:p));
  const submit=()=>{setError('');setNotice('');if(!cart.length){setError('Agrega al menos un producto a la factura.');return;}if(credit&&(!customer.trim()||customer==='Consumidor Final'||!dueDate)){setError('Para venta al crédito, selecciona un cliente y fecha de vencimiento.');return;}if(cart.some(p=>p.qty>(products.find(x=>x.id===p.id)?.stock??0))){setError('El inventario cambió. Revisa las cantidades antes de guardar.');return;}
- const number=`EST-${today().replaceAll('-','')}-${String(Date.now()).slice(-6)}`;
+ const number=`EST-${today().replace(/-/g,'')}-${String(Date.now()).slice(-6)}`;
  const sold:CartItem[]=cart.map(p=>({...p}));
  const ok=onComplete(sold,customer==='Consumidor Final'?'':customer,credit?dueDate:'',rtn,number);
  if(!ok){setError('No se pudo guardar. Verifica el inventario y la sincronización del sistema.');return;}
