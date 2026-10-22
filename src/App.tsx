@@ -36,7 +36,6 @@ function App({ userId, userEmail, signOut }: { userId: string; userEmail:string;
   const canSee=(module:string)=>permissions.includes(module as typeof permissions[number])||(module==='reportes'&&!!userAccess&&reportRoles.includes(userAccess.role))||(module==='clientes'&&!!userAccess&&customerRoles.includes(userAccess.role))||(module==='redes_sociales'&&!!userAccess&&socialRoles.includes(userAccess.role))||(module==='asistente_ia'&&!!userAccess&&aiRoles.includes(userAccess.role));
   const visibleNav=nav.filter(([id])=>id!=='proveedores'&&canSee(id));
   const [purchasesExpanded,setPurchasesExpanded]=useState(false);
-  const [newPurchaseExpanded,setNewPurchaseExpanded]=useState(false);
   const [purchaseSectionRequest,setPurchaseSectionRequest]=useState(0);
   const goToPurchaseSection=(target:string)=>{setActive('compras');setPurchasesExpanded(true);window.setTimeout(()=>document.getElementById(target)?.scrollIntoView({behavior:'smooth',block:'start'}),80);};
 
@@ -47,13 +46,9 @@ function App({ userId, userEmail, signOut }: { userId: string; userEmail:string;
       {visibleNav.map(([id, label, Icon]) => id==='compras' ? <div className="nav-group" key={id}>
         <button type="button" className={active==='compras'?'nav active nav-parent':'nav nav-parent'} aria-expanded={purchasesExpanded} aria-controls="purchases-subnav" onClick={()=>{setActive('compras');setPurchasesExpanded(open=>!open);}}><Icon size={19}/><span>Compras</span><span className="nav-chevron">{purchasesExpanded?'▾':'▸'}</span></button>
         {purchasesExpanded&&<div className="nav-submenu" id="purchases-subnav">
-          <div className="nav-subgroup">
-            <button type="button" className="nav-submenu-parent" aria-expanded={newPurchaseExpanded} onClick={()=>{setNewPurchaseExpanded(open=>!open);goToPurchaseSection('purchase-order');}}>Nueva compra <span>{newPurchaseExpanded?'▾':'▸'}</span></button>
-            {newPurchaseExpanded&&<div className="nav-submenu nav-submenu-nested">
-              <button type="button" onClick={()=>goToPurchaseSection('purchase-ai')}>Sugerencias con IA</button>
-              <button type="button" onClick={()=>goToPurchaseSection('purchase-detail')}>Detalle de compra</button>
-              <button type="button" onClick={()=>goToPurchaseSection('purchase-reception')}>Recepción</button>
-            </div>}
+          <button type="button" onClick={()=>goToPurchaseSection('purchase-order')}>Nueva compra</button>
+          {canSee('compras')&&<button type="button" onClick={()=>{setActive('compras');setPurchasesExpanded(true);setPurchaseSectionRequest(n=>n+1);}}>Proveedores</button>}
+        </div>}
           </div>
           {canSee('compras')&&<button type="button" onClick={()=>{setActive('compras');setPurchasesExpanded(true);setPurchaseSectionRequest(n=>n+1);}}>Proveedores</button>}
         </div>}
