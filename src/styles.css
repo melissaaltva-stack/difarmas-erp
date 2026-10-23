@@ -921,3 +921,81 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
     align-items: center;
   }
 }
+
+
+/* Facturación estándar: proporciones compactas y consistentes */
+.standard-invoice { box-sizing: border-box; }
+.standard-invoice .invoice-layout { gap: 14px !important; }
+.standard-invoice .invoice-layout > .card,
+.standard-invoice .invoice-cart { padding: 20px 22px; box-sizing: border-box; }
+.standard-invoice .invoice-layout > .card .section-heading { margin: 0 0 14px; gap: 12px; }
+.standard-invoice .invoice-layout > .card .section-heading h3,
+.standard-invoice .invoice-cart .section-heading h3 { margin: 0; font-size: 16px; line-height: 1.35; }
+.standard-invoice .invoice-layout > .card .section-heading p { margin: 4px 0 0; font-size: 12px; line-height: 1.45; }
+.standard-invoice .invoice-layout > .card:first-child,
+.standard-invoice .invoice-layout > .card.invoice-billing-details {
+  display: grid !important;
+  grid-template-columns: minmax(145px, 190px) minmax(0, 1fr) !important;
+  column-gap: 18px !important;
+  row-gap: 10px !important;
+  align-items: center !important;
+}
+.standard-invoice .invoice-layout > .card:first-child .section-heading,
+.standard-invoice .invoice-layout > .card:first-child .text-button,
+.standard-invoice .invoice-layout > .card:first-child .new-invoice-customer,
+.standard-invoice .invoice-layout > .card:first-child .invoice-fiscal-note,
+.standard-invoice .invoice-layout > .card.invoice-billing-details .section-heading,
+.standard-invoice .invoice-layout > .card.invoice-billing-details .invoice-fiscal-note {
+  grid-column: 1 / -1 !important;
+}
+.standard-invoice .invoice-layout > .card .field-label {
+  display: block; width: auto; margin: 0 !important; font-size: 13px;
+  line-height: 1.35; font-weight: 500; text-align: left; color: #415b56;
+}
+.standard-invoice .invoice-layout > .card:first-child select,
+.standard-invoice .invoice-layout > .card:first-child input:not(.invoice-qty),
+.standard-invoice .invoice-layout > .card.invoice-billing-details select,
+.standard-invoice .invoice-layout > .card.invoice-billing-details input:not(.invoice-qty) {
+  box-sizing: border-box; width: 100% !important; min-width: 0; max-width: 100% !important;
+  min-height: 40px; height: 40px; padding: 9px 11px; margin: 0 !important;
+  font-size: 14px !important;
+}
+.standard-invoice .invoice-layout > .card:first-child .text-button {
+  justify-self: start; width: auto; padding: 5px 0; margin: -2px 0 0;
+}
+.standard-invoice .invoice-layout > .card:first-child .new-invoice-customer {
+  display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr) auto;
+  gap: 10px; align-items: center;
+}
+.standard-invoice .invoice-layout > .card .invoice-fiscal-note {
+  margin-top: 6px; padding: 10px 12px; font-size: 12px; line-height: 1.45;
+}
+.standard-invoice .invoice-layout > .card:nth-child(2) .invoice-search,
+.standard-invoice .invoice-history .invoice-search {
+  box-sizing: border-box; width: 100%; max-width: 100%; min-height: 42px; gap: 10px;
+}
+.standard-invoice .invoice-search input {
+  min-width: 0; width: 100%; height: 40px; padding: 9px 10px; font-size: 14px !important;
+}
+.standard-invoice .invoice-cart { margin-top: 14px; }
+.standard-invoice .invoice-total { margin-top: 16px; padding-top: 14px; }
+.standard-invoice .invoice-total strong { font-size: 22px; }
+.standard-invoice .invoice-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
+.standard-invoice .invoice-actions button { min-height: 40px; padding: 9px 15px; font-size: 13px; }
+@media (max-width: 700px) {
+ .standard-invoice .invoice-layout > .card,
+ .standard-invoice .invoice-cart { padding: 16px; }
+ .standard-invoice .invoice-layout > .card:first-child,
+ .standard-invoice .invoice-layout > .card.invoice-billing-details {
+   grid-template-columns: minmax(0,1fr) !important; row-gap: 7px !important;
+ }
+ .standard-invoice .invoice-layout > .card:first-child .section-heading,
+ .standard-invoice .invoice-layout > .card:first-child .text-button,
+ .standard-invoice .invoice-layout > .card:first-child .new-invoice-customer,
+ .standard-invoice .invoice-layout > .card:first-child .invoice-fiscal-note,
+ .standard-invoice .invoice-layout > .card.invoice-billing-details .section-heading,
+ .standard-invoice .invoice-layout > .card.invoice-billing-details .invoice-fiscal-note { grid-column: 1 !important; }
+ .standard-invoice .invoice-layout > .card .field-label { margin-top: 7px !important; }
+ .standard-invoice .invoice-layout > .card:first-child .new-invoice-customer { grid-template-columns: minmax(0,1fr) !important; }
+ .standard-invoice .invoice-actions { flex-wrap: wrap; }
+}
