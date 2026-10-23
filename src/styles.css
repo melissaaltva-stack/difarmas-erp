@@ -1044,3 +1044,9 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
 @media (max-width: 700px) {
   .standard-invoice .invoice-layout > .card .field-label { margin: 0 !important; }
 }
+
+
+/* Facturación estándar: evitar encabezados repetidos en cada sección */
+.standard-invoice .invoice-layout > .card .section-heading {
+  display: none !important;
+}
