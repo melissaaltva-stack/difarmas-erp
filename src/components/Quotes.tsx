@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import type { Customer, Product, ErpSettings, QuoteRecord, QuoteLine } from '../domain/types';
 import { Plus, Search, Printer, Trash2 } from 'lucide-react';
 const money=(n:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL'}).format(n);
-export function Quotes({customers,products,settings,quotes,setQuotes}:{customers:Customer[];products:Product[];settings:ErpSettings;quotes:QuoteRecord[];setQuotes:React.Dispatch<React.SetStateAction<QuoteRecord[]>>}){
+export function Quotes({customers,products,settings,quotes,setQuotes}:{customers:Customer[];products:Product[];settings:ErpSettings;quotes:QuoteRecord[];setQuotes:Dispatch<SetStateAction<QuoteRecord[]>>}){
 const [creating,setCreating]=useState(false);const [selected,setSelected]=useState<QuoteRecord|null>(null);const [search,setSearch]=useState('');const [client,setClient]=useState('');const [valid,setValid]=useState('');const [discount,setDiscount]=useState('0');const [notes,setNotes]=useState('');const [term,setTerm]=useState('');const [lines,setLines]=useState<QuoteLine[]>([]);
 const persist=(q:QuoteRecord[])=>setQuotes(q);const subtotal=lines.reduce((s,l)=>s+l.qty*l.price,0);const results=products.filter(p=>(p.name+' '+p.code).toLowerCase().includes(term.toLowerCase())).slice(0,6);
 const add=(p:Product)=>setLines(old=>old.some(l=>l.id===p.id)?old.map(l=>l.id===p.id?{...l,qty:l.qty+1}:l):[...old,{id:p.id,name:p.name,code:p.code,qty:1,price:p.retail}]);
