@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { CartItem, CashClosure, CashMovement, Customer, ErpSettings, Expense, InventoryMovement, Module, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseItem, PurchaseRecord, Receivable, SaleRecord, Supplier, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord } from '../domain/types';
+import type { CartItem, CashClosure, CashMovement, Customer, ErpSettings, Expense, InventoryMovement, Module, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseItem, PurchaseRecord, Receivable, SaleRecord, Supplier, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord, QuoteRecord } from '../domain/types';
 import { loadJson, saveJson, loadNumber, saveNumber } from '../utils/storage';
 import { applyPurchaseToInventory, applySaleToInventory } from '../services/inventoryService';
 import { buildSaleRecord, createReceivableFromSale } from '../services/salesService';
@@ -37,6 +37,7 @@ billingInfo:{cai:'',authorizedRangeStart:'',authorizedRangeEnd:'',authorizationE
 export function useErpState(userId: string) {
   const [active, setActive] = useState<Module>('dashboard');
   const [customers,setCustomers]=useState<Customer[]>(()=>loadJson<Customer[]>('difarmas_customers',[]));
+  const [quotes,setQuotes]=useState<QuoteRecord[]>(()=>loadJson<QuoteRecord[]>('difarmas_quotes',[]));
   const [suppliers,setSuppliers]=useState<Supplier[]>(()=>loadJson<Supplier[]>('difarmas_suppliers',[]));
   const [products, setProducts] = useState<Product[]>(() => loadJson<Product[]>('difarmas_products',initialProducts));
   const [search, setSearch] = useState('');
@@ -75,6 +76,7 @@ export function useErpState(userId: string) {
   useEffect(()=>{purchaseInProgress.current=false},[purchases]);
 
   useEffect(()=>{saveJson('difarmas_customers',customers)},[customers]);
+  useEffect(()=>{saveJson('difarmas_quotes',quotes)},[quotes]);
   useEffect(()=>{saveJson('difarmas_suppliers',suppliers)},[suppliers]);
   useEffect(()=>{saveJson('difarmas_products',products)},[products]);
   useEffect(()=>{saveNumber('difarmas_monthly_goal',monthlyGoal)},[monthlyGoal]);
@@ -95,9 +97,9 @@ export function useErpState(userId: string) {
   useEffect(()=>{saveJson('difarmas_sale_adjustments',saleAdjustments)},[saleAdjustments]);
 
   const snapshot = useMemo<ErpSnapshot>(() => ({
-    customers, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables,
+    customers, quotes, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables,
     inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests, supplierReturns, saleAdjustments,
-  }), [customers, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables, inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests, supplierReturns, saleAdjustments]);
+  }), [customers, quotes, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables, inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests, supplierReturns, saleAdjustments]);
 
   // Load the signed-in user's snapshot before allowing remote writes. A first login
   // seeds the cloud record from this browser's existing local data.
@@ -113,6 +115,7 @@ export function useErpState(userId: string) {
     const accountChanged = Boolean(previousOwner && previousOwner !== userId);
     if (accountChanged) {
       setCustomers([]);
+      setQuotes([]);
       setSuppliers([]);
       setProducts(initialProducts);
       setSales([]);
@@ -137,6 +140,7 @@ export function useErpState(userId: string) {
       if (!activeRequest) return;
       if (remote) {
         setCustomers(remote.customers);
+        setQuotes(remote.quotes ?? []);
         setSuppliers(remote.suppliers ?? []);
         setProducts(remote.products);
         setSales(remote.sales);
