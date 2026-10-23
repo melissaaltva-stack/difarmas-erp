@@ -1019,3 +1019,28 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
 .standard-invoice .section-heading > * {
   text-align: left !important;
 }
+
+
+/* Facturación estándar: reducir el espacio entre etiquetas y campos */
+.standard-invoice .invoice-layout > .card:first-child,
+.standard-invoice .invoice-layout > .card.invoice-billing-details {
+  column-gap: 8px !important;
+  row-gap: 5px !important;
+}
+.standard-invoice .invoice-layout > .card .field-label {
+  margin: 0 !important;
+  line-height: 1.2 !important;
+  align-self: center !important;
+}
+.standard-invoice .invoice-layout > .card:first-child input:not(.invoice-qty),
+.standard-invoice .invoice-layout > .card:first-child select,
+.standard-invoice .invoice-layout > .card.invoice-billing-details input:not(.invoice-qty),
+.standard-invoice .invoice-layout > .card.invoice-billing-details select {
+  margin: 0 !important;
+}
+.standard-invoice .invoice-layout > .card .section-heading {
+  margin-bottom: 8px !important;
+}
+@media (max-width: 700px) {
+  .standard-invoice .invoice-layout > .card .field-label { margin: 0 !important; }
+}
