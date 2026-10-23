@@ -999,3 +999,23 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
  .standard-invoice .invoice-layout > .card:first-child .new-invoice-customer { grid-template-columns: minmax(0,1fr) !important; }
  .standard-invoice .invoice-actions { flex-wrap: wrap; }
 }
+
+
+/* Facturación estándar: encabezados de todas las secciones alineados a la izquierda */
+.standard-invoice .section-heading {
+  justify-content: flex-start !important;
+  text-align: left !important;
+  align-items: flex-start !important;
+  width: 100%;
+}
+.standard-invoice .section-heading h2,
+.standard-invoice .section-heading h3,
+.standard-invoice .section-heading h4,
+.standard-invoice .section-heading p {
+  text-align: left !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+.standard-invoice .section-heading > * {
+  text-align: left !important;
+}
