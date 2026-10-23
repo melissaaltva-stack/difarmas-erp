@@ -59,3 +59,32 @@ export function Customers({customers,setCustomers}:{customers:Customer[];setCust
     </div></div>}
   </div>;
 }
+
+
+/** Modal reutilizable para registrar clientes desde cualquier módulo del ERP. */
+export function RegisterCustomerModal({customers,onClose,onSave}:{customers:Customer[];onClose:()=>void;onSave:(customer:Customer)=>void}) {
+ const [form,setForm]=useState<CustomerForm>(emptyForm);
+ const [error,setError]=useState('');
+ const save=()=>{
+  const name=form.name.trim(), creditLimit=Number(form.creditLimit), rtn=form.rtn.trim();
+  if(!name){setError('Escribe el nombre del cliente o razón social.');return;}
+  if(!Number.isFinite(creditLimit)||creditLimit<0){setError('El límite de crédito debe ser un monto igual o mayor a cero.');return;}
+  if(rtn&&customers.some(c=>(c.rtn??'').replace(/[^0-9A-Za-z]/g,'').toLowerCase()===rtn.replace(/[^0-9A-Za-z]/g,'').toLowerCase())){setError('Ya existe un cliente con ese RTN.');return;}
+  onSave({id:Date.now(),name,customerType:form.customerType,rtn,phone:form.phone.trim(),email:form.email.trim(),address:form.address.trim(),creditLimit,active:form.active,notes:form.notes.trim()});
+ };
+ return <div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onClose();}}><div className="modal customer-modal" role="dialog" aria-modal="true" aria-label="Registrar nuevo cliente"><div className="modal-head"><div><h2>Registrar nuevo cliente</h2><p>Completa los datos de contacto y crédito del cliente.</p></div><button className="icon-btn" type="button" onClick={onClose} aria-label="Cerrar"><X size={18}/></button></div>
+ <div className="form-grid">
+ <label>Tipo de cliente<select value={form.customerType} onChange={e=>setForm(f=>({...f,customerType:e.target.value as CustomerForm['customerType']}))}><option>Persona natural</option><option>Empresa</option></select></label>
+ <label>Nombre completo / Razón social *<input autoFocus value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} placeholder="Nombre del cliente o empresa" maxLength={160}/></label>
+ <label>RTN / Identificación<input value={form.rtn} onChange={e=>setForm(f=>({...f,rtn:e.target.value}))} placeholder="Número de identificación" maxLength={40}/></label>
+ <label>Teléfono<input value={form.phone} onChange={e=>setForm(f=>({...f,phone:e.target.value}))} placeholder="Ej. 9999-9999" maxLength={40}/></label>
+ <label>Correo electrónico<input type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder="cliente@correo.com" maxLength={160}/></label>
+ <label>Dirección<input value={form.address} onChange={e=>setForm(f=>({...f,address:e.target.value}))} placeholder="Dirección del cliente" maxLength={240}/></label>
+ <label>Límite de crédito (L)<input type="number" min="0" step="0.01" value={form.creditLimit} onChange={e=>setForm(f=>({...f,creditLimit:e.target.value}))}/></label>
+ <label className="settings-check-label"><input type="checkbox" checked={form.active} onChange={e=>setForm(f=>({...f,active:e.target.checked}))}/> Cliente activo</label>
+ <label style={{gridColumn:'1 / -1'}}>Notas<textarea rows={3} value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} placeholder="Observaciones, preferencias o condiciones de pago" maxLength={1000}/></label>
+ </div>
+ {error&&<p className="form-error" role="alert">{error}</p>}
+ <div className="modal-actions"><button className="secondary" type="button" onClick={onClose}>Cancelar</button><button className="primary" type="button" onClick={save}><Save size={16}/> Guardar cliente</button></div>
+ </div></div>;
+}
