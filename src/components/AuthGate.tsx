@@ -86,9 +86,9 @@ export function AuthGate({ children }: Props) {
   return <div className="auth-page">
     <form className="auth-card" onSubmit={signIn}>
       <div className="auth-logo"><LockKeyhole size={25}/></div>
-      <p className="auth-eyebrow">DIFARMÁS · SISTEMA INTERNO</p>
-      <h1>Iniciar sesión</h1>
-      <p className="auth-subtitle">Acceso privado al sistema de gestión de la farmacia.</p>
+      <p className="auth-eyebrow">DIFARMÁS · FARMI ERP</p>
+      <h1>Acceso al sistema</h1>
+      <p className="auth-subtitle">Inicia sesión para ingresar al sistema de gestión de DIFARMÁS.</p>
       <label htmlFor="erp-email">Correo electrónico</label>
       <input id="erp-email" type="email" autoComplete="username" required value={email} onChange={event => setEmail(event.target.value)} />
       <label htmlFor="erp-password">Contraseña</label>
