@@ -1134,3 +1134,46 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
   }
   .standard-invoice .invoice-actions { flex-wrap: wrap; }
 }
+
+
+/* Facturación estándar: acción de nuevo cliente junto al selector */
+.standard-invoice .invoice-layout > .card:first-child .invoice-customer-select-row {
+  grid-column: 2 / 3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+.standard-invoice .invoice-layout > .card:first-child .invoice-customer-select-row select {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100% !important;
+}
+.standard-invoice .invoice-layout > .card:first-child .invoice-customer-select-row .text-button {
+  grid-column: auto;
+  flex: 0 0 auto;
+  justify-self: auto;
+  white-space: nowrap;
+  margin: 0;
+  padding: 7px 10px !important;
+  min-height: 32px;
+  border: 1px solid #d7e7e1;
+  border-radius: 7px;
+  background: #eef7f3;
+  color: #176b45;
+  font-size: 12px !important;
+  font-weight: 700;
+}
+@media (max-width: 700px) {
+  .standard-invoice .invoice-layout > .card:first-child .invoice-customer-select-row {
+    grid-column: 1 / -1;
+    flex-wrap: wrap;
+  }
+  .standard-invoice .invoice-layout > .card:first-child .invoice-customer-select-row select {
+    flex: 1 1 180px;
+  }
+  .standard-invoice .invoice-layout > .card:first-child .invoice-customer-select-row .text-button {
+    white-space: normal;
+  }
+}
