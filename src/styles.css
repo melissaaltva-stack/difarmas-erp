@@ -822,3 +822,68 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
 .standard-invoice .invoice-layout>.card:first-child .field-label{margin-top:4px}
 .standard-invoice .invoice-layout>.card:nth-child(2) .invoice-search{max-width:100%}
 @media(max-width:650px){.standard-invoice .page-intro{align-items:flex-start;flex-direction:column}.standard-invoice .invoice-layout>.card:first-child{grid-template-columns:1fr}}
+
+
+/* Ajuste final: Facturación estándar alineada desde la izquierda y a todo el ancho */
+.standard-invoice {
+  width: 100%;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+.standard-invoice .invoice-layout {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  width: 100%;
+  gap: 16px;
+}
+.standard-invoice .invoice-layout > .card {
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0;
+  margin: 0;
+}
+.standard-invoice .invoice-layout > .card:first-child {
+  display: block !important;
+}
+.standard-invoice .invoice-layout > .card:first-child .section-heading,
+.standard-invoice .invoice-layout > .card:first-child .text-button,
+.standard-invoice .invoice-layout > .card:first-child .new-invoice-customer,
+.standard-invoice .invoice-layout > .card:first-child .invoice-fiscal-note {
+  width: 100%;
+  max-width: none;
+}
+.standard-invoice .invoice-layout > .card:first-child .field-label {
+  display: block;
+  width: 100%;
+  margin: 14px 0 6px;
+  text-align: left;
+}
+.standard-invoice .invoice-layout > .card:first-child select,
+.standard-invoice .invoice-layout > .card:first-child input:not(.invoice-qty),
+.standard-invoice .invoice-layout > .card:nth-child(2) .invoice-search {
+  display: flex;
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0;
+  margin-right: 0;
+}
+.standard-invoice .invoice-layout > .card:nth-child(2) .invoice-search {
+  display: flex;
+}
+@media (min-width: 900px) {
+  .standard-invoice .invoice-layout > .card:first-child {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    column-gap: 20px;
+    align-items: start;
+  }
+  .standard-invoice .invoice-layout > .card:first-child .section-heading,
+  .standard-invoice .invoice-layout > .card:first-child .text-button,
+  .standard-invoice .invoice-layout > .card:first-child .new-invoice-customer,
+  .standard-invoice .invoice-layout > .card:first-child .invoice-fiscal-note {
+    grid-column: 1 / -1;
+  }
+}
