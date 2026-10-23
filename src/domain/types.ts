@@ -1,5 +1,5 @@
 export type MissingProductRequest = { id:number; name:string; presentation:string; quantity:number; notes:string; requestedAt:string; status:'Pendiente'|'Comprado'|'Descartado' };
-export type Module = 'dashboard' | 'facturacion_estandar' | 'ventas' | 'redes_sociales' | 'inventario' | 'clientes' | 'compras' | 'finanzas' | 'cuentas_cobrar' | 'cuentas_pagar' | 'reportes' | 'asistente_ia' | 'proveedores' | 'configuracion';
+export type Module = 'dashboard' | 'facturacion_estandar' | 'ventas' | 'redes_sociales' | 'inventario' | 'clientes' | 'cotizaciones' | 'compras' | 'finanzas' | 'cuentas_cobrar' | 'cuentas_pagar' | 'reportes' | 'asistente_ia' | 'proveedores' | 'configuracion';
 export type DocumentTemplate = { id:'factura'|'orden_compra'|'nota_debito'|'nota_credito'|'orden_entrega'; name:string; title:string; subtitle:string; footer:string; paperSize:'A4'|'A5'|'ticket'; showLogo:boolean; showTaxLines:boolean; showSignatures:boolean; customFields:string[] };
 export type UserAccess = { id:string; email:string; name:string; role:'Administrador'|'Supervisor'|'Ventas'|'Compras'|'Finanzas'|'Solo lectura'; permissions:Module[]; active:boolean };
 export type CurrencyConfig = { code:string; name:string; symbol:string; exchangeRate:number; active:boolean };
@@ -29,3 +29,6 @@ export type PaymentTransaction = { id:number; type:'Cobro'|'Pago proveedor'; acc
 export type InventoryMovement = { id:number; productId:number; productName:string; type:'Venta'|'Compra'|'Ajuste'; quantity:number; stockBefore:number; stockAfter:number; unitCost:number; referenceId?:number; date:string; note?:string };
 export type Customer = { id:number; name:string; phone:string; creditLimit:number; active:boolean; notes:string; rtn?:string; email?:string; address?:string; customerType?:'Persona natural'|'Empresa' };
 export type Supplier = { id:number; name:string; contact:string; phone:string; email:string; rtn:string; address:string; paymentTerms:string; notes:string; active:boolean };
+
+export type QuoteLine = { id:number; name:string; code:string; qty:number; price:number };
+export type QuoteRecord = { id:number; number:string; client:string; date:string; valid:string; discount:number; lines:QuoteLine[]; notes:string };
