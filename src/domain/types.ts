@@ -32,4 +32,3 @@ export type Customer = { id:number; name:string; phone:string; creditLimit:numbe
 export type Supplier = { id:number; name:string; contact:string; phone:string; email:string; rtn:string; address:string; paymentTerms:string; notes:string; active:boolean };
 
 export type QuoteLine = { id:number; name:string; code:string; qty:number; price:number };
-export type QuotePrintFormatConfig = { title:string; subtitle:string; footer:string; showLogo:boolean; showBusinessData:boolean; showClientData:boolean; showProductCodes:boolean; showDiscount:boolean; showNotes:boolean; paperSize:'A4'|'A5'|'ticket'; marginsMm:number };\nexport type QuoteRecord = { id:number; number:string; client:string; date:string; valid:string; discount:number; lines:QuoteLine[]; notes:string };
