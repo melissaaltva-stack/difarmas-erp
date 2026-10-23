@@ -887,3 +887,37 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
     grid-column: 1 / -1;
   }
 }
+
+
+/* Facturación estándar: alinear también los campos en filas de izquierda a derecha */
+@media (min-width: 900px) {
+  .standard-invoice .invoice-layout > .card:first-child {
+    display: grid !important;
+    grid-template-columns: minmax(150px, 0.38fr) minmax(0, 1fr) !important;
+    column-gap: 18px;
+    row-gap: 10px;
+    align-items: center;
+  }
+  .standard-invoice .invoice-layout > .card:first-child .section-heading,
+  .standard-invoice .invoice-layout > .card:first-child .text-button,
+  .standard-invoice .invoice-layout > .card:first-child .new-invoice-customer,
+  .standard-invoice .invoice-layout > .card:first-child .invoice-fiscal-note {
+    grid-column: 1 / -1;
+  }
+  .standard-invoice .invoice-layout > .card:first-child .field-label {
+    margin: 6px 0;
+    align-self: center;
+  }
+  .standard-invoice .invoice-layout > .card:first-child select,
+  .standard-invoice .invoice-layout > .card:first-child input:not(.invoice-qty) {
+    width: 100% !important;
+    min-width: 0;
+    margin: 0;
+  }
+  .standard-invoice .invoice-layout > .card:first-child .new-invoice-customer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+  }
+}
