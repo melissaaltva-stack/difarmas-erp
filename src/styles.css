@@ -808,3 +808,17 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
   .mobile-menu-close{width:44px;height:44px}
   .mobile-menu-close svg{width:25px!important;height:25px!important}
 }
+
+/* Facturación estándar: estructura simplificada, cliente antes del buscador */
+.standard-invoice .page-intro{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:0 0 18px;padding:0}
+.standard-invoice .page-intro p{margin:8px 0 0;color:#718a85;font-size:13px;line-height:1.5}
+.standard-invoice .invoice-layout{display:flex;flex-direction:column;gap:14px;align-items:stretch}
+.standard-invoice .invoice-layout>.card{width:100%;min-width:0}
+.standard-invoice .invoice-layout>.card:first-child .section-heading{margin-bottom:14px}
+.standard-invoice .invoice-layout>.card:first-child select,.standard-invoice .invoice-layout>.card:first-child input{max-width:100%}
+.standard-invoice .invoice-layout>.card:first-child{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:16px;align-items:start}
+.standard-invoice .invoice-layout>.card:first-child .section-heading,.standard-invoice .invoice-layout>.card:first-child .text-button,.standard-invoice .invoice-layout>.card:first-child .new-invoice-customer,.standard-invoice .invoice-layout>.card:first-child .invoice-fiscal-note{grid-column:1/-1}
+.standard-invoice .invoice-layout>.card:first-child .section-heading{display:flex}
+.standard-invoice .invoice-layout>.card:first-child .field-label{margin-top:4px}
+.standard-invoice .invoice-layout>.card:nth-child(2) .invoice-search{max-width:100%}
+@media(max-width:650px){.standard-invoice .page-intro{align-items:flex-start;flex-direction:column}.standard-invoice .invoice-layout>.card:first-child{grid-template-columns:1fr}}
