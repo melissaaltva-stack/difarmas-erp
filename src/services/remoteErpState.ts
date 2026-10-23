@@ -1,11 +1,12 @@
 import type {
   CashClosure, CashMovement, Customer, Supplier, ErpSettings, Expense, InventoryMovement, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseRecord,
-  Receivable, SaleRecord, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord,
+  Receivable, SaleRecord, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord, QuoteRecord,
 } from '../domain/types';
 import { requireSupabase } from './supabaseClient';
 
 export type ErpSnapshot = {
   customers: Customer[];
+  quotes?: QuoteRecord[];
   suppliers?: Supplier[];
   products: Product[];
   sales: SaleRecord[];
@@ -38,7 +39,7 @@ function normalizeSnapshot(value: unknown): ErpSnapshot {
       throw new Error(`El campo ${key} de los datos guardados no es válido.`);
     }
   }
-  for (const key of ['cashClosures', 'cashMovements', 'paymentTransactions', 'missingProductRequests', 'supplierReturns', 'saleAdjustments'] as const) {
+  for (const key of ['cashClosures', 'cashMovements', 'paymentTransactions', 'missingProductRequests', 'supplierReturns', 'saleAdjustments', 'quotes'] as const) {
     if (value[key] !== undefined && !Array.isArray(value[key])) {
       throw new Error(`El campo ${key} de los datos guardados no es válido.`);
     }
@@ -50,6 +51,7 @@ function normalizeSnapshot(value: unknown): ErpSnapshot {
   }
   return {
     customers: (value.customers ?? []) as Customer[],
+    quotes: (value.quotes ?? []) as QuoteRecord[],
     suppliers: (value.suppliers ?? []) as Supplier[],
     products: (value.products ?? []) as Product[],
     sales: (value.sales ?? []) as SaleRecord[],
