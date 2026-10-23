@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0f766e">
+<title>DIFARMÁS ERP · Demostración</title>
+<style>
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#17252a;background:#f4f7f7;font-synthesis:none}
+*{box-sizing:border-box}body{margin:0}.layout{display:grid;grid-template-columns:250px minmax(0,1fr);min-height:100vh}.side{background:#fff;border-right:1px solid #e1e9e8;padding:24px 16px;display:flex;flex-direction:column;gap:8px}.brand{display:flex;align-items:center;gap:11px;padding:0 10px 28px}.mark{display:grid;place-items:center;width:40px;height:40px;border-radius:13px;background:#0f766e;color:#fff;font-weight:800;font-size:21px}.brand strong{display:block;font-size:18px}.brand small{color:#718184}.label{font-size:10px;font-weight:800;letter-spacing:.12em;color:#819091;padding:12px}.nav{border:0;background:transparent;text-align:left;color:#4d6061;padding:11px 12px;border-radius:10px;font:inherit;font-size:13px;cursor:pointer}.nav:hover,.nav.active{background:#e8f5f2;color:#0f766e;font-weight:700}.side-note{margin-top:auto;padding:13px;border:1px solid #dcebe7;background:#f5faf8;border-radius:12px;font-size:12px;color:#4e6664;line-height:1.5}.main{min-width:0}.top{background:#fff;border-bottom:1px solid #e1e9e8;padding:20px 30px;display:flex;justify-content:space-between;align-items:center;gap:16px}.eyebrow{font-size:11px;color:#718184;margin:0 0 5px}.top h1{font-size:22px;margin:0}.tag{font-size:11px;color:#0f766e;background:#e8f5f2;border-radius:30px;padding:7px 11px;font-weight:750;white-space:nowrap}.content{padding:28px;max-width:1250px;margin:auto}.notice{background:#fff8e7;border:1px solid #f1dfae;border-radius:12px;padding:12px 15px;font-size:12px;color:#755b18;margin-bottom:22px;line-height:1.5}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.card{background:#fff;border:1px solid #e1e9e8;border-radius:14px;padding:18px;min-width:0}.metric{font-size:12px;color:#718184}.value{font-size:25px;font-weight:800;margin:12px 0 5px}.sub{font-size:11px;color:#0f766e}.section{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:26px 0 13px}.section h2{font-size:16px;margin:0}.btn{border:0;background:#0f766e;color:white;border-radius:9px;padding:10px 13px;font-weight:700;font-size:12px}.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse;font-size:12px}.table th{text-align:left;color:#758486;font-weight:650;background:#f8faf9}.table th,.table td{padding:13px 12px;border-bottom:1px solid #edf1f0;white-space:nowrap}.status{border-radius:20px;padding:5px 8px;background:#e8f5f2;color:#0f766e;font-size:10px;font-weight:750}.status.pending{background:#fff2d8;color:#94670c}.form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.field label{display:block;font-size:11px;color:#718184;margin-bottom:7px}.fake-input{background:#f8faf9;border:1px solid #dce5e3;border-radius:8px;padding:11px;font-size:12px;color:#8b9898}.actions{display:flex;gap:8px;flex-wrap:wrap}.ghost{background:#fff;color:#0f766e;border:1px solid #b9d8d1}.footer{text-align:center;font-size:11px;color:#829091;padding:25px}.hide{display:none!important}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:12px}.brand,.side-note,.label{grid-column:1/-1}.brand{padding-bottom:10px}.nav{font-size:12px}.top{padding:17px 18px}.content{padding:18px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.form-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.top h1{font-size:18px}.tag{font-size:10px}.grid{gap:9px}.card{padding:13px}.value{font-size:21px}.form-grid{grid-template-columns:1fr}.side{grid-template-columns:1fr 1fr}.nav{padding:10px}}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="side">
+<div class="brand"><div class="mark">F</div><div><strong>Farmi</strong><small>Sistema de gestión</small></div></div>
+<div class="label">DEMOSTRACIÓN INTERACTIVA</div>
+<button class="nav active" data-page="dashboard">▦ &nbsp; Panel de control</button>
+<button class="nav" data-page="facturacion">▤ &nbsp; Facturación estándar</button>
+<button class="nav" data-page="ventas">🛒 &nbsp; Ventas / POS</button>
+<button class="nav" data-page="inventario">▣ &nbsp; Inventario</button>
+<button class="nav" data-page="clientes">♙ &nbsp; Clientes</button>
+<button class="nav" data-page="compras">⇄ &nbsp; Compras</button>
+<button class="nav" data-page="finanzas">＄ &nbsp; Finanzas</button>
+<div class="side-note"><strong>Modo de solo lectura</strong><br>Esta página usa ejemplos ficticios. No está conectada a la base de datos del ERP ni permite registrar operaciones reales.</div>
+</aside>
+<main class="main">
+<header class="top"><div><p class="eyebrow">Farmi · Sistema de gestión · Vista de muestra</p><h1 id="page-title">Panel de control</h1></div><span class="tag">● DEMO PÚBLICA</span></header>
+<div class="content">
+<div class="notice"><strong>Entorno de demostración:</strong> todos los nombres, montos, clientes y documentos que aparecen aquí son datos ficticios creados para mostrar la interfaz. No introduzcas información real.</div>
+<section id="dashboard" class="page">
+<div class="grid">
+<div class="card"><div class="metric">Ventas del mes (ejemplo)</div><div class="value">L 48,250</div><div class="sub">↑ Datos ilustrativos</div></div>
+<div class="card"><div class="metric">Productos de muestra</div><div class="value">128</div><div class="sub">Catálogo ficticio</div></div>
+<div class="card"><div class="metric">Facturas de muestra</div><div class="value">36</div><div class="sub">Sin documentos reales</div></div>
+<div class="card"><div class="metric">Meta ilustrativa</div><div class="value">64%</div><div class="sub">Progreso simulado</div></div>
+</div>
+<div class="section"><h2>Actividad reciente (ficticia)</h2><span class="tag">Solo lectura</span></div>
+<div class="card table-wrap"><table class="table"><thead><tr><th>Referencia</th><th>Cliente de ejemplo</th><th>Fecha</th><th>Total</th><th>Estado</th></tr></thead><tbody><tr><td>DEMO-0004</td><td>Cliente de muestra A</td><td>23/10/2026</td><td>L 850.00</td><td><span class="status">Ejemplo</span></td></tr><tr><td>DEMO-0003</td><td>Cliente de muestra B</td><td>22/10/2026</td><td>L 1,240.00</td><td><span class="status">Ejemplo</span></td></tr><tr><td>DEMO-0002</td><td>Cliente de muestra C</td><td>21/10/2026</td><td>L 320.00</td><td><span class="status pending">Simulado</span></td></tr></tbody></table></div>
+</section>
+<section id="facturacion" class="page hide">
+<div class="card"><div class="section" style="margin-top:0"><h2>Facturación estándar</h2><span class="tag">Vista de muestra</span></div><div class="form-grid"><div class="field"><label>Cliente</label><div class="fake-input">Cliente de muestra A</div></div><div class="field"><label>Identificación / RTN</label><div class="fake-input">0000-0000-00000</div></div><div class="field"><label>Forma de pago</label><div class="fake-input">Efectivo (simulado)</div></div></div><div class="section"><h2>Detalle de factura</h2></div><div class="table-wrap"><table class="table"><thead><tr><th>Producto ficticio</th><th>Cantidad</th><th>Precio</th><th>Subtotal</th></tr></thead><tbody><tr><td>Producto de muestra A</td><td>2</td><td>L 125.00</td><td>L 250.00</td></tr><tr><td>Producto de muestra B</td><td>1</td><td>L 80.00</td><td>L 80.00</td></tr></tbody></table></div><div class="section"><strong>Total ilustrativo</strong><strong style="font-size:22px">L 330.00</strong></div><div class="actions"><button class="btn" disabled title="Deshabilitado en la demostración">Registrar factura (deshabilitado)</button><button class="btn ghost" onclick="alert('La demostración no genera documentos reales ni guarda datos.')">Ver aviso de demostración</button></div></div>
+</section>
+<section id="ventas" class="page hide"><div class="card"><h2>Ventas / punto de venta</h2><p style="color:#718184;font-size:13px">Interfaz ilustrativa del punto de venta. Las operaciones están deshabilitadas.</p><div class="form-grid"><div class="field"><label>Buscar producto</label><div class="fake-input">Producto de muestra…</div></div><div class="field"><label>Cantidad</label><div class="fake-input">1</div></div><div class="field"><label>Pago</label><div class="fake-input">Sin procesar</div></div></div></div></section>
+<section id="inventario" class="page hide"><div class="card"><h2>Inventario de muestra</h2><div class="table-wrap"><table class="table"><thead><tr><th>Producto</th><th>Categoría</th><th>Existencia</th><th>Estado</th></tr></thead><tbody><tr><td>Producto de muestra A</td><td>Bienestar</td><td>24</td><td><span class="status">Ejemplo</span></td></tr><tr><td>Producto de muestra B</td><td>Higiene</td><td>11</td><td><span class="status">Ejemplo</span></td></tr><tr><td>Producto de muestra C</td><td>Cuidado personal</td><td>8</td><td><span class="status pending">Simulado</span></td></tr></tbody></table></div></div></section>
+<section id="clientes" class="page hide"><div class="card"><h2>Clientes de ejemplo</h2><p style="color:#718184;font-size:13px">No se muestran ni se consultan clientes reales.</p><div class="table-wrap"><table class="table"><thead><tr><th>Nombre</th><th>Identificación</th><th>Tipo</th></tr></thead><tbody><tr><td>Cliente de muestra A</td><td>0000-0000-00000</td><td>Minorista</td></tr><tr><td>Cliente de muestra B</td><td>1111-1111-11111</td><td>Mayorista</td></tr></tbody></table></div></div></section>
+<section id="compras" class="page hide"><div class="card"><h2>Compras (vista ilustrativa)</h2><div class="table-wrap"><table class="table"><thead><tr><th>Referencia</th><th>Proveedor ficticio</th><th>Total</th><th>Estado</th></tr></thead><tbody><tr><td>COMP-DEMO-01</td><td>Proveedor de muestra</td><td>L 2,100.00</td><td><span class="status">Ejemplo</span></td></tr></tbody></table></div></div></section>
+<section id="finanzas" class="page hide"><div class="card"><h2>Resumen financiero simulado</h2><div class="grid"><div><div class="metric">Ingresos ficticios</div><div class="value">L 48,250</div></div><div><div class="metric">Costos ficticios</div><div class="value">L 31,100</div></div><div><div class="metric">Gastos ficticios</div><div class="value">L 8,400</div></div><div><div class="metric">Resultado simulado</div><div class="value">L 8,750</div></div></div></div></section>
+<div class="footer">DIFARMÁS ERP · Demostración visual independiente · No conectada a sistemas ni datos reales</div>
+</div>
+</main>
+</div>
+<script>
+const titles={dashboard:'Panel de control',facturacion:'Facturación estándar',ventas:'Ventas / POS',inventario:'Inventario',clientes:'Clientes',compras:'Compras',finanzas:'Finanzas'};
+document.querySelectorAll('[data-page]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('[data-page]').forEach(item=>item.classList.toggle('active',item===button));document.querySelectorAll('.page').forEach(page=>page.classList.toggle('hide',page.id!==button.dataset.page));document.getElementById('page-title').textContent=titles[button.dataset.page];window.scrollTo({top:0,behavior:'smooth'});}));
+</script>
+</body>
+</html>
