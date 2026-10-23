@@ -1177,3 +1177,42 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
     white-space: normal;
   }
 }
+
+
+/* Ajuste fiel al diseño aprobado: etiqueta arriba y selector con botón en la misma fila */
+.standard-invoice .invoice-layout > .card:first-child > .field-label {
+  grid-column: 1 / -1 !important;
+  width: 100%;
+  margin: 0 0 5px !important;
+}
+.standard-invoice .invoice-layout > .card:first-child .invoice-customer-select-row {
+  grid-column: 1 / -1 !important;
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  margin-bottom: 8px;
+}
+.standard-invoice .invoice-layout > .card:first-child .invoice-customer-select-row select {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100% !important;
+}
+.standard-invoice .invoice-layout > .card:first-child .invoice-customer-select-row .text-button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  margin: 0;
+}
+.standard-invoice .invoice-layout > .card:first-child > input:not(.invoice-qty) {
+  grid-column: 1 / -1;
+  width: 100% !important;
+}
+@media (max-width: 700px) {
+  .standard-invoice .invoice-layout > .card:first-child .invoice-customer-select-row {
+    flex-wrap: wrap;
+  }
+  .standard-invoice .invoice-layout > .card:first-child .invoice-customer-select-row .text-button {
+    white-space: normal;
+  }
+}
