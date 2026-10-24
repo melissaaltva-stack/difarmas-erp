@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { FileText, ShieldCheck, Building2, Save, Plus, Trash2, Users, Info } from 'lucide-react';
+import { FileText, ShieldCheck, Building2, Save, Plus, Trash2, Users, Info, KeyRound, Mail, RefreshCw, UserPlus, Eye, EyeOff, CheckCircle2, Ban } from 'lucide-react';
 import type { CurrencyConfig, DocumentTemplate, ErpSettings, Module, PaymentMethodConfig, UserAccess } from '../domain/types';
+import { requireSupabase } from '../services/supabaseClient';
 
 const modules:{id:Module;label:string}[]=[
   {id:'dashboard',label:'Panel de control'},{id:'ventas',label:'Ventas / POS'},{id:'redes_sociales',label:'Redes sociales / Ventas'},{id:'inventario',label:'Inventario'},
@@ -15,6 +16,8 @@ const rolePermissions:Record<UserAccess['role'],Module[]> = {
   'Solo lectura':['dashboard','ventas','redes_sociales','clientes','inventario','compras','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','proveedores']
 };
 const roleOptions:UserAccess['role'][]=['Administrador','Supervisor','Ventas','Compras','Finanzas','Solo lectura'];
+type ManagedUser = {id:string;email:string;name:string;role:UserAccess['role'];permissions:Module[];active:boolean;createdAt:string;lastSignInAt:string|null;emailConfirmed:boolean;isAdmin:boolean};
+type AdminApiResult = {isAdmin?:boolean;canBootstrap?:boolean;users?:ManagedUser[];user?:ManagedUser;message?:string;error?:string};
 export function Settings({settings,setSettings,userEmail,userId}:{settings:ErpSettings;setSettings:(s:ErpSettings)=>void;userEmail:string;userId:string}) {
   const [tab,setTab]=useState<'empresa'|'documentos'|'cotizaciones'|'usuarios'|'sistema'|'monedas'>('documentos');
   const [selected,setSelected]=useState<DocumentTemplate['id']>('factura');
@@ -22,6 +25,15 @@ export function Settings({settings,setSettings,userEmail,userId}:{settings:ErpSe
   const [newEmail,setNewEmail]=useState('');
   const [newName,setNewName]=useState('');
   const [newRole,setNewRole]=useState<UserAccess['role']>('Ventas');
+  const [managedUsers,setManagedUsers]=useState<ManagedUser[]>([]);
+  const [userAdminStatus,setUserAdminStatus]=useState<'checking'|'admin'|'bootstrap'|'blocked'>('checking');
+  const [bootstrapToken,setBootstrapToken]=useState('');
+  const [adminBusy,setAdminBusy]=useState(false);
+  const [accountMode,setAccountMode]=useState<'create'|'invite'>('create');
+  const [newPassword,setNewPassword]=useState('');
+  const [showNewPassword,setShowNewPassword]=useState(false);
+  const [newPermissions,setNewPermissions]=useState<Module[]>([...rolePermissions.Ventas]);
+  const [managedUserEdit,setManagedUserEdit]=useState<string|null>(null);
   const [newField,setNewField]=useState('');
   const [editedUser,setEditedUser]=useState<string|null>(null);
   const [draftTemplate,setDraftTemplate]=useState<DocumentTemplate|null>(null);
@@ -60,15 +72,33 @@ export function Settings({settings,setSettings,userEmail,userId}:{settings:ErpSe
   const updateQuotePrintFormat=(patch:Partial<typeof defaultQuotePrintFormat>)=>setDraftSettings(current=>({...current,quotePrintFormat:{...quotePrintFormat,...patch}}));
   const saveQuotePrintFormat=()=>{setSettings({...draftSettings,quotePrintFormat});setNotice('Formato de impresión de cotizaciones guardado.');};
 
+  const callAdminApi=async(payload:Record<string,unknown>):Promise<AdminApiResult>=>{
+    const client=requireSupabase();
+    const {data:sessionData,error:sessionError}=await client.auth.getSession();
+    if(sessionError||!sessionData.session?.access_token)throw new Error('La sesión ha caducado. Inicia sesión de nuevo.');
+    const response=await fetch('/api/admin-users',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${sessionData.session.access_token}`},body:JSON.stringify(payload)});
+    const result=await response.json().catch(()=>({error:'El servidor devolvió una respuesta no válida.'})) as AdminApiResult;
+    if(!response.ok)throw new Error(result.error||'No se pudo completar la operación de usuarios.');
+    return result;
+  };
+  const refreshManagedUsers=async()=>{const result=await callAdminApi({action:'list'});setManagedUsers(result.users??[]);};
   const currentTemplate=settings.templates.find(t=>t.id===selected)??settings.templates[0];
 
   useEffect(()=>{
-    if(settings.users.length===0&&userEmail.trim()){
-      setSettings({...settings,users:[{id:userId,email:userEmail.trim().toLowerCase(),name:userEmail.split('@')[0],role:'Administrador',permissions:rolePermissions.Administrador,active:true}]});
-    }
-  // Initial bootstrap only; the current user becomes the first administrator when no users exist.
+    if(tab!=='usuarios')return;
+    let live=true;
+    setUserAdminStatus('checking');
+    callAdminApi({action:'status'}).then(async result=>{
+      if(!live)return;
+      if(result.isAdmin){
+        setUserAdminStatus('admin');
+        try{const users=await callAdminApi({action:'list'});if(live)setManagedUsers(users.users??[]);}
+        catch(error){if(live)setNotice(error instanceof Error?error.message:'No se pudo cargar el listado de usuarios.');}
+      }else setUserAdminStatus(result.canBootstrap?'bootstrap':'blocked');
+    }).catch(error=>{if(live){setUserAdminStatus('blocked');setNotice(error instanceof Error?error.message:'No se pudo comprobar el acceso administrativo.');}});
+    return()=>{live=false;};
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[]);
+  },[tab,userId]);
 
   useEffect(()=>{setDraftTemplate(currentTemplate?{...currentTemplate,customFields:[...currentTemplate.customFields]}:null)},[selected,settings.templates]);
   useEffect(()=>{setDraftSettings(settings)},[settings]);
@@ -86,12 +116,44 @@ export function Settings({settings,setSettings,userEmail,userId}:{settings:ErpSe
   const updateInvoicePrintFormat=(format:'ticket'|'carta',patch:Partial<NonNullable<ErpSettings['invoicePrintFormats']>['ticket']>)=>setDraftSettings(current=>({...current,invoicePrintFormats:{...invoicePrintFormats,[format]:{...invoicePrintFormats[format],...patch}}}));
   const saveInvoicePrintFormats=()=>{setSettings({...draftSettings,invoicePrintFormats});setNotice('Formatos de factura ticket y tamaño carta guardados.');};
   const saveTemplate=()=>{if(!draftTemplate)return;setSettings({...settings,templates:settings.templates.map(t=>t.id===draftTemplate.id?draftTemplate:t)});setNotice('Formato de documento guardado.');};
-  const addUser=()=>{
-    const email=newEmail.trim().toLowerCase();
-    if(!email||!email.includes('@')){setNotice('Escribe un correo válido para identificar la cuenta.');return;}
-    if(settings.users.some(u=>u.email.toLowerCase()===email)){setNotice('Ese correo ya está registrado en la lista de permisos.');return;}
-    const entry:UserAccess={id:`user-${Date.now()}`,email,name:newName.trim()||email.split('@')[0],role:newRole,permissions:[...rolePermissions[newRole]],active:true};
-    setSettings({...settings,users:[...settings.users,entry]});setNewEmail('');setNewName('');setNewRole('Ventas');setNotice('Usuario agregado a la matriz de permisos. La cuenta de acceso debe crearse por separado en Supabase.');
+  const bootstrapAdmin=async()=>{
+    if(!bootstrapToken.trim()){setNotice('Introduce el código de activación de administrador.');return;}
+    setAdminBusy(true);setNotice('');
+    try{const result=await callAdminApi({action:'bootstrap',bootstrapToken:bootstrapToken.trim()});await requireSupabase().auth.refreshSession();setBootstrapToken('');setUserAdminStatus('admin');await refreshManagedUsers();setNotice(result.message??'Administración segura activada. Ya puedes crear cuentas desde Farmi.');}
+    catch(error){setNotice(error instanceof Error?error.message:'No se pudo activar la administración segura.');}
+    finally{setAdminBusy(false);}
+  };
+  const addUser=async()=>{
+    const email=newEmail.trim().toLowerCase(),name=newName.trim();
+    if(!email||!email.includes('@')){setNotice('Escribe un correo válido para la cuenta.');return;}
+    if(!name){setNotice('Escribe el nombre del colaborador.');return;}
+    if(accountMode==='create'&&newPassword.length<12){setNotice('La contraseña temporal debe tener al menos 12 caracteres.');return;}
+    setAdminBusy(true);setNotice('');
+    try{
+      const result=await callAdminApi({action:accountMode,email,name,role:newRole,permissions:newPermissions,password:accountMode==='create'?newPassword:undefined});
+      if(result.user){const entry:UserAccess={id:result.user.id,email:result.user.email,name:result.user.name,role:result.user.role,permissions:result.user.permissions,active:result.user.active};setSettings({...settings,users:[...settings.users.filter(user=>user.id!==entry.id&&user.email.toLowerCase()!==email),entry]});}
+      setNewEmail('');setNewName('');setNewPassword('');setNewRole('Ventas');setNewPermissions([...rolePermissions.Ventas]);
+      setNotice(accountMode==='invite'?'Invitación solicitada. El usuario podrá establecer su contraseña desde el enlace de correo.':'Cuenta creada con contraseña temporal. Entrégala por un canal seguro y solicita que la cambie.');
+      await refreshManagedUsers();
+    }catch(error){setNotice(error instanceof Error?error.message:'No se pudo crear la cuenta.');}
+    finally{setAdminBusy(false);}
+  };
+  const updateManagedUser=async(user:ManagedUser,patch:Partial<Pick<ManagedUser,'role'|'active'|'permissions'>>)=>{
+    const next={...user,...patch};
+    setAdminBusy(true);setNotice('');
+    try{
+      const result=await callAdminApi({action:'update',userId:user.id,role:next.role,active:next.active,permissions:next.permissions});
+      if(result.user)setManagedUsers(current=>current.map(currentUser=>currentUser.id===user.id?result.user!:currentUser));
+      setSettings({...settings,users:settings.users.map(currentUser=>currentUser.id===user.id?{...currentUser,role:next.role,active:next.active,permissions:next.permissions}:currentUser)});
+      setNotice('Cambios de acceso guardados en Supabase.');
+    }catch(error){setNotice(error instanceof Error?error.message:'No se pudieron guardar los cambios del usuario.');}
+    finally{setAdminBusy(false);}
+  };
+  const sendRecovery=async(user:ManagedUser)=>{
+    setAdminBusy(true);setNotice('');
+    try{const {error}=await requireSupabase().auth.resetPasswordForEmail(user.email,{redirectTo:window.location.origin});if(error)throw error;setNotice(`Se solicitó enviar un correo de recuperación a ${user.email}. Comprueba la configuración de correo de Supabase.`);}
+    catch(error){setNotice(error instanceof Error?error.message:'No se pudo solicitar la recuperación de contraseña.');}
+    finally{setAdminBusy(false);}
   };
   const updateUser=(id:string,patch:Partial<UserAccess>)=>setSettings({...settings,users:settings.users.map(u=>u.id===id?{...u,...patch}:u)});
   const changeRole=(user:UserAccess,role:UserAccess['role'])=>updateUser(user.id,{role,permissions:[...rolePermissions[role]]});
