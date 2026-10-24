@@ -40,13 +40,7 @@ function App({ userId, userEmail, userAppMetadata, signOut }: { userId: string; 
   const userAccess=tokenAccess;
   const permissions=userAccess?.permissions??['dashboard','configuracion'];
   // Existing user records may predate the reports module. Preserve role-based access for those accounts.
-  const reportRoles=['Administrador','Supervisor','Finanzas','Solo lectura'];
-  const customerRoles=['Administrador','Supervisor','Ventas','Solo lectura'];
-  // Older saved permission lists do not include the new Clientes module. Keep it visible for roles that should have customer access.
-  const socialRoles=['Administrador','Supervisor','Ventas','Solo lectura'];
-  const invoiceRoles=['Administrador','Supervisor','Ventas','Finanzas'];
-  const aiRoles=['Administrador','Supervisor','Finanzas','Solo lectura'];
-  const canSee=(module:string)=>permissions.includes(module as typeof permissions[number])||(module==='reportes'&&!!userAccess&&reportRoles.includes(userAccess.role))||(module==='clientes'&&!!userAccess&&customerRoles.includes(userAccess.role))||(module==='redes_sociales'&&!!userAccess&&socialRoles.includes(userAccess.role))||(module==='facturacion_estandar'&&!!userAccess&&invoiceRoles.includes(userAccess.role))||(module==='asistente_ia'&&!!userAccess&&aiRoles.includes(userAccess.role));
+  const canSee=(module:string)=>permissions.includes(module as Module);
   const visibleNav=nav.filter(([id])=>id!=='proveedores'&&id!=='cuentas_cobrar'&&id!=='cuentas_pagar'&&canSee(id));
   const [mobileMenuOpen,setMobileMenuOpen]=useState(false);
   const [purchasesExpanded,setPurchasesExpanded]=useState(false);
