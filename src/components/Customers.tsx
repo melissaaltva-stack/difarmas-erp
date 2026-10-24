@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import { Plus, Search, Pencil, UserRound, UsersRound, X, Save, Ban, CheckCircle2, FileText, CreditCard, Receipt, Building2 } from 'lucide-react';
 import type { Customer } from '../domain/types';
 import { nextCustomerCode } from '../services/customerCodeService';
