@@ -20,11 +20,11 @@ const MODULES = [
 ] as const;
 const ROLE_PERMISSIONS: Record<Role, string[]> = {
   Administrador: [...MODULES],
-  Supervisor: ['dashboard','ventas','redes_sociales','clientes','inventario','compras','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','proveedores'],
+  Supervisor: ['dashboard','facturacion_estandar','ventas','redes_sociales','clientes','cotizaciones','inventario','compras','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','proveedores'],
   Ventas: ['dashboard','facturacion_estandar','ventas','redes_sociales','clientes','cotizaciones'],
   Compras: ['dashboard','inventario','compras','proveedores'],
   Finanzas: ['dashboard','facturacion_estandar','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','compras'],
-  'Solo lectura': ['dashboard','ventas','redes_sociales','clientes','inventario','compras','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','proveedores'],
+  'Solo lectura': ['dashboard','ventas','redes_sociales','clientes','cotizaciones','inventario','compras','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','proveedores'],
 };
 const ROLES: Role[] = ['Administrador','Supervisor','Ventas','Compras','Finanzas','Solo lectura'];
 const isRole = (value: unknown): value is Role => typeof value === 'string' && ROLES.includes(value as Role);
