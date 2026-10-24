@@ -1991,3 +1991,34 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
   .admin-managed-user .access-user-controls label:first-child{grid-column:1/-1}
   .admin-managed-user .access-user-controls select{width:100%}
 }
+
+
+/* Facturación estándar: ampliar Cliente y mantener el pago en línea en pantallas amplias */
+@media (min-width: 761px) {
+  .standard-invoice .invoice-customer-select-row {
+    grid-template-columns: minmax(260px, 1.5fr) auto minmax(210px, 0.82fr) !important;
+    align-items: end !important;
+  }
+  .standard-invoice .invoice-customer-select-row .invoice-payment-inline {
+    grid-column: auto !important;
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+}
+@media (max-width: 760px) {
+  .standard-invoice .invoice-header-grid > .invoice-field.inv-span-12 {
+    grid-column: 1 / -1 !important;
+  }
+  .standard-invoice .invoice-customer-select-row {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .standard-invoice .invoice-customer-select-row > select,
+  .standard-invoice .invoice-customer-select-row .register-customer-button,
+  .standard-invoice .invoice-customer-select-row .invoice-payment-inline {
+    grid-column: 1 !important;
+    width: 100% !important;
+  }
+  .standard-invoice .invoice-customer-select-row .register-customer-button {
+    white-space: normal !important;
+  }
+}
