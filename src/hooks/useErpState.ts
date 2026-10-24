@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { CartItem, CashClosure, CashMovement, Customer, ErpSettings, Expense, InventoryMovement, Module, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseItem, PurchaseRecord, Receivable, SaleRecord, Supplier, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord, QuoteRecord } from '../domain/types';
+import type { CartItem, CashClosure, CashMovement, Customer, ErpSettings, Expense, InventoryMovement, Module, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseItem, PurchaseRecord, Receivable, SaleRecord, Supplier, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord, QuoteRecord, StandardInvoiceDetails } from '../domain/types';
 import { loadJson, saveJson, loadNumber, saveNumber } from '../utils/storage';
 import { applyPurchaseToInventory, applySaleToInventory } from '../services/inventoryService';
 import { buildSaleRecord, createReceivableFromSale } from '../services/salesService';
@@ -198,7 +198,7 @@ export function useErpState(userId: string) {
     return true;
   };
 
-  const recordSale=(sold:CartItem[],customer='',dueDate='',customerRtn='',invoiceNumber=''):boolean=>{
+  const recordSale=(sold:CartItem[],customer='',dueDate='',customerRtn='',invoiceNumber='',invoiceDetails?:StandardInvoiceDetails):boolean=>{
     if (saleInProgress.current) return false;
     if (!sold.length || sold.some(item => !Number.isFinite(item.qty) || item.qty <= 0)) return false;
     if (((settings.paymentMethods??[]).find(method=>method.name===payment)?.kind==='credit'||payment==='Crédito') && (!customer.trim() || !dueDate.trim())) return false;
@@ -206,7 +206,35 @@ export function useErpState(userId: string) {
     let updated: Product[];
     try { updated = applySaleToInventory(products,sold); } catch { return false; }
     saleInProgress.current=true;
-    const sale:SaleRecord={...buildSaleRecord(sold,payment,saleType,customer,dueDate),invoiceNumber,customer:customer.trim()||undefined,customerRtn:customerRtn.trim()||undefined};
+    const recordDate=invoiceDetails?.invoiceDate ? new Date(invoiceDetails.invoiceDate+'T12:00:00') : new Date();
+    const base=buildSaleRecord(sold,payment,invoiceDetails?'factura_estandar':saleType,customer,dueDate,recordDate);
+    const items=invoiceDetails ? (base.items??[]).map(line=>{
+      const d=invoiceDetails.lines.find(row=>row.productId===line.productId);
+      if(!d)return line;
+      const net=d.netTotal;
+      return {...line,unit:d.unit,baseUnitPrice:line.unitPrice,unitPrice:line.qty?net/line.qty:line.unitPrice,revenue:net,profit:net-line.cost,discountPercent:d.discountPercent,taxPercent:d.taxPercent,discountAmount:d.discountAmount,taxAmount:d.taxAmount,lineTotal:d.lineTotal};
+    }) : base.items;
+    const sale:SaleRecord={
+      ...base,
+      type:invoiceDetails?'factura_estandar':base.type,
+      invoiceNumber,
+      customer:customer.trim()||undefined,
+      customerRtn:customerRtn.trim()||undefined,
+      items,
+      total:invoiceDetails?invoiceDetails.lines.reduce((sum,row)=>sum+row.lineTotal,0):base.total,
+      profit:items?.reduce((sum,line)=>sum+line.profit,0)??base.profit,
+      customerAddress:invoiceDetails?.customerAddress||undefined,
+      customerPhone:invoiceDetails?.customerPhone||undefined,
+      terms:invoiceDetails?.terms||undefined,
+      priceList:invoiceDetails?.priceList||undefined,
+      seller:invoiceDetails?.seller||undefined,
+      invoiceDate:invoiceDetails?.invoiceDate||undefined,
+      maxDate:invoiceDetails?.maxDate||undefined,
+      notes:invoiceDetails?.notes||undefined,
+      discountTotal:invoiceDetails?.discountTotal,
+      taxTotal:invoiceDetails?.taxTotal,
+      dueDate:payment==='Crédito'||((settings.paymentMethods??[]).find(method=>method.name===payment)?.kind==='credit')?dueDate:undefined
+    };
     setProducts(updated);
     setInventoryMovements(current=>[...current,...createInventoryMovementsForSale(products,sold,sale.id)]);
     setSales(current=>[...current,sale]);
