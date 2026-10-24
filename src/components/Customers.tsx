@@ -1,13 +1,31 @@
 import { useMemo, useState } from 'react';
-import { Plus, Search, Pencil, UserRound, UsersRound, X, Save, Ban, CheckCircle2 } from 'lucide-react';
+import { Plus, Search, Pencil, UserRound, UsersRound, X, Save, Ban, CheckCircle2, FileText, CreditCard, Receipt, Building2 } from 'lucide-react';
 import type { Customer } from '../domain/types';
 import { nextCustomerCode } from '../services/customerCodeService';
 
 type CustomerForm = {
-  name:string; customerType:'Persona natural'|'Empresa'; rtn:string; phone:string; email:string;
-  address:string; creditLimit:string; active:boolean; notes:string;
+  name:string; customerType:'Persona natural'|'Empresa'; documentType:'RTN'|'Identidad'|'Pasaporte'|'Otro'; documentNumber:string;
+  rtn:string; legalName:string; taxRegime:string; phone:string; email:string; billingEmail:string; address:string;
+  creditLimit:string; paymentTerms:'Contado'|'Crédito'; creditDays:string; assignedSeller:string; priceList:string;
+  active:boolean; notes:string;
 };
-const emptyForm:CustomerForm={name:'',customerType:'Persona natural',rtn:'',phone:'',email:'',address:'',creditLimit:'0',active:true,notes:''};
+const emptyForm:CustomerForm={name:'',customerType:'Persona natural',documentType:'Identidad',documentNumber:'',rtn:'',legalName:'',taxRegime:'Persona Natural',phone:'',email:'',billingEmail:'',address:'',creditLimit:'0',paymentTerms:'Contado',creditDays:'0',assignedSeller:'',priceList:'Precio de venta 1',active:true,notes:''};
+const customerToForm=(customer:Customer):CustomerForm=>({
+  name:customer.name,customerType:customer.customerType??'Persona natural',documentType:customer.documentType??'Identidad',
+  documentNumber:customer.documentNumber??'',rtn:customer.rtn??'',legalName:customer.legalName??'',
+  taxRegime:customer.taxRegime??(customer.customerType==='Empresa'?'Régimen General':'Persona Natural'),
+  phone:customer.phone??'',email:customer.email??'',billingEmail:customer.billingEmail??customer.email??'',
+  address:customer.address??'',creditLimit:String(customer.creditLimit??0),paymentTerms:customer.paymentTerms??'Contado',
+  creditDays:String(customer.creditDays??0),assignedSeller:customer.assignedSeller??'',priceList:customer.priceList??'Precio de venta 1',
+  active:customer.active,notes:customer.notes??''
+});
+const toCustomer=(form:CustomerForm,id:number,code:string):Customer=>({
+  id,code,name:form.name.trim(),customerType:form.customerType,documentType:form.documentType,documentNumber:form.documentNumber.trim(),
+  rtn:form.rtn.trim(),legalName:form.legalName.trim(),taxRegime:form.taxRegime,phone:form.phone.trim(),email:form.email.trim(),
+  billingEmail:form.billingEmail.trim(),address:form.address.trim(),creditLimit:Number(form.creditLimit)||0,
+  paymentTerms:form.paymentTerms,creditDays:form.paymentTerms==='Crédito'?Number(form.creditDays)||0:0,
+  assignedSeller:form.assignedSeller.trim(),priceList:form.priceList,active:form.active,notes:form.notes.trim()
+});
 const money=(value:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL',maximumFractionDigits:2}).format(value);
 
 export function Customers({customers,setCustomers}:{customers:Customer[];setCustomers:(value:Customer[]|((current:Customer[])=>Customer[]))=>void}) {
@@ -18,15 +36,16 @@ export function Customers({customers,setCustomers}:{customers:Customer[];setCust
   const [error,setError]=useState('');
   const filtered=useMemo(()=>customers.filter(c=>[c.code??'',c.name,c.rtn??'',c.phone,c.email??'',c.address??''].join(' ').toLocaleLowerCase().includes(query.toLocaleLowerCase())),[customers,query]);
   const startNew=()=>{setEditing(null);setForm(emptyForm);setError('');setShowForm(true);};
-  const startEdit=(customer:Customer)=>{setEditing(customer);setForm({name:customer.name,customerType:customer.customerType??'Persona natural',rtn:customer.rtn??'',phone:customer.phone??'',email:customer.email??'',address:customer.address??'',creditLimit:String(customer.creditLimit??0),active:customer.active,notes:customer.notes??''});setError('');setShowForm(true);};
+  const startEdit=(customer:Customer)=>{setEditing(customer);setForm(customerToForm(customer));setError('');setShowForm(true);};
   const save=()=>{
-    const name=form.name.trim();
-    const creditLimit=Number(form.creditLimit);
+    const name=form.name.trim(),creditLimit=Number(form.creditLimit),creditDays=Number(form.creditDays);
     if(!name){setError('Escribe el nombre del cliente o razón social.');return;}
     if(!Number.isFinite(creditLimit)||creditLimit<0){setError('El límite de crédito debe ser un monto igual o mayor a cero.');return;}
+    if(!Number.isInteger(creditDays)||creditDays<0||creditDays>365){setError('Los días de crédito deben ser un número entero entre 0 y 365.');return;}
+    if(form.paymentTerms==='Crédito'&&creditDays<1){setError('Para términos de crédito, indica al menos 1 día de plazo.');return;}
     const rtn=form.rtn.trim();
     if(rtn&&customers.some(c=>c.id!==editing?.id&&(c.rtn??'').replace(/[^0-9A-Za-z]/g,'').toLowerCase()===rtn.replace(/[^0-9A-Za-z]/g,'').toLowerCase())){setError('Ya existe un cliente con ese RTN.');return;}
-    const record:Customer={id:editing?.id??Date.now(),code:editing?.code??nextCustomerCode(customers),name,customerType:form.customerType,rtn,phone:form.phone.trim(),email:form.email.trim(),address:form.address.trim(),creditLimit,active:form.active,notes:form.notes.trim()};
+    const record=toCustomer(form,editing?.id??Date.now(),editing?.code??nextCustomerCode(customers));
     setCustomers(current=>editing?current.map(c=>c.id===editing.id?record:c):[record,...current]);
     setShowForm(false);setEditing(null);setForm(emptyForm);setError('');
   };
