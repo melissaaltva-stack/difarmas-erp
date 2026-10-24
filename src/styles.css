@@ -1726,3 +1726,25 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
   .inventory-detail-row { grid-template-columns: minmax(110px, .8fr) minmax(0, 1.2fr); gap: 10px; }
   .inventory-detail-footer { padding: 10px 15px; }
 }
+
+
+/* POS: filas independientes y acceso al asistente farmacológico */
+.results .pos-result-row{display:flex;align-items:center;gap:7px;padding:4px 5px;border-bottom:1px solid #edf2f1}
+.results .pos-result-row:last-child{border-bottom:0}
+.results .pos-result-row .pos-result-add{flex:1 1 auto;width:auto!important;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 7px;background:transparent;color:#24483f}
+.pos-result-copy{min-width:0;flex:1 1 auto}.pos-result-copy small{overflow-wrap:anywhere}.pos-result-add>b{flex:0 0 auto;white-space:nowrap}.pos-promo-label{color:#b45309!important}
+.pos-drug-mini{width:auto!important;flex:0 0 auto;display:inline-flex!important;align-items:center;justify-content:center;gap:4px;padding:5px 7px!important;border:1px solid #cce6dc!important;border-radius:7px!important;color:#16745a!important;background:#eef9f4!important;font-size:10px!important;line-height:1.15;white-space:nowrap}
+.pos-drug-mini:hover{background:#dff3eb!important;border-color:#94cdb9!important}
+.cart-product-info{min-width:0}.cart-product-title{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:2px}.cart-product-title>strong{min-width:0;overflow-wrap:anywhere}.cart-product-title .cart-drug-mini{padding:3px 6px!important}
+.drug-assistant-backdrop{z-index:120}.drug-assistant-modal{width:min(720px,calc(100vw - 32px));max-height:min(88vh,820px);display:flex;flex-direction:column;padding:20px}.drug-assistant-modal .modal-head{flex:0 0 auto}.drug-assistant-modal .modal-head h2{margin:8px 0 3px;font-size:19px}.drug-assistant-body{min-height:0;overflow:auto;padding:0 2px 4px}
+.drug-assistant-product{display:flex;align-items:center;gap:13px;padding:12px;border:1px solid #e3ece8;background:#f7fbf9;border-radius:11px}
+.drug-assistant-product img,.drug-assistant-image-placeholder{flex:0 0 72px;width:72px;height:72px;border-radius:8px;border:1px solid #e1eae6;object-fit:contain;background:white;padding:5px}
+.drug-assistant-image-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#68857b;font-size:9px}.drug-assistant-product>div:last-child{min-width:0}
+.drug-assistant-product strong,.drug-assistant-product small{display:block;overflow-wrap:anywhere}.drug-assistant-product strong{color:#20473d;font-size:13px}.drug-assistant-product small{color:#6a817a;font-size:10px;margin-top:4px}
+.drug-assistant-review{display:flex;align-items:center;gap:6px;color:#5c796f;font-size:11px;margin:10px 0}
+.drug-assistant-fields{margin-top:12px;border:1px solid #e6eeeb;border-radius:10px;padding:13px}.drug-assistant-fields h3{display:flex;align-items:center;gap:7px;margin:0 0 10px;color:#234a40;font-size:13px}
+.drug-assistant-fields>div{padding:8px 0;border-bottom:1px solid #edf2f1}.drug-assistant-fields>div:last-of-type{border-bottom:0}.drug-assistant-fields>div strong{display:block;color:#4e6b62;font-size:11px}
+.drug-assistant-fields>div p{margin:5px 0 0;color:#344f46;font-size:12px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.drug-assistant-source{display:block;margin-top:10px;color:#6f8980;font-size:10px}.drug-assistant-caution{margin:11px 2px 2px;color:#738880;font-size:10px;line-height:1.5}
+.drug-assistant-actions{flex-wrap:wrap;flex:0 0 auto}.drug-assistant-actions button{min-height:36px;padding:8px 10px;font-size:11px}
+@media(max-width:640px){.results .pos-result-row{align-items:stretch;gap:5px}.results .pos-result-row .pos-result-add{padding:8px 5px;gap:6px}.pos-drug-mini{padding:5px!important}.pos-drug-mini span{display:none}.drug-assistant-modal{width:100%;max-height:calc(100dvh - 16px);padding:14px}.drug-assistant-actions{display:grid;grid-template-columns:1fr 1fr}.drug-assistant-actions button:last-child{grid-column:1/-1}}
