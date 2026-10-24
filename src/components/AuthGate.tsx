@@ -41,11 +41,14 @@ export function AuthGate({ children }: Props) {
       if (!mounted) return;
       if (sessionError) setError('No se pudo comprobar la sesión. Intenta de nuevo.');
       setUser(data.session?.user ?? null);
+      const initialLinkType=new URLSearchParams(window.location.hash.replace(/^#/,'')).get('type');
+      if(initialLinkType==='invite'||initialLinkType==='recovery')setRecoveryMode(true);
       setChecking(false);
     });
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
-      if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true);
+      const linkType=new URLSearchParams(window.location.hash.replace(/^#/,'')).get('type');
+      if (event === 'PASSWORD_RECOVERY' || linkType === 'invite' || linkType === 'recovery') setRecoveryMode(true);
       setUser(session?.user ?? null);
     });
     return () => {
@@ -93,6 +96,7 @@ export function AuthGate({ children }: Props) {
       const {error:updateError}=await requireSupabase().auth.updateUser({password:recoveryPassword});
       if(updateError)throw updateError;
       setRecoveryMode(false);setRecoveryPassword('');setConfirmRecoveryPassword('');
+      window.history.replaceState({},document.title,window.location.pathname+window.location.search);
       setNotice('Contraseña actualizada correctamente.');
     }catch(caught){setError(`No se pudo actualizar la contraseña: ${getSignInErrorMessage(caught)}`);}
     finally{setBusy(false);}
