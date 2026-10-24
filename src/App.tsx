@@ -37,7 +37,7 @@ function App({ userId, userEmail, userAppMetadata, signOut }: { userId: string; 
   const metadataRole=typeof userAppMetadata.farmi_role==='string'&&roleOptions.includes(userAppMetadata.farmi_role as UserAccess['role'])?userAppMetadata.farmi_role as UserAccess['role']:undefined;
   const metadataPermissions=Array.isArray(userAppMetadata.farmi_permissions)?userAppMetadata.farmi_permissions.filter((value):value is Module=>nav.some(item=>item[0]===value)):undefined;
   const tokenAccess:UserAccess|undefined=metadataRole?{id:userId,email:userEmail,name:userEmail.split('@')[0],role:metadataRole,permissions:metadataPermissions??[],active:userAppMetadata.farmi_active!==false}:undefined;
-  const userAccess=tokenAccess??settings.users.find(u=>u.email.trim().toLowerCase()===userEmail.trim().toLowerCase()&&u.active);
+  const userAccess=tokenAccess;
   const permissions=userAccess?.permissions??['dashboard','configuracion'];
   // Existing user records may predate the reports module. Preserve role-based access for those accounts.
   const reportRoles=['Administrador','Supervisor','Finanzas','Solo lectura'];
