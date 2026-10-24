@@ -1286,3 +1286,47 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
   .customer-modal-actions { flex-wrap: wrap; }
   .standard-invoice .invoice-customer-select-row .register-customer-button { white-space: normal; }
 }
+
+
+/* Corrección definitiva de la fila de cliente y forma de pago en Facturación estándar */
+.standard-invoice .invoice-layout > .card:first-child .invoice-customer-select-row {
+  display: grid !important;
+  grid-template-columns: minmax(240px, 1fr) auto minmax(170px, 0.55fr) !important;
+  align-items: end !important;
+  gap: 10px !important;
+  flex-wrap: nowrap !important;
+  width: 100% !important;
+}
+.standard-invoice .invoice-layout > .card:first-child .invoice-customer-select-row > select {
+  grid-column: 1 !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+.standard-invoice .invoice-layout > .card:first-child .invoice-customer-select-row .register-customer-button {
+  grid-column: 2 !important;
+  white-space: nowrap !important;
+  align-self: end !important;
+}
+.standard-invoice .invoice-layout > .card:first-child .invoice-customer-select-row .invoice-payment-inline {
+  grid-column: 3 !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  align-self: end !important;
+}
+.standard-invoice .invoice-layout > .card:first-child .invoice-customer-select-row .invoice-payment-inline .field-label {
+  margin: 0 0 5px !important;
+}
+@media (max-width: 760px) {
+  .standard-invoice .invoice-layout > .card:first-child .invoice-customer-select-row {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .standard-invoice .invoice-layout > .card:first-child .invoice-customer-select-row > select,
+  .standard-invoice .invoice-layout > .card:first-child .invoice-customer-select-row .register-customer-button,
+  .standard-invoice .invoice-layout > .card:first-child .invoice-customer-select-row .invoice-payment-inline {
+    grid-column: 1 !important;
+    width: 100% !important;
+  }
+  .standard-invoice .invoice-layout > .card:first-child .invoice-customer-select-row .register-customer-button {
+    white-space: normal !important;
+  }
+}
