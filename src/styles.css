@@ -1536,3 +1536,15 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
   .standard-invoice .invoice-layout > .card:nth-child(2),
   .standard-invoice .invoice-cart { padding: 12px !important; }
 }
+
+
+/* Facturación estándar: ampliar el ancho horizontal de Notas de la factura */
+.standard-invoice .invoice-header-grid > .invoice-field.inv-span-12 {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.standard-invoice .invoice-header-grid > .invoice-field.inv-span-12 textarea {
+  width: 100% !important;
+  min-width: 0 !important;
+}
