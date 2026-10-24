@@ -1960,3 +1960,34 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
   .customer-form-footer{flex-wrap:wrap}
   .customer-form-footer button{flex:1}
 }
+
+
+/* Administración segura de usuarios de Farmi */
+.admin-form-label{display:flex;flex-direction:column;gap:7px;margin:12px 0;color:#4b675f;font-size:12px;font-weight:700}
+.admin-form-label input{width:100%;max-width:540px;border:1px solid #d8e3df;border-radius:8px;padding:11px 12px;background:#fff;color:#203c34;font:inherit;font-size:13px}
+.admin-account-mode{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 18px}
+.admin-account-mode button{display:inline-flex;align-items:center;gap:7px;border:1px solid #d8e7e1;border-radius:9px;padding:10px 12px;background:#fff;color:#45685b;font-size:12px;font-weight:700;cursor:pointer}
+.admin-account-mode button.active{background:#eaf8f1;border-color:#8fcbb4;color:#176b51}
+.admin-user-create-grid{margin-bottom:13px}
+.admin-permission-editor{margin:14px 0;padding:13px;border:1px solid #e4ece8;border-radius:10px;background:#fbfdfc}
+.admin-permission-editor>strong,.admin-permission-editor>div+strong{display:block;color:#31574b;font-size:12px}
+.admin-permission-editor>div:first-of-type{margin-top:9px}
+.admin-permission-editor small{display:block;color:#748a82;font-size:10px;margin-top:4px}
+.admin-permission-editor .settings-hint{margin-bottom:0}
+.admin-managed-user{border-top:1px solid #e9f0ed;padding-top:15px;margin-top:15px}
+.admin-managed-user .access-user-head{flex-wrap:wrap}
+.admin-managed-user .access-user-identity{min-width:180px;flex:1}
+.admin-managed-user .access-user-identity small{overflow-wrap:anywhere}
+.admin-managed-user .access-user-controls{align-items:flex-end}
+.admin-managed-user .access-user-controls label:not(.access-active){display:flex;flex-direction:column;gap:6px;font-size:11px;color:#4d6d62}
+.admin-managed-user .access-user-controls select{min-width:150px;border:1px solid #d8e3df;border-radius:8px;padding:8px;background:#fff;color:#24473d}
+.admin-managed-user .access-user-controls button{font-size:11px}
+.admin-managed-user .access-permissions{margin-top:12px}
+.admin-managed-user .pill{white-space:nowrap}
+@media(max-width:650px){
+  .admin-account-mode{display:grid;grid-template-columns:1fr}
+  .admin-account-mode button{justify-content:flex-start}
+  .admin-managed-user .access-user-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .admin-managed-user .access-user-controls label:first-child{grid-column:1/-1}
+  .admin-managed-user .access-user-controls select{width:100%}
+}
