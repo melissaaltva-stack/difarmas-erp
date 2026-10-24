@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState } from 'react';
 import { useErpState } from './hooks/useErpState';
+import type { Module, UserAccess } from './domain/types';
 
 const POS = lazy(() => import('./components/POS').then(m => ({ default: m.POS })));
 const StandardInvoice = lazy(() => import('./components/StandardInvoice').then(m => ({ default: m.StandardInvoice })));
@@ -20,7 +21,7 @@ const ReceivablesModule = lazy(() => import('./components/FinancialModules').the
 const PayablesModule = lazy(() => import('./components/FinancialModules').then(m => ({ default: m.PayablesModule })));
 const ReportsModule = lazy(() => import('./components/FinancialModules').then(m => ({ default: m.ReportsModule })));
 
-function App({ userId, userEmail, signOut }: { userId: string; userEmail:string; signOut: () => Promise<void> }) {
+function App({ userId, userEmail, userAppMetadata, signOut }: { userId: string; userEmail:string; userAppMetadata:Record<string, unknown>; signOut: () => Promise<void> }) {
   const {
     active,setActive,quotes,setQuotes,products,search,setSearch,suppliers,setSuppliers,customers,setCustomers,inventoryMovements,cashMovements,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,
     showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,
@@ -32,8 +33,12 @@ function App({ userId, userEmail, signOut }: { userId: string; userEmail:string;
     ['dashboard', 'Dashboard', LayoutDashboard], ['facturacion_estandar', 'Facturación estándar', Printer], ['ventas', 'Ventas / POS', ShoppingCart], ['redes_sociales', 'Redes sociales / Ventas', MessagesSquare],
     ['inventario', 'Inventario', Boxes], ['clientes', 'Clientes', UsersRound], ['compras', 'Compras', ShoppingCart], ['finanzas', 'Finanzas', Wallet], ['cuentas_cobrar', 'Cuentas por cobrar', HandCoins], ['cuentas_pagar', 'Cuentas por pagar', CreditCard], ['reportes', 'Reportes e impresión', Printer], ['asistente_ia', 'Asistente IA', BrainCircuit], ['proveedores', 'Proveedores', Truck], ['configuracion', 'Configuración', SettingsIcon],
   ] as const;
-  const userAccess=settings.users.find(u=>u.email.trim().toLowerCase()===userEmail.trim().toLowerCase()&&u.active);
-  const permissions=userAccess?.permissions??(settings.users.length===0?nav.map(item=>item[0]):['dashboard']);
+  const roleOptions:UserAccess['role'][]=['Administrador','Supervisor','Ventas','Compras','Finanzas','Solo lectura'];
+  const metadataRole=typeof userAppMetadata.farmi_role==='string'&&roleOptions.includes(userAppMetadata.farmi_role as UserAccess['role'])?userAppMetadata.farmi_role as UserAccess['role']:undefined;
+  const metadataPermissions=Array.isArray(userAppMetadata.farmi_permissions)?userAppMetadata.farmi_permissions.filter((value):value is Module=>nav.some(item=>item[0]===value)):undefined;
+  const tokenAccess:UserAccess|undefined=metadataRole?{id:userId,email:userEmail,name:userEmail.split('@')[0],role:metadataRole,permissions:metadataPermissions??[],active:userAppMetadata.farmi_active!==false}:undefined;
+  const userAccess=tokenAccess??settings.users.find(u=>u.email.trim().toLowerCase()===userEmail.trim().toLowerCase()&&u.active);
+  const permissions=userAccess?.permissions??['dashboard','configuracion'];
   // Existing user records may predate the reports module. Preserve role-based access for those accounts.
   const reportRoles=['Administrador','Supervisor','Finanzas','Solo lectura'];
   const customerRoles=['Administrador','Supervisor','Ventas','Solo lectura'];
