@@ -242,7 +242,7 @@ export function useErpState(userId: string) {
     return true;
   };
 
-  const updateStandardInvoice=(invoiceId:number,sold:CartItem[],customer='',customerRtn=''):boolean=>{
+  const updateStandardInvoice=(invoiceId:number,sold:CartItem[],customer='',customerRtn='',details?:StandardInvoiceDetails):boolean=>{
     const original=sales.find(sale=>sale.id===invoiceId);
     if(!original||original.type!=='factura_estandar'||!sold.length||sold.some(item=>!Number.isFinite(item.qty)||item.qty<=0||!Number.isFinite(item.price)||item.price<0))return false;
     const oldQty=new Map<number,number>();
@@ -253,8 +253,32 @@ export function useErpState(userId: string) {
     const updatedProducts=products.map(product=>{const before=oldQty.get(product.id)??0;const after=newQty.get(product.id)??0;return before===after?product:{...product,stock:product.stock+before-after};});
     const movements:InventoryMovement[]=[];
     for(const product of products){const before=oldQty.get(product.id)??0;const after=newQty.get(product.id)??0;if(before===after)continue;movements.push({id:Date.now()+product.id,productId:product.id,productName:product.name,type:'Ajuste',quantity:Math.abs(after-before),stockBefore:product.stock,stockAfter:product.stock+before-after,unitCost:product.cost,referenceId:invoiceId,date:new Date().toISOString(),note:'Corrección de detalle de factura estándar '+(original.invoiceNumber??invoiceId)});}
-    const items=sold.map(item=>({productId:item.id,productName:item.name,category:item.category,laboratory:item.laboratory,qty:item.qty,unitCost:item.cost,unitPrice:item.price,revenue:item.price*item.qty,cost:item.cost*item.qty,profit:(item.price-item.cost)*item.qty}));
-    const updatedSale:SaleRecord={...original,customer:customer.trim()||undefined,customerRtn:customerRtn.trim()||undefined,items,total:items.reduce((sum,line)=>sum+line.revenue,0),cost:items.reduce((sum,line)=>sum+line.cost,0),profit:items.reduce((sum,line)=>sum+line.profit,0)};
+    const items=sold.map(item=>{
+      const d=details?.lines.find(row=>row.productId===item.id);
+      const net=d?.netTotal??item.price*item.qty;
+      const cost=item.cost*item.qty;
+      return {productId:item.id,productName:item.name,category:item.category,laboratory:item.laboratory,qty:item.qty,unitCost:item.cost,unitPrice:details&&item.qty?net/item.qty:item.price,revenue:net,cost,profit:net-cost,...(d?{unit:d.unit,baseUnitPrice:item.price,discountPercent:d.discountPercent,taxPercent:d.taxPercent,discountAmount:d.discountAmount,taxAmount:d.taxAmount,lineTotal:d.lineTotal}:{})};
+    });
+    const updatedSale:SaleRecord={
+      ...original,
+      customer:customer.trim()||undefined,
+      customerRtn:customerRtn.trim()||undefined,
+      items,
+      total:details?details.lines.reduce((sum,line)=>sum+line.lineTotal,0):items.reduce((sum,line)=>sum+line.revenue,0),
+      cost:items.reduce((sum,line)=>sum+line.cost,0),
+      profit:items.reduce((sum,line)=>sum+line.profit,0),
+      customerAddress:details?.customerAddress||undefined,
+      customerPhone:details?.customerPhone||undefined,
+      terms:details?.terms||original.terms,
+      priceList:details?.priceList||original.priceList,
+      seller:details?.seller||original.seller,
+      invoiceDate:details?.invoiceDate||original.invoiceDate,
+      maxDate:details?.maxDate||original.maxDate,
+      notes:details?.notes||undefined,
+      discountTotal:details?.discountTotal,
+      taxTotal:details?.taxTotal,
+      dueDate:details?.maxDate&&original.payment==='Crédito'?details.maxDate:original.dueDate
+    };
     setProducts(updatedProducts);setInventoryMovements(current=>[...current,...movements]);setSales(current=>current.map(sale=>sale.id===invoiceId?updatedSale:sale));return true;
   };
 
