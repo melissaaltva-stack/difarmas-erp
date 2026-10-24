@@ -94,7 +94,7 @@ export default async function handler(req: Req, res: Res) {
     let lastFailure: { status?: number; code?: string } | null = null;
 
     for (const key of serverKeys) {
-      const supabase = createClient(url.replace(/\\/+$/, ''), key, {
+      const supabase = createClient(url.replace(/\/+$/, ''), key, {
         auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false },
       });
       const result = await supabase
