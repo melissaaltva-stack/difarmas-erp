@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { LockKeyhole, LogIn } from 'lucide-react';
+import { LockKeyhole, LogIn, Mail, KeyRound, ShieldAlert } from 'lucide-react';
 import { requireSupabase, supabase, supabaseConfigured } from '../services/supabaseClient';
 
 type Props = {
@@ -26,6 +26,10 @@ export function AuthGate({ children }: Props) {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [notice,setNotice] = useState('');
+  const [recoveryMode,setRecoveryMode] = useState(false);
+  const [recoveryPassword,setRecoveryPassword] = useState('');
+  const [confirmRecoveryPassword,setConfirmRecoveryPassword] = useState('');
 
   useEffect(() => {
     if (!supabase) {
@@ -39,8 +43,10 @@ export function AuthGate({ children }: Props) {
       setUser(data.session?.user ?? null);
       setChecking(false);
     });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (mounted) setUser(session?.user ?? null);
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+      if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true);
+      setUser(session?.user ?? null);
     });
     return () => {
       mounted = false;
@@ -66,6 +72,32 @@ export function AuthGate({ children }: Props) {
     }
   };
 
+  const requestPasswordRecovery = async () => {
+    const target=email.trim();
+    if(!target){setError('Escribe primero el correo de la cuenta para enviar el enlace de recuperación.');return;}
+    setBusy(true);setError('');setNotice('');
+    try{
+      const client=requireSupabase();
+      const {error:recoveryError}=await client.auth.resetPasswordForEmail(target,{redirectTo:window.location.origin});
+      if(recoveryError)throw recoveryError;
+      setNotice('Si la cuenta existe, Supabase enviará un enlace para recuperar la contraseña. Revisa también la carpeta de spam.');
+    }catch(caught){setError(`No se pudo solicitar la recuperación: ${getSignInErrorMessage(caught)}`);}
+    finally{setBusy(false);}
+  };
+
+  const updateRecoveredPassword = async (event:FormEvent) => {
+    event.preventDefault();setBusy(true);setError('');setNotice('');
+    if(recoveryPassword.length<12){setError('La nueva contraseña debe tener al menos 12 caracteres.');setBusy(false);return;}
+    if(recoveryPassword!==confirmRecoveryPassword){setError('Las contraseñas no coinciden.');setBusy(false);return;}
+    try{
+      const {error:updateError}=await requireSupabase().auth.updateUser({password:recoveryPassword});
+      if(updateError)throw updateError;
+      setRecoveryMode(false);setRecoveryPassword('');setConfirmRecoveryPassword('');
+      setNotice('Contraseña actualizada correctamente.');
+    }catch(caught){setError(`No se pudo actualizar la contraseña: ${getSignInErrorMessage(caught)}`);}
+    finally{setBusy(false);}
+  };
+
   const signOut = async () => {
     const client = requireSupabase();
     const { error: signOutError } = await client.auth.signOut();
@@ -81,6 +113,14 @@ export function AuthGate({ children }: Props) {
     return <div className="auth-page"><section className="auth-card"><div className="auth-logo">D</div><p>Comprobando sesión segura…</p></section></div>;
   }
 
+  if (user?.app_metadata?.farmi_active === false) {
+    return <div className="auth-page"><section className="auth-card"><div className="auth-logo"><ShieldAlert size={25}/></div><h1>Acceso desactivado</h1><p className="auth-subtitle">Esta cuenta está desactivada. Pide al administrador de Farmi que reactive el acceso.</p><button className="primary auth-submit" type="button" onClick={()=>void signOut()}>Cerrar sesión</button></section></div>;
+  }
+
+  if (user && recoveryMode) {
+    return <div className="auth-page"><form className="auth-card" onSubmit={updateRecoveredPassword}><div className="auth-logo"><KeyRound size={25}/></div><p className="auth-eyebrow">DIFARMÁS · FARMI ERP</p><h1>Establecer nueva contraseña</h1><p className="auth-subtitle">Elige una contraseña nueva de al menos 12 caracteres.</p><label htmlFor="recovery-password">Nueva contraseña</label><input id="recovery-password" type="password" autoComplete="new-password" minLength={12} required value={recoveryPassword} onChange={event=>setRecoveryPassword(event.target.value)}/><label htmlFor="recovery-password-confirm">Confirmar contraseña</label><input id="recovery-password-confirm" type="password" autoComplete="new-password" minLength={12} required value={confirmRecoveryPassword} onChange={event=>setConfirmRecoveryPassword(event.target.value)}/>{error&&<p className="auth-error" role="alert">{error}</p>}{notice&&<p className="auth-note" role="status">{notice}</p>}<button className="primary auth-submit" type="submit" disabled={busy}>{busy?'Guardando…':'Guardar nueva contraseña'}</button></form></div>;
+  }
+
   if (user) return <>{children(user, signOut)}</>;
 
   return <div className="auth-page">
@@ -94,8 +134,10 @@ export function AuthGate({ children }: Props) {
       <label htmlFor="erp-password">Contraseña</label>
       <input id="erp-password" type="password" autoComplete="current-password" required value={password} onChange={event => setPassword(event.target.value)} />
       {error && <p className="auth-error" role="alert">{error}</p>}
+      {notice && <p className="auth-note" role="status">{notice}</p>}
       <button className="primary auth-submit" type="submit" disabled={busy}>{busy ? 'Verificando…' : <><LogIn size={17}/> Entrar al ERP</>}</button>
-      <p className="auth-note">Las cuentas se crean desde el panel seguro de Supabase. El registro público no está habilitado en esta pantalla.</p>
+      <button className="secondary auth-submit" type="button" onClick={requestPasswordRecovery} disabled={busy}><Mail size={16}/> Recuperar contraseña</button>
+      <p className="auth-note">Las cuentas se administran desde Configuración → Usuarios y permisos. El registro público no está habilitado.</p>
     </form>
   </div>;
 }
