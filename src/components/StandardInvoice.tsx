@@ -23,13 +23,21 @@ export function StandardInvoice({products,customers,sales,settings,payment,setPa
  const invoiceHistory=[...sales].filter(s=>s.type==='factura_estandar'||(s.invoiceNumber??'').startsWith('EST-')).filter(s=>!historySearch||normalize([s.invoiceNumber??'',s.customer??'',String(s.id)].join(' ')).includes(normalize(historySearch))).sort((a,b)=>new Date(b.date).getTime()-new Date(a.date).getTime());
  const add=(p:Product)=>{setCart(current=>{const old=current.find(x=>x.id===p.id);if(old){if(old.qty>=p.stock)return current;return current.map(x=>x.id===p.id?{...x,qty:x.qty+1}:x);}return [...current,{...p,qty:1,price:priceFor(p)}];});setLineAdjustments(current=>({...current,[p.id]:current[p.id]??{unit:p.presentation||'Unidad',discountPercent:0,taxPercent:p.taxEnabled===false?0:(p.taxRate??settings.billingInfo?.isvRate??15)}}));setError('');setSearch('');};
  const updateQty=(id:number,qty:number)=>setCart(current=>current.map(p=>p.id===id?{...p,qty:Math.max(1,Math.min(p.stock,Math.floor(qty)||1))}:p));
- const submit=()=>{setError('');setNotice('');if(!cart.length){setError('Agrega al menos un producto a la factura.');return;}if(credit&&(!customer.trim()||customer==='Consumidor Final'||!dueDate)){setError('Para venta al crédito, selecciona un cliente y fecha de vencimiento.');return;}if(cart.some(p=>p.qty>(products.find(x=>x.id===p.id)?.stock??0))){setError('El inventario cambió. Revisa las cantidades antes de guardar.');return;}
- const number=`EST-${today().replace(/-/g,'')}-${String(Date.now()).slice(-6)}`;
- const sold:CartItem[]=cart.map(p=>({...p}));
- const ok=onComplete(sold,customer==='Consumidor Final'?'':customer,credit?dueDate:'',rtn,number);
- if(!ok){setError('No se pudo guardar. Verifica el inventario y la sincronización del sistema.');return;}
- const record:SaleRecord={id:Date.now(),total,cost:cart.reduce((s,p)=>s+p.cost*p.qty,0),profit:cart.reduce((s,p)=>s+(p.price-p.cost)*p.qty,0),payment,type:'factura_estandar',date:new Date().toISOString(),invoiceNumber:number,customer:customer==='Consumidor Final'?undefined:customer,customerRtn:rtn||undefined,items:cart.map(p=>({productId:p.id,productName:p.name,category:p.category,laboratory:p.laboratory,qty:p.qty,unitCost:p.cost,unitPrice:p.price,revenue:p.price*p.qty,cost:p.cost*p.qty,profit:(p.price-p.cost)*p.qty}))};
- setLastInvoice(record);setSelectedInvoice(record);setCart([]);setSearch('');setNotice(`Factura ${number} guardada correctamente.`);
+ const submit=()=>{
+  setError('');setNotice('');
+  if(!cart.length){setError('Agrega al menos un producto a la factura.');return;}
+  if(credit&&(!customer.trim()||customer==='Consumidor Final'||!maxDate)){setError('Para venta al crédito, selecciona un cliente y la fecha máxima de pago.');return;}
+  if(cart.some(p=>p.qty>(products.find(x=>x.id===p.id)?.stock??0))){setError('El inventario cambió. Revisa las cantidades antes de guardar.');return;}
+  const sold:CartItem[]=cart.map(p=>({...p}));
+  const details:StandardInvoiceDetails={invoiceDate,maxDate,terms,priceList,seller,customerAddress,customerPhone,notes,discountTotal,taxTotal,lines:calculatedLines.map(line=>({productId:line.product.id,unit:line.unit,discountPercent:line.discountPercent,taxPercent:line.taxPercent,discountAmount:line.discountAmount,taxAmount:line.taxAmount,lineTotal:line.lineTotal,netTotal:line.netTotal}))};
+  const number=invoiceNumber.trim()||`001-001-${String(20037+sales.length).padStart(10,'0')}`;
+  const ok=editingInvoice
+    ? onUpdateInvoice(editingInvoice.id,sold,customer==='Consumidor Final'?'':customer,rtn,details)
+    : onComplete(sold,customer==='Consumidor Final'?'':customer,credit?maxDate:'',rtn,number,details);
+  if(!ok){setError('No se pudo guardar. Verifica el inventario, los datos del cliente y la sincronización.');return;}
+  const record:SaleRecord={id:editingInvoice?.id??Date.now(),total,cost:cart.reduce((s,p)=>s+p.cost*p.qty,0),profit:calculatedLines.reduce((s,l)=>s+l.netTotal-l.product.cost*l.product.qty,0),payment,type:'factura_estandar',date:new Date(invoiceDate+'T12:00:00').toISOString(),invoiceNumber:number,customer:customer==='Consumidor Final'?undefined:customer,customerRtn:rtn||undefined,customerAddress,customerPhone,terms,priceList,seller,invoiceDate,maxDate,notes,discountTotal,taxTotal,items:calculatedLines.map(line=>({productId:line.product.id,productName:line.product.name,category:line.product.category,laboratory:line.product.laboratory,qty:line.product.qty,unitCost:line.product.cost,unitPrice:line.netTotal/line.product.qty,revenue:line.netTotal,cost:line.product.cost*line.product.qty,profit:line.netTotal-line.product.cost*line.product.qty,unit:line.unit,baseUnitPrice:line.product.price,discountPercent:line.discountPercent,taxPercent:line.taxPercent,discountAmount:line.discountAmount,taxAmount:line.taxAmount,lineTotal:line.lineTotal}))};
+  setLastInvoice(record);setSelectedInvoice(record);setCart([]);setLineAdjustments({});setSearch('');setEditingInvoice(null);setNotice(editingInvoice?`Factura ${number} actualizada correctamente.`:`Factura ${number} guardada correctamente.`);
+  setInvoiceNumber(`001-001-${String(20038+sales.length).padStart(10,'0')}`);setNotes('');
  };
  return <div className="content standard-invoice">
  <div className="page-intro"><div><span className="pill">VENTAS</span><p>Emite facturas comerciales internas y conserva el registro en las ventas del sistema.</p></div><button className="secondary" onClick={()=>{setShowHistory(v=>!v);setNotice('');}}><FileText size={16}/>{showHistory?' Nueva factura':' Historial de facturas'}</button></div>
