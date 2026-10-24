@@ -28,6 +28,68 @@ const toCustomer=(form:CustomerForm,id:number,code:string):Customer=>({
 });
 const money=(value:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL',maximumFractionDigits:2}).format(value);
 
+
+function CustomerEditorFields({form,setForm,customers,editing}:{form:CustomerForm;setForm:Dispatch<SetStateAction<CustomerForm>>;customers:Customer[];editing:Customer|null}) {
+  const code=editing?.code??nextCustomerCode(customers);
+  return <>
+    <div className="customer-form-top">
+      <label className="customer-form-field"><span>Código de cliente</span><input value={code} readOnly aria-label="Código de cliente asignado automáticamente"/></label>
+      <label className="customer-form-field"><span>Nombre del cliente *</span><input autoFocus value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} placeholder="Nombre completo o razón social" maxLength={160}/></label>
+    </div>
+    <div className="customer-form-layout">
+      <div className="customer-form-main">
+        <section className="customer-form-section">
+          <h3><UserRound size={17}/> Información personal</h3>
+          <div className="customer-form-grid">
+            <label className="customer-form-field"><span>Tipo de cliente</span><select value={form.customerType} onChange={e=>setForm(f=>({...f,customerType:e.target.value as CustomerForm['customerType']}))}><option>Persona natural</option><option>Empresa</option></select></label>
+            <label className="customer-form-field"><span>Tipo de documento *</span><select value={form.documentType} onChange={e=>setForm(f=>({...f,documentType:e.target.value as CustomerForm['documentType']}))}><option value="RTN">RTN</option><option value="Identidad">Identidad</option><option value="Pasaporte">Pasaporte</option><option value="Otro">Otro</option></select></label>
+            <label className="customer-form-field"><span>N.º de documento</span><input value={form.documentNumber} onChange={e=>setForm(f=>({...f,documentNumber:e.target.value}))} placeholder="Número de identidad o documento" maxLength={40}/></label>
+            <label className="customer-form-field customer-form-full"><span>Dirección</span><input value={form.address} onChange={e=>setForm(f=>({...f,address:e.target.value}))} placeholder="Dirección del cliente" maxLength={240}/></label>
+            <label className="customer-form-field"><span>Teléfono</span><input value={form.phone} onChange={e=>setForm(f=>({...f,phone:e.target.value}))} placeholder="Ej. 9999-1234" autoComplete="tel" maxLength={40}/></label>
+            <label className="customer-form-field"><span>Correo electrónico</span><input type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder="cliente@correo.com" autoComplete="email" maxLength={160}/></label>
+          </div>
+        </section>
+        <section className="customer-form-section">
+          <h3><Building2 size={17}/> Datos fiscales <small>(opcional)</small></h3>
+          <div className="customer-form-grid">
+            <label className="customer-form-field"><span>RTN</span><input value={form.rtn} onChange={e=>setForm(f=>({...f,rtn:e.target.value}))} placeholder="RTN fiscal" maxLength={40}/></label>
+            <label className="customer-form-field"><span>Nombre o razón social</span><input value={form.legalName} onChange={e=>setForm(f=>({...f,legalName:e.target.value}))} placeholder="Nombre fiscal" maxLength={160}/></label>
+            <label className="customer-form-field"><span>Régimen fiscal</span><select value={form.taxRegime} onChange={e=>setForm(f=>({...f,taxRegime:e.target.value}))}><option>Persona Natural</option><option>Régimen General</option><option>Régimen Simplificado</option><option>Exento</option><option>No especificado</option></select></label>
+            <label className="customer-form-field"><span>Correo para facturación</span><input type="email" value={form.billingEmail} onChange={e=>setForm(f=>({...f,billingEmail:e.target.value}))} placeholder="facturacion@correo.com" maxLength={160}/></label>
+          </div>
+        </section>
+        <section className="customer-form-section customer-form-observations">
+          <h3><FileText size={17}/> Observaciones</h3>
+          <label className="customer-form-field"><span>Notas internas del cliente</span><textarea rows={3} value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} placeholder="Notas internas o información adicional del cliente..." maxLength={1000}/></label>
+        </section>
+      </div>
+      <aside className="customer-form-sidebar">
+        <section className="customer-active-panel">
+          <label className="customer-active-toggle">
+            <input type="checkbox" checked={form.active} onChange={e=>setForm(f=>({...f,active:e.target.checked}))}/>
+            <span className="customer-switch" aria-hidden="true"/>
+            <span className="customer-active-copy"><strong>Cliente activo</strong><small>Puede realizar compras y acumular crédito.</small></span>
+          </label>
+        </section>
+        <section className="customer-form-section customer-payment-section">
+          <h3><CreditCard size={17}/> Términos de pago</h3>
+          <div className="customer-form-grid">
+            <label className="customer-form-field"><span>Término de pago *</span><select value={form.paymentTerms} onChange={e=>setForm(f=>({...f,paymentTerms:e.target.value as CustomerForm['paymentTerms'],creditDays:e.target.value==='Contado'?'0':(Number(f.creditDays)>0?f.creditDays:'30')}))}><option value="Contado">Contado</option><option value="Crédito">Crédito</option></select></label>
+            <label className="customer-form-field"><span>Días de crédito</span><input type="number" min="0" max="365" step="1" value={form.creditDays} disabled={form.paymentTerms!=='Crédito'} onChange={e=>setForm(f=>({...f,creditDays:e.target.value}))}/></label>
+            <label className="customer-form-field customer-form-full"><span>Límite de crédito (L)</span><input type="number" min="0" step="0.01" value={form.creditLimit} onChange={e=>setForm(f=>({...f,creditLimit:e.target.value}))}/></label>
+          </div>
+        </section>
+        <section className="customer-form-section customer-additional-section">
+          <h3><Receipt size={17}/> Información adicional</h3>
+          <label className="customer-form-field"><span>Vendedor asignado</span><input value={form.assignedSeller} onChange={e=>setForm(f=>({...f,assignedSeller:e.target.value}))} placeholder="Nombre del vendedor" maxLength={100}/></label>
+          <label className="customer-form-field"><span>Lista de precios</span><select value={form.priceList} onChange={e=>setForm(f=>({...f,priceList:e.target.value}))}><option>Precio de venta 1</option><option>Precio de venta mayoreo</option><option>Precio especial</option></select></label>
+          <p className="customer-additional-hint">Los términos y el límite se conservarán en la ficha del cliente.</p>
+        </section>
+      </aside>
+    </div>
+  </>;
+}
+
 export function Customers({customers,setCustomers}:{customers:Customer[];setCustomers:(value:Customer[]|((current:Customer[])=>Customer[]))=>void}) {
   const [query,setQuery]=useState('');
   const [showForm,setShowForm]=useState(false);
