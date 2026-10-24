@@ -63,8 +63,10 @@ export function AuthGate({ children }: Props) {
     setError('');
     try {
       const client = requireSupabase();
+      const identifier = email.trim().toLowerCase();
+      const loginEmail = identifier.includes('@') ? identifier : `${identifier}@users.farmi.invalid`;
       const { error: signInError } = await client.auth.signInWithPassword({
-        email: email.trim(),
+        email: loginEmail,
         password,
       });
       if (signInError) throw signInError;
@@ -77,7 +79,8 @@ export function AuthGate({ children }: Props) {
 
   const requestPasswordRecovery = async () => {
     const target=email.trim();
-    if(!target){setError('Escribe primero el correo de la cuenta para enviar el enlace de recuperación.');return;}
+    if(!target){setError('Escribe primero tu correo electrónico.');return;}
+    if(!target.includes('@')){setError('Las cuentas que entran con nombre de usuario deben pedir al administrador que les asigne una contraseña nueva.');return;}
     setBusy(true);setError('');setNotice('');
     try{
       const client=requireSupabase();
@@ -133,8 +136,8 @@ export function AuthGate({ children }: Props) {
       <p className="auth-eyebrow">DIFARMÁS · FARMI ERP</p>
       <h1>Acceso al sistema</h1>
       <p className="auth-subtitle">Inicia sesión para ingresar al sistema de gestión de DIFARMÁS.</p>
-      <label htmlFor="erp-email">Correo electrónico</label>
-      <input id="erp-email" type="email" autoComplete="username" required value={email} onChange={event => setEmail(event.target.value)} />
+      <label htmlFor="erp-email">Nombre de usuario o correo electrónico</label>
+      <input id="erp-email" type="text" autoComplete="username" required value={email} onChange={event => setEmail(event.target.value)} placeholder="Ej. vendedor01" />
       <label htmlFor="erp-password">Contraseña</label>
       <input id="erp-password" type="password" autoComplete="current-password" required value={password} onChange={event => setPassword(event.target.value)} />
       {error && <p className="auth-error" role="alert">{error}</p>}
