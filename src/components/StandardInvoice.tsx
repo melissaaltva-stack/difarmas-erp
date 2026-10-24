@@ -14,7 +14,6 @@ export function StandardInvoice({products,customers,sales,settings,payment,setPa
  const credit=paymentMethods.find(m=>m.name===payment)?.kind==='credit'||payment==='Crédito';
  const results=useMemo(()=>products.filter(p=>p.stock>0&&[p.code,p.name,p.laboratory,p.category,p.presentation,...(p.activeIngredients??[])].join(' ').toLowerCase().includes(search.toLowerCase())).slice(0,8),[products,search]);
  const calculatedLines=cart.map(p=>{const a=lineAdjustments[p.id]??{unit:p.presentation||'Unidad',discountPercent:0,taxPercent:p.taxEnabled===false?0:(p.taxRate??settings.billingInfo?.isvRate??15)};const subtotal=p.price*p.qty;const discountAmount=subtotal*Math.max(0,Math.min(100,a.discountPercent))/100;const netTotal=subtotal-discountAmount;const taxAmount=netTotal*Math.max(0,Math.min(100,a.taxPercent))/100;return {product:p,unit:a.unit,discountPercent:a.discountPercent,taxPercent:a.taxPercent,subtotal,discountAmount,netTotal,taxAmount,lineTotal:netTotal+taxAmount};});
- const subtotal=calculatedLines.reduce((s,l)=>s+l.subtotal,0);
  const discountTotal=calculatedLines.reduce((s,l)=>s+l.discountAmount,0);
  const taxTotal=calculatedLines.reduce((s,l)=>s+l.taxAmount,0);
  const total=calculatedLines.reduce((s,l)=>s+l.lineTotal,0);
@@ -56,8 +55,8 @@ export function StandardInvoice({products,customers,sales,settings,payment,setPa
    <div className="invoice-field inv-span-3"><label className="field-label" htmlFor="standard-invoice-phone">Teléfono</label><input id="standard-invoice-phone" value={customerPhone} onChange={e=>setCustomerPhone(e.target.value)} placeholder="Teléfono del cliente" /></div>
    <div className="invoice-field inv-span-3"><label className="field-label" htmlFor="standard-invoice-rtn">RTN</label><input id="standard-invoice-rtn" value={rtn} onChange={e=>setRtn(e.target.value)} placeholder="RTN del cliente" /></div>
    <div className="invoice-field inv-span-3"><label className="field-label" htmlFor="standard-invoice-terms">Términos de venta</label><select id="standard-invoice-terms" value={terms} onChange={e=>{setTerms(e.target.value);if(e.target.value==='Crédito'&&paymentMethods.some(m=>m.name==='Crédito'))setPayment('Crédito');}}><option>Contado</option><option>Crédito</option><option>15 días</option><option>30 días</option></select></div>
-   <div className="invoice-field inv-span-9"><label className="field-label" htmlFor="standard-invoice-notes">Notas de la factura</label><textarea id="standard-invoice-notes" rows={2} value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Ingresar notas en la factura (opcional)" /></div>
-   <div className="invoice-total-panel inv-span-3"><span>TOTAL</span><strong>{money(total)}</strong><div className="invoice-total-breakdown"><span>Subtotal: {money(subtotal)}</span><span>Descuento: {money(discountTotal)}</span><span>Impuesto: {money(taxTotal)}</span></div></div>
+   <div className="invoice-field inv-span-12"><label className="field-label" htmlFor="standard-invoice-notes">Notas de la factura</label><textarea id="standard-invoice-notes" rows={2} value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Ingresar notas en la factura (opcional)" /></div>
+
   </div>
   {newCustomer&&<RegisterCustomerModal customers={customers} onClose={()=>{setNewCustomer(false);setError('');}} onSave={c=>{onCreateCustomer(c);setCustomer(c.name);setRtn(c.rtn??'');setCustomerAddress(c.address??'');setCustomerPhone(c.phone??'');setNewCustomer(false);setNewName('');setNewRtn('');setError('');}}/>}
  </section>
