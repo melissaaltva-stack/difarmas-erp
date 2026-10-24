@@ -85,6 +85,7 @@ export default async function handler(req: Req, res: Res) {
   const adminClient = createClient(url, secret, { auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false } });
   const { data: currentData, error: authError } = await adminClient.auth.getUser(accessToken);
   if (authError || !currentData.user) return reply(res, 401, { error: 'La sesión no es válida o ha caducado. Inicia sesión de nuevo.' });
+  if (currentData.user.app_metadata?.farmi_active === false) return reply(res, 403, { error: 'Esta cuenta está desactivada. Pide al administrador que reactive el acceso.' });
   const currentUser = currentData.user;
   const body = getBody(req);
   const action = typeof body.action === 'string' ? body.action : '';
