@@ -40,7 +40,7 @@ if (root) {
     <React.StrictMode>
       <AppErrorBoundary>
         <AuthGate>
-          {(user, signOut) => <App userId={user.id} userEmail={user.email ?? ''} signOut={signOut} />}
+          {(user, signOut) => <App userId={user.id} userEmail={user.email ?? ''} userAppMetadata={user.app_metadata ?? {}} signOut={signOut} />}
         </AuthGate>
       </AppErrorBoundary>
     </React.StrictMode>
