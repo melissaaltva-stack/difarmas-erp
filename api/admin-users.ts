@@ -56,6 +56,7 @@ function safeUser(user: User) {
     id: user.id,
     email: user.email ?? '',
     name: String(user.user_metadata?.full_name ?? user.user_metadata?.name ?? user.email?.split('@')[0] ?? 'Usuario'),
+    username: typeof user.user_metadata?.username === 'string' ? user.user_metadata.username : '',
     createdAt: user.created_at,
     lastSignInAt: user.last_sign_in_at ?? null,
     emailConfirmed: Boolean(user.email_confirmed_at),
@@ -134,22 +135,34 @@ export default async function handler(req: Req, res: Res) {
       return reply(res, 200, { users: users.map(safeUser).sort((a, b) => a.name.localeCompare(b.name, 'es')) });
     }
 
-    if (action === 'create' || action === 'invite') {
-      const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+    if (action === 'create' || action === 'invite' || action === 'create-username') {
+      const username = typeof body.username === 'string' ? body.username.trim().toLowerCase() : '';
+      const email = action === 'create-username' && username
+        ? `${username}@users.farmi.invalid`
+        : (typeof body.email === 'string' ? body.email.trim().toLowerCase() : '');
       const name = typeof body.name === 'string' ? body.name.trim().slice(0, 160) : '';
       const role = isRole(body.role) ? body.role : 'Ventas';
       const permissions = safePermissions(role, body.permissions);
       const password = typeof body.password === 'string' ? body.password : '';
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return reply(res, 400, { error: 'Escribe un correo electrónico válido.' });
+      if (action === 'create-username' && !/^[a-z0-9][a-z0-9._-]{2,29}$/.test(username)) return reply(res, 400, { error: 'El usuario debe tener entre 3 y 30 caracteres: letras sin acentos, números, punto, guion o guion bajo.' });
+      if (action !== 'create-username' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return reply(res, 400, { error: 'Escribe un correo electrónico válido.' });
       if (!name) return reply(res, 400, { error: 'Escribe el nombre del colaborador.' });
-      if (action === 'create' && password.length < 12) return reply(res, 400, { error: 'La contraseña temporal debe tener al menos 12 caracteres.' });
+      if (action !== 'invite' && password.length < 12) return reply(res, 400, { error: 'La contraseña debe tener al menos 12 caracteres.' });
 
       const metadata = claimForRole(role, permissions, true);
       let newUser: User | null = null;
-      if (action === 'create') {
+      if (action === 'create' || action === 'create-username') {
+        if (action === 'create-username') {
+          const users = await listAllUsers();
+          const usernameTaken = users.some(user =>
+            String(user.user_metadata?.username ?? '').toLowerCase() === username ||
+            (user.email ?? '').toLowerCase() === email
+          );
+          if (usernameTaken) return reply(res, 409, { error: 'Ese nombre de usuario ya está ocupado. Elige otro.' });
+        }
         const { data, error } = await adminClient.auth.admin.createUser({
           email, password, email_confirm: true,
-          user_metadata: { full_name: name },
+          user_metadata: action === 'create-username' ? { full_name: name, username } : { full_name: name },
           app_metadata: metadata,
         });
         if (error || !data.user) return reply(res, 400, { error: error?.message ?? 'No se pudo crear la cuenta.' });
@@ -167,6 +180,18 @@ export default async function handler(req: Req, res: Res) {
         newUser = updated.user;
       }
       return reply(res, 201, { user: safeUser(newUser), mode: action });
+    }
+
+    if (action === 'reset-password') {
+      const targetId = typeof body.userId === 'string' ? body.userId : '';
+      const password = typeof body.password === 'string' ? body.password : '';
+      if (!targetId) return reply(res, 400, { error: 'Falta el usuario al que deseas asignar la nueva contraseña.' });
+      if (password.length < 12) return reply(res, 400, { error: 'La contraseña debe tener al menos 12 caracteres.' });
+      const { data: targetData, error: targetError } = await adminClient.auth.admin.getUserById(targetId);
+      if (targetError || !targetData.user) return reply(res, 404, { error: 'No se encontró ese usuario.' });
+      const { error } = await adminClient.auth.admin.updateUserById(targetId, { password });
+      if (error) return reply(res, 400, { error: error.message ?? 'No se pudo cambiar la contraseña.' });
+      return reply(res, 200, { message: 'Contraseña actualizada correctamente.' });
     }
 
     if (action === 'update') {
