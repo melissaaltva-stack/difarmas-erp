@@ -81,20 +81,48 @@ export default async function handler(req: Req, res: Res) {
   }
 
   try {
-    const supabase = createClient(url.replace(/\/+$/, ''), serviceKey, {
-      auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false },
-    });
-    const { data, error } = await supabase
-      .from('erp_state')
-      .select('state,updated_at')
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    if (error) {
-      return reply(res, 502, { error: 'No se pudo consultar el catálogo del ERP.' });
+      const serverKeys = [...new Set([
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      process.env.SUPABASE_SECRET_KEY,
+    ].filter((key): key is string => Boolean(key?.trim())))];
+    if (!serverKeys.length) {
+      return reply(res, 503, { configured: false, products: [] });
     }
 
-    const state = asRecord(data?.state);
+    let row: { state: unknown; updated_at: string | null } | null = null;
+    let querySucceeded = false;
+    let lastFailure: { status?: number; code?: string } | null = null;
+
+    for (const key of serverKeys) {
+      const supabase = createClient(url.replace(/\\/+$/, ''), key, {
+        auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false },
+      });
+      const result = await supabase
+        .from('erp_state')
+        .select('state,updated_at')
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (!result.error) {
+        row = result.data;
+        querySucceeded = true;
+        break;
+      }
+      lastFailure = {
+        status: typeof result.error.status === 'number' ? result.error.status : undefined,
+        code: typeof result.error.code === 'string' ? result.error.code : undefined,
+      };
+    }
+
+    if (!querySucceeded) {
+      console.error('[store-catalog] Supabase read failed', lastFailure);
+      return reply(res, 502, {
+        error: 'No se pudo consultar el catálogo del ERP.',
+        ...(lastFailure?.status ? { upstreamStatus: lastFailure.status } : {}),
+        ...(lastFailure?.code ? { upstreamCode: lastFailure.code } : {}),
+      });
+    }
+
+    const state = asRecord(row?.state);
     const rawProducts = state?.products;
     const products = Array.isArray(rawProducts)
       ? rawProducts.map(publicProduct).filter((product): product is NonNullable<ReturnType<typeof publicProduct>> => product !== null)
@@ -102,7 +130,7 @@ export default async function handler(req: Req, res: Res) {
 
     return reply(res, 200, {
       configured: true,
-      updatedAt: typeof data?.updated_at === 'string' ? data.updated_at : null,
+      updatedAt: typeof row?.updated_at === 'string' ? row.updated_at : null,
       products,
     });
   } catch {
