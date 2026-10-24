@@ -99,6 +99,7 @@ export function Customers({customers,setCustomers}:{customers:Customer[];setCust
   const filtered=useMemo(()=>customers.filter(c=>[c.code??'',c.name,c.rtn??'',c.phone,c.email??'',c.address??''].join(' ').toLocaleLowerCase().includes(query.toLocaleLowerCase())),[customers,query]);
   const startNew=()=>{setEditing(null);setForm(emptyForm);setError('');setShowForm(true);};
   const startEdit=(customer:Customer)=>{setEditing(customer);setForm(customerToForm(customer));setError('');setShowForm(true);};
+  const closeForm=()=>{setShowForm(false);setEditing(null);setForm(emptyForm);setError('');};
   const save=()=>{
     const name=form.name.trim(),creditLimit=Number(form.creditLimit),creditDays=Number(form.creditDays);
     if(!name){setError('Escribe el nombre del cliente o razón social.');return;}
