@@ -3,7 +3,6 @@ import { isExpiryAtLeastSixMonths } from './expiryService';
 
 export function applySaleToInventory(products: Product[], sold: CartItem[]): Product[] {
   if (!sold.length) throw new Error('La venta debe contener al menos un producto.');
-  if (new Set(sold.map(item => item.id)).size !== sold.length) throw new Error('El carrito contiene productos duplicados.');
   if (sold.some(item => !products.some(product => product.id === item.id))) throw new Error('No se encontró un producto del carrito en el inventario.');
   const invalid = sold.find(item => !Number.isFinite(item.qty) || item.qty <= 0 || !Number.isFinite(item.price) || item.price < 0 || !Number.isFinite(item.cost) || item.cost < 0 || !Number.isFinite(item.price * item.qty) || !Number.isFinite(item.cost * item.qty));
   if (invalid) throw new Error('Cantidad, precio y costo de venta deben ser válidos.');
@@ -11,9 +10,14 @@ export function applySaleToInventory(products: Product[], sold: CartItem[]): Pro
   const saleCost = sold.reduce((sum, item) => sum + item.cost * item.qty, 0);
   if (!Number.isFinite(saleTotal) || !Number.isFinite(saleCost) || !Number.isFinite(saleTotal - saleCost)) throw new Error('El total o costo de la venta está fuera de rango. Verifica los importes.');
   if (products.some(product => !Number.isFinite(product.stock) || product.stock < 0 || !Number.isFinite(product.cost) || product.cost < 0)) throw new Error('El inventario contiene una existencia o costo inválido.');
-  const insufficient = sold.find(item => { const product = products.find(p => p.id === item.id); return !product || item.qty > product.stock; });
-  if (insufficient) throw new Error('Stock insuficiente para el producto seleccionado.');
-  return products.map(product => { const item = sold.find(line => line.id === product.id); return item ? { ...product, stock: product.stock - item.qty } : product; });
+  const requestedByProduct = new Map<number,number>();
+  sold.forEach(item => requestedByProduct.set(item.id,(requestedByProduct.get(item.id)??0)+item.qty));
+  for (const [productId,quantity] of requestedByProduct) {
+    const product=products.find(p=>p.id===productId);
+    if(!product) throw new Error('No se encontró un producto del carrito en el inventario.');
+    if(quantity>product.stock) throw new Error('Stock insuficiente para el producto seleccionado.');
+  }
+  return products.map(product => { const quantity=requestedByProduct.get(product.id)??0; return quantity>0 ? { ...product, stock: product.stock - quantity } : product; });
 }
 
 export function applyPurchaseToInventory(products: Product[], items: PurchaseItem[], supplier: string): Product[] {
