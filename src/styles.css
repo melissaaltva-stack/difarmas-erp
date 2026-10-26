@@ -2451,3 +2451,34 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
   .product-edit-modal .product-prices-section > .card:has(> strong) > .form-grid,
   .product-edit-modal .product-prices-section > .card:has(> div > strong) { grid-template-columns: minmax(0, 1fr); }
 }
+
+
+/* Campos de ganancia calculada para precios principales */
+.product-edit-modal .price-profit-field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid #dce9e3;
+  border-radius: 9px;
+  background: #f5faf7;
+  color: #526a60;
+  font-size: 11px;
+  line-height: 1.35;
+}
+.product-edit-modal .price-profit-field strong {
+  color: #16734f;
+  font-size: 15px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.product-edit-modal .product-prices-section > .card:has(> strong) > .form-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+@media (max-width: 760px) {
+  .product-edit-modal .product-prices-section > .card:has(> strong) > .form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
