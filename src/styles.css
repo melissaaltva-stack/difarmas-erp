@@ -2229,3 +2229,101 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
   .product-edit-modal .product-prices-section .product-unit-cost-field { width: min(100%, 260px); }
   .product-edit-modal .product-prices-section > .card:has(> div > strong) { grid-template-columns: minmax(0, 1fr); }
 }
+
+
+/* Ajuste final: tabla compacta de Modificar precios, siguiendo la referencia */
+.product-edit-modal .product-prices-section {
+  grid-template-columns: minmax(0, 1fr) minmax(190px, 0.8fr);
+  gap: 8px;
+  align-items: start;
+}
+.product-edit-modal .product-prices-section > .helper:first-child {
+  grid-column: 1 / -1 !important;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #64748b;
+}
+.product-edit-modal .product-prices-section .product-tax-card {
+  grid-column: 1 / -1 !important;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+}
+.product-edit-modal .product-prices-section .product-tax-card > strong {
+  display: block;
+  background: #e5e7eb;
+  padding: 7px 9px;
+  margin: -11px -11px 4px;
+  border-bottom: 1px solid #cbd5e1;
+  color: #334155;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+}
+.product-edit-modal .product-prices-section .product-tax-card > label {
+  max-width: 360px;
+}
+.product-edit-modal .product-prices-section .product-unit-cost-field {
+  grid-column: 1 / -1 !important;
+  width: min(100%, 260px);
+  padding: 8px 10px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+}
+.product-edit-modal .product-prices-section > .card:has(> strong) {
+  grid-column: 1 / -1 !important;
+  padding: 0 !important;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  overflow: hidden;
+  gap: 0 !important;
+}
+.product-edit-modal .product-prices-section > .card:has(> strong) > strong {
+  display: block;
+  background: #e5e7eb;
+  padding: 7px 10px;
+  border-bottom: 1px solid #cbd5e1;
+  text-transform: uppercase;
+  color: #334155;
+}
+.product-edit-modal .product-prices-section > .card:has(> strong) > .form-grid {
+  padding: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.product-edit-modal .product-prices-section > .card:has(> strong) label {
+  font-size: 10px;
+  text-transform: uppercase;
+}
+.product-edit-modal .product-prices-section > .card:has(> strong) input {
+  min-height: 31px;
+  text-align: center;
+  font-size: 12px;
+}
+.product-edit-modal .product-prices-section > div[style*="justify-content: space-between"] {
+  grid-column: 1 / -1 !important;
+  padding: 7px 10px;
+  background: #e5e7eb;
+  border: 1px solid #cbd5e1;
+  margin-top: 3px;
+}
+.product-edit-modal .product-prices-section > .card:has(> div > strong) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  padding: 10px !important;
+}
+.product-edit-modal .product-prices-section > .card:has(> div > strong) > div:first-child {
+  grid-column: 1 / -1;
+}
+.product-edit-modal .product-prices-section > .card:has(> div > strong) input {
+  text-align: center;
+}
+@media (max-width: 680px) {
+  .product-edit-modal .product-prices-section { grid-template-columns: minmax(0, 1fr); }
+  .product-edit-modal .product-prices-section > .card:has(> strong) > .form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .product-edit-modal .product-prices-section > .card:has(> div > strong) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
