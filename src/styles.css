@@ -2482,3 +2482,32 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+
+/* Tabla horizontal de niveles de precio: distribución moderna inspirada en la referencia */
+.product-edit-modal .product-prices-section { display:grid; grid-template-columns:minmax(0,1fr); gap:14px; }
+.product-edit-modal .pricing-intro { margin:0; color:#64748b; line-height:1.45; }
+.product-edit-modal .product-name-pricing { max-width:100%; }
+.product-edit-modal .product-name-pricing label,.product-edit-modal .pricing-cost-card label,.product-edit-modal .pricing-stock-card label { display:grid; gap:6px; font-weight:600; color:#425b53; }
+.product-edit-modal .pricing-table-card,.product-edit-modal .product-name-pricing,.product-edit-modal .pricing-cost-card,.product-edit-modal .pricing-stock-card { min-width:0; border:1px solid #dce7e2; border-radius:12px; background:#fff; padding:14px; }
+.product-edit-modal .pricing-section-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
+.product-edit-modal .pricing-section-heading strong,.product-edit-modal .pricing-stock-card>strong { color:#234b3f; font-size:14px; }
+.product-edit-modal .pricing-section-heading span { color:#64748b; font-size:11px; }
+.product-edit-modal .pricing-table-scroll { overflow-x:auto; width:100%; }
+.product-edit-modal .product-pricing-table { width:100%; min-width:850px; border-collapse:separate; border-spacing:0; font-variant-numeric:tabular-nums; }
+.product-edit-modal .product-pricing-table th { text-align:left; padding:10px 8px; color:#526a60; font-size:10px; text-transform:uppercase; letter-spacing:.025em; background:#f3f7f5; border-bottom:1px solid #dce7e2; white-space:nowrap; }
+.product-edit-modal .product-pricing-table td { padding:8px; border-bottom:1px solid #edf2ef; vertical-align:middle; }
+.product-edit-modal .product-pricing-table tbody tr:last-child td { border-bottom:0; }
+.product-edit-modal .product-pricing-table td:first-child { min-width:125px; }
+.product-edit-modal .product-pricing-table input,.product-edit-modal .product-pricing-table select { width:100%; min-width:76px; min-height:34px; padding:6px 7px; box-sizing:border-box; border:1px solid #cbd8d1; border-radius:7px; background:#fff; font-size:12px; }
+.product-edit-modal .product-pricing-table td:nth-child(2) input { min-width:58px; }
+.product-edit-modal .product-pricing-table td:nth-child(3) input,.product-edit-modal .product-pricing-table td:nth-child(4) input,.product-edit-modal .product-pricing-table td:nth-child(6) input { min-width:90px; }
+.product-edit-modal .pricing-profit { white-space:nowrap; color:#16734f; font-weight:700; }
+.product-edit-modal .pricing-table-footer { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:12px; padding-top:12px; border-top:1px solid #edf2ef; color:#64748b; }
+.product-edit-modal .pricing-cost-card { display:flex; align-items:flex-end; gap:18px; flex-wrap:wrap; background:#f8fbf9; }
+.product-edit-modal .pricing-cost-card label { width:min(100%,240px); }
+.product-edit-modal .pricing-stock-card>div { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-top:12px; }
+.product-edit-modal .pricing-stock-card input { min-width:0; width:100%; box-sizing:border-box; }
+.product-edit-modal .pricing-stock-card input[readonly] { background:#f3f7f5; color:#526a60; }
+.product-edit-modal .product-prices-section .product-tax-card { display:grid; gap:10px; }
+@media(max-width:760px){ .product-edit-modal .pricing-section-heading,.product-edit-modal .pricing-table-footer { align-items:flex-start; flex-direction:column; } .product-edit-modal .pricing-stock-card>div { grid-template-columns:repeat(2,minmax(0,1fr)); } }
