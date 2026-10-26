@@ -2136,3 +2136,21 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
   .product-edit-modal .product-prices-section > * { grid-column: 1 / -1 !important; }
   .product-edit-modal .product-tax-card > label:not(.product-tax-toggle) { max-width: none; }
 }
+
+
+/* El costo unitario ocupa solo el ancho necesario en Modificar precios */
+.product-edit-modal .product-unit-cost-field {
+  grid-column: auto !important;
+  width: min(100%, 220px);
+  justify-self: start;
+}
+.product-edit-modal .product-unit-cost-field input {
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 9px;
+}
+@media (max-width: 680px) {
+  .product-edit-modal .product-unit-cost-field {
+    width: min(100%, 260px);
+  }
+}
