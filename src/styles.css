@@ -2022,3 +2022,36 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
     white-space: normal !important;
   }
 }
+
+/* DIFARMÁS ERP — diseño moderno */
+:root{font-family:Inter,"Segoe UI",system-ui,sans-serif;color:#172b3a;background:#f4f7fb;--brand:#1677d2;--line:#e5ebf2;--radius:16px}
+body,.app,.main{background:#f4f7fb;color:#172b3a}
+.sidebar{background:linear-gradient(180deg,#102d4b,#0b2340);color:#eaf3fc;box-shadow:8px 0 28px #163b5b0a}
+.brand-mark{background:linear-gradient(135deg,#38a4f4,#176ac0);box-shadow:0 7px 18px #0874d333}
+.brand span{color:#a9c4df}.section-label{color:#82a8ca;font-weight:700}
+.nav{width:100%;color:#c0d1e3;border-radius:11px;padding:11px 12px;font-weight:500;min-height:42px}
+.nav:hover{background:#ffffff12;color:#fff;transform:translateX(2px)}
+.nav.active{background:linear-gradient(100deg,#197bd0,#1764ad);color:#fff;box-shadow:0 6px 16px #0874d32b}
+.sidebar-footer{color:#92afca}
+.topbar{height:auto;min-height:88px;background:#ffffffed;border-bottom:1px solid #e5ebf2;padding:18px clamp(18px,3vw,38px);gap:18px;position:sticky;top:0;z-index:10;backdrop-filter:blur(12px)}
+.eyebrow{font-size:11px;letter-spacing:1.2px;color:#7a8da2;font-weight:700}
+.topbar h1{font-size:clamp(21px,2vw,27px);font-weight:750;letter-spacing:-.5px;color:#142f49}
+.topbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap}
+.status{padding:8px 11px;background:#f0faf5;border:1px solid #d9f1e4;border-radius:999px;font-size:11px;font-weight:600;color:#27744d}
+.status-error{background:#fff2f1;border-color:#f7d7d3;color:#a83d32}.status-pending{background:#fff8e9;border-color:#f6e5b8;color:#8c681b}
+.content{padding:clamp(18px,3vw,34px);max-width:1600px;margin:0 auto}
+.card,.panel,.stat-card,.metric-card,.table-wrap{border:1px solid #e5ebf2;border-radius:var(--radius);box-shadow:0 4px 18px #173b5b08;background:#fff}
+.hero{background:linear-gradient(115deg,#123b63,#176eb5 62%,#2389d2);border:1px solid #2d82bd;border-radius:20px;box-shadow:0 14px 30px #176eb51c}
+.hero p{color:#e0effc}
+button,input,select,textarea{font:inherit}
+button{transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #79b8f5;outline-offset:2px}
+input,select,textarea{border-color:#d9e3ed;border-radius:10px;background:#fff;color:#243d54}
+input:hover,select:hover,textarea:hover{border-color:#adc6de}
+input:focus,select:focus,textarea:focus{border-color:#3989d1;box-shadow:0 0 0 3px #3989d11a;outline:0}
+th{color:#657b90;background:#f7f9fc}tbody tr:hover{background:#f7fbff}
+.secondary,.signout{border:1px solid #d9e3ed;background:#fff;color:#36536e;border-radius:10px;font-weight:600}
+.secondary:hover,.signout:hover{border-color:#9dbfe0;background:#f4f9ff}
+@media(max-width:900px){.topbar{padding:16px 20px}.topbar-actions{gap:8px}.content{padding:20px}}
+@media(max-width:700px){.topbar{padding:14px 16px}.topbar h1{font-size:21px}.status{font-size:10px;padding:7px 9px}.content{padding:14px}.hero{padding:20px;border-radius:15px}.card{padding:15px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
