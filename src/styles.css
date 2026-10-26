@@ -2511,3 +2511,57 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
 .product-edit-modal .pricing-stock-card input[readonly] { background:#f3f7f5; color:#526a60; }
 .product-edit-modal .product-prices-section .product-tax-card { display:grid; gap:10px; }
 @media(max-width:760px){ .product-edit-modal .pricing-section-heading,.product-edit-modal .pricing-table-footer { align-items:flex-start; flex-direction:column; } .product-edit-modal .pricing-stock-card>div { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+
+/* Modificar precios: compactar contenido para evitar scroll horizontal */
+.product-edit-modal.modal { width:min(1180px, calc(100vw - 24px)); max-width:1180px; padding:14px; }
+.product-edit-modal .modal-head { margin-bottom:10px; }
+.product-edit-modal .product-prices-section { gap:7px; }
+.product-edit-modal .product-prices-section .pricing-intro { padding:0; font-size:10px; line-height:1.25; }
+.product-edit-modal .product-prices-section .product-name-pricing,
+.product-edit-modal .product-prices-section .pricing-table-card,
+.product-edit-modal .product-prices-section .pricing-cost-card,
+.product-edit-modal .product-prices-section .pricing-stock-card { padding:8px; border-radius:8px; }
+.product-edit-modal .product-prices-section .pricing-section-heading { margin-bottom:6px; }
+.product-edit-modal .product-prices-section .pricing-section-heading strong,
+.product-edit-modal .product-prices-section .pricing-stock-card>strong { font-size:12px; }
+.product-edit-modal .product-prices-section .pricing-section-heading span { font-size:10px; }
+.product-edit-modal .pricing-table-scroll { overflow:visible; }
+.product-edit-modal .product-pricing-table { width:100%; min-width:0; table-layout:fixed; border-spacing:0; }
+.product-edit-modal .product-pricing-table th { padding:6px 3px; font-size:9px; letter-spacing:0; white-space:normal; line-height:1.15; }
+.product-edit-modal .product-pricing-table td { padding:4px 3px; }
+.product-edit-modal .product-pricing-table td:first-child { min-width:0; width:15%; overflow-wrap:anywhere; }
+.product-edit-modal .product-pricing-table th:nth-child(1) { width:15%; }
+.product-edit-modal .product-pricing-table th:nth-child(2) { width:8%; }
+.product-edit-modal .product-pricing-table th:nth-child(3) { width:11%; }
+.product-edit-modal .product-pricing-table th:nth-child(4) { width:11%; }
+.product-edit-modal .product-pricing-table th:nth-child(5) { width:10%; }
+.product-edit-modal .product-pricing-table th:nth-child(6) { width:16%; }
+.product-edit-modal .product-pricing-table th:nth-child(7) { width:12%; }
+.product-edit-modal .product-pricing-table th:nth-child(8) { width:4%; }
+.product-edit-modal .product-pricing-table input,
+.product-edit-modal .product-pricing-table select { min-width:0 !important; width:100%; min-height:29px; height:29px; padding:4px 3px; font-size:11px; border-radius:5px; }
+.product-edit-modal .product-pricing-table td:first-child input { padding-left:5px; }
+.product-edit-modal .product-pricing-table td strong { font-size:10px; line-height:1.2; }
+.product-edit-modal .product-pricing-table .pricing-profit { white-space:normal; font-size:10px; overflow-wrap:anywhere; }
+.product-edit-modal .pricing-table-footer { margin-top:6px; padding-top:6px; font-size:10px; }
+.product-edit-modal .pricing-table-footer .secondary { padding:7px 9px; font-size:11px; }
+.product-edit-modal .pricing-cost-card { align-items:center; gap:8px; }
+.product-edit-modal .pricing-cost-card label { width:170px; font-size:10px; }
+.product-edit-modal .pricing-cost-card input { min-height:29px; padding:5px 7px; }
+.product-edit-modal .pricing-cost-card .helper { flex:1; min-width:160px; font-size:9px; }
+.product-edit-modal .pricing-stock-card>div { grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px; margin-top:7px; }
+.product-edit-modal .pricing-stock-card label { font-size:9px; gap:3px; }
+.product-edit-modal .pricing-stock-card input { min-height:28px; height:28px; padding:4px 6px; font-size:11px; }
+.product-edit-modal .product-prices-section .product-tax-card { padding:8px !important; gap:5px !important; }
+.product-edit-modal .product-prices-section .product-tax-card > strong { font-size:11px; }
+.product-edit-modal .product-prices-section .product-tax-card .helper { margin:0; font-size:9px; }
+.product-edit-modal .product-prices-section .product-tax-toggle { font-size:10px; }
+@media(max-width:760px){
+ .product-edit-modal.modal { width:calc(100vw - 12px); padding:9px; }
+ .product-edit-modal .product-pricing-table th { font-size:8px; }
+ .product-edit-modal .product-pricing-table input,.product-edit-modal .product-pricing-table select { font-size:10px; }
+ .product-edit-modal .product-prices-section .pricing-cost-card { align-items:stretch; }
+ .product-edit-modal .pricing-cost-card label { width:100%; }
+ .product-edit-modal .pricing-stock-card>div { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
