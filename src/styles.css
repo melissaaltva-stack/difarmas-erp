@@ -1567,8 +1567,8 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
 .inventory-detail-modal {
   display: flex;
   flex-direction: column;
-  width: min(1040px, calc(100vw - 36px));
-  max-height: min(90vh, 900px);
+  width: min(800px, calc(100vw - 36px));
+  max-height: min(88vh, 780px);
   overflow: hidden;
   border: 1px solid #e0eae6;
   border-radius: 16px;
@@ -1579,25 +1579,27 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 16px;
-  padding: 20px 24px 16px;
+  gap: 12px;
+  padding: 14px 18px 12px;
   border-bottom: 1px solid #e8efec;
 }
+.inventory-detail-head-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.inventory-detail-edit-btn { width: 30px; height: 30px; min-width: 30px; padding: 6px; color: #16745a; background: #eef9f4; border-color: #cce6dc; }
 .inventory-detail-head h2 { margin: 9px 0 4px; font-size: 20px; color: #173c35; }
 .inventory-detail-head p { margin: 0; color: #718a85; font-size: 12px; }
 .inventory-detail-body {
   display: grid;
-  grid-template-columns: minmax(260px, .8fr) minmax(0, 1.2fr);
+  grid-template-columns: minmax(200px, .72fr) minmax(0, 1.28fr);
   min-height: 0;
   overflow: auto;
 }
 .inventory-detail-summary {
-  padding: 20px;
+  padding: 14px;
   border-right: 1px solid #e8efec;
   min-width: 0;
 }
 .inventory-detail-image {
-  height: 230px;
+  height: 150px;
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -1624,13 +1626,13 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
   align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
-  margin-top: 17px;
+  margin-top: 11px;
 }
 .inventory-detail-name-row h3 {
   margin: 0;
   color: #173c35;
-  font-size: 18px;
-  line-height: 1.35;
+  font-size: 15px;
+  line-height: 1.3;
   overflow-wrap: anywhere;
 }
 .inventory-detail-name-row .stock { white-space: nowrap; flex-shrink: 0; }
@@ -1645,8 +1647,8 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
 }
 .inventory-detail-description,
 .inventory-detail-ingredients {
-  margin-top: 16px;
-  padding-top: 14px;
+  margin-top: 10px;
+  padding-top: 9px;
   border-top: 1px solid #edf2f1;
   color: #526d66;
   font-size: 12px;
@@ -1664,9 +1666,9 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
 }
 .inventory-detail-description p { margin: 0; }
 .inventory-detail-ingredients > div { padding: 3px 0; }
-.inventory-detail-sections { padding: 8px 22px 20px; min-width: 0; }
+.inventory-detail-sections { padding: 5px 16px 12px; min-width: 0; }
 .inventory-detail-section {
-  padding: 14px 0;
+  padding: 9px 0;
   border-bottom: 1px solid #e8efec;
 }
 .inventory-detail-section:last-child { border-bottom: 0; }
@@ -1683,8 +1685,8 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
   grid-template-columns: minmax(130px, .85fr) minmax(0, 1.15fr);
   gap: 14px;
   align-items: start;
-  padding: 5px 0;
-  font-size: 12px;
+  padding: 3px 0;
+  font-size: 11px;
   line-height: 1.4;
 }
 .inventory-detail-row > span { color: #6a817a; }
@@ -1703,7 +1705,7 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
 .inventory-detail-footer {
   display: flex;
   justify-content: flex-end;
-  padding: 13px 22px;
+  padding: 9px 16px;
   border-top: 1px solid #e8efec;
   background: #fbfdfc;
 }
