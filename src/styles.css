@@ -2039,3 +2039,11 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
   box-shadow: 0 0 0 3px #21856520 !important;
   outline: none;
 }
+
+
+/* Tipografía uniforme en todo DIFARMÁS ERP */
+.app :is(h1,h2,h3,h4,h5,h6,p,span,a,button,input,select,textarea,label,small,strong,em,th,td,li,summary,legend),
+.modal :is(h1,h2,h3,h4,h5,h6,p,span,a,button,input,select,textarea,label,small,strong,em,th,td,li,summary,legend),
+.auth-page :is(h1,h2,h3,h4,h5,h6,p,span,a,button,input,select,textarea,label,small,strong,em,th,td,li,summary,legend) {
+  font-size: 13px !important;
+}
