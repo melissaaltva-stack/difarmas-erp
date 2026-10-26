@@ -2327,3 +2327,127 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+
+/* Distribución funcional moderna para Modificar precios */
+.product-edit-modal .product-prices-section {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+.product-edit-modal .product-prices-section > .helper:first-child {
+  grid-column: 1 / -1 !important;
+  margin: 0;
+  padding: 0 2px 3px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.product-edit-modal .product-prices-section .product-tax-card {
+  grid-column: span 5 !important;
+  align-self: stretch;
+  background: linear-gradient(145deg, #fbfdfc, #f5faf7);
+  border: 1px solid #dce9e3;
+  border-radius: 12px;
+  padding: 14px !important;
+  gap: 10px !important;
+}
+.product-edit-modal .product-prices-section .product-tax-card > strong {
+  margin: 0 0 2px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: #234b3f;
+  text-transform: none;
+  font-size: 14px;
+  letter-spacing: normal;
+}
+.product-edit-modal .product-prices-section .product-tax-card > label:not(.product-tax-toggle) {
+  max-width: 190px;
+}
+.product-edit-modal .product-prices-section .product-tax-summary {
+  padding: 10px !important;
+  border-radius: 9px;
+}
+.product-edit-modal .product-prices-section .product-unit-cost-field {
+  grid-column: span 7 !important;
+  width: min(100%, 250px);
+  justify-self: start;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+.product-edit-modal .product-prices-section > .card:has(> strong) {
+  grid-column: 1 / -1 !important;
+  border: 1px solid #dce7e2;
+  border-radius: 12px;
+  overflow: visible;
+  background: #fff;
+  padding: 14px !important;
+  gap: 12px !important;
+}
+.product-edit-modal .product-prices-section > .card:has(> strong) > strong {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  text-transform: none;
+  color: #234b3f;
+  font-size: 14px;
+}
+.product-edit-modal .product-prices-section > .card:has(> strong) > .form-grid {
+  padding: 0;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.product-edit-modal .product-prices-section > .card:has(> strong) label {
+  font-size: 11px;
+  text-transform: none;
+  line-height: 1.35;
+}
+.product-edit-modal .product-prices-section > .card:has(> strong) input {
+  text-align: left;
+  min-height: 38px;
+  font-size: 13px;
+}
+.product-edit-modal .product-prices-section > div[style*="justify-content: space-between"] {
+  grid-column: 1 / -1 !important;
+  padding: 5px 2px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #e4ece8;
+  margin-top: 4px;
+}
+.product-edit-modal .product-prices-section > .card:has(> div > strong) {
+  grid-column: 1 / -1 !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px !important;
+  padding: 14px !important;
+  border: 1px solid #dce7e2;
+  border-radius: 12px;
+  background: #fbfdfc;
+}
+.product-edit-modal .product-prices-section > .card:has(> div > strong) > div:first-child {
+  grid-column: 1 / -1;
+}
+.product-edit-modal .product-prices-section > .card:has(> div > strong) input {
+  text-align: left;
+}
+.product-edit-modal .product-prices-section label {
+  font-size: 11px;
+  line-height: 1.35;
+}
+.product-edit-modal .product-prices-section label input,
+.product-edit-modal .product-prices-section label select {
+  min-height: 38px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+@media (max-width: 760px) {
+  .product-edit-modal .product-prices-section .product-tax-card { grid-column: 1 / -1 !important; }
+  .product-edit-modal .product-prices-section .product-unit-cost-field { grid-column: 1 / -1 !important; }
+  .product-edit-modal .product-prices-section > .card:has(> strong) > .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .product-edit-modal .product-prices-section > .card:has(> div > strong) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 430px) {
+  .product-edit-modal .product-prices-section > .card:has(> strong) > .form-grid,
+  .product-edit-modal .product-prices-section > .card:has(> div > strong) { grid-template-columns: minmax(0, 1fr); }
+}
