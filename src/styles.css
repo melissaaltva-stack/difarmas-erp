@@ -2023,3 +2023,19 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
   }
 }
 
+
+
+/* Facturación estándar: contornos de campos más visibles sin alterar la distribución */
+.standard-invoice input:not([type="checkbox"]):not([type="radio"]),
+.standard-invoice select,
+.standard-invoice textarea {
+  border: 1.5px solid #9bb9ae !important;
+  box-shadow: 0 1px 2px #173e3e0b;
+}
+.standard-invoice input:not([type="checkbox"]):not([type="radio"]):focus,
+.standard-invoice select:focus,
+.standard-invoice textarea:focus {
+  border-color: #218565 !important;
+  box-shadow: 0 0 0 3px #21856520 !important;
+  outline: none;
+}
