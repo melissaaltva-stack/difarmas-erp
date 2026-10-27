@@ -3110,3 +3110,9 @@ h4, h5, h6 {
     min-height: 112px;
   }
 }
+
+
+/* Botón discreto del asistente farmacológico en el detalle del producto */
+.inventory-detail-footer { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+.inventory-detail-footer .inventory-detail-pharma-btn { padding:6px 9px; font-size:11px; gap:5px; }
+.inventory-detail-footer .inventory-detail-pharma-btn svg { width:14px; height:14px; }
