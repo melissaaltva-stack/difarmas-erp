@@ -2869,3 +2869,40 @@ h1, h2, h3, h4, h5, h6,
 .panel-title, .module-title, .page-title, .modal-title {
   text-align: center;
 }
+
+/* Jerarquía tipográfica compacta para títulos y descripciones de todos los módulos */
+.page-head h1, .page-header h1, .module-header h1, .page-title,
+h1 {
+  font-size: clamp(20px, 1.8vw, 25px);
+  line-height: 1.2;
+}
+.page-head h2, .page-header h2, .module-header h2, h2 {
+  font-size: clamp(17px, 1.45vw, 21px);
+  line-height: 1.25;
+}
+.card-title h1, .card-title h2, .card-title h3,
+.section-heading h1, .section-heading h2, .section-heading h3,
+.panel-title, .module-title, h3 {
+  font-size: 16px;
+  line-height: 1.3;
+}
+h4, h5, h6 {
+  font-size: 14px;
+  line-height: 1.3;
+}
+.page-head p, .page-header p, .module-header p,
+.card-title p, .section-heading p, .hero p,
+.subtitle, .sub-title, .description, .panel-subtitle, .module-subtitle {
+  font-size: 12px;
+  line-height: 1.4;
+}
+@media (max-width: 640px) {
+  .page-head h1, .page-header h1, .module-header h1, .page-title, h1 { font-size: 20px; }
+  .page-head h2, .page-header h2, .module-header h2, h2 { font-size: 17px; }
+  .card-title h1, .card-title h2, .card-title h3,
+  .section-heading h1, .section-heading h2, .section-heading h3,
+  .panel-title, .module-title, h3 { font-size: 15px; }
+  .page-head p, .page-header p, .module-header p,
+  .card-title p, .section-heading p, .hero p,
+  .subtitle, .sub-title, .description, .panel-subtitle, .module-subtitle { font-size: 11px; }
+}
