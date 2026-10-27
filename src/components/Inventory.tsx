@@ -123,7 +123,7 @@ function InventoryProductDetails({product,onClose,onEdit}:{product:Product;onClo
           {(product.drugInfo?.dosage||product.drugInfo?.duration||product.drugInfo?.warnings)&&<section className="inventory-detail-section"><h4><Pill size={16}/> Información farmacológica registrada</h4>{product.drugInfo?.dosage&&row('Posología',product.drugInfo.dosage)}{product.drugInfo?.duration&&row('Duración',product.drugInfo.duration)}{product.drugInfo?.warnings&&row('Advertencias',product.drugInfo.warnings)}<p className="inventory-detail-note">Información de referencia guardada en la ficha; verificar la presentación y fuente antes de utilizarla clínicamente.</p></section>}
         </div>
       </div>
-      <footer className="inventory-detail-footer"><button className="secondary" type="button" onClick={onClose}><X size={16}/> Cerrar</button></footer>
+      <footer className="inventory-detail-footer"><button className="secondary inventory-detail-pharma-btn" type="button" onClick={()=>{onClose();onEdit(product);}}><Pill size={14}/> Asistente farmacológico</button><button className="secondary" type="button" onClick={onClose}><X size={16}/> Cerrar</button></footer>
     </section>
   </div>;
 }
