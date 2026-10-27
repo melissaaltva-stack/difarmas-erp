@@ -2613,3 +2613,81 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
 .inventory-page .inventory-page-heading{text-align:center;flex:1;}
 .inventory-page .inventory-page-heading .pill{margin-inline:auto;}
 @media(max-width:900px){.inventory-page .inventory-page-heading{width:100%;}}
+
+
+/* Facturación estándar: encabezado centrado y distribución compacta */
+.standard-invoice {
+  padding: 18px 24px 24px;
+}
+.standard-invoice .page-intro {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 58px;
+  margin: 0 0 12px;
+  gap: 12px;
+}
+.standard-invoice .invoice-page-heading {
+  flex: 1;
+  text-align: center;
+}
+.standard-invoice .invoice-page-heading .pill {
+  margin: 0 auto;
+}
+.standard-invoice .invoice-page-heading p {
+  margin: 6px 0 0;
+  line-height: 1.4;
+}
+.standard-invoice .page-intro > button {
+  flex: 0 0 auto;
+  padding: 9px 12px;
+}
+.standard-invoice .invoice-layout {
+  gap: 10px !important;
+  margin-bottom: 10px;
+}
+.standard-invoice .invoice-layout > .card,
+.standard-invoice .invoice-cart,
+.standard-invoice .invoice-history {
+  padding: 14px 16px !important;
+}
+.standard-invoice .invoice-layout > .card .section-heading {
+  margin-bottom: 9px;
+}
+.standard-invoice .invoice-layout > .card .field-label {
+  font-size: 12px;
+}
+.standard-invoice .invoice-layout > .card:first-child,
+.standard-invoice .invoice-layout > .card.invoice-billing-details {
+  row-gap: 7px !important;
+}
+.standard-invoice .invoice-layout > .card .invoice-fiscal-note {
+  margin-top: 4px;
+  padding: 8px 10px;
+}
+.standard-invoice .invoice-cart {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+.standard-invoice .invoice-total {
+  margin-top: 8px;
+  padding: 10px 0 4px;
+}
+.standard-invoice .invoice-actions {
+  margin-top: 8px;
+}
+@media (max-width: 650px) {
+  .standard-invoice { padding: 14px 12px 20px; }
+  .standard-invoice .page-intro {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 9px;
+    margin-bottom: 10px;
+  }
+  .standard-invoice .invoice-page-heading { width: 100%; }
+  .standard-invoice .page-intro > button { align-self: stretch; justify-content: center; }
+  .standard-invoice .invoice-layout > .card,
+  .standard-invoice .invoice-cart,
+  .standard-invoice .invoice-history { padding: 12px !important; }
+}
