@@ -49,7 +49,7 @@ export function Inventory({products, search, setSearch, movements, onNew, onEdit
   });
   const toggle = (id:number, checked:boolean) => setSelected(current => checked ? [...new Set([...current,id])] : current.filter(x => x !== id));
   const selectVisible = (checked:boolean) => setSelected(current => checked ? [...new Set([...current,...visibleProducts.map(p=>p.id)])] : current.filter(id => !visibleProducts.some(p=>p.id===id)));
-  return <div className="content">
+  return <div className="content inventory-page">
     <div className="page-head"><div><span className="pill">MÓDULO 2</span><h2>Productos e inventario</h2><p>Existencias, costos, margen, lotes, vencimientos y etiquetas.</p></div><div className="inventory-actions"><button className="secondary" onClick={()=>setLabelsOpen(true)} disabled={selected.length===0}><Printer size={17}/> Imprimir etiquetas ({selected.length})</button><button className="primary" onClick={onNew}><Plus size={17}/> Nuevo producto</button></div></div>
     <div className="inventory-toolbar card"><div className="search"><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar por código, producto, categoría..." /></div><span className="count">{products.length} productos</span></div>
     <div className="inventory-alerts">
