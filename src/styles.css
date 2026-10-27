@@ -2726,3 +2726,93 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
   .standard-invoice .invoice-cart,
   .standard-invoice .invoice-history { padding: 8px !important; }
 }
+
+
+/* Compactación global de todos los módulos: márgenes, alineación y controles */
+.content { padding: 16px 20px; }
+.page-head { margin-bottom: 10px; gap: 10px; }
+.page-head h2 { margin: 3px 0 4px; font-size: 22px; line-height: 1.2; }
+.page-head p { margin: 0; line-height: 1.35; font-size: 12px; }
+.card { padding: 12px; border-radius: 11px; }
+.grid, .two-col, .pos-grid, .purchase-grid, .finance-grid, .dashboard-grid { gap: 10px; }
+.metrics { margin: 10px 0; gap: 10px; }
+.metric strong { margin: 8px 0 3px; font-size: 21px; }
+.card-title { gap: 8px; align-items: center; }
+.card-title h3, .section-heading h3 { margin: 0; line-height: 1.25; }
+.card-title p, .section-heading p { margin: 3px 0 0; line-height: 1.35; }
+.section-heading { margin-bottom: 8px; gap: 8px; }
+.hero { padding: 18px 20px; gap: 14px; border-radius: 12px; }
+.hero h2 { margin: 5px 0; font-size: 22px; line-height: 1.2; }
+.hero-goal { padding: 10px 12px; }
+.hero-goal strong { margin: 3px 0; font-size: 22px; }
+.topbar { height: 72px; padding: 12px 22px; }
+.topbar h1 { font-size: 21px; line-height: 1.2; }
+.brand { padding: 3px 8px 18px; gap: 9px; }
+.sidebar { padding: 16px 12px; gap: 5px; }
+.nav { padding: 9px 10px; gap: 8px; border-radius: 8px; }
+.section-label { padding: 6px 10px; }
+.inventory-toolbar { margin-bottom: 8px; gap: 8px; }
+.inventory-alerts { gap: 8px; margin-bottom: 8px; }
+.alert-card { padding: 9px; gap: 8px; }
+.table-wrap { border-radius: 8px; }
+th, td { padding: 8px 10px; line-height: 1.3; }
+td small { margin-top: 2px; line-height: 1.25; }
+.primary, .secondary { padding: 8px 11px; gap: 6px; border-radius: 7px; }
+.icon-btn { width: 30px; height: 30px; }
+.form-grid { gap: 9px; }
+.form-grid label { line-height: 1.3; }
+.form-grid input { margin-top: 4px; padding: 8px; }
+.modal { padding: 16px; border-radius: 12px; }
+.modal-head { margin-bottom: 10px; gap: 10px; }
+.modal-actions { margin-top: 12px; gap: 7px; }
+.empty { padding: 40px 16px; }
+.empty h2 { margin: 8px 0 5px; }
+.empty p { margin-bottom: 12px; line-height: 1.45; }
+.pos-grid, .purchase-grid { grid-template-columns: minmax(0, 1.6fr) minmax(280px, 340px); }
+.cart-card { min-height: 0; }
+.cart-empty { padding: 35px 12px; }
+.cart-row, .purchase-row { gap: 9px; padding: 8px 0; }
+.qty { gap: 5px; }
+.summary-line { padding: 8px 0; }
+.grand { padding: 10px 0; }
+.checkout-label { margin-top: 8px; }
+.checkout select, .purchase-head input { margin-top: 4px; padding: 8px; }
+.purchase-head { gap: 9px; margin-bottom: 6px; }
+.purchase-row input { padding: 6px; }
+.finance-grid { margin-bottom: 8px; }
+.expense-form { gap: 7px; margin-top: 10px; }
+.expense-form input, .expense-form select { padding: 8px; }
+.expense-row { padding: 8px 0; }
+.finance-table .card-title { padding-bottom: 6px; }
+.goal-card { margin-bottom: 10px; }
+.goal-head { gap: 12px; }
+.progress-track { margin-top: 9px; }
+.dashboard-grid { margin-top: 10px; }
+.mini-sales { gap: 6px; }
+.mini-sale { padding: 7px 0; }
+.alert { gap: 8px; padding: 8px 0; }
+.alert p { margin-top: 2px; }
+.finance-summary { gap: 8px; }
+.finance-summary>div { padding: 8px 0; }
+.results { margin-bottom: 8px; padding: 4px; }
+.results button { padding: 8px; }
+.search-pos { gap: 7px; margin-bottom: 6px; }
+.sale-type { gap: 5px; }
+.type { padding: 7px 10px; }
+.cart-row small, .purchase-row small, .expense-row small { margin-top: 2px; }
+@media (max-width: 900px) {
+  .content { padding: 12px; }
+  .topbar { height: 64px; padding: 10px 14px; }
+  .page-head { margin-bottom: 8px; }
+  .hero { padding: 14px; gap: 10px; }
+  .pos-grid, .purchase-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .content { padding: 8px; }
+  .card { padding: 9px; border-radius: 9px; }
+  .topbar { height: 58px; padding: 8px 10px; }
+  .topbar h1 { font-size: 17px; }
+  .page-head h2 { font-size: 19px; }
+  .modal { padding: 10px; }
+  th, td { padding: 7px 8px; }
+}
