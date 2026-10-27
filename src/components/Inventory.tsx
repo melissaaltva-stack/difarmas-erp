@@ -63,7 +63,7 @@ export function Inventory({products, search, setSearch, movements, onNew, onEdit
 
     <section className="inventory-utility-section">
       <button type="button" className="inventory-utility-toggle" aria-expanded={showExpiryControl} onClick={()=>setShowExpiryControl(value=>!value)}>
-        <span><CalendarClock size={18}/><span><strong>Control de vencimientos</strong><small>Filtros, productos próximos a vencer y valor comprometido</small></span></span><span className="inventory-utility-toggle-end"><small>{products.length{"}"} productos</small><ChevronDown size={18} className={showExpiryControl?'is-open':''}/></span>
+        <span><CalendarClock size={18}/><span><strong>Control de vencimientos</strong><small>Filtros, productos próximos a vencer y valor comprometido</small></span></span><span className="inventory-utility-toggle-end"><small>{products.length} productos</small><ChevronDown size={18} className={showExpiryControl?'is-open':''}/></span>
       </button>
       {showExpiryControl && <div className="inventory-utility-content">    <section className="card expiry-control-panel">
       <div className="expiry-control-heading"><div><h3>Control de vencimientos</h3><p>Filtra los productos por fecha y revisa el valor de inventario comprometido. Los cálculos usan el costo registrado y las existencias actuales.</p></div><CalendarClock size={20}/></div>
@@ -79,7 +79,7 @@ export function Inventory({products, search, setSearch, movements, onNew, onEdit
     </section>
     <section className="inventory-utility-section">
       <button type="button" className="inventory-utility-toggle" aria-expanded={showMovementHistory} onClick={()=>setShowMovementHistory(value=>!value)}>
-        <span><History size={18}/><span><strong>Historial de movimientos</strong><small>Consulta entradas y salidas recientes del inventario</small></span></span><span className="inventory-utility-toggle-end"><small>{movements.length{"}"} registros</small><ChevronDown size={18} className={showMovementHistory?'is-open':''}/></span>
+        <span><History size={18}/><span><strong>Historial de movimientos</strong><small>Consulta entradas y salidas recientes del inventario</small></span></span><span className="inventory-utility-toggle-end"><small>{movements.length} registros</small><ChevronDown size={18} className={showMovementHistory?'is-open':''}/></span>
       </button>
       {showMovementHistory && <div className="inventory-utility-content"><div className="card table-wrap"><div className="card-title"><div><h3>Historial de movimientos</h3><p>Últimas entradas y salidas registradas.</p></div><History size={20}/></div><table><thead><tr><th>Fecha</th><th>Producto</th><th>Tipo</th><th>Cantidad</th><th>Stock antes</th><th>Stock después</th><th>Costo unitario</th></tr></thead><tbody>{movements.slice().reverse().slice(0,20).map(m=><tr key={m.id}><td>{new Date(m.date).toLocaleString('es-HN')}</td><td><strong>{m.productName}</strong></td><td>{m.type}</td><td>{m.quantity}</td><td>{m.stockBefore}</td><td>{m.stockAfter}</td><td>{money(m.unitCost)}</td></tr>)}{movements.length===0&&<tr><td colSpan={7}>Aún no hay movimientos registrados.</td></tr>}</tbody></table></div></div>}
     </section>
