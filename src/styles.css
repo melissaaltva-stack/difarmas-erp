@@ -2906,3 +2906,56 @@ h4, h5, h6 {
   .card-title p, .section-heading p, .hero p,
   .subtitle, .sub-title, .description, .panel-subtitle, .module-subtitle { font-size: 11px; }
 }
+
+
+/* Redes sociales: evitar que las etiquetas de estado se monten sobre los textos */
+.social-sales .social-inbox { min-width: 0; overflow: hidden; }
+.social-sales .social-search { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.social-sales .social-search input { flex: 1; width: 100%; min-width: 0; }
+.social-sales .social-filters { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 8px; }
+.social-sales .social-filters select { width: 100%; min-width: 0; }
+.social-sales .social-filters span { white-space: nowrap; }
+.social-sales .social-lead {
+  display: grid;
+  grid-template-columns: 32px minmax(0,1fr);
+  align-items: start;
+  gap: 7px 10px;
+  min-width: 0;
+}
+.social-sales .social-channel-icon { grid-column: 1; grid-row: 1 / span 2; }
+.social-sales .social-lead-main { grid-column: 2; grid-row: 1; width: 100%; min-width: 0; }
+.social-sales .social-lead-main strong { line-height: 1.4; overflow-wrap: anywhere; }
+.social-sales .social-lead-main small { line-height: 1.4; }
+.social-sales .social-stage {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: start;
+  display: inline-block;
+  width: fit-content;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left;
+  margin-top: 0;
+}
+.social-sales .social-detail,
+.social-sales .social-detail .card-title,
+.social-sales .social-detail .card-title > div { min-width: 0; }
+.social-sales .social-detail .card-title { align-items: flex-start; }
+.social-sales .social-detail .card-title p { line-height: 1.45; overflow-wrap: anywhere; }
+.social-sales .social-detail-fields { align-items: start; }
+.social-sales .social-detail-fields label { min-width: 0; }
+.social-sales .social-detail-fields select,
+.social-sales .social-notes-label textarea,
+.social-sales .social-message-label textarea { box-sizing: border-box; min-width: 0; max-width: 100%; }
+.social-sales .social-product { min-width: 0; }
+.social-sales .social-product > span { flex: 1; overflow-wrap: anywhere; }
+.social-sales .social-product b { flex: 0 0 auto; }
+@media (max-width: 650px) {
+  .social-sales .social-filters { grid-template-columns: minmax(0,1fr); }
+  .social-sales .social-filters span { white-space: normal; }
+  .social-sales .social-lead { padding: 10px; }
+  .social-sales .social-detail-fields { grid-template-columns: minmax(0,1fr); }
+  .social-sales .social-message-actions { justify-content: stretch; }
+  .social-sales .social-message-actions button { min-width: 0; }
+}
