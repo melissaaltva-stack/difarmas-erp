@@ -2609,3 +2609,7 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
  .inventory-utility-toggle-end>small{display:none}
  .inventory-utility-content{padding:0 6px 7px}
 }
+
+.inventory-page .inventory-page-heading{text-align:center;flex:1;}
+.inventory-page .inventory-page-heading .pill{margin-inline:auto;}
+@media(max-width:900px){.inventory-page .inventory-page-heading{width:100%;}}
