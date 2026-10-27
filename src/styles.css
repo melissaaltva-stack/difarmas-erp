@@ -3055,3 +3055,32 @@ h4, h5, h6 {
   .inventory-detail-image { height: 100px; }
   .inventory-detail-sections { padding: 3px 12px 8px; }
 }
+
+
+/* Ajuste visible reforzado para la ficha emergente del producto */
+.inventory-detail-backdrop .inventory-detail-modal {
+  width: min(660px, calc(100vw - 28px)) !important;
+  max-height: min(78vh, 610px) !important;
+}
+.inventory-detail-backdrop .inventory-detail-head { padding: 8px 12px !important; }
+.inventory-detail-backdrop .inventory-detail-head h2 { font-size: 16px !important; margin: 3px 0 0 !important; }
+.inventory-detail-backdrop .inventory-detail-head p { display: none !important; }
+.inventory-detail-backdrop .inventory-detail-body {
+  grid-template-columns: minmax(150px, .62fr) minmax(0, 1.38fr) !important;
+}
+.inventory-detail-backdrop .inventory-detail-summary { padding: 8px !important; }
+.inventory-detail-backdrop .inventory-detail-image { height: 82px !important; }
+.inventory-detail-backdrop .inventory-detail-image img { padding: 5px !important; }
+.inventory-detail-backdrop .inventory-detail-name-row { margin-top: 5px !important; }
+.inventory-detail-backdrop .inventory-detail-name-row h3 { font-size: 12px !important; }
+.inventory-detail-backdrop .inventory-detail-code { margin-top: 4px !important; font-size: 9px !important; }
+.inventory-detail-backdrop .inventory-detail-sections { padding: 2px 10px 5px !important; }
+.inventory-detail-backdrop .inventory-detail-section { padding: 4px 0 !important; }
+.inventory-detail-backdrop .inventory-detail-section h4 { margin-bottom: 3px !important; font-size: 11px !important; }
+.inventory-detail-backdrop .inventory-detail-row { padding: 1px 0 !important; font-size: 9px !important; }
+.inventory-detail-backdrop .inventory-detail-footer { padding: 5px 10px !important; }
+@media (max-width: 720px) {
+ .inventory-detail-backdrop .inventory-detail-modal { width: calc(100vw - 20px) !important; max-height: calc(100dvh - 20px) !important; }
+ .inventory-detail-backdrop .inventory-detail-body { grid-template-columns: minmax(0,1fr) !important; }
+ .inventory-detail-backdrop .inventory-detail-image { height: 90px !important; }
+}
