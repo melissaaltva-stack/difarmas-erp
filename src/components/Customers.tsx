@@ -114,7 +114,7 @@ export function Customers({customers,setCustomers}:{customers:Customer[];setCust
   };
   const toggleActive=(customer:Customer)=>setCustomers(current=>current.map(c=>c.id===customer.id?{...c,active:!c.active}:c));
   return <div className="content">
-    <div className="page-head"><div><span className="pill">MÓDULO · CLIENTES</span><h2>Registro de clientes</h2><p>Guarda y consulta los datos de clientes particulares y empresas de DIFARMÁS.</p></div><button className="primary" onClick={startNew}><Plus size={17}/> Nuevo cliente</button></div>
+    <div className="page-head customer-page-head-compact"><button className="primary" onClick={startNew}><Plus size={17}/> Nuevo cliente</button></div>
     <div className="inventory-toolbar card"><div className="search"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar por nombre, RTN, teléfono o correo..."/></div><span className="count">{customers.length} clientes registrados</span></div>
     <div className="inventory-alerts">
       <div className="card alert-card"><UsersRound size={18}/><div><strong>{customers.length} registrados</strong><small>Todos los clientes guardados en el ERP.</small></div></div>
