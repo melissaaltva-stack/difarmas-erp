@@ -85,7 +85,7 @@ export function Inventory({products, search, setSearch, movements, onNew, onEdit
     </section>
 
 
-    {detailProduct && <InventoryProductDetails product={detailProduct} onClose={()=>setDetailProduct(null)} onPrintLabel={(p)=>{setSelected([p.id]);setLabelsOpen(true);}} onEdit={(p)=>{setDetailProduct(null);onEdit(p);}}/>}
+    {detailProduct && !labelsOpen && <InventoryProductDetails product={detailProduct} onClose={()=>setDetailProduct(null)} onPrintLabel={(p)=>{setSelected([p.id]);setLabelsOpen(true);}} onEdit={(p)=>{setDetailProduct(null);onEdit(p);}}/>}
     {labelsOpen && <div className="modal-backdrop label-backdrop"><div className="modal labels-modal"><div className="modal-head no-print"><div><h2>Selección múltiple de productos</h2><p>Marca los productos que deseas incluir en las etiquetas. Puedes buscar y cambiar la selección aquí.</p></div><button className="icon-btn" aria-label="Cerrar ventana" onClick={()=>setLabelsOpen(false)}><X/></button></div>
       <div className="label-picker no-print">
         <div className="label-picker-toolbar"><div className="search label-picker-search"><Search size={17}/><input value={labelSearch} onChange={e=>setLabelSearch(e.target.value)} placeholder="Buscar por nombre, código o categoría..." aria-label="Buscar productos para etiquetas"/></div><span className="count">{selected.length} seleccionado(s)</span></div>
