@@ -3084,3 +3084,29 @@ h4, h5, h6 {
  .inventory-detail-backdrop .inventory-detail-body { grid-template-columns: minmax(0,1fr) !important; }
  .inventory-detail-backdrop .inventory-detail-image { height: 90px !important; }
 }
+
+/* Mantener la imagen del producto completa, sin recortes en la ficha compacta */
+.inventory-detail-backdrop .inventory-detail-image {
+  height: 100px !important;
+  min-height: 100px;
+  padding: 4px;
+  box-sizing: border-box;
+  background: #fff !important;
+}
+.inventory-detail-backdrop .inventory-detail-image img {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain !important;
+  object-position: center;
+  padding: 0 !important;
+  box-sizing: border-box;
+}
+@media (max-width: 720px) {
+  .inventory-detail-backdrop .inventory-detail-image {
+    height: 112px !important;
+    min-height: 112px;
+  }
+}
