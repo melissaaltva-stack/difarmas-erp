@@ -2691,3 +2691,38 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
   .standard-invoice .invoice-cart,
   .standard-invoice .invoice-history { padding: 12px !important; }
 }
+
+
+/* Factura estándar: máxima compactación del formulario */
+.standard-invoice { padding: 8px 12px 12px; }
+.standard-invoice .page-intro { min-height: 0; margin-bottom: 6px; gap: 8px; }
+.standard-invoice .invoice-page-heading p { margin-top: 2px; line-height: 1.2; }
+.standard-invoice .page-intro > button { padding: 6px 9px; }
+.standard-invoice .invoice-layout { gap: 6px !important; margin-bottom: 6px; }
+.standard-invoice .invoice-layout > .card,
+.standard-invoice .invoice-cart,
+.standard-invoice .invoice-history { padding: 8px 10px !important; }
+.standard-invoice .invoice-header-grid { gap: 6px; }
+.standard-invoice .invoice-field { gap: 3px; }
+.standard-invoice .invoice-layout > .card .section-heading { margin-bottom: 5px; }
+.standard-invoice .invoice-layout > .card .section-heading h3 { margin: 0; }
+.standard-invoice .invoice-layout > .card .section-heading p { margin: 2px 0 0; line-height: 1.25; }
+.standard-invoice .invoice-layout input,
+.standard-invoice .invoice-layout select,
+.standard-invoice .invoice-layout textarea { min-height: 30px; padding: 5px 7px; }
+.standard-invoice .invoice-layout textarea { min-height: 42px; }
+.standard-invoice .invoice-customer-select-row { gap: 6px; }
+.standard-invoice .invoice-products-card .invoice-search { margin-top: 5px; }
+.standard-invoice .invoice-cart { margin-top: 6px; margin-bottom: 6px; }
+.standard-invoice .invoice-cart .muted { margin: 4px 0; }
+.standard-invoice .invoice-total { margin-top: 4px; padding: 6px 0 2px; }
+.standard-invoice .invoice-actions { margin-top: 5px; gap: 6px; }
+.standard-invoice .invoice-actions button { padding: 7px 10px; }
+.standard-invoice .invoice-fiscal-note { margin-top: 5px; padding: 6px 8px; }
+@media (max-width: 650px) {
+  .standard-invoice { padding: 8px; }
+  .standard-invoice .page-intro { gap: 6px; margin-bottom: 6px; }
+  .standard-invoice .invoice-layout > .card,
+  .standard-invoice .invoice-cart,
+  .standard-invoice .invoice-history { padding: 8px !important; }
+}
