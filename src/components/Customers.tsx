@@ -113,7 +113,7 @@ export function Customers({customers,setCustomers}:{customers:Customer[];setCust
     setShowForm(false);setEditing(null);setForm(emptyForm);setError('');
   };
   const toggleActive=(customer:Customer)=>setCustomers(current=>current.map(c=>c.id===customer.id?{...c,active:!c.active}:c));
-  return <div className="content">
+  return <div className="content customers-page">
     <div className="page-head customer-page-head-compact"><button className="primary" onClick={startNew}><Plus size={17}/> Nuevo cliente</button></div>
     <div className="inventory-toolbar card"><div className="search"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar por nombre, RTN, teléfono o correo..."/></div><span className="count">{customers.length} clientes registrados</span></div>
     <div className="inventory-alerts">
@@ -121,7 +121,7 @@ export function Customers({customers,setCustomers}:{customers:Customer[];setCust
       <div className="card alert-card"><CheckCircle2 size={18}/><div><strong>{customers.filter(c=>c.active).length} activos</strong><small>Disponibles para futuras operaciones.</small></div></div>
       <div className="card alert-card"><Ban size={18}/><div><strong>{customers.filter(c=>!c.active).length} inactivos</strong><small>Se conservan sus datos e historial.</small></div></div>
     </div>
-    <div className="card table-wrap"><table><thead><tr><th>Código</th><th>Cliente</th><th>RTN / Identificación</th><th>Términos de pago</th><th>Teléfono</th><th>Correo</th><th>Límite de crédito</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
+    <div className="card table-wrap customer-table-wrap"><table><thead><tr><th>Código</th><th>Cliente</th><th>RTN / Identificación</th><th>Términos de pago</th><th>Teléfono</th><th>Correo</th><th>Límite de crédito</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
       {filtered.map(customer=><tr key={customer.id}><td><span className="customer-code">{customer.code}</span></td><td><div className="product-cell"><div className="customer-avatar"><UserRound size={18}/></div><div><strong>{customer.name}</strong><small>{customer.customerType??'Persona natural'}{customer.address?' · '+customer.address:''}</small></div></div></td><td>{customer.rtn||customer.documentNumber||'—'}</td><td><span className="customer-term">{customer.paymentTerms??'Contado'}{customer.paymentTerms==='Crédito'&&customer.creditDays?' · '+customer.creditDays+' días':''}</span></td><td>{customer.phone||'—'}</td><td>{customer.email||'—'}</td><td>{money(customer.creditLimit??0)}</td><td><span className={customer.active?'stock':'stock low'}>{customer.active?'Activo':'Inactivo'}</span></td><td><div className="customer-actions"><button className="icon-btn" title="Editar cliente" aria-label={'Editar '+customer.name} onClick={()=>startEdit(customer)}><Pencil size={16}/></button><button className="secondary" onClick={()=>toggleActive(customer)}>{customer.active?'Desactivar':'Activar'}</button></div></td></tr>)}
       {filtered.length===0&&<tr><td colSpan={9}><div className="empty"><UserRound size={30}/><strong>{query?'No se encontraron clientes':'Aún no hay clientes registrados'}</strong><p>{query?'Prueba otra búsqueda.':'Pulsa “Nuevo cliente” para registrar el primero.'}</p></div></td></tr>}
     </tbody></table></div>
