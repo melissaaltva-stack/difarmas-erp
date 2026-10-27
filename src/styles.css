@@ -2831,3 +2831,30 @@ td small { margin-top: 2px; line-height: 1.25; }
 .goal-setting-input input { width: 100%; min-width: 0; padding: 8px 0; border: 0; outline: 0; background: transparent; color: #173b36; font: inherit; font-size: 14px; font-weight: 650; font-variant-numeric: tabular-nums; }
 .goal-setting-input input:focus { outline: 0; }
 @media (max-width: 560px) { .goal-settings-fields { grid-template-columns: 1fr; gap: 10px; } .goal-setting-help { min-height: 0; } .goal-setting-input { min-height: 38px; } }
+
+
+/* Centrar subtítulos y descripciones en todo el sistema */
+.page-head p,
+.card-title p,
+.section-heading p,
+.hero p,
+.metric span,
+.goal-setting-help,
+.eyebrow,
+.subtitle,
+.sub-title,
+.description,
+.panel-subtitle,
+.module-subtitle {
+  text-align: center;
+}
+.card-title,
+.section-heading {
+  text-align: center;
+}
+.card-title > div,
+.section-heading > div {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
