@@ -2858,3 +2858,14 @@ td small { margin-top: 2px; line-height: 1.25; }
   min-width: 0;
   text-align: center;
 }
+
+/* Centrar los encabezados y títulos de los módulos */
+h1, h2, h3, h4, h5, h6,
+.page-head h1, .page-head h2,
+.page-header h1, .page-header h2,
+.module-header h1, .module-header h2,
+.card-title h1, .card-title h2, .card-title h3,
+.section-heading h1, .section-heading h2, .section-heading h3,
+.panel-title, .module-title, .page-title, .modal-title {
+  text-align: center;
+}
