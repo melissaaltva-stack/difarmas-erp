@@ -34,8 +34,12 @@ function ProductProfitability({sales}:{sales:SaleRecord[]}) {
 }
 
 export function GoalsSettings({monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses}:{monthlyGoal:number;setMonthlyGoal:(v:number)=>void;fixedExpenses:number;setFixedExpenses:(v:number)=>void}) {
-  return <section className="card"><div className="card-title"><div><h3>Configuración de metas</h3><p>Estos valores alimentan el cálculo de meta y punto de equilibrio.</p></div><DollarSign size={20}/></div>
-    <div className="expense-form"><label>Meta mensual<input type="number" min="0" value={monthlyGoal||''} onChange={e=>setMonthlyGoal(Number(e.target.value))}/></label><label>Gastos fijos mensuales<input type="number" min="0" value={fixedExpenses||''} onChange={e=>setFixedExpenses(Number(e.target.value))}/></label></div>
+  return <section className="card goal-settings">
+    <div className="card-title goal-settings-head"><div><h3>Configuración de metas</h3><p>Ajusta los valores usados en el avance mensual y el punto de equilibrio.</p></div><span className="goal-settings-icon"><DollarSign size={19}/></span></div>
+    <div className="goal-settings-fields">
+      <label className="goal-setting-field" htmlFor="dashboard-monthly-goal"><span className="goal-setting-label">Meta de ventas mensual</span><span className="goal-setting-help">Objetivo total de ventas del mes</span><span className="goal-setting-input"><span aria-hidden="true">L</span><input id="dashboard-monthly-goal" type="number" min="0" step="0.01" inputMode="decimal" value={monthlyGoal} onChange={e=>setMonthlyGoal(Math.max(0,Number(e.target.value)||0))} /></span></label>
+      <label className="goal-setting-field" htmlFor="dashboard-fixed-expenses"><span className="goal-setting-label">Gastos fijos mensuales</span><span className="goal-setting-help">Costos fijos para calcular el equilibrio</span><span className="goal-setting-input"><span aria-hidden="true">L</span><input id="dashboard-fixed-expenses" type="number" min="0" step="0.01" inputMode="decimal" value={fixedExpenses} onChange={e=>setFixedExpenses(Math.max(0,Number(e.target.value)||0))} /></span></label>
+    </div>
   </section>;
 }
 
