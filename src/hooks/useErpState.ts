@@ -5,7 +5,7 @@ import { applyPurchaseToInventory, applySaleToInventory } from '../services/inve
 import { buildSaleRecord, createReceivableFromSale } from '../services/salesService';
 import { createPayableFromPurchase } from '../services/purchaseService';
 import { createInventoryMovementsForPurchase, createInventoryMovementsForSale } from '../services/inventoryMovementService';
-import { loadErpSnapshot, saveErpSnapshot, type ErpSnapshot } from '../services/remoteErpState';
+import { loadErpSnapshot, saveErpSnapshot, saveQuotesForUser, type ErpSnapshot } from '../services/remoteErpState';
 import { ensureCustomerCodes } from '../services/customerCodeService';
 
 const initialProducts: Product[] = [
@@ -71,6 +71,7 @@ export function useErpState(userId: string) {
   const [remoteReady, setRemoteReady] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'loading'|'saving'|'synced'|'error'>('loading');
   const [syncError, setSyncError] = useState<string | null>(null);
+  const autoSaveTimerRef = useRef<number | null>(null);
   const saleInProgress = useRef(false);
   const purchaseInProgress = useRef(false);
 
@@ -181,6 +182,7 @@ export function useErpState(userId: string) {
     setSyncStatus('saving');
     setSyncError(null);
     const timer = window.setTimeout(() => {
+      if (autoSaveTimerRef.current === timer) autoSaveTimerRef.current = null;
       saveErpSnapshot(userId, snapshot)
         .then(() => { setSyncStatus('synced'); setSyncError(null); })
         .catch((error: unknown) => {
@@ -188,15 +190,25 @@ export function useErpState(userId: string) {
           setSyncError(error instanceof Error ? error.message : 'No se pudieron guardar los datos en Supabase.');
         });
     }, 500);
-    return () => window.clearTimeout(timer);
+    autoSaveTimerRef.current = timer;
+    return () => {
+      window.clearTimeout(timer);
+      if (autoSaveTimerRef.current === timer) autoSaveTimerRef.current = null;
+    };
   }, [remoteReady, userId, snapshot]);
 
   const saveQuotes = async (nextQuotes: QuoteRecord[]): Promise<void> => {
     if (!remoteReady) throw new Error('El sistema todavía está sincronizando los datos. Espera a que termine e inténtalo de nuevo.');
+    // Cancel a delayed autosave captured before this edit. Any save already
+    // queued completes first; the quote update then merges only the quotes field.
+    if (autoSaveTimerRef.current !== null) {
+      window.clearTimeout(autoSaveTimerRef.current);
+      autoSaveTimerRef.current = null;
+    }
     setSyncStatus('saving');
     setSyncError(null);
     try {
-      await saveErpSnapshot(userId, { ...snapshot, quotes: nextQuotes });
+      await saveQuotesForUser(userId, nextQuotes, snapshot);
       setQuotes(nextQuotes);
       setSyncStatus('synced');
       setSyncError(null);
