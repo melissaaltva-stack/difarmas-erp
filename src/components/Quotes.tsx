@@ -75,14 +75,14 @@ return <div className="content standard-invoice quotes-page"><style>{`.quotes-pa
 .quotes-page .invoice-field:has(#quote-address){grid-area:address!important;flex:none!important;width:100%!important;max-width:100%!important}
 .quotes-page .invoice-field:has(#quote-seller){grid-area:seller!important;flex:none!important;width:169px!important;min-width:169px!important;max-width:169px!important;box-sizing:border-box}
 .quotes-page #quote-seller{display:block;width:169px!important;min-width:169px!important;max-width:169px!important;height:39px!important;min-height:39px!important;max-height:39px!important;box-sizing:border-box}
-.quotes-page .invoice-field:has(#quote-price-list){grid-area:price!important;flex:none!important;width:100%!important;max-width:100%!important}
+.quotes-page .invoice-field:has(#quote-price-list){grid-area:price!important;flex:none!important;width:159px!important;min-width:159px!important;max-width:159px!important;box-sizing:border-box}.quotes-page #quote-price-list{display:block;width:159px!important;min-width:159px!important;max-width:159px!important;height:39px!important;min-height:39px!important;max-height:39px!important;box-sizing:border-box}
 @media(max-width:560px){
 .quotes-page .quote-field-number{width:100%!important;min-width:0!important;max-width:100%!important}.quotes-page #quote-number{width:100%!important;min-width:0!important;max-width:100%!important}
 .quotes-page .invoice-header-grid{grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"number" "seller" "date" "valid" "client" "rtn" "price" "address" "phone";gap:10px!important}
-.quotes-page .invoice-field:has(#quote-client-search),.quotes-page .invoice-field:has(#quote-rtn),.quotes-page .invoice-field:has(#quote-phone),.quotes-page .invoice-field:has(#quote-date),.quotes-page .invoice-field:has(#quote-valid),.quotes-page .invoice-field:has(#quote-address),.quotes-page .invoice-field:has(#quote-seller),.quotes-page .invoice-field:has(#quote-price-list){flex:0 1 100%!important;width:100%!important;max-width:100%!important}
+.quotes-page .invoice-field:has(#quote-client-search),.quotes-page .invoice-field:has(#quote-rtn),.quotes-page .invoice-field:has(#quote-phone),.quotes-page .invoice-field:has(#quote-date),.quotes-page .invoice-field:has(#quote-valid),.quotes-page .invoice-field:has(#quote-address),.quotes-page .invoice-field:has(#quote-seller),.quotes-page .invoice-field:has(#quote-price-list){flex:0 1 100%!important;width:100%!important;min-width:0!important;max-width:100%!important}
 .quotes-page .invoice-field:has(#quote-client-search) .invoice-search{flex:1 1 100%!important;width:100%!important;max-width:100%!important}
 .quotes-page #quote-date,.quotes-page #quote-valid,.quotes-page #quote-phone{width:100%!important;min-width:0!important;max-width:100%!important}
-.quotes-page #quote-seller{width:100%!important;max-width:100%!important}
+.quotes-page #quote-seller,.quotes-page #quote-price-list{width:100%!important;min-width:0!important;max-width:100%!important}
 .quotes-page #quote-client-search,.quotes-page #quote-rtn{width:100%!important;min-width:0!important;max-width:100%!important;height:39px!important;min-height:39px!important;max-height:39px!important}
 .quotes-page .quote-editor-card{padding:10px!important}
 .quotes-page .quote-products-card{padding:10px!important}
