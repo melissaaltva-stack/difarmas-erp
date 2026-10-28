@@ -191,6 +191,23 @@ export function useErpState(userId: string) {
     return () => window.clearTimeout(timer);
   }, [remoteReady, userId, snapshot]);
 
+  const saveQuotes = async (nextQuotes: QuoteRecord[]): Promise<void> => {
+    if (!remoteReady) throw new Error('El sistema todavía está sincronizando los datos. Espera a que termine e inténtalo de nuevo.');
+    setSyncStatus('saving');
+    setSyncError(null);
+    try {
+      await saveErpSnapshot(userId, { ...snapshot, quotes: nextQuotes });
+      setQuotes(nextQuotes);
+      setSyncStatus('synced');
+      setSyncError(null);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'No se pudo guardar la cotización en Supabase.';
+      setSyncStatus('error');
+      setSyncError(message);
+      throw new Error(message);
+    }
+  };
+
   const filtered=useMemo(()=>products.filter(p=>[p.code,p.name,p.category,p.laboratory].join(' ').toLowerCase().includes(search.toLowerCase())),[products,search]);
 
   const recordMissingProduct=(request:Omit<MissingProductRequest,'id'|'requestedAt'|'status'>):boolean=>{
@@ -368,5 +385,5 @@ export function useErpState(userId: string) {
     return true;
   };
 
-  return {active,setActive,customers,setCustomers,quotes,setQuotes,suppliers,setSuppliers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,settings,setSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,purchases,purchaseCostHistory,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,cashClosures,setCashClosures,cashMovements,setCashMovements,paymentTransactions,setPaymentTransactions,missingProductRequests,setMissingProductRequests,supplierReturns,setSupplierReturns,saleAdjustments,setSaleAdjustments,recordSupplierDispatch,recordSaleAdjustment,recordMissingProduct,filtered,recordSale,updateStandardInvoice,saveProduct,deleteProduct,receivePurchase,syncStatus,syncError};
+  return {active,setActive,customers,setCustomers,quotes,setQuotes,saveQuotes,suppliers,setSuppliers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,settings,setSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,purchases,purchaseCostHistory,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,cashClosures,setCashClosures,cashMovements,setCashMovements,paymentTransactions,setPaymentTransactions,missingProductRequests,setMissingProductRequests,supplierReturns,setSupplierReturns,saleAdjustments,setSaleAdjustments,recordSupplierDispatch,recordSaleAdjustment,recordMissingProduct,filtered,recordSale,updateStandardInvoice,saveProduct,deleteProduct,receivePurchase,syncStatus,syncError};
 }
