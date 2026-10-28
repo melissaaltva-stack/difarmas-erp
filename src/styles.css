@@ -3116,3 +3116,66 @@ h4, h5, h6 {
 .inventory-detail-footer { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
 .inventory-detail-footer .inventory-detail-pharma-btn { padding:6px 9px; font-size:11px; gap:5px; }
 .inventory-detail-footer .inventory-detail-pharma-btn svg { width:14px; height:14px; }
+
+
+/* Ventana de devoluciones y anulaciones del POS */
+.returns-modal-backdrop {
+  z-index: 1200;
+  padding: clamp(10px, 2.5vh, 28px) 14px;
+  overflow-y: auto;
+  align-items: center;
+}
+.returns-modal-shell {
+  width: min(1180px, 96vw) !important;
+  max-width: 1180px !important;
+  max-height: 94vh !important;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden !important;
+  padding: clamp(14px, 2vw, 24px) !important;
+  border-radius: 16px;
+  box-sizing: border-box;
+}
+.returns-modal-shell > .modal-head {
+  flex: 0 0 auto;
+  gap: 14px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+}
+.returns-modal-shell > .modal-head h2 { margin: 0 0 4px; font-size: clamp(18px, 2vw, 23px); }
+.returns-modal-shell > .modal-head p { margin: 0; }
+.returns-modal-shell > .sales-return-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  margin: 0;
+  padding: clamp(10px, 1.5vw, 18px);
+  box-shadow: none;
+  border: 0;
+  background: transparent;
+}
+.returns-modal-shell .invoice-search-box { margin-bottom: 12px; }
+.returns-modal-shell .invoice-search-control { width: 100%; }
+.returns-modal-shell .invoice-search-control input { min-width: 0; }
+.returns-modal-shell .invoice-return-results { max-height: 230px; overflow-y: auto; }
+.returns-modal-shell .invoice-selected-banner { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.returns-modal-shell .sales-return-detail .form-grid { grid-template-columns: minmax(180px, .8fr) minmax(240px, 1.4fr); gap: 12px; }
+.returns-modal-shell .table-wrap { max-width: 100%; overflow-x: auto; }
+.returns-modal-shell .sales-return-detail table { width:100%; min-width:600px; }
+.returns-modal-shell .sales-return-detail th,
+.returns-modal-shell .sales-return-detail td { padding: 9px 10px; vertical-align: middle; }
+.returns-modal-shell .sales-return-detail input[type="number"] { width: 90px; max-width:100%; }
+.returns-modal-shell .modal-actions { display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
+.returns-modal-shell .sales-return-history { margin-top: 16px; }
+@media (max-width: 700px) {
+  .returns-modal-backdrop { padding: 8px; align-items: flex-start; }
+  .returns-modal-shell { width: 100% !important; max-width: 100% !important; max-height: calc(100dvh - 16px) !important; padding: 12px !important; border-radius: 12px; }
+  .returns-modal-shell > .modal-head { padding-bottom: 10px; }
+  .returns-modal-shell > .sales-return-panel { padding: 4px 0; }
+  .returns-modal-shell .sales-return-detail .form-grid { grid-template-columns: minmax(0, 1fr); }
+  .returns-modal-shell .invoice-selected-banner { align-items: flex-start; }
+  .returns-modal-shell .sales-return-detail th,
+  .returns-modal-shell .sales-return-detail td { padding: 7px; font-size: 12px; }
+}
