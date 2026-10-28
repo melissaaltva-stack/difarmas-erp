@@ -3325,10 +3325,10 @@ h4, h5, h6 {
 }
 
 /* Diseño mejorado de filas en detalle de compra */
-#purchase-detail .purchase-detail-columns{display:grid;grid-template-columns:minmax(135px,1fr) minmax(125px,.9fr) 94px minmax(100px,max-content);gap:10px;align-items:center;padding:10px 12px;margin:0 0 8px;border:1px solid #e0ebe5;border-radius:9px;background:#f5faf7;color:#58766c;font-size:10px;letter-spacing:.02em;font-weight:800;text-transform:uppercase}
+#purchase-detail .purchase-detail-columns{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(140px,1fr) 98px 126px;gap:10px;align-items:center;padding:10px 12px;margin:0 0 8px;border:1px solid #e0ebe5;border-radius:9px;background:#f5faf7;color:#58766c;font-size:10px;letter-spacing:.02em;font-weight:800;text-transform:uppercase}
 #purchase-detail .purchase-detail-columns span:nth-child(3){text-align:center}
 #purchase-detail .purchase-detail-columns span:last-child{text-align:right}
-#purchase-detail .purchase-row-expiry{grid-template-columns:minmax(135px,1fr) minmax(125px,.9fr) 94px minmax(100px,max-content);gap:10px;align-items:center;padding:14px 12px;margin:0 0 9px;border:1px solid #e1ebe6;border-radius:11px;background:#fff;box-shadow:0 2px 6px rgba(24,66,51,.035);transition:border-color .15s,background .15s}
+#purchase-detail .purchase-row-expiry{grid-template-columns:minmax(0,1.4fr) minmax(140px,1fr) 98px 126px;gap:10px;align-items:center;padding:14px 12px;margin:0 0 9px;border:1px solid #e1ebe6;border-radius:11px;background:#fff;box-shadow:0 2px 6px rgba(24,66,51,.035);transition:border-color .15s,background .15s}
 #purchase-detail .purchase-row-expiry:hover{border-color:#bfded0;background:#fcfefd}
 #purchase-detail .purchase-row-expiry>div:first-child{min-width:0}
 #purchase-detail .purchase-row-expiry>div:first-child>strong{color:#173c32;font-size:13px;line-height:1.4;overflow-wrap:anywhere}
