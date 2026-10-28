@@ -33,5 +33,5 @@ export type InventoryMovement = { id:number; productId:number; productName:strin
 export type Customer = { id:number; code?:string; name:string; phone:string; creditLimit:number; active:boolean; notes:string; rtn?:string; email?:string; address?:string; customerType?:'Persona natural'|'Empresa'; documentType?:'RTN'|'Identidad'|'Pasaporte'|'Otro'; documentNumber?:string; legalName?:string; taxRegime?:string; billingEmail?:string; paymentTerms?:'Contado'|'Crédito'; creditDays?:number; assignedSeller?:string; priceList?:string };
 export type Supplier = { id:number; name:string; contact:string; phone:string; email:string; rtn:string; address:string; paymentTerms:string; notes:string; active:boolean };
 
-export type QuoteLine = { id:number; name:string; code:string; qty:number; price:number };
+export type QuoteLine = { id:number; name:string; code:string; qty:number; price:number; discountPercent?:number };
 export type QuoteRecord = { id:number; number:string; client:string; date:string; valid:string; discount:number; lines:QuoteLine[]; notes:string };
