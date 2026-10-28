@@ -89,6 +89,8 @@ return <div className="content standard-invoice quotes-page"><style>{`.quotes-pa
 .quotes-page .standard-invoice-lines th:nth-child(7),.quotes-page .standard-invoice-lines td:nth-child(7){text-align:right}
 .quotes-page .standard-invoice-lines td:nth-child(7)>strong{display:block;text-align:right}
 .quotes-page .standard-invoice-lines th:nth-child(8),.quotes-page .standard-invoice-lines td:nth-child(8){text-align:center}
+.quotes-page table thead th{text-align:center!important;vertical-align:middle}
+.quotes-page .standard-invoice-lines thead th:nth-child(n){text-align:center!important}
 .quotes-page table.standard-invoice-lines th:nth-child(3),.quotes-page table.standard-invoice-lines td:nth-child(3){text-align:center!important}
 .quotes-page table.standard-invoice-lines td:nth-child(3)>div{justify-content:center!important;width:100%;min-width:0}
 .quotes-page table.standard-invoice-lines th:nth-child(4),.quotes-page table.standard-invoice-lines td:nth-child(4){text-align:center!important}
