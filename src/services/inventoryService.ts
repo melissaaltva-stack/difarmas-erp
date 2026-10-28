@@ -3,6 +3,7 @@ import { isExpiryAtLeastSixMonths } from './expiryService';
 
 export function applySaleToInventory(products: Product[], sold: CartItem[]): Product[] {
   if (!sold.length) throw new Error('La venta debe contener al menos un producto.');
+  if (new Set(sold.map(item => item.id)).size !== sold.length) throw new Error('La venta contiene productos duplicados.');
   if (sold.some(item => !products.some(product => product.id === item.id))) throw new Error('No se encontró un producto del carrito en el inventario.');
   const invalid = sold.find(item => !Number.isFinite(item.qty) || item.qty <= 0 || !Number.isFinite(item.price) || item.price < 0 || !Number.isFinite(item.cost) || item.cost < 0 || !Number.isFinite(item.price * item.qty) || !Number.isFinite(item.cost * item.qty));
   if (invalid) throw new Error('Cantidad, precio y costo de venta deben ser válidos.');
