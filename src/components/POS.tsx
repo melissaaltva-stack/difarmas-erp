@@ -23,6 +23,7 @@ export function POS({products,customers,cart,setCart,saleType,setSaleType,paymen
   const results=products.filter(p=>[p.code,p.name,...(p.activeIngredients??[])].join(' ').toLowerCase().includes(search.toLowerCase())).slice(0,6);
   const [lineDiscounts,setLineDiscounts]=useState<Record<string,number>>({});
   const [invoiceDiscount,setInvoiceDiscount]=useState('0');
+  const cartLineKey=(item:CartItem,index:number)=>item.cartLineId??(String(item.id)+'-legacy-'+index);
   const subtotal=cart.reduce((sum,i)=>sum+i.price*i.qty,0);
   const invoiceDiscountPercent=Math.max(0,Math.min(100,Number(invoiceDiscount)||0));
   const lineDiscountPercent=(item:CartItem,index:number)=>Math.max(0,Math.min(100,Number(lineDiscounts[cartLineKey(item,index)]??0)||0));
@@ -99,7 +100,6 @@ export function POS({products,customers,cart,setCart,saleType,setSaleType,paymen
   const invoiceIsCash=invoicePaymentMethod?.kind==='cash'||invoice?.payment==='Efectivo';
   const received=Number(amountReceived);
   const changeDue=isCash&&Number.isFinite(received)?Math.max(0,received-total):0;
-  const cartLineKey=(item:CartItem,index:number)=>item.cartLineId??(String(item.id)+'-legacy-'+index);
   const add=(p:Product)=>{
     const expiryAlert=getExpiryAlert(p.expiry);
     if(expiryAlert&&expiryAlert.daysRemaining<0){setError(`⛔ ${p.name}: producto vencido. No se puede agregar a la venta; revisa y retira el lote según el procedimiento de la farmacia.`);return;}
