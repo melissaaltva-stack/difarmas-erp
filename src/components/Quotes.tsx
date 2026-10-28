@@ -9,25 +9,27 @@ const persist=(q:QuoteRecord[])=>setQuotes(q);const printFormat=settings.quotePr
 const add=(p:Product)=>{setLines(old=>old.some(l=>l.id===p.id)?old.map(l=>l.id===p.id?{...l,qty:l.qty+1}:l):[...old,{id:p.id,name:p.name,code:p.code,qty:1,price:priceWithTax(p)}]);setTerm("");};
 const startEdit=(q:QuoteRecord)=>{setSelected(null);setEditingId(q.id);const matchedCustomer=customers.find(c=>c.name===q.client);setClient(String(matchedCustomer?.id??''));setClientSearch(matchedCustomer?.name??q.client);setClientOpen(false);setValid(q.valid);setDiscount(String(q.discount));setNotes(q.notes??'');setIncludeNotes(true);setLines(q.lines.map(l=>({...l})));setTerm('');setShowList(false);setCreating(true)}; const save=()=>{const c=customers.find(x=>String(x.id)===client);if(!c||!lines.length)return;const id=editingId??Date.now();const previous=quotes.find(x=>x.id===editingId);const q:QuoteRecord={id,number:previous?.number??'COT-'+String(id).slice(-8),client:c.name,date:previous?.date??new Date().toISOString().slice(0,10),valid,discount:Math.min(subtotal,Math.max(0,Number(discount)||0)),lines:lines.map(l=>({...l})),notes:includeNotes?notes:'' };persist(editingId===null?[q,...quotes]:quotes.map(x=>x.id===editingId?q:x));setCreating(false);setSelected(q);setEditingId(null);setLines([]);setClient('');setClientSearch('');setClientOpen(false);setDiscount('0');setNotes('')}; const startNew=()=>{setSelected(null);setEditingId(null);setLines([]);setClient('');setClientSearch('');setClientOpen(false);setDiscount('0');setNotes('');setSeller('');setDeliveryTime('1 - 3 días');setIncludeNotes(true);setValid(new Date(Date.now()+15*86400000).toISOString().slice(0,10));setShowList(false);setCreating(true)};
 return <div className="content standard-invoice quotes-page"><style>{`.quotes-page .invoice-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
-.quotes-page .invoice-header-grid{display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px 12px!important;margin:0!important}
+.quotes-page .invoice-header-grid{display:flex!important;flex-wrap:wrap!important;align-items:flex-start;gap:10px 12px!important;margin:0!important}
 .quotes-page .invoice-field{min-width:0;margin:0!important;padding:0!important;flex:0 1 180px}
 .quotes-page .inv-span-2,.quotes-page .inv-span-4,.quotes-page .inv-span-8{grid-column:auto}
 .quotes-page .invoice-field input,.quotes-page .invoice-field select,.quotes-page .invoice-field textarea{width:100%;box-sizing:border-box;margin:0!important}
 .quotes-page .quote-product-results{margin-top:0!important}
 .quotes-page .quote-editor-card{padding:12px!important}
-.quotes-page .invoice-field:has(#quote-client-search){flex:0 1 545px;width:545px;max-width:100%}
+.quotes-page .invoice-field:has(#quote-client-search){flex:0 1 545px!important;width:545px!important;max-width:100%!important;min-width:0;box-sizing:border-box}
 .quotes-page .invoice-field:has(#quote-client-search) .invoice-customer-select-row{width:100%;max-width:100%;box-sizing:border-box}
-.quotes-page .invoice-field:has(#quote-client-search) .invoice-search{display:flex;flex:1 1 auto;width:100%;min-width:0;max-width:100%;height:38px;min-height:38px;box-sizing:border-box}
-.quotes-page #quote-client-search{width:100%;height:38px;min-height:38px;max-height:38px;box-sizing:border-box}
-.quotes-page .invoice-field:has(#quote-rtn){flex:0 1 208px;width:208px;max-width:100%}
-.quotes-page #quote-rtn{width:100%;max-width:100%;height:38px;min-height:38px;max-height:38px;box-sizing:border-box}
+.quotes-page .invoice-field:has(#quote-client-search) .invoice-search{display:flex!important;flex:1 1 auto;width:545px!important;min-width:0;max-width:100%;height:38px!important;min-height:38px!important;max-height:38px;box-sizing:border-box}
+.quotes-page #quote-client-search{width:100%!important;height:38px!important;min-height:38px!important;max-height:38px!important;box-sizing:border-box}
+.quotes-page .invoice-field:has(#quote-rtn){flex:0 1 208px!important;width:208px!important;max-width:100%!important;min-width:0;box-sizing:border-box}
+.quotes-page #quote-rtn{width:208px!important;max-width:100%!important;height:38px!important;min-height:38px!important;max-height:38px!important;box-sizing:border-box}
 .quotes-page .invoice-field:has(#quote-phone){flex:0 1 180px;width:180px;max-width:100%}
 .quotes-page .invoice-field:has(#quote-date),.quotes-page .invoice-field:has(#quote-valid){flex:0 1 170px;width:170px;max-width:100%}
 .quotes-page .invoice-field:has(#quote-address){flex:1 1 545px;width:545px;max-width:100%}
 .quotes-page .invoice-field:has(#quote-seller),.quotes-page .invoice-field:has(#quote-price-list){flex:0 1 240px;width:240px;max-width:100%}
 @media(max-width:560px){
 .quotes-page .invoice-header-grid{gap:10px!important}
-.quotes-page .invoice-field:has(#quote-client-search),.quotes-page .invoice-field:has(#quote-rtn),.quotes-page .invoice-field:has(#quote-phone),.quotes-page .invoice-field:has(#quote-date),.quotes-page .invoice-field:has(#quote-valid),.quotes-page .invoice-field:has(#quote-address),.quotes-page .invoice-field:has(#quote-seller),.quotes-page .invoice-field:has(#quote-price-list){flex:0 1 100%;width:100%;max-width:100%}
+.quotes-page .invoice-field:has(#quote-client-search),.quotes-page .invoice-field:has(#quote-rtn),.quotes-page .invoice-field:has(#quote-phone),.quotes-page .invoice-field:has(#quote-date),.quotes-page .invoice-field:has(#quote-valid),.quotes-page .invoice-field:has(#quote-address),.quotes-page .invoice-field:has(#quote-seller),.quotes-page .invoice-field:has(#quote-price-list){flex:0 1 100%!important;width:100%!important;max-width:100%!important}
+.quotes-page .invoice-field:has(#quote-client-search) .invoice-search{width:100%!important;max-width:100%!important}
+.quotes-page #quote-client-search,.quotes-page #quote-rtn{width:100%!important;max-width:100%!important}
 .quotes-page .quote-editor-card{padding:10px!important}
 .quotes-page .quote-products-card{padding:10px!important}
 }`}</style><div className="page-head quote-page-head-compact" style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}>{!creating&&<div style={{display:"flex",gap:10,flexWrap:"wrap"}}>{!selected&&<button className="secondary" onClick={()=>{setSelected(null);setCreating(false);setEditingId(null);setShowList(v=>!v)}}><FileText size={16}/> {showList?"Volver al formulario":"Ver cotizaciones"}</button>}<button className="primary" onClick={startNew}><Plus size={17}/> Nueva cotización</button></div>}</div>
