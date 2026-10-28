@@ -3243,3 +3243,22 @@ h4, h5, h6 {
 .returns-modal-shell .invoice-result-row { width: 100%; box-sizing: border-box; }
 .returns-modal-shell .invoice-result-main { min-width: 0; flex: 1 1 auto; }
 .returns-modal-shell .invoice-result-side { flex: 0 0 auto; }
+
+
+/* Ventana de devoluciones más compacta, sin perder espacio útil para el texto */
+.returns-modal-shell {
+  width: min(900px, calc(100vw - 36px)) !important;
+  max-width: 900px !important;
+  max-height: min(86vh, 760px) !important;
+  padding: 16px !important;
+  border-radius: 14px;
+}
+.returns-modal-backdrop { padding: 14px; }
+.returns-modal-shell > .sales-return-panel { padding: 8px 2px; }
+.returns-modal-shell .sales-return-detail .form-grid { grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 10px; }
+.returns-modal-shell .sales-return-detail table { min-width: 540px; }
+@media (max-width: 700px) {
+  .returns-modal-shell { width: calc(100vw - 16px) !important; max-width: calc(100vw - 16px) !important; max-height: calc(100dvh - 16px) !important; padding: 12px !important; }
+  .returns-modal-backdrop { padding: 8px; }
+  .returns-modal-shell .sales-return-detail .form-grid { grid-template-columns: minmax(0, 1fr); }
+}
