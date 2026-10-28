@@ -142,6 +142,61 @@ async function saveErpSnapshotNow(userId: string, snapshot: ErpSnapshot): Promis
 }
 
 
+async function saveQuotesForUserNow(userId: string, quotes: QuoteRecord[], fallbackSnapshot: ErpSnapshot): Promise<void> {
+  const client = requireSupabase();
+
+  // Read the latest cloud revision inside the same per-user save queue. This
+  // prevents a stale autosave snapshot from being used as the base for edits.
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const { data, error } = await client
+      .from('erp_state')
+      .select('user_id,state,updated_at')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!data) {
+      lastSeenRevision.delete(userId);
+      await saveErpSnapshotNow(userId, { ...fallbackSnapshot, quotes });
+      return;
+    }
+    if (data.user_id !== userId) throw new Error('La cuenta no coincide con el propietario de los datos.');
+    if (typeof data.updated_at !== 'string') throw new Error('No se pudo verificar la versión de los datos en Supabase.');
+
+    const latestState = isRecord(data.state) ? data.state : {};
+    const nextRevision = new Date(Math.max(Date.now(), Date.parse(data.updated_at) + 1)).toISOString();
+    const { data: updated, error: updateError } = await client
+      .from('erp_state')
+      .update({ state: { ...latestState, quotes }, updated_at: nextRevision })
+      .eq('user_id', userId)
+      .eq('updated_at', data.updated_at)
+      .select('updated_at')
+      .maybeSingle();
+
+    if (updateError) throw updateError;
+    if (updated && typeof updated.updated_at === 'string') {
+      lastSeenRevision.set(userId, updated.updated_at);
+      return;
+    }
+    // A different device changed the row while we were saving. Re-read it and
+    // retry the quote-only update without replacing its other data.
+  }
+
+  throw new Error('Otra sesión está modificando los datos. No se pudo confirmar el guardado; vuelve a intentarlo.');
+}
+
+export function saveQuotesForUser(userId: string, quotes: QuoteRecord[], fallbackSnapshot: ErpSnapshot): Promise<void> {
+  const previous = saveQueues.get(userId) ?? Promise.resolve();
+  const next = previous.catch(() => undefined).then(() => saveQuotesForUserNow(userId, quotes, fallbackSnapshot));
+  saveQueues.set(userId, next);
+  void next.finally(() => {
+    if (saveQueues.get(userId) === next) saveQueues.delete(userId);
+  }).catch(() => undefined);
+  return next;
+}
+
+
 // Serialize saves from this browser session. The revision check still protects
 // against other tabs/devices, while this queue prevents this tab's own autosaves
 // from racing each other.
