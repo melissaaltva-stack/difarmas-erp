@@ -22,13 +22,15 @@ return <div className="content standard-invoice quotes-page"><style>{`.quotes-pa
 .quotes-page .invoice-field:has(#quote-rtn){flex:0 1 208px!important;width:208px!important;max-width:100%!important;min-width:0;box-sizing:border-box}
 .quotes-page #quote-rtn{width:208px!important;max-width:100%!important;height:38px!important;min-height:38px!important;max-height:38px!important;box-sizing:border-box}
 .quotes-page .invoice-field:has(#quote-phone){flex:0 1 180px;width:180px;max-width:100%}
-.quotes-page .invoice-field:has(#quote-date),.quotes-page .invoice-field:has(#quote-valid){flex:0 1 170px;width:170px;max-width:100%}
+.quotes-page .invoice-field:has(#quote-date),.quotes-page .invoice-field:has(#quote-valid){flex:0 1 130px!important;width:130px!important;max-width:130px!important;min-width:0}
+.quotes-page #quote-date,.quotes-page #quote-valid{width:130px!important;max-width:100%;height:39px!important;min-height:39px!important;max-height:39px!important;box-sizing:border-box}
 .quotes-page .invoice-field:has(#quote-address){flex:1 1 545px;width:545px;max-width:100%}
 .quotes-page .invoice-field:has(#quote-seller),.quotes-page .invoice-field:has(#quote-price-list){flex:0 1 240px;width:240px;max-width:100%}
 @media(max-width:560px){
 .quotes-page .invoice-header-grid{gap:10px!important}
 .quotes-page .invoice-field:has(#quote-client-search),.quotes-page .invoice-field:has(#quote-rtn),.quotes-page .invoice-field:has(#quote-phone),.quotes-page .invoice-field:has(#quote-date),.quotes-page .invoice-field:has(#quote-valid),.quotes-page .invoice-field:has(#quote-address),.quotes-page .invoice-field:has(#quote-seller),.quotes-page .invoice-field:has(#quote-price-list){flex:0 1 100%!important;width:100%!important;max-width:100%!important}
 .quotes-page .invoice-field:has(#quote-client-search) .invoice-search{flex-basis:100%!important;width:100%!important;max-width:100%!important}
+.quotes-page #quote-date,.quotes-page #quote-valid{width:100%!important;min-width:0!important;max-width:100%!important}
 .quotes-page #quote-client-search,.quotes-page #quote-rtn{width:100%!important;max-width:100%!important}
 .quotes-page .quote-editor-card{padding:10px!important}
 .quotes-page .quote-products-card{padding:10px!important}
