@@ -3207,3 +3207,39 @@ h4, h5, h6 {
   .returns-modal-shell .invoice-search-box label,
   .returns-modal-shell .helper { font-size: 11px; }
 }
+
+
+/* Aprovechar todo el ancho de la ventana: evitar contenido pegado a un lado */
+.returns-modal-shell,
+.returns-modal-shell > .sales-return-panel {
+  width: 100% !important;
+  max-width: none !important;
+  align-self: stretch !important;
+  box-sizing: border-box !important;
+}
+.returns-modal-shell > .sales-return-panel {
+  display: block !important;
+}
+.returns-modal-shell .card-title,
+.returns-modal-shell .invoice-search-box,
+.returns-modal-shell .invoice-search-control,
+.returns-modal-shell .invoice-return-results,
+.returns-modal-shell .invoice-selected-banner,
+.returns-modal-shell .sales-return-detail,
+.returns-modal-shell .sales-return-history {
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+}
+.returns-modal-shell .sales-return-detail .summary-line,
+.returns-modal-shell .sales-return-detail .form-grid,
+.returns-modal-shell .sales-return-detail .table-wrap,
+.returns-modal-shell .sales-return-detail .grand,
+.returns-modal-shell .sales-return-detail .inline-check {
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+}
+.returns-modal-shell .invoice-result-row { width: 100%; box-sizing: border-box; }
+.returns-modal-shell .invoice-result-main { min-width: 0; flex: 1 1 auto; }
+.returns-modal-shell .invoice-result-side { flex: 0 0 auto; }
