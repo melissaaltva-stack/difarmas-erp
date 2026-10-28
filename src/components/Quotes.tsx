@@ -68,10 +68,10 @@ return <div className="content standard-invoice quotes-page"><style>{`.quotes-pa
 .quotes-page .invoice-field:has(#quote-rtn){grid-area:rtn!important;flex:none!important;width:266px!important;min-width:0!important;max-width:266px!important;box-sizing:border-box}
 .quotes-page #quote-rtn{width:266px!important;min-width:0!important;max-width:266px!important;height:39px!important;min-height:39px!important;max-height:39px!important;box-sizing:border-box}
 .quotes-page .invoice-field:has(#quote-phone){grid-area:phone!important;flex:none!important;width:100%!important;max-width:100%!important}
-.quotes-page .invoice-field:has(#quote-date){grid-area:date!important}.quotes-page .invoice-field:has(#quote-valid){grid-area:valid!important}
+.quotes-page .invoice-field:has(#quote-date){grid-area:date!important}.quotes-page .invoice-field:has(#quote-valid){grid-area:valid!important;width:138px!important;min-width:138px!important;max-width:138px!important;box-sizing:border-box}
 .quotes-page .invoice-field.quote-field-date{width:138px!important;min-width:138px!important;max-width:138px!important;box-sizing:border-box}
 .quotes-page #quote-date{width:138px!important;min-width:138px!important;max-width:138px!important;height:39px!important;min-height:39px!important;max-height:39px!important;box-sizing:border-box}
-.quotes-page #quote-valid{width:100%!important;min-width:0!important;max-width:100%!important;height:39px!important;min-height:39px!important;max-height:39px!important;box-sizing:border-box}
+.quotes-page #quote-valid{width:138px!important;min-width:138px!important;max-width:138px!important;height:39px!important;min-height:39px!important;max-height:39px!important;box-sizing:border-box}
 .quotes-page .invoice-field:has(#quote-address){grid-area:address!important;flex:none!important;width:100%!important;max-width:100%!important}
 .quotes-page .invoice-field:has(#quote-seller){grid-area:seller!important;flex:none!important;width:169px!important;min-width:169px!important;max-width:169px!important;box-sizing:border-box}
 .quotes-page #quote-seller{display:block;width:169px!important;min-width:169px!important;max-width:169px!important;height:39px!important;min-height:39px!important;max-height:39px!important;box-sizing:border-box}
