@@ -50,6 +50,9 @@ return <div className="content standard-invoice quotes-page"><style>{`.quotes-pa
 .quotes-page .invoice-field{min-width:0;margin:0!important;padding:0!important;flex:0 1 180px}
 .quotes-page .inv-span-2,.quotes-page .inv-span-4,.quotes-page .inv-span-8{grid-column:auto}
 .quotes-page .invoice-field input,.quotes-page .invoice-field select,.quotes-page .invoice-field textarea{width:100%;box-sizing:border-box;margin:0!important}
+.quotes-page .inventory-toolbar .search{display:flex!important;align-items:center;gap:10px;width:100%;max-width:560px;min-height:42px;padding:0 13px;border:1px solid #dbe7e2;border-radius:10px;background:#f8fbfa;box-shadow:none;box-sizing:border-box;color:#7a918c}
+.quotes-page .inventory-toolbar .search:focus-within{border-color:#87b9a9;background:#fff}
+.quotes-page .inventory-toolbar .search input,.quotes-page .inventory-toolbar .search input:focus{flex:1;min-width:0;width:100%;height:100%;margin:0!important;padding:0!important;border:0!important;outline:0!important;box-shadow:none!important;border-radius:0!important;background:transparent!important;color:#243c38;font:inherit;box-sizing:border-box}
 .quotes-page .quote-product-results{margin-top:0!important}
 .quotes-page .quote-editor-card{padding:12px!important}
 .quotes-page .invoice-field:has(#quote-client-search){flex:0 1 545px!important;width:min(545px,100%)!important;max-width:545px!important;min-width:0;box-sizing:border-box}
