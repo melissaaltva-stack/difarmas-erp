@@ -3179,3 +3179,31 @@ h4, h5, h6 {
   .returns-modal-shell .sales-return-detail th,
   .returns-modal-shell .sales-return-detail td { padding: 7px; font-size: 12px; }
 }
+
+
+/* Texto adaptable al tamaño de la ventana de devoluciones */
+.returns-modal-shell { font-size: clamp(12px, .9vw, 14px); }
+.returns-modal-shell h2 { overflow-wrap: anywhere; }
+.returns-modal-shell h3 { font-size: clamp(14px, 1.1vw, 17px); line-height: 1.25; }
+.returns-modal-shell p,
+.returns-modal-shell label,
+.returns-modal-shell .helper,
+.returns-modal-shell .pill { font-size: clamp(11px, .82vw, 13px); line-height: 1.4; overflow-wrap: anywhere; }
+.returns-modal-shell button,
+.returns-modal-shell input,
+.returns-modal-shell select,
+.returns-modal-shell textarea { font-size: clamp(11px, .85vw, 13px); min-width: 0; }
+.returns-modal-shell .card-title { gap: 10px; align-items: flex-start; }
+.returns-modal-shell .card-title > div { min-width: 0; }
+.returns-modal-shell .invoice-search-control { min-width: 0; }
+.returns-modal-shell .invoice-search-control input { width: 100%; }
+.returns-modal-shell .invoice-results-heading { gap: 8px; flex-wrap: wrap; }
+.returns-modal-shell .invoice-selected-banner > * { min-width: 0; overflow-wrap: anywhere; }
+.returns-modal-shell .sales-return-detail { min-width: 0; }
+@media (max-width: 700px) {
+  .returns-modal-shell { font-size: 12px; }
+  .returns-modal-shell > .modal-head h2 { font-size: 17px; line-height: 1.25; }
+  .returns-modal-shell > .modal-head p { font-size: 11px; line-height: 1.35; }
+  .returns-modal-shell .invoice-search-box label,
+  .returns-modal-shell .helper { font-size: 11px; }
+}
