@@ -3323,3 +3323,36 @@ h4, h5, h6 {
 #purchase-order .purchase-product-option-end .purchase-product-cost{font-size:13px}
 #purchase-order .purchase-product-add{padding:6px 7px;font-size:10px}
 }
+
+/* Diseño mejorado de filas en detalle de compra */
+#purchase-detail .purchase-detail-columns{display:grid;grid-template-columns:minmax(135px,1fr) minmax(125px,.9fr) 94px minmax(100px,max-content);gap:10px;align-items:center;padding:10px 12px;margin:0 0 8px;border:1px solid #e0ebe5;border-radius:9px;background:#f5faf7;color:#58766c;font-size:10px;letter-spacing:.02em;font-weight:800;text-transform:uppercase}
+#purchase-detail .purchase-detail-columns span:nth-child(3){text-align:center}
+#purchase-detail .purchase-detail-columns span:last-child{text-align:right}
+#purchase-detail .purchase-row-expiry{grid-template-columns:minmax(135px,1fr) minmax(125px,.9fr) 94px minmax(100px,max-content);gap:10px;align-items:center;padding:14px 12px;margin:0 0 9px;border:1px solid #e1ebe6;border-radius:11px;background:#fff;box-shadow:0 2px 6px rgba(24,66,51,.035);transition:border-color .15s,background .15s}
+#purchase-detail .purchase-row-expiry:hover{border-color:#bfded0;background:#fcfefd}
+#purchase-detail .purchase-row-expiry>div:first-child{min-width:0}
+#purchase-detail .purchase-row-expiry>div:first-child>strong{color:#173c32;font-size:13px;line-height:1.4;overflow-wrap:anywhere}
+#purchase-detail .purchase-row-expiry>div:first-child>small{color:#82958f;font-size:10px}
+#purchase-detail .purchase-expiry-label,#purchase-detail .purchase-cost-label{display:block;min-width:0;color:#607a74;font-size:10px;line-height:1.4;font-weight:700}
+#purchase-detail .purchase-row-expiry .purchase-expiry-label input,#purchase-detail .purchase-row-expiry .purchase-cost-label input{display:block;width:100%;min-width:0;min-height:39px;margin-top:6px;padding:8px 9px;border:1px solid #d8e6df;border-radius:8px;background:#fbfdfc;color:#233c37;font-size:12px;box-sizing:border-box}
+#purchase-detail .purchase-row-expiry .purchase-expiry-label input:focus,#purchase-detail .purchase-row-expiry .purchase-cost-label input:focus{outline:2px solid #a9d7c2;outline-offset:1px;border-color:#68ad8e;background:#fff}
+#purchase-detail .purchase-row-expiry .qty{justify-content:center;align-self:center;gap:6px;min-width:0}
+#purchase-detail .purchase-row-expiry .qty button{display:inline-flex;align-items:center;justify-content:center;width:29px;height:31px;border:1px solid #d7e7df;border-radius:8px;background:#f5faf7;color:#17684f;font-size:17px;font-weight:700;line-height:1;cursor:pointer}
+#purchase-detail .purchase-row-expiry .qty button:hover{background:#e3f5ec;border-color:#9acdb5}
+#purchase-detail .purchase-row-expiry .qty b{min-width:22px;text-align:center;color:#173c32;font-size:13px;font-variant-numeric:tabular-nums}
+#purchase-detail .purchase-row-expiry>strong{justify-self:end;align-self:center;white-space:nowrap;padding:9px 10px;border:1px solid #d6eee2;border-radius:9px;background:#effaf4;color:#17684f;font-size:13px;font-weight:800;font-variant-numeric:tabular-nums}
+#purchase-detail .expiry-error{font-size:10px;line-height:1.4}
+@media(max-width:700px){
+#purchase-detail .purchase-detail-columns{display:none}
+#purchase-detail .purchase-row-expiry{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;padding:13px;margin-bottom:10px;align-items:start}
+#purchase-detail .purchase-row-expiry>div:first-child{grid-column:1/-1}
+#purchase-detail .purchase-row-expiry .purchase-cost-label{grid-column:1;min-width:0}
+#purchase-detail .purchase-row-expiry .qty{grid-column:2;justify-self:end;align-self:end;padding-bottom:4px}
+#purchase-detail .purchase-row-expiry>strong{grid-column:2;justify-self:end;align-self:center;margin-top:2px}
+}
+@media(max-width:380px){
+#purchase-detail .purchase-row-expiry{padding:10px;gap:10px}
+#purchase-detail .purchase-row-expiry .qty{gap:4px}
+#purchase-detail .purchase-row-expiry .qty button{width:27px;height:29px}
+#purchase-detail .purchase-row-expiry>strong{font-size:12px;padding:8px}
+}
