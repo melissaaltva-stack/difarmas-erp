@@ -3819,3 +3819,60 @@ h4, h5, h6 {
     grid-column: 1 / -1;
   }
 }
+
+
+/* Animaciones sutiles para los iconos de Farmi, inspiradas en interfaces de iconos animados. */
+@keyframes farmi-icon-motion {
+  0%, 100% { transform: translateY(0) rotate(0) scale(1); }
+  30% { transform: translateY(-2px) rotate(-7deg) scale(1.12); }
+  62% { transform: translateY(1px) rotate(4deg) scale(.97); }
+}
+@keyframes farmi-icon-active {
+  0% { transform: scale(.88) rotate(-8deg); }
+  65% { transform: scale(1.12) rotate(3deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+.sidebar .nav:hover > svg,
+.sidebar .nav:focus-visible > svg,
+.sidebar .nav-parent:hover > svg,
+.sidebar .nav-parent:focus-visible > svg,
+button.primary:hover svg,
+button.primary:focus-visible svg,
+button.secondary:hover svg,
+button.secondary:focus-visible svg,
+button.type:hover svg,
+button.type:focus-visible svg,
+button.icon-btn:hover svg,
+button.icon-btn:focus-visible svg,
+.mobile-menu-toggle:hover svg,
+.mobile-menu-toggle:focus-visible svg,
+.mobile-menu-close:hover svg,
+.mobile-menu-close:focus-visible svg {
+  animation: farmi-icon-motion 520ms cubic-bezier(.2,.8,.2,1);
+  transform-origin: center;
+}
+.sidebar .nav.active > svg {
+  animation: farmi-icon-active 420ms cubic-bezier(.2,.8,.2,1);
+  transform-origin: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar .nav:hover > svg,
+  .sidebar .nav:focus-visible > svg,
+  .sidebar .nav-parent:hover > svg,
+  .sidebar .nav-parent:focus-visible > svg,
+  button.primary:hover svg,
+  button.primary:focus-visible svg,
+  button.secondary:hover svg,
+  button.secondary:focus-visible svg,
+  button.type:hover svg,
+  button.type:focus-visible svg,
+  button.icon-btn:hover svg,
+  button.icon-btn:focus-visible svg,
+  .mobile-menu-toggle:hover svg,
+  .mobile-menu-toggle:focus-visible svg,
+  .mobile-menu-close:hover svg,
+  .mobile-menu-close:focus-visible svg,
+  .sidebar .nav.active > svg {
+    animation: none !important;
+  }
+}
