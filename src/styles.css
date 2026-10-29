@@ -3909,3 +3909,7 @@ button.icon-btn:focus-visible svg,
 @media (max-width: 560px) {
   .product-name-image-row > label, .product-name-image-row > label input { width: 100%; max-width: 100%; }
 }
+/* Nombre del producto: ancho de 600px y alto de 39px en Registrar nuevo producto. */
+.product-name-image-row > label { flex: 0 1 600px; width: 600px; max-width: 100%; }
+.product-name-image-row > label input { width: 600px; max-width: 100%; height: 39px; box-sizing: border-box; }
+@media (max-width: 560px) { .product-name-image-row > label, .product-name-image-row > label input { width: 100%; max-width: 100%; } }
