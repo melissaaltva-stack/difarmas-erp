@@ -147,7 +147,7 @@ export function Purchases({products,sales,cart,setCart,search,setSearch,supplier
                   <option value={0}>Exento</option><option value={15}>15%</option><option value={18}>18%</option>
                 </select>
               </label>
-              <div className="qty purchase-detail-qty aria-label={`Cantidad de ${i.name}`}>
+              <div className="qty purchase-detail-qty" aria-label={`Cantidad de ${i.name}`}>
                 <button type="button" aria-label={`Disminuir cantidad de ${i.name}`} onClick={()=>change(i.id,-1)}>-</button>
                 <b>{i.qty}</b>
                 <button type="button" aria-label={`Aumentar cantidad de ${i.name}`} onClick={()=>change(i.id,1)}>+</button>
