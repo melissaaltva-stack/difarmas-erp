@@ -3876,3 +3876,28 @@ button.icon-btn:focus-visible svg,
     animation: none !important;
   }
 }
+
+
+/* Microanimaciones para los iconos interactivos en todos los módulos de Farmi. */
+.app button svg {
+  transform-origin: center;
+  transition: color 180ms ease, stroke 180ms ease;
+}
+.app button:hover svg,
+.app button:focus-visible svg {
+  animation: farmi-icon-motion 520ms cubic-bezier(.2,.8,.2,1);
+}
+.app button:active svg {
+  animation: farmi-icon-active 360ms cubic-bezier(.2,.8,.2,1);
+}
+.app .nav.active > svg {
+  filter: drop-shadow(0 1px 3px #21a17955);
+}
+@media (prefers-reduced-motion: reduce) {
+  .app button:hover svg,
+  .app button:focus-visible svg,
+  .app button:active svg {
+    animation: none !important;
+    transition: none !important;
+  }
+}
