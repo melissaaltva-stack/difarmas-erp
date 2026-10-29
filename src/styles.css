@@ -4035,3 +4035,21 @@ button.icon-btn:focus-visible svg,
     max-width: 100% !important;
   }
 }
+
+
+/* Reducir dimensiones generales de la ventana Nuevo producto / Editar producto. */
+.product-edit-modal.modal {
+  width: min(900px, calc(100vw - 28px)) !important;
+  max-width: 900px !important;
+  max-height: calc(100vh - 28px) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
+}
+@media (max-width: 700px) {
+  .product-edit-modal.modal {
+    width: calc(100vw - 18px) !important;
+    max-width: calc(100vw - 18px) !important;
+    max-height: calc(100vh - 18px) !important;
+  }
+}
