@@ -359,20 +359,23 @@ export function useErpState(userId: string) {
     return true;
   };
 
-  const saveProduct=(product:Product)=>{
-    if (!product.name.trim() || [product.cost,product.retail,product.wholesale,product.stock,product.minStock].some(v=>!Number.isFinite(v)||v<0)) return;
+  const saveProduct=(product:Product):Product|null=>{
+    if (!product.name.trim() || [product.cost,product.retail,product.wholesale,product.stock,product.minStock].some(v=>!Number.isFinite(v)||v<0)) return null;
+    let saved:Product;
     if (editing) {
       const previous = products.find(p=>p.id===editing.id);
-      const saved = {...product,id:editing.id};
+      saved = {...product,id:editing.id};
       setProducts(current=>current.map(p=>p.id===editing.id?saved:p));
       if (previous && previous.stock !== saved.stock) {
         const difference = saved.stock - previous.stock;
         setInventoryMovements(current=>[...current,{id:Date.now(),productId:saved.id,productName:saved.name,type:'Ajuste',quantity:Math.abs(difference),stockBefore:previous.stock,stockAfter:saved.stock,unitCost:saved.cost,date:new Date().toISOString(),note:difference>0?'Ajuste de entrada manual':'Ajuste de salida manual'}]);
       }
     } else {
-      setProducts(current=>[...current,{...product,id:Date.now()}]);
+      saved = {...product,id:product.id||Date.now()};
+      setProducts(current=>[...current,saved]);
     }
     setEditing(null); setShowForm(false);
+    return saved;
   };
 
   const deleteProduct=(id:number)=>{ setProducts(current=>current.filter(product=>product.id!==id)); };
