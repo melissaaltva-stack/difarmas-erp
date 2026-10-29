@@ -4248,3 +4248,36 @@ button.icon-btn:focus-visible svg,
   outline: 2px solid #21845c;
   outline-offset: 2px;
 }
+
+
+/* Acción minimalista para consultar información del medicamento. */
+.product-edit-modal .drug-info-consult-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: start;
+  gap: 8px;
+  min-height: 36px;
+  padding: 6px 11px;
+  border: 1px solid #cfe2d8;
+  border-radius: 8px;
+  background: #f7fbf8;
+  color: #21845c;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+.product-edit-modal .drug-info-consult-btn:hover:not(:disabled) {
+  border-color: #21845c;
+  background: #edf6f0;
+  color: #196f4c;
+}
+.product-edit-modal .drug-info-consult-btn:focus-visible {
+  outline: 2px solid #21845c;
+  outline-offset: 2px;
+}
+.product-edit-modal .drug-info-consult-btn:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
