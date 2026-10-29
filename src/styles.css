@@ -4205,3 +4205,46 @@ button.icon-btn:focus-visible svg,
     margin-left: auto;
   }
 }
+
+
+/* Botón principal de agregar principio activo, alineado con la identidad verde de Farmi. */
+.product-edit-modal .active-ingredient-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 39px;
+  padding: 6px 15px 6px 8px;
+  border: 1px solid #21845c;
+  border-radius: 9px;
+  background: #21845c;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: 0 2px 5px rgba(33,132,92,.14);
+  transition: background .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+.product-edit-modal .active-ingredient-add-btn:hover {
+  background: #196f4c;
+  border-color: #196f4c;
+  box-shadow: 0 3px 8px rgba(33,132,92,.22);
+}
+.product-edit-modal .active-ingredient-add-btn:active {
+  transform: translateY(1px);
+}
+.product-edit-modal .active-ingredient-add-icon {
+  width: 25px;
+  height: 25px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 25px;
+  border-radius: 7px;
+  background: rgba(255,255,255,.18);
+  color: #fff;
+}
+.product-edit-modal .active-ingredient-add-btn:focus-visible {
+  outline: 2px solid #21845c;
+  outline-offset: 2px;
+}
