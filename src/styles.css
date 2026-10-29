@@ -3901,3 +3901,11 @@ button.icon-btn:focus-visible svg,
     transition: none !important;
   }
 }
+
+
+/* Ajuste solicitado: campo Nombre del producto en Registrar nuevo producto. */
+.product-name-image-row > label { flex: 0 1 600px; width: 600px; max-width: 100%; }
+.product-name-image-row > label input { width: 600px; max-width: 100%; height: 39px; box-sizing: border-box; }
+@media (max-width: 560px) {
+  .product-name-image-row > label, .product-name-image-row > label input { width: 100%; max-width: 100%; }
+}
