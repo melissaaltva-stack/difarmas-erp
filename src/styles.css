@@ -4187,3 +4187,21 @@ button.icon-btn:focus-visible svg,
     justify-self: end;
   }
 }
+
+
+/* Icono de principios activos alineado junto a Agregar y con el verde de Farmi. */
+.product-edit-modal .active-ingredients-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 0 0 auto;
+}
+.product-edit-modal .active-ingredients-icon {
+  color: #21845c !important;
+  background: #e8f4ee !important;
+}
+@media (max-width: 520px) {
+  .product-edit-modal .active-ingredients-actions {
+    margin-left: auto;
+  }
+}
