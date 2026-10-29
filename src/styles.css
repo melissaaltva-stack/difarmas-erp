@@ -4053,3 +4053,16 @@ button.icon-btn:focus-visible svg,
     max-height: calc(100vh - 18px) !important;
   }
 }
+
+
+/* Ajuste adicional: reducir también el largo/alto de la ventana de producto. */
+.product-edit-modal.modal {
+  height: auto !important;
+  max-height: min(680px, calc(100dvh - 28px)) !important;
+  overflow-y: auto !important;
+}
+@media (max-width: 700px) {
+  .product-edit-modal.modal {
+    max-height: calc(100dvh - 18px) !important;
+  }
+}
