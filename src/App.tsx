@@ -80,7 +80,7 @@ function App({ userId, userEmail, userAppMetadata, signOut }: { userId: string; 
         const saved=saveProduct(product);
         if(saved){
           if(addToPurchase){
-            setPurchaseCart(current=>current.some(item=>item.id===saved.id)?current:[...current,{...saved,qty:1,unitCost:Number(saved.cost)||0}]);
+            setPurchaseCart(current=>current.some(item=>item.id===saved.id)?current:[...current,{...saved,qty:1,unitCost:Number(saved.cost)||0,purchaseTaxRate:saved.taxEnabled?Number(saved.taxRate??15):0}]);
           }
           setNewProductOrigin('inventory');
         }
