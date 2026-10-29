@@ -4055,14 +4055,23 @@ button.icon-btn:focus-visible svg,
 }
 
 
-/* Ajuste adicional: reducir también el largo/alto de la ventana de producto. */
+/* Ventana de producto con dimensiones estables al cambiar entre secciones/pestañas. */
 .product-edit-modal.modal {
-  height: auto !important;
+  width: min(900px, calc(100vw - 28px)) !important;
+  max-width: 900px !important;
+  height: min(680px, calc(100dvh - 28px)) !important;
+  min-height: min(680px, calc(100dvh - 28px)) !important;
   max-height: min(680px, calc(100dvh - 28px)) !important;
+  overflow-x: hidden !important;
   overflow-y: auto !important;
+  box-sizing: border-box !important;
 }
 @media (max-width: 700px) {
   .product-edit-modal.modal {
+    width: calc(100vw - 18px) !important;
+    max-width: calc(100vw - 18px) !important;
+    height: calc(100dvh - 18px) !important;
+    min-height: calc(100dvh - 18px) !important;
     max-height: calc(100dvh - 18px) !important;
   }
 }
