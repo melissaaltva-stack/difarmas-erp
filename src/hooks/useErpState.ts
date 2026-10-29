@@ -377,7 +377,7 @@ export function useErpState(userId: string) {
 
   const deleteProduct=(id:number)=>{ setProducts(current=>current.filter(product=>product.id!==id)); };
 
-  const receivePurchase=(items:PurchaseItem[],paymentMethod:string,dueDate:string,invoiceNumber='',invoiceDate='',notes=''):boolean=>{
+  const receivePurchase=(items:PurchaseItem[],paymentMethod:string,dueDate:string,invoiceNumber='',invoiceDate='',notes='',enteredTotal?:number,paymentTerms='Contado - Efectivo'):boolean=>{
     if (purchaseInProgress.current) return false;
     if (!items.length || items.some(item => !Number.isFinite(item.qty) || item.qty <= 0 || !Number.isFinite(item.unitCost) || item.unitCost < 0)) return false;
     let updated: Product[];
@@ -386,14 +386,15 @@ export function useErpState(userId: string) {
     const referenceId = Date.now();
     setProducts(updated);
     setInventoryMovements(current=>[...current,...createInventoryMovementsForPurchase(products,items,referenceId)]);
-    const total=items.reduce((sum,item)=>sum+item.qty*item.unitCost,0);
+    const calculatedTotal=items.reduce((sum,item)=>sum+item.qty*item.unitCost,0);
+    const total=typeof enteredTotal==='number'&&Number.isFinite(enteredTotal)&&enteredTotal>=0?enteredTotal:calculatedTotal;
     const receivedAt = new Date().toISOString();
-    setPurchases(current=>[{id:referenceId,supplier:purchaseSupplier,total,paymentMethod:paymentMethod as 'Efectivo'|'Transferencia'|'Crédito',date:receivedAt,invoiceNumber,invoiceDate,notes},...current]);
+    setPurchases(current=>[{id:referenceId,supplier:purchaseSupplier,total,paymentMethod:paymentMethod as 'Efectivo'|'Transferencia'|'Crédito',date:receivedAt,invoiceNumber,invoiceDate,notes,paymentTerms,dueDate:paymentMethod==='Crédito'?dueDate:undefined},...current]);
     setPurchaseCostHistory(current=>[
       ...items.map((item,index):PurchaseCostHistoryEntry=>({id:referenceId+index,purchaseId:referenceId,productId:item.id,productCode:item.code,productName:item.name,supplier:purchaseSupplier.trim(),unitCost:item.unitCost,quantity:item.qty,date:receivedAt})),
       ...current,
     ]);
-    if(paymentMethod==='Crédito') setPayables(current=>[...current,createPayableFromPurchase(items,purchaseSupplier,dueDate)]);
+    if(paymentMethod==='Crédito'){const payable=createPayableFromPurchase(items,purchaseSupplier,dueDate);setPayables(current=>[...current,{...payable,total}]);}
     return true;
   };
 
