@@ -3479,3 +3479,18 @@ h4, h5, h6 {
   min-height: 39px;
   box-sizing: border-box;
 }
+
+
+/* Inventario: dimensiones solicitadas para campos específicos del modal Nuevo producto */
+.product-edit-modal .form-grid > label.product-field-200 {
+  width: 200px;
+  max-width: 100%;
+}
+.product-edit-modal .form-grid > label.product-field-200 input {
+  display: block;
+  width: 200px;
+  max-width: 100%;
+  height: 39px;
+  min-height: 39px;
+  box-sizing: border-box;
+}
