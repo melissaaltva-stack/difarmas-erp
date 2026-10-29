@@ -3476,3 +3476,60 @@ h4, h5, h6 {
 #purchase-detail .purchase-row-expiry{padding:11px;gap:10px}
 #purchase-detail .purchase-detail-subtotal>strong{font-size:15px}
 }
+
+
+/* Versión de alto contraste del detalle de compra */
+#purchase-detail .purchase-detail-title{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:14px 16px;margin:0 0 16px;border:1px solid #bcdaca;border-radius:12px;
+  background:#e9f6ef
+}
+#purchase-detail .purchase-detail-title h3{margin:0;color:#164b3b;font-size:18px;font-weight:800}
+#purchase-detail .purchase-detail-title p{
+  display:inline-flex;align-items:center;width:max-content;max-width:100%;
+  margin:7px 0 0;padding:4px 9px;border:1px solid #c4e5d3;border-radius:999px;
+  background:#fff;color:#24674e;font-size:11px;font-weight:700
+}
+#purchase-detail .purchase-detail-title>svg{flex:0 0 auto;color:#167b61;width:23px;height:23px}
+#purchase-detail .purchase-detail-columns{
+  padding:12px 13px;border:1px solid #174e3c;border-radius:10px;
+  background:#174e3c;color:#fff;font-size:10px;letter-spacing:.045em
+}
+#purchase-detail .purchase-row-expiry{
+  padding:14px 13px;border:1px solid #d5e7de;border-left:4px solid #8bc9a9;
+  border-radius:11px;background:#fff;box-shadow:0 3px 8px rgba(18,69,49,.06)
+}
+#purchase-detail .purchase-row-expiry:hover{
+  border-color:#99cdb1;border-left-color:#187b58;background:#f9fdfb;
+  box-shadow:0 4px 12px rgba(18,69,49,.09)
+}
+#purchase-detail .purchase-detail-product>strong{color:#143e30;font-size:14px;font-weight:800}
+#purchase-detail .purchase-expiry-label,#purchase-detail .purchase-cost-label{color:#426c5b;font-size:11px;font-weight:800}
+#purchase-detail .purchase-row-expiry .purchase-expiry-label input,
+#purchase-detail .purchase-row-expiry .purchase-cost-label input{
+  border-color:#c6ded2;background:#fbfefc
+}
+#purchase-detail .purchase-detail-line-total{
+  padding:10px 11px;border:1px solid #bfe4d0;border-radius:9px;
+  background:#e4f7ec;color:#116744;font-size:14px;font-weight:900
+}
+#purchase-detail .purchase-remove-item{
+  width:36px;height:36px;border:1px solid #edc8c3;background:#fff5f3;
+  color:#ae3f34
+}
+#purchase-detail .purchase-detail-footer{
+  margin-top:16px;padding:14px 15px;border:1px solid #c3e4d2;border-radius:12px;
+  background:#effaf4
+}
+#purchase-detail .purchase-detail-subtotal>strong{
+  padding:11px 14px;border:1px solid #a8d9bd;border-radius:10px;
+  background:#d8f2e3;color:#0d6848;font-size:18px;font-weight:900
+}
+@media(max-width:700px){
+  #purchase-detail .purchase-detail-title{padding:12px 13px}
+  #purchase-detail .purchase-detail-title h3{font-size:16px}
+  #purchase-detail .purchase-detail-columns{display:none}
+  #purchase-detail .purchase-row-expiry{border-left-width:3px}
+  #purchase-detail .purchase-detail-footer{padding:12px}
+  #purchase-detail .purchase-detail-subtotal>strong{font-size:16px}
+}
