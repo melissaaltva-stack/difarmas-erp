@@ -3470,3 +3470,12 @@ h4, h5, h6 {
   #purchase-detail .purchase-detail-totals{width:100%;min-width:0}
   #purchase-detail .purchase-detail-totals .purchase-detail-grand-total strong{font-size:15px}
 }
+
+
+/* Inventario: tamaño exacto del campo Código de barras / SKU en el modal de producto */
+.product-edit-modal .barcode-field input {
+  width: 244px;
+  height: 39px;
+  min-height: 39px;
+  box-sizing: border-box;
+}
