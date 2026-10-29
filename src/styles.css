@@ -3356,3 +3356,61 @@ h4, h5, h6 {
 #purchase-detail .purchase-row-expiry .qty button{width:27px;height:29px}
 #purchase-detail .purchase-row-expiry>strong{font-size:12px;padding:8px}
 }
+
+/* Ventana compacta de datos para nueva compra */
+.purchase-page-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:0 0 16px}
+.purchase-page-heading h2{margin:0;color:#173c32;font-size:22px}
+.purchase-page-heading p{margin:5px 0 0;color:#718a85;font-size:12px}
+.purchase-page-heading .primary{display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap}
+#purchase-order .purchase-head{grid-template-columns:minmax(0,1fr);gap:12px}
+.purchase-data-launch{display:flex;align-items:center;justify-content:space-between;gap:14px;min-width:0;padding:12px 13px;border:1px solid #dce9e4;border-radius:10px;background:#f7fbf9}
+.purchase-data-launch>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.purchase-data-launch>div>span{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#718a85}
+.purchase-data-launch strong{font-size:13px;color:#173c32;overflow-wrap:anywhere}
+.purchase-data-launch small{font-size:11px;color:#718a85;overflow-wrap:anywhere}
+.purchase-data-launch button{flex:0 0 auto;white-space:nowrap}
+.purchase-header-modal{width:min(790px,100%);max-height:calc(100vh - 32px);padding:20px;border-radius:15px}
+.purchase-header-modal .modal-head{margin-bottom:15px}
+.purchase-header-modal .modal-head h2{font-size:19px;color:#173c32}
+.purchase-header-modal-layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(205px,.85fr);gap:16px;align-items:stretch}
+.purchase-header-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-content:start;min-width:0}
+.purchase-header-form>label,.purchase-supplier-field>label,.purchase-new-supplier-form>label{display:block;min-width:0;font-size:11px;color:#607a74;font-weight:700}
+.purchase-header-form input,.purchase-header-form select,.purchase-supplier-field input,.purchase-new-supplier-form input,.purchase-new-supplier-form select{display:block;width:100%;min-width:0;max-width:100%;height:39px;margin-top:6px;padding:8px 10px;border:1px solid #d9e5e2;border-radius:8px;background:#fff;color:#233c37;font:inherit;font-size:12px;box-sizing:border-box}
+.purchase-header-form input:focus,.purchase-header-form select:focus,.purchase-new-supplier-form input:focus,.purchase-new-supplier-form select:focus{outline:2px solid #b9dfcc;outline-offset:1px;border-color:#65ad8e}
+.purchase-supplier-field{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:end}
+.purchase-create-supplier{height:39px;display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;padding:0 10px}
+.purchase-invoice-total-panel{display:flex;flex-direction:column;align-items:stretch;gap:11px;min-width:0;padding:17px;border:1px solid #d1e9dd;border-radius:12px;background:linear-gradient(150deg,#f0faf5,#fbfefd)}
+.purchase-invoice-total-panel>span{font-size:11px;color:#527568;font-weight:800;letter-spacing:.045em;text-transform:uppercase}
+.purchase-total-input-label{display:flex;align-items:center;gap:6px;padding:0 10px;border:1px solid #cfe4da;border-radius:9px;background:#fff;color:#167b61;font-size:14px;font-weight:800}
+.purchase-total-input-label input{display:block;width:100%;min-width:0;height:45px;padding:0;border:0;outline:0;background:transparent;color:#174837;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+.purchase-total-input-label input:focus{outline:0}
+.purchase-invoice-total-panel>strong{font-size:23px;line-height:1.2;color:#167b61;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.purchase-invoice-total-panel>small{font-size:11px;line-height:1.45;color:#718a85}
+.purchase-header-modal .modal-actions{margin-top:17px}
+.purchase-new-supplier-modal{width:min(560px,100%);padding:20px;border-radius:15px}
+.purchase-new-supplier-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.purchase-new-supplier-form .purchase-new-supplier-address{grid-column:1/-1}
+@media(max-width:620px){
+.purchase-page-heading{align-items:flex-start}
+.purchase-page-heading h2{font-size:19px}
+.purchase-header-modal{padding:16px}
+.purchase-header-modal-layout{grid-template-columns:minmax(0,1fr);gap:12px}
+.purchase-invoice-total-panel{padding:13px;display:grid;grid-template-columns:minmax(0,1fr) minmax(120px,.9fr);align-items:center;column-gap:12px}
+.purchase-invoice-total-panel>span{grid-column:1/-1}
+.purchase-total-input-label{grid-column:2;grid-row:2}
+.purchase-invoice-total-panel>strong{grid-column:1;grid-row:2;font-size:19px}
+.purchase-invoice-total-panel>small{grid-column:1/-1}
+}
+@media(max-width:480px){
+.purchase-page-heading{gap:9px}
+.purchase-page-heading h2{font-size:18px}
+.purchase-page-heading .primary{padding:9px 10px;font-size:12px}
+.purchase-data-launch{align-items:flex-start;flex-direction:column}
+.purchase-data-launch button{align-self:flex-start}
+.purchase-supplier-field{grid-template-columns:minmax(0,1fr);gap:8px}
+.purchase-create-supplier{justify-self:start}
+.purchase-header-form,.purchase-new-supplier-form{grid-template-columns:minmax(0,1fr)}
+.purchase-header-form>label,.purchase-supplier-field,.purchase-new-supplier-form .purchase-new-supplier-address{grid-column:1}
+.purchase-header-modal .modal-actions{gap:8px;flex-wrap:wrap}
+.purchase-new-supplier-modal{padding:16px}
+}
