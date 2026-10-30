@@ -25,7 +25,7 @@ export function applyPurchaseToInventory(products: Product[], items: PurchaseIte
   if (!items.length) throw new Error('La compra debe contener al menos un producto.');
   if (new Set(items.map(item => item.id)).size !== items.length) throw new Error('La compra contiene productos duplicados.');
   if (items.some(item => !products.some(product => product.id === item.id))) throw new Error('No se encontró un producto de la compra en el inventario.');
-  const invalid = items.find(item => !Number.isFinite(item.qty) || item.qty <= 0 || !Number.isFinite(item.unitCost) || item.unitCost < 0 || !Number.isFinite(item.qty * item.unitCost));
+  const invalid = items.find(item => !Number.isInteger(item.qty) || item.qty <= 0 || !Number.isFinite(item.unitCost) || item.unitCost < 0 || !Number.isFinite(item.qty * item.unitCost));
   if (invalid) throw new Error('Cantidad y costo de compra deben ser válidos.');
   const invalidExpiry = items.find(item => !isExpiryAtLeastSixMonths(item.expiry));
   if (invalidExpiry) throw new Error(`No se puede recibir “${invalidExpiry.name}”: el vencimiento debe ser de al menos seis meses desde hoy.`);
