@@ -142,7 +142,7 @@ export function Purchases({products,sales,cart,setCart,search,setSearch,supplier
                 <input type="number" min="0" step="0.01" value={i.unitCost} onChange={e=>updateCost(i.id,Number(e.target.value))} aria-label={`Costo unitario de ${i.name}`}/>
               </label>
               <label className="purchase-isv-label">
-                <span className="purchase-field-caption">ISV (%)</span>
+                
                 <select value={purchaseTaxRate(i)} onChange={e=>updatePurchaseTax(i.id,Number(e.target.value))} aria-label={`ISV de compra de ${i.name}`}>
                   <option value={0}>Exento</option><option value={15}>15%</option><option value={18}>18%</option>
                 </select>
