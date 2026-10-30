@@ -77,6 +77,19 @@ return <div className="content standard-invoice quotes-page"><style>{`.quotes-pa
 .quotes-page #quote-seller{display:block;width:169px!important;min-width:169px!important;max-width:169px!important;height:39px!important;min-height:39px!important;max-height:39px!important;box-sizing:border-box}
 .quotes-page .invoice-field:has(#quote-price-list){grid-area:price!important;flex:none!important;width:159px!important;min-width:159px!important;max-width:159px!important;box-sizing:border-box}.quotes-page #quote-price-list{display:block;width:159px!important;min-width:159px!important;max-width:159px!important;height:39px!important;min-height:39px!important;max-height:39px!important;box-sizing:border-box}
 /* Compactar el encabezado: menos separación entre campos y filas */
+/* Alinear etiquetas y eliminar huecos laterales del encabezado */
+.quotes-page .quote-header-row{width:max-content!important;max-width:100%!important;justify-content:flex-start!important;gap:8px!important}
+.quotes-page .quote-header-row-main{align-items:flex-end!important}
+.quotes-page .quote-header-row .invoice-field{align-self:flex-end!important}
+.quotes-page .quote-header-row .field-label{width:100%!important;text-align:left!important;margin:0 0 4px!important;padding:0!important}
+.quotes-page .quote-field-number .field-label{display:block!important;text-align:left!important}
+.quotes-page .quote-header-row-client,.quotes-page .quote-header-row-details{margin:0!important}
+.quotes-page .invoice-header-grid{align-items:flex-start!important;gap:5px!important}
+.quotes-page .quote-editor-card{width:fit-content!important;max-width:100%!important}
+@media(max-width:560px){
+.quotes-page .quote-header-row{width:100%!important;max-width:100%!important}
+.quotes-page .quote-editor-card{width:100%!important}
+}
 .quotes-page .quote-editor-card{padding:9px!important}
 .quotes-page .invoice-header-grid{gap:5px!important}
 .quotes-page .quote-header-row{gap:8px!important}
