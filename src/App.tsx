@@ -51,8 +51,8 @@ function App({ userId, userEmail, userAppMetadata, signOut }: { userId: string; 
   const financeItems=[['resumen','Resumen financiero'],['gastos','Gastos'],['ventas','Ventas registradas'],['compras_recibidas','Compras recibidas'],['cobrar','Cuentas por cobrar'],['pagar','Cuentas por pagar'],['historial_pagos','Historial de cobros y pagos'],['movimientos','Movimientos de caja'],['cierre','Cierre de caja diario'],['historial_cierres','Historial de cierres'],['gestion','Gestión y análisis']] as const;
   const goToFinanceSection=(target:typeof financeSection)=>{setFinanceSection(target);setActive('finanzas');setFinanceExpanded(true);setMobileMenuOpen(false);};
   const [purchaseSectionRequest,setPurchaseSectionRequest]=useState(0);
-  const [purchaseRequestedSection,setPurchaseRequestedSection]=useState<'compras'|'proveedores'>('compras');
-  const goToPurchaseSection=(target:string)=>{setPurchaseRequestedSection('compras');setPurchaseSectionRequest(n=>n+1);setActive('compras');setPurchasesExpanded(true);setMobileMenuOpen(false);window.setTimeout(()=>document.getElementById(target)?.scrollIntoView({behavior:'smooth',block:'start'}),180);};
+  const [purchaseRequestedSection,setPurchaseRequestedSection]=useState<'compras'|'proveedores'|'nueva-compra'>('compras');
+  const goToPurchaseSection=(target:string)=>{setPurchaseRequestedSection('nueva-compra');setPurchaseSectionRequest(n=>n+1);setActive('compras');setPurchasesExpanded(true);setMobileMenuOpen(false);window.setTimeout(()=>document.getElementById(target)?.scrollIntoView({behavior:'smooth',block:'start'}),180);};
 
   return <div className={`app${mobileMenuOpen?" mobile-menu-open":""}`}>
     {mobileMenuOpen&&<button type="button" className="mobile-menu-backdrop" aria-label="Cerrar menú" onClick={()=>setMobileMenuOpen(false)}/>}
