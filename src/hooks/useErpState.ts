@@ -75,9 +75,11 @@ export function useErpState(userId: string) {
   const saleInProgress = useRef(false);
   const purchaseInProgress = useRef(false);
   const invoiceUpdateInProgress = useRef(false);
+  const saleAdjustmentInProgress = useRef(false);
 
   useEffect(()=>{saleInProgress.current=false},[sales]);
   useEffect(()=>{invoiceUpdateInProgress.current=false},[sales]);
+  useEffect(()=>{saleAdjustmentInProgress.current=false},[saleAdjustments]);
   useEffect(()=>{purchaseInProgress.current=false},[purchases]);
 
   useEffect(()=>{saveJson('difarmas_customers',customers)},[customers]);
@@ -346,6 +348,7 @@ export function useErpState(userId: string) {
   };
 
   const recordSaleAdjustment=(adjustment:SaleAdjustmentRecord):boolean=>{
+    if(saleAdjustmentInProgress.current)return false;
     if(saleAdjustments.some(item=>item.id===adjustment.id)||!sales.some(sale=>sale.id===adjustment.saleId)||!adjustment.items.length||!Number.isFinite(adjustment.amount)||adjustment.amount<=0)return false;
     if(adjustment.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!Number.isFinite(item.unitPrice)||item.unitPrice<0))return false;
     const adjustedItems=saleAdjustments.filter(item=>item.saleId===adjustment.saleId&&item.type!=='Anulación').flatMap(item=>item.items);
@@ -368,6 +371,7 @@ export function useErpState(userId: string) {
       movements.push({id:Date.now()+line.productId,productId:line.productId,productName:line.productName,type:'Ajuste',quantity:line.quantity,stockBefore:product.stock,stockAfter:product.stock+line.quantity,unitCost:line.unitCost,referenceId:adjustment.id,date:new Date().toISOString(),note:'Devolución de venta '+adjustment.invoiceNumber});
       updated=updated.map(p=>p.id===line.productId?{...p,stock:p.stock+line.quantity}:p);
     }
+    saleAdjustmentInProgress.current=true;
     setProducts(updated);
     setInventoryMovements(current=>[...current,...movements]);
     if(linkedReceivable){
