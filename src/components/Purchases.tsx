@@ -132,13 +132,13 @@ export function Purchases({products,sales,cart,setCart,search,setSearch,supplier
               </div>
               <div className="purchase-detail-expiry-cell">
                 <label className="purchase-expiry-label">
-                  <span className="purchase-field-caption">Fecha de vencimiento</span>
+                  
                   <input type="date" min={minExpiry} value={i.expiry||''} onChange={e=>updateExpiry(i.id,e.target.value)} aria-label={`Fecha de vencimiento de ${i.name}`}/>
                 </label>
                 {i.expiry&&!isExpiryAtLeastSixMonths(i.expiry)&&<small className="expiry-error">Debe vencer a partir de {minExpiry}.</small>}
               </div>
               <label className="purchase-cost-label">
-                <span className="purchase-field-caption">Costo unitario nuevo</span>
+                
                 <input type="number" min="0" step="0.01" value={i.unitCost} onChange={e=>updateCost(i.id,Number(e.target.value))} aria-label={`Costo unitario de ${i.name}`}/>
               </label>
               <label className="purchase-isv-label">
