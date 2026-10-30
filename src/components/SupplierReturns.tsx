@@ -19,12 +19,14 @@ export function SupplierReturns({products,suppliers,records,setRecords,onDispatc
   const selected=products.find(p=>String(p.id)===productId);
   const validQty=Number(quantity);
   const create=()=>{
+    if(createInProgress.current)return;
     setNotice('');
     if(!supplier.trim()||!selected||!Number.isInteger(validQty)||validQty<1||validQty>selected.stock||!reason.trim()){
       setNotice('Revisa proveedor, producto, cantidad (máximo el stock disponible) y motivo.');
       return;
     }
-    createInProgress.current=true;\n    const item:SupplierReturnItem={productId:selected.id,productName:selected.name,code:selected.code,quantity:validQty,unitCost:selected.cost,reason};
+    createInProgress.current=true;
+    const item:SupplierReturnItem={productId:selected.id,productName:selected.name,code:selected.code,quantity:validQty,unitCost:selected.cost,reason};
     const record:SupplierReturnRecord={id:Math.max(Date.now(),...records.map(r=>r.id+1)),supplier:supplier.trim(),purchaseReference:purchaseReference.trim(),date:new Date().toISOString(),status:'Pendiente',items:[item],totalCost:item.quantity*item.unitCost,reason,notes:notes.trim()};
     setRecords(current=>[record,...current]);
     setPurchaseReference('');setProductId('');setQuantity('1');setNotes('');
