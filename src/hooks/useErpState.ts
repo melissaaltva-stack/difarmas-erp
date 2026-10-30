@@ -76,6 +76,8 @@ export function useErpState(userId: string) {
   const purchaseInProgress = useRef(false);
   const invoiceUpdateInProgress = useRef(false);
   const saleAdjustmentInProgress = useRef(false);
+  const supplierDispatchInProgress = useRef(new Set<number>());
+  const supplierDispatchCompleted = useRef(new Set<number>());
 
   useEffect(()=>{saleInProgress.current=false},[sales]);
   useEffect(()=>{invoiceUpdateInProgress.current=false},[sales]);
@@ -331,19 +333,36 @@ export function useErpState(userId: string) {
   };
 
   const recordSupplierDispatch=(record:SupplierReturnRecord):boolean=>{
-    if(!record.items.length)return false;
-    if(record.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!products.some(p=>p.id===item.productId&&p.stock>=item.quantity)))return false;
+    if(!record.id||!record.items.length||supplierDispatchInProgress.current.has(record.id)||supplierDispatchCompleted.current.has(record.id))return false;
+    const totals=new Map<number,{quantity:number;items:typeof record.items}>();
+    for(const item of record.items){
+      if(!Number.isInteger(item.quantity)||item.quantity<=0||!Number.isFinite(item.unitCost)||item.unitCost<0)return false;
+      const current=totals.get(item.productId);
+      if(current){current.quantity+=item.quantity;current.items.push(item);}
+      else totals.set(item.productId,{quantity:item.quantity,items:[item]});
+    }
+    for(const [productId,line] of totals){
+      const product=products.find(p=>p.id===productId);
+      if(!product||product.stock<line.quantity)return false;
+    }
+    supplierDispatchInProgress.current.add(record.id);
+    const now=new Date().toISOString();
     const updated=products.map(product=>{
-      const item=record.items.find(line=>line.productId===product.id);
-      return item?{...product,stock:product.stock-item.quantity}:product;
+      const line=totals.get(product.id);
+      return line?{...product,stock:product.stock-line.quantity}:product;
     });
-    const movements:InventoryMovement[]=record.items.flatMap(item=>{
-      const product=products.find(p=>p.id===item.productId);
-      if(!product)return [];
-      return [{id:Date.now()+item.productId,productId:item.productId,productName:item.productName,type:'Ajuste' as const,quantity:item.quantity,stockBefore:product.stock,stockAfter:product.stock-item.quantity,unitCost:item.unitCost,referenceId:record.id,date:new Date().toISOString(),note:'Devolución enviada al proveedor: '+record.reason}];
-    });
+    const movements:InventoryMovement[]=[];
+    for(const [productId,line] of totals){
+      const product=products.find(p=>p.id===productId);
+      if(!product)continue;
+      const quantity=line.quantity;
+      const weightedCost=line.items.reduce((sum,item)=>sum+item.quantity*item.unitCost,0)/quantity;
+      movements.push({id:Date.now()+movements.length,productId,productName:product.name,type:'Ajuste',quantity,stockBefore:product.stock,stockAfter:product.stock-quantity,unitCost:weightedCost,referenceId:record.id,date:now,note:'Devolución enviada al proveedor: '+record.reason});
+    }
     setProducts(updated);
     setInventoryMovements(current=>[...current,...movements]);
+    supplierDispatchCompleted.current.add(record.id);
+    supplierDispatchInProgress.current.delete(record.id);
     return true;
   };
 
