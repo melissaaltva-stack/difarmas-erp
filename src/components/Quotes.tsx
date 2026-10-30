@@ -78,6 +78,26 @@ return <div className="content standard-invoice quotes-page"><style>{`.quotes-pa
 .quotes-page .invoice-field:has(#quote-price-list){grid-area:price!important;flex:none!important;width:159px!important;min-width:159px!important;max-width:159px!important;box-sizing:border-box}.quotes-page #quote-price-list{display:block;width:159px!important;min-width:159px!important;max-width:159px!important;height:39px!important;min-height:39px!important;max-height:39px!important;box-sizing:border-box}
 /* Compactar el encabezado: menos separación entre campos y filas */
 /* Alinear etiquetas y eliminar huecos laterales del encabezado */
+/* Unificar los campos en filas compactas y eliminar columnas vacías */
+.quotes-page .invoice-header-grid{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:7px!important;width:100%!important}
+.quotes-page .quote-header-row{display:flex!important;flex-flow:row wrap!important;align-items:flex-end!important;justify-content:flex-start!important;gap:7px!important;width:100%!important;max-width:100%!important;margin:0!important}
+.quotes-page .quote-header-row .invoice-field{flex:0 0 auto!important;align-self:flex-end!important}
+.quotes-page .quote-header-row .field-label{display:block!important;text-align:left!important;margin:0 0 3px!important;line-height:1.15!important}
+.quotes-page .quote-field-number{width:160px!important;min-width:160px!important;max-width:160px!important}
+.quotes-page .quote-field-seller{width:169px!important;min-width:169px!important;max-width:169px!important}
+.quotes-page .quote-field-date,.quotes-page .quote-field-valid{width:138px!important;min-width:138px!important;max-width:138px!important}
+.quotes-page .quote-field-client{width:516px!important;min-width:0!important;max-width:min(516px,100%)!important}
+.quotes-page .quote-field-rtn{width:266px!important;min-width:0!important;max-width:min(266px,100%)!important}
+.quotes-page .quote-field-price-list{width:159px!important;min-width:0!important;max-width:min(159px,100%)!important}
+.quotes-page .quote-field-address{width:475px!important;min-width:0!important;max-width:min(475px,100%)!important}
+.quotes-page .quote-field-phone{width:159px!important;min-width:0!important;max-width:min(159px,100%)!important}
+.quotes-page .quote-editor-card{width:100%!important;max-width:100%!important;padding:10px!important}
+.quotes-page .quote-products-card{margin-top:8px!important}
+@media(max-width:560px){
+ .quotes-page .quote-header-row{gap:6px!important}
+ .quotes-page .quote-header-row .invoice-field{width:100%!important;min-width:0!important;max-width:100%!important;flex:1 1 100%!important}
+ .quotes-page .quote-header-row input,.quotes-page .quote-header-row select,.quotes-page #quote-client-search,.quotes-page .invoice-field:has(#quote-client-search) .invoice-search{width:100%!important;min-width:0!important;max-width:100%!important}
+}
 .quotes-page .quote-header-row{width:max-content!important;max-width:100%!important;justify-content:flex-start!important;gap:8px!important}
 .quotes-page .quote-header-row-main{align-items:flex-end!important}
 .quotes-page .quote-header-row .invoice-field{align-self:flex-end!important}
