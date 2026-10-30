@@ -291,12 +291,16 @@ export function useErpState(userId: string) {
       const cost=item.cost*item.qty;
       return {productId:item.id,productName:item.name,category:item.category,laboratory:item.laboratory,qty:item.qty,unitCost:item.cost,unitPrice:details&&item.qty?net/item.qty:item.price,revenue:net,cost,profit:net-cost,...(d?{unit:d.unit,baseUnitPrice:item.price,discountPercent:d.discountPercent,taxPercent:d.taxPercent,discountAmount:d.discountAmount,taxAmount:d.taxAmount,lineTotal:d.lineTotal}:{})};
     });
+    const updatedTotal=details?details.lines.reduce((sum,line)=>sum+line.lineTotal,0):items.reduce((sum,line)=>sum+line.revenue,0);
+    const linkedReceivable=receivables.find(account=>account.saleId===invoiceId);
+    // Never allow an invoice edit to reduce the document below amounts already collected.
+    if(linkedReceivable&&(!Number.isFinite(updatedTotal)||updatedTotal<linkedReceivable.paid))return false;
     const updatedSale:SaleRecord={
       ...original,
       customer:customer.trim()||undefined,
       customerRtn:customerRtn.trim()||undefined,
       items,
-      total:details?details.lines.reduce((sum,line)=>sum+line.lineTotal,0):items.reduce((sum,line)=>sum+line.revenue,0),
+      total:updatedTotal,
       cost:items.reduce((sum,line)=>sum+line.cost,0),
       profit:items.reduce((sum,line)=>sum+line.profit,0),
       customerAddress:details?.customerAddress||undefined,
@@ -311,7 +315,13 @@ export function useErpState(userId: string) {
       taxTotal:details?.taxTotal,
       dueDate:details?.maxDate&&original.payment==='Crédito'?details.maxDate:original.dueDate
     };
-    setProducts(updatedProducts);setInventoryMovements(current=>[...current,...movements]);setSales(current=>current.map(sale=>sale.id===invoiceId?updatedSale:sale));return true;
+    setProducts(updatedProducts);
+    setInventoryMovements(current=>[...current,...movements]);
+    setSales(current=>current.map(sale=>sale.id===invoiceId?updatedSale:sale));
+    if(linkedReceivable){
+      setReceivables(current=>current.map(account=>account.saleId===invoiceId?{...account,total:updatedTotal,dueDate:updatedSale.dueDate||account.dueDate}:account));
+    }
+    return true;
   };
 
   const recordSupplierDispatch=(record:SupplierReturnRecord):boolean=>{
