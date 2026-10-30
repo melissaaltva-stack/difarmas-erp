@@ -4316,5 +4316,5 @@ button.icon-btn:focus-visible svg,
 
 
 /* Botón compacto de compras sugeridas con IA */
-#purchases-panel .ai-purchase-launch>button{width:65px;min-width:65px;height:39px;min-height:39px;padding:2px 3px;gap:2px;display:inline-flex;align-items:center;justify-content:center;flex-wrap:wrap;white-space:normal;text-align:center;font-size:9px;line-height:10px;}
+#purchases-panel .ai-purchase-launch>button{width:140px;min-width:140px;height:39px;min-height:39px;padding:2px 3px;gap:2px;display:inline-flex;align-items:center;justify-content:center;flex-wrap:wrap;white-space:normal;text-align:center;font-size:9px;line-height:10px;}
 #purchases-panel .ai-purchase-launch>button svg{width:13px;height:13px;flex:0 0 13px;}
