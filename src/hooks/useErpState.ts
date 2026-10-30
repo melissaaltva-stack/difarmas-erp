@@ -351,6 +351,10 @@ export function useErpState(userId: string) {
       if(!sold||already+line.quantity>sold.qty)return false;
     }
     if(adjustment.type==='Anulación'&&saleAdjustments.some(item=>item.saleId===adjustment.saleId&&item.type==='Anulación'))return false;
+    const linkedReceivable=receivables.find(account=>account.saleId===adjustment.saleId);
+    // A credit-sale return reduces the outstanding balance; it is not a cash refund.
+    // Reject amounts above the unpaid balance so collected money is never silently erased.
+    if(linkedReceivable&&adjustment.amount>Math.max(0,linkedReceivable.total-linkedReceivable.paid))return false;
     let updated=products;
     const movements:InventoryMovement[]=[];
     for(const line of adjustment.items){
@@ -362,7 +366,11 @@ export function useErpState(userId: string) {
     }
     setProducts(updated);
     setInventoryMovements(current=>[...current,...movements]);
-    if(adjustment.paymentMethod.toLowerCase().includes('efectivo')){
+    if(linkedReceivable){
+      setReceivables(current=>current.map(account=>account.saleId===adjustment.saleId
+        ?{...account,total:Math.max(account.paid,account.total-adjustment.amount)}
+        :account));
+    }else if(adjustment.paymentMethod.toLowerCase().includes('efectivo')){
       setCashMovements(current=>[{id:adjustment.id,type:'Salida',description:'Reembolso por '+adjustment.type+' '+adjustment.invoiceNumber,amount:adjustment.amount,category:'Devoluciones de ventas',date:new Date().toISOString()},...current]);
     }
     setSaleAdjustments(current=>[adjustment,...current]);
