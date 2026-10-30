@@ -4407,3 +4407,18 @@ button.icon-btn:focus-visible svg,
 .cost-comparison-dialog-content{min-height:0;overflow:auto}
 .cost-comparison-dialog-content>.cost-review{margin:0;box-shadow:none}
 @media(max-width:600px){.cost-comparison-button{width:100%}.cost-comparison-dialog{width:calc(100vw - 18px);max-height:calc(100dvh - 18px);padding:12px}}
+
+
+/* Datos de compra visibles encima del buscador de productos */
+#purchases-panel .purchase-head{display:flex;flex-direction:column;gap:12px}
+#purchases-panel .purchase-inline-header{display:grid;gap:10px;padding:13px;border:1px solid #dce9e4;border-radius:11px;background:#f9fcfa;min-width:0}
+#purchases-panel .purchase-inline-header-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#purchases-panel .purchase-inline-header-top strong{font-size:13px;color:#214c41}
+#purchases-panel .purchase-inline-header-top button{padding:8px 11px;font-size:11px}
+#purchases-panel .purchase-inline-header-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#purchases-panel .purchase-inline-header-form label{display:block;min-width:0;font-size:11px;font-weight:700;color:#607a74}
+#purchases-panel .purchase-inline-header-form input,#purchases-panel .purchase-inline-header-form select{display:block;width:100%;min-width:0;height:38px;margin-top:5px;padding:8px 10px;border:1px solid #d9e5e2;border-radius:8px;background:#fff;color:#233c37;font:inherit;font-size:12px}
+#purchases-panel .purchase-inline-header-form input:focus,#purchases-panel .purchase-inline-header-form select:focus{outline:2px solid #b9dfcc;outline-offset:1px;border-color:#65ad8e}
+#purchases-panel .purchase-head .search{max-width:none;width:100%}
+@media(max-width:760px){#purchases-panel .purchase-inline-header-form{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){#purchases-panel .purchase-inline-header-form{grid-template-columns:minmax(0,1fr)}#purchases-panel .purchase-inline-header-top{align-items:flex-start;flex-direction:column}}
