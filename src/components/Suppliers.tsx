@@ -4,7 +4,7 @@ import type { Product, Supplier, SupplierReturnRecord } from '../domain/types';
 import { SupplierReturns } from './SupplierReturns';
 type SupplierForm = Omit<Supplier, 'id'>;
 const emptySupplier = (): SupplierForm => ({ name:'', contact:'', phone:'', email:'', rtn:'', address:'', paymentTerms:'Contado', notes:'', active:true });
-export function Suppliers({suppliers,setSuppliers,products,records,setRecords,onDispatch}:{suppliers:Supplier[];setSuppliers:(items:Supplier[])=>void;products:Product[];records:SupplierReturnRecord[];setRecords:(items:SupplierReturnRecord[])=>void;onDispatch:(record:SupplierReturnRecord)=>boolean}) {
+export function Suppliers({suppliers,setSuppliers,products,records,setRecords,onDispatch}:{suppliers:Supplier[];setSuppliers:(items:Supplier[])=>void;products:Product[];records:SupplierReturnRecord[];setRecords:(items:SupplierReturnRecord[] | ((current:SupplierReturnRecord[])=>SupplierReturnRecord[]))=>void;onDispatch:(record:SupplierReturnRecord)=>boolean}) {
   const [query,setQuery]=useState(''); const [returnsOpen,setReturnsOpen]=useState(false); const [viewing,setViewing]=useState<Supplier|null>(null); const [modalOpen,setModalOpen]=useState(false); const [editing,setEditing]=useState<Supplier|null>(null); const [form,setForm]=useState<SupplierForm>(emptySupplier()); const [error,setError]=useState('');
   const visible=useMemo(()=>suppliers.filter(s=>[s.name,s.contact,s.phone,s.rtn,s.email].join(' ').toLowerCase().includes(query.toLowerCase())),[suppliers,query]);
   const start=(s?:Supplier)=>{setEditing(s??null);setForm(s?{name:s.name,contact:s.contact,phone:s.phone,email:s.email,rtn:s.rtn,address:s.address,paymentTerms:s.paymentTerms,notes:s.notes,active:s.active}:emptySupplier());setError('');setModalOpen(true);};
