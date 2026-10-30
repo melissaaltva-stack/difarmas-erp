@@ -4378,3 +4378,18 @@ button.icon-btn:focus-visible svg,
 .cash-closing-footnote{display:block;margin-top:9px;text-align:center;color:#82938d;font-size:10px}
 @media(max-width:1050px){.cash-closing-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.cash-closing-layout{grid-template-columns:1fr}.cash-count-card{position:static}}
 @media(max-width:600px){.cash-closing-intro{align-items:stretch;flex-direction:column}.cash-closing-date{text-align:left}.cash-closing-metrics{grid-template-columns:1fr 1fr;gap:8px}.cash-closing-metric{padding:12px}.cash-closing-metric strong{font-size:16px}.cash-closing-metric small{font-size:9px}.cash-closing-breakdown,.cash-count-card{padding:14px}.cash-closing-status{font-size:9px}.cash-closing-formula{align-items:flex-start;flex-direction:column}}
+
+
+/* Historial de costos de compra: acceso compacto mediante botón y ventana emergente. */
+.purchase-history-launch{display:flex;justify-content:flex-end;margin:10px 0}
+.purchase-history-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:7px 12px;border:1px solid #d5e5dc;border-radius:8px;background:#f7fbf8;color:#21845c;font-size:12px;font-weight:650}
+.purchase-history-button:hover{border-color:#21845c;background:#edf6f0;color:#196f4c}
+.purchase-history-button span{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:20px;background:#e4f1e9;color:#176b4d;font-size:10px}
+.purchase-history-backdrop{z-index:1300}
+.purchase-history-dialog{width:min(850px,calc(100vw - 32px));max-width:850px;max-height:min(760px,calc(100dvh - 32px));overflow:hidden;display:flex;flex-direction:column;gap:10px}
+.purchase-history-dialog>.modal-head{flex:0 0 auto}
+.purchase-history-dialog>.modal-head h2{margin:0;font-size:17px}
+.purchase-history-dialog>.modal-head p{margin:4px 0 0;font-size:11px;color:#718096}
+.purchase-history-dialog-content{min-height:0;overflow:auto}
+.purchase-history-dialog-content>.purchase-history{margin:0;box-shadow:none}
+@media(max-width:600px){.purchase-history-launch{justify-content:stretch}.purchase-history-button{width:100%}.purchase-history-dialog{width:calc(100vw - 18px);max-height:calc(100dvh - 18px);padding:12px}}
