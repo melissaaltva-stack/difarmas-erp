@@ -4318,3 +4318,11 @@ button.icon-btn:focus-visible svg,
 /* Botón compacto de compras sugeridas con IA */
 #purchases-panel .ai-purchase-launch>button{width:140px;min-width:140px;height:45px;min-height:45px;padding:2px 3px;gap:2px;display:inline-flex;align-items:center;justify-content:center;flex-wrap:wrap;white-space:normal;text-align:center;font-size:9px;line-height:10px;}
 #purchases-panel .ai-purchase-launch>button svg{width:13px;height:13px;flex:0 0 13px;}
+
+
+/* FAB extendido de compras sugeridas con IA */
+#purchases-panel .ai-purchase-launch{position:fixed;right:24px;bottom:24px;z-index:1200;margin:0}
+#purchases-panel .ai-purchase-launch>button{width:auto;min-width:0;height:52px;min-height:52px;padding:0 22px;gap:10px;display:inline-flex;align-items:center;justify-content:center;flex-wrap:nowrap;white-space:nowrap;text-align:center;border:0;border-radius:999px;background:#21845c;color:#fff;font-size:13px;font-weight:650;line-height:1;box-shadow:0 5px 16px rgba(18,87,59,.28);transition:transform .18s ease,box-shadow .18s ease,background .18s ease}
+#purchases-panel .ai-purchase-launch>button:hover{background:#196f4c;transform:translateY(-2px);box-shadow:0 8px 20px rgba(18,87,59,.32)}
+#purchases-panel .ai-purchase-launch>button svg{width:19px;height:19px;flex:0 0 19px}
+@media(max-width:600px){#purchases-panel .ai-purchase-launch{right:16px;bottom:16px}#purchases-panel .ai-purchase-launch>button{height:48px;min-height:48px;padding:0 17px;font-size:12px}}
