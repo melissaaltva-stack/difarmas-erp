@@ -34,9 +34,10 @@ export function SupplierReturns({products,suppliers,records,setRecords,onDispatc
   };
   const updateStatus=(id:number,status:SupplierReturnRecord['status'])=>setRecords(current=>current.map(r=>r.id===id?{...r,status}:r));
   const dispatch=(record:SupplierReturnRecord)=>{
-    if(record.status!=='Pendiente')return;
+    if(record.status!=='Pendiente'||dispatchInProgress.current.has(record.id))return;
+    dispatchInProgress.current.add(record.id);
     if(onDispatch(record)){updateStatus(record.id,'Enviado al proveedor');setNotice('Salida registrada y descontada del inventario.');}
-    else setNotice('No se pudo registrar la salida. Verifica el stock disponible y la sincronización.');
+    else {dispatchInProgress.current.delete(record.id);setNotice('No se pudo registrar la salida. Verifica el stock disponible y la sincronización.');}
   };
   const printReturn=(record:SupplierReturnRecord)=>{
     const popup=window.open('','_blank','width=900,height=700');
