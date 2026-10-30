@@ -76,6 +76,16 @@ return <div className="content standard-invoice quotes-page"><style>{`.quotes-pa
 .quotes-page .invoice-field:has(#quote-seller){grid-area:seller!important;flex:none!important;width:169px!important;min-width:169px!important;max-width:169px!important;box-sizing:border-box}
 .quotes-page #quote-seller{display:block;width:169px!important;min-width:169px!important;max-width:169px!important;height:39px!important;min-height:39px!important;max-height:39px!important;box-sizing:border-box}
 .quotes-page .invoice-field:has(#quote-price-list){grid-area:price!important;flex:none!important;width:159px!important;min-width:159px!important;max-width:159px!important;box-sizing:border-box}.quotes-page #quote-price-list{display:block;width:159px!important;min-width:159px!important;max-width:159px!important;height:39px!important;min-height:39px!important;max-height:39px!important;box-sizing:border-box}
+/* Compactar el encabezado: menos separación entre campos y filas */
+.quotes-page .quote-editor-card{padding:9px!important}
+.quotes-page .invoice-header-grid{gap:5px!important}
+.quotes-page .quote-header-row{gap:8px!important}
+.quotes-page .invoice-field .field-label{display:block;margin:0 0 3px!important;line-height:1.2}
+.quotes-page .quote-header-row input,.quotes-page .quote-header-row select{height:36px!important;min-height:36px!important;max-height:36px!important}
+.quotes-page .quote-header-row #quote-client-search{height:36px!important;min-height:36px!important;max-height:36px!important}
+.quotes-page .invoice-field:has(#quote-client-search) .invoice-search{height:36px!important;min-height:36px!important;max-height:36px!important}
+.quotes-page .quote-products-card{margin-top:9px!important;padding:10px!important}
+@media(max-width:560px){.quotes-page .invoice-header-grid,.quotes-page .quote-header-row{gap:5px!important}.quotes-page .quote-products-card{margin-top:8px!important}}
 @media(max-width:560px){
 .quotes-page .quote-field-number{width:100%!important;min-width:0!important;max-width:100%!important}.quotes-page #quote-number{width:100%!important;min-width:0!important;max-width:100%!important}
 .quotes-page .invoice-header-grid{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:9px!important}.quotes-page .quote-header-row{flex-direction:column!important;align-items:stretch!important;gap:9px!important;width:100%!important;max-width:100%!important}
