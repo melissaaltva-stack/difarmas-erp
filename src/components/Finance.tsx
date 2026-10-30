@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Activity, AlertTriangle, DollarSign, ShoppingCart, TrendingUp, Wallet, Search, Plus, Pencil, Package, History, Target, BrainCircuit, Scale, SlidersHorizontal, ShieldCheck, CheckCircle2, Clock3, ListChecks, ReceiptText, WalletCards, ArrowUpDown, Brain, LineChart, BarChart3, Megaphone, ShoppingBag, Award, Boxes, Users, X, Calculator, LayoutDashboard } from 'lucide-react';
-import type { SaleRecord, Expense, Receivable, Payable, PurchaseRecord, CashClosure, CashMovement, PaymentTransaction } from '../domain/types';
+import type { SaleRecord, Expense, Receivable, Payable, PurchaseRecord, CashClosure, CashMovement, PaymentTransaction, ErpSettings } from '../domain/types';
 import { dateKey, localDateKey } from '../utils/dates';
 const validPayment = (value:number, balance:number) => Number.isFinite(value) && value > 0 && value <= balance;
 const currentMonthKey = (d = new Date()) => localDateKey(d).slice(0,7);
@@ -11,7 +11,7 @@ import { sumSales, sumProfit, sumExpenses, cashExpenses, cashMovementTotals, pen
 
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
 
-export function Finance({section='resumen',sales,purchases,expenses,setExpenses,receivables,setReceivables,payables,setPayables,closures,setClosures,movements,setMovements,paymentTransactions,setPaymentTransactions}:{section?:'resumen'|'gastos'|'ventas'|'compras_recibidas'|'cobrar'|'pagar'|'historial_pagos'|'movimientos'|'cierre'|'historial_cierres';sales:SaleRecord[];purchases:PurchaseRecord[];expenses:Expense[];setExpenses:(e:Expense[])=>void;receivables:Receivable[];setReceivables:(e:Receivable[])=>void;payables:Payable[];setPayables:(e:Payable[])=>void;closures:CashClosure[];setClosures:React.Dispatch<React.SetStateAction<CashClosure[]>>;movements:CashMovement[];setMovements:React.Dispatch<React.SetStateAction<CashMovement[]>>;paymentTransactions:PaymentTransaction[];setPaymentTransactions:React.Dispatch<React.SetStateAction<PaymentTransaction[]>>}) {
+export function Finance({section='resumen',sales,purchases,expenses,setExpenses,receivables,setReceivables,payables,setPayables,closures,setClosures,movements,setMovements,paymentTransactions,setPaymentTransactions,settings}:{section?:'resumen'|'gastos'|'ventas'|'compras_recibidas'|'cobrar'|'pagar'|'historial_pagos'|'movimientos'|'cierre'|'historial_cierres';sales:SaleRecord[];purchases:PurchaseRecord[];expenses:Expense[];setExpenses:(e:Expense[])=>void;receivables:Receivable[];setReceivables:(e:Receivable[])=>void;payables:Payable[];setPayables:(e:Payable[])=>void;closures:CashClosure[];setClosures:React.Dispatch<React.SetStateAction<CashClosure[]>>;movements:CashMovement[];setMovements:React.Dispatch<React.SetStateAction<CashMovement[]>>;paymentTransactions:PaymentTransaction[];setPaymentTransactions:React.Dispatch<React.SetStateAction<PaymentTransaction[]>>;settings:ErpSettings}) {
   const [description,setDescription]=useState(''); const [amount,setAmount]=useState(0); const [category,setCategory]=useState('Operación'); const [expensePaymentMethod,setExpensePaymentMethod]=useState<'Efectivo'|'Transferencia'>('Efectivo');
   const [paymentAmount,setPaymentAmount]=useState<Record<number,number>>({}); const [supplierPaymentMethod,setSupplierPaymentMethod]=useState<'Efectivo'|'Transferencia'>('Efectivo'); const [collectionPaymentMethod,setCollectionPaymentMethod]=useState<'Efectivo'|'Transferencia'>('Efectivo');
   const [opening,setOpening]=useState(0); const [counted,setCounted]=useState(0); const [note,setNote]=useState('');
@@ -22,7 +22,7 @@ export function Finance({section='resumen',sales,purchases,expenses,setExpenses,
 
   const salesTotal=sumSales(sales); const profit=sumProfit(sales); const expenseTotal=sumExpenses(expenses); const cashExpenseTotal=cashExpenses(expenses);
   const receivablePending=pendingReceivables(receivables); const payablePending=pendingPayables(payables);
-  const cashSalesTotal=cashSales(sales); const collected=collectedReceivables(receivables); const supplierPaymentsTotal=supplierPayments(payables);
+  const isCashPayment=(method:string)=>method==='Efectivo'||(settings.paymentMethods??[]).some(config=>config.name===method&&config.kind==='cash');\n  const cashSalesTotal=sales.filter(sale=>isCashPayment(sale.payment)).reduce((sum,sale)=>sum+sale.total,0); const collected=collectedReceivables(receivables); const supplierPaymentsTotal=supplierPayments(payables);
   const cashCollections=receivables.reduce((sum,r)=>{
     const transactions=paymentTransactions.filter(t=>t.type==='Cobro'&&t.accountId===r.id);
     const recorded=transactions.reduce((total,t)=>total+t.amount,0);
@@ -39,7 +39,7 @@ export function Finance({section='resumen',sales,purchases,expenses,setExpenses,
   const cashFlow=cashSalesTotal+cashCollections+cashMovementIn-cashExpenseTotal-cashSupplierPayments-purchases.filter(p=>p.paymentMethod==='Efectivo').reduce((sum,p)=>sum+p.total,0)-cashMovementOut;
   const today=localDateKey();
   const dayMovementIn=movements.filter(m=>m.category!=='Banco'&&dateKey(m.date)===today&&m.type==='Entrada').reduce((a,m)=>a+m.amount,0); const dayMovementOut=movements.filter(m=>m.category!=='Banco'&&dateKey(m.date)===today&&m.type==='Salida').reduce((a,m)=>a+m.amount,0);
-  const daySales=sales.filter(s=>dateKey(s.date)===today&&s.payment==='Efectivo').reduce((a,s)=>a+s.total,0);
+  const daySales=sales.filter(s=>dateKey(s.date)===today&&isCashPayment(s.payment)).reduce((a,s)=>a+s.total,0);
   const dayCollections=receivables.reduce((sum,r)=>{
     const accountTransactions=paymentTransactions.filter(t=>t.type==='Cobro'&&t.accountId===r.id);
     if(accountTransactions.length>0) {
