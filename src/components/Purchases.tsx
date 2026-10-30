@@ -9,7 +9,7 @@ import type { SupplierReturnRecord } from '../domain/types';
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
 const percent = (value:number) => `${value.toLocaleString('es-HN',{maximumFractionDigits:1,minimumFractionDigits:1})}%`;
 
-export function Purchases({products,sales,cart,setCart,search,setSearch,supplier,setSupplier,suppliers=[],setSuppliers,records=[],setRecords,onDispatch,showSuppliers=true,costHistory=[],onReceive,onOpenNewProduct,sectionRequest=0,requestedSection='compras'}:{products:Product[];sales:SaleRecord[];cart:PurchaseItem[];setCart:(c:PurchaseItem[])=>void;search:string;setSearch:(v:string)=>void;supplier:string;setSupplier:(v:string)=>void;suppliers?:Supplier[];setSuppliers:(items:Supplier[])=>void;records?:SupplierReturnRecord[];setRecords:(items:SupplierReturnRecord[] | ((current:SupplierReturnRecord[])=>SupplierReturnRecord[]))=>void;onDispatch:(record:SupplierReturnRecord)=>boolean;showSuppliers?:boolean;costHistory?:PurchaseCostHistoryEntry[];onReceive:(items:PurchaseItem[],paymentMethod:'Efectivo'|'Transferencia'|'Crédito',dueDate:string,invoiceNumber:string,invoiceDate:string,notes:string,purchaseTotal?:number,paymentTerms?:string)=>boolean;onOpenNewProduct:()=>void;sectionRequest?:number;requestedSection?:'compras'|'proveedores'|'nueva-compra'}) {
+export function Purchases({products,sales,cart,setCart,search,setSearch,supplier,setSupplier,suppliers=[],setSuppliers,records=[],setRecords,onDispatch,showSuppliers=true,costHistory=[],onReceive,onOpenNewProduct,sectionRequest=0,requestedSection='compras'}:{products:Product[];sales:SaleRecord[];cart:PurchaseItem[];setCart:(c:PurchaseItem[])=>void;search:string;setSearch:(v:string)=>void;supplier:string;setSupplier:(v:string)=>void;suppliers?:Supplier[];setSuppliers:(items:Supplier[] | ((current:Supplier[])=>Supplier[]))=>void;records?:SupplierReturnRecord[];setRecords:(items:SupplierReturnRecord[] | ((current:SupplierReturnRecord[])=>SupplierReturnRecord[]))=>void;onDispatch:(record:SupplierReturnRecord)=>boolean;showSuppliers?:boolean;costHistory?:PurchaseCostHistoryEntry[];onReceive:(items:PurchaseItem[],paymentMethod:'Efectivo'|'Transferencia'|'Crédito',dueDate:string,invoiceNumber:string,invoiceDate:string,notes:string,purchaseTotal?:number,paymentTerms?:string)=>boolean;onOpenNewProduct:()=>void;sectionRequest?:number;requestedSection?:'compras'|'proveedores'|'nueva-compra'}) {
   const [section,setSection]=useState<'compras'|'proveedores'>('compras');
   useEffect(()=>{setSection(requestedSection==='proveedores'?'proveedores':'compras');if(requestedSection==='nueva-compra'){setPurchaseHeaderError('');setShowPurchaseModal(true);}},[sectionRequest,requestedSection]);
   const [showSuggestedPurchases,setShowSuggestedPurchases]=useState(false);
@@ -50,8 +50,8 @@ export function Purchases({products,sales,cart,setCart,search,setSearch,supplier
     if(suppliers.some(item=>item.name.trim().toLocaleLowerCase()===name.toLocaleLowerCase())){
       setSupplierFormError('Ya existe un proveedor con ese nombre.');return;
     }
-    const created:Supplier={...newSupplierForm,id:Date.now(),name};
-    setSuppliers([created,...suppliers]);
+    const created:Supplier={...newSupplierForm,id:Math.max(Date.now(),...suppliers.map(item=>item.id+1)),name};
+    setSuppliers(current=>[created,...current]);
     setSupplier(created.name);
     updatePaymentTerms(created.paymentTerms==='Contado'?'Contado - Efectivo':created.paymentTerms);
     setNewSupplierForm(emptyNewSupplier());
