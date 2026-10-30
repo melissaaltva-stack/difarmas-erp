@@ -22,7 +22,8 @@ export function Finance({section='resumen',sales,purchases,expenses,setExpenses,
 
   const salesTotal=sumSales(sales); const profit=sumProfit(sales); const expenseTotal=sumExpenses(expenses); const cashExpenseTotal=cashExpenses(expenses);
   const receivablePending=pendingReceivables(receivables); const payablePending=pendingPayables(payables);
-  const isCashPayment=(method:string)=>method==='Efectivo'||(settings.paymentMethods??[]).some(config=>config.name===method&&config.kind==='cash');\n  const cashSalesTotal=sales.filter(sale=>isCashPayment(sale.payment)).reduce((sum,sale)=>sum+sale.total,0); const collected=collectedReceivables(receivables); const supplierPaymentsTotal=supplierPayments(payables);
+  const isCashPayment=(method:string)=>method==='Efectivo'||(settings.paymentMethods??[]).some(config=>config.name===method&&config.kind==='cash');
+  const cashSalesTotal=sales.filter(sale=>isCashPayment(sale.payment)).reduce((sum,sale)=>sum+sale.total,0); const collected=collectedReceivables(receivables); const supplierPaymentsTotal=supplierPayments(payables);
   const cashCollections=receivables.reduce((sum,r)=>{
     const transactions=paymentTransactions.filter(t=>t.type==='Cobro'&&t.accountId===r.id);
     const recorded=transactions.reduce((total,t)=>total+t.amount,0);
