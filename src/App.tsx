@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, startTransition, useState } from 'react';
 import { useErpState } from './hooks/useErpState';
 import type { Module, UserAccess } from './domain/types';
 
@@ -20,6 +20,23 @@ const SocialSales = lazy(() => import('./components/SocialSales').then(m => ({ d
 const ReceivablesModule = lazy(() => import('./components/FinancialModules').then(m => ({ default: m.ReceivablesModule })));
 const PayablesModule = lazy(() => import('./components/FinancialModules').then(m => ({ default: m.PayablesModule })));
 const ReportsModule = lazy(() => import('./components/FinancialModules').then(m => ({ default: m.ReportsModule })));
+
+const preloadModule = (id: string) => {
+  switch (id) {
+    case 'dashboard': case 'finanzas': return Promise.all([import('./components/Dashboard'), import('./components/ManagementSuite'), import('./components/Finance')]);
+    case 'inventario': return import('./components/Inventory');
+    case 'ventas': return import('./components/POS');
+    case 'facturacion_estandar': return import('./components/StandardInvoice');
+    case 'compras': case 'proveedores': return import('./components/Purchases');
+    case 'clientes': return import('./components/Customers');
+    case 'cotizaciones': return import('./components/Quotes');
+    case 'redes_sociales': return import('./components/SocialSales');
+    case 'configuracion': return import('./components/Settings');
+    case 'cuentas_cobrar': case 'cuentas_pagar': case 'reportes': return import('./components/FinancialModules');
+    case 'asistente_ia': return import('./components/AiAssistant');
+    default: return Promise.resolve();
+  }
+};
 
 function App({ userId, userEmail, userAppMetadata, signOut }: { userId: string; userEmail:string; userAppMetadata:Record<string, unknown>; signOut: () => Promise<void> }) {
   const {
@@ -49,10 +66,10 @@ function App({ userId, userEmail, userAppMetadata, signOut }: { userId: string; 
   const [financeExpanded,setFinanceExpanded]=useState(false);
   const [financeSection,setFinanceSection]=useState<'resumen'|'gastos'|'ventas'|'compras_recibidas'|'cobrar'|'pagar'|'historial_pagos'|'movimientos'|'cierre'|'historial_cierres'|'gestion'>('resumen');
   const financeItems=[['resumen','Resumen financiero'],['gastos','Gastos'],['ventas','Ventas registradas'],['compras_recibidas','Compras recibidas'],['cobrar','Cuentas por cobrar'],['pagar','Cuentas por pagar'],['historial_pagos','Historial de cobros y pagos'],['movimientos','Movimientos de caja'],['cierre','Cierre de caja diario'],['historial_cierres','Historial de cierres'],['gestion','Gestión y análisis']] as const;
-  const goToFinanceSection=(target:typeof financeSection)=>{setFinanceSection(target);setActive('finanzas');setFinanceExpanded(true);setMobileMenuOpen(false);};
+  const goToFinanceSection=(target:typeof financeSection)=>{setFinanceSection(target);startTransition(()=>setActive('finanzas'));setFinanceExpanded(true);setMobileMenuOpen(false);};
   const [purchaseSectionRequest,setPurchaseSectionRequest]=useState(0);
   const [purchaseRequestedSection,setPurchaseRequestedSection]=useState<'compras'|'proveedores'|'nueva-compra'>('compras');
-  const goToPurchaseSection=(target:string)=>{setPurchaseRequestedSection('nueva-compra');setPurchaseSectionRequest(n=>n+1);setActive('compras');setPurchasesExpanded(true);setMobileMenuOpen(false);window.setTimeout(()=>document.getElementById(target)?.scrollIntoView({behavior:'smooth',block:'start'}),180);};
+  const goToPurchaseSection=(target:string)=>{setPurchaseRequestedSection('nueva-compra');setPurchaseSectionRequest(n=>n+1);startTransition(()=>setActive('compras'));setPurchasesExpanded(true);setMobileMenuOpen(false);window.setTimeout(()=>document.getElementById(target)?.scrollIntoView({behavior:'smooth',block:'start'}),180);};
 
   return <div className={`app${mobileMenuOpen?" mobile-menu-open":""}`}>
     {mobileMenuOpen&&<button type="button" className="mobile-menu-backdrop" aria-label="Cerrar menú" onClick={()=>setMobileMenuOpen(false)}/>}
@@ -60,16 +77,16 @@ function App({ userId, userEmail, userAppMetadata, signOut }: { userId: string; 
       <button type="button" className="mobile-menu-close" aria-label="Cerrar menú" onClick={()=>setMobileMenuOpen(false)}><X size={21}/></button>
       <div className="brand"><div className="brand-mark">F</div><div><strong>Farmi</strong><span>Sistema de gestión</span></div></div>
       <div className="section-label">OPERACIÓN</div>
-      {visibleNav.map(([id, label, Icon]) => id==='clientes' ? <div className="nav-group" key={id}><button type="button" className="nav nav-parent" aria-expanded={customersExpanded} aria-controls="customers-subnav" onClick={()=>setCustomersExpanded(open=>!open)}><Icon size={19}/><span>Clientes</span><span className="nav-chevron">{customersExpanded?'▾':'▸'}</span></button>{customersExpanded&&<div className="nav-submenu" id="customers-subnav"><button type="button" className={active==='clientes'?'active':''} onClick={()=>{setActive('clientes');setMobileMenuOpen(false)}}>Registro de nuevo cliente</button><button type="button" className={active==='cotizaciones'?'active':''} onClick={()=>{setActive('cotizaciones');setMobileMenuOpen(false)}}>Cotizaciones</button></div>}</div> : id==='compras' ? <div className="nav-group" key={id}>
+      {visibleNav.map(([id, label, Icon]) => id==='clientes' ? <div className="nav-group" key={id}><button type="button" className="nav nav-parent" aria-expanded={customersExpanded} aria-controls="customers-subnav" onClick={()=>setCustomersExpanded(open=>!open)}><Icon size={19}/><span>Clientes</span><span className="nav-chevron">{customersExpanded?'▾':'▸'}</span></button>{customersExpanded&&<div className="nav-submenu" id="customers-subnav"><button type="button" className={active==='clientes'?'active':''} onMouseEnter={()=>void preloadModule('clientes')} onClick={()=>{startTransition(()=>setActive('clientes'));setMobileMenuOpen(false)}}>Registro de nuevo cliente</button><button type="button" className={active==='cotizaciones'?'active':''} onMouseEnter={()=>void preloadModule('cotizaciones')} onClick={()=>{startTransition(()=>setActive('cotizaciones'));setMobileMenuOpen(false)}}>Cotizaciones</button></div>}</div> : id==='compras' ? <div className="nav-group" key={id}>
         <button type="button" className="nav nav-parent" aria-expanded={purchasesExpanded} aria-controls="purchases-subnav" onClick={()=>setPurchasesExpanded(open=>!open)}><Icon size={19}/><span>Compras</span><span className="nav-chevron">{purchasesExpanded?'▾':'▸'}</span></button>
         {purchasesExpanded&&<div className="nav-submenu" id="purchases-subnav">
-          <button type="button" onClick={()=>goToPurchaseSection('purchase-order')}>Nueva compra</button>
-          {(canSee('proveedores')||canSee('compras'))&&<button type="button" className={active==='proveedores'?'active':''} onClick={()=>{setPurchaseRequestedSection('proveedores');setPurchaseSectionRequest(n=>n+1);setActive('proveedores');setMobileMenuOpen(false);}}>Proveedores</button>}
+          <button type="button" onMouseEnter={()=>void preloadModule('compras')} onClick={()=>goToPurchaseSection('purchase-order')}>Nueva compra</button>
+          {(canSee('proveedores')||canSee('compras'))&&<button type="button" className={active==='proveedores'?'active':''} onMouseEnter={()=>void preloadModule('proveedores')} onClick={()=>{setPurchaseRequestedSection('proveedores');setPurchaseSectionRequest(n=>n+1);startTransition(()=>setActive('proveedores'));setMobileMenuOpen(false);}}>Proveedores</button>}
         </div>}
       </div> : id==='finanzas' ? <div className="nav-group" key={id}>
         <button type="button" className="nav nav-parent" aria-expanded={financeExpanded} aria-controls="finance-subnav" onClick={()=>setFinanceExpanded(open=>!open)}><Icon size={19}/><span>Finanzas</span><span className="nav-chevron">{financeExpanded?'▾':'▸'}</span></button>
-        {financeExpanded&&<div className="nav-submenu" id="finance-subnav">{financeItems.map(([key,title])=><button type="button" key={key} className={active==='finanzas'&&financeSection===key?'active':''} onClick={()=>goToFinanceSection(key)}>{title}</button>)}</div>}
-      </div> : <button key={id} className={active === id ? 'nav active' : 'nav'} onClick={() => {if(id==='facturacion_estandar')setSaleType('minorista');setActive(id);setMobileMenuOpen(false);}}><Icon size={19}/>{label}</button>)}
+        {financeExpanded&&<div className="nav-submenu" id="finance-subnav">{financeItems.map(([key,title])=><button type="button" key={key} className={active==='finanzas'&&financeSection===key?'active':''} onMouseEnter={()=>void preloadModule('finanzas')} onClick={()=>goToFinanceSection(key)}>{title}</button>)}</div>}
+      </div> : <button key={id} className={active === id ? 'nav active' : 'nav'} onMouseEnter={()=>void preloadModule(id)} onClick={() => {if(id==='facturacion_estandar')setSaleType('minorista');startTransition(()=>setActive(id));setMobileMenuOpen(false);}}><Icon size={19}/>{label}</button>)}
       <div className="sidebar-footer"><Activity size={17}/> Sistema MVP v0.7</div>
     </aside>
     <main className="main">
