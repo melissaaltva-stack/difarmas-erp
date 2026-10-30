@@ -128,7 +128,7 @@ export function Purchases({products,sales,cart,setCart,search,setSearch,supplier
           <div className="purchase-detail-list">
             {cart.map(i=><div className="purchase-row purchase-row-expiry" key={i.id}>
               <div className="purchase-detail-product">
-                <button type="button" className="purchase-product-edit-link" onClick={()=>onEditProduct(products.find(product=>product.id===i.id)??i)} title={`Editar ${i.name}`}><strong>{i.name}</strong></button><small>{i.code||'Sin código'}</small>
+                <button type="button" className="purchase-product-edit-link" style={{border:0,background:"transparent",padding:0,color:"inherit",font:"inherit",textAlign:"left",cursor:"pointer"}} onClick={()=>onEditProduct(products.find(product=>product.id===i.id)??i)} title={`Editar ${i.name}`}><strong>{i.name}</strong></button><small>{i.code||'Sin código'}</small>
               </div>
               <div className="purchase-detail-expiry-cell">
                 <label className="purchase-expiry-label">
