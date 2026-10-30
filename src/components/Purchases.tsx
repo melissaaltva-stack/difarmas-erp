@@ -9,7 +9,7 @@ import type { SupplierReturnRecord } from '../domain/types';
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
 const percent = (value:number) => `${value.toLocaleString('es-HN',{maximumFractionDigits:1,minimumFractionDigits:1})}%`;
 
-export function Purchases({products,sales,cart,setCart,search,setSearch,supplier,setSupplier,suppliers=[],setSuppliers,records=[],setRecords,onDispatch,showSuppliers=true,costHistory=[],onReceive,onOpenNewProduct,sectionRequest=0,requestedSection='compras'}:{products:Product[];sales:SaleRecord[];cart:PurchaseItem[];setCart:(c:PurchaseItem[])=>void;search:string;setSearch:(v:string)=>void;supplier:string;setSupplier:(v:string)=>void;suppliers?:Supplier[];setSuppliers:(items:Supplier[] | ((current:Supplier[])=>Supplier[]))=>void;records?:SupplierReturnRecord[];setRecords:(items:SupplierReturnRecord[] | ((current:SupplierReturnRecord[])=>SupplierReturnRecord[]))=>void;onDispatch:(record:SupplierReturnRecord)=>boolean;showSuppliers?:boolean;costHistory?:PurchaseCostHistoryEntry[];onReceive:(items:PurchaseItem[],paymentMethod:'Efectivo'|'Transferencia'|'Crédito',dueDate:string,invoiceNumber:string,invoiceDate:string,notes:string,purchaseTotal?:number,paymentTerms?:string)=>boolean;onOpenNewProduct:()=>void;sectionRequest?:number;requestedSection?:'compras'|'proveedores'|'nueva-compra'}) {
+export function Purchases({products,sales,cart,setCart,search,setSearch,supplier,setSupplier,suppliers=[],setSuppliers,records=[],setRecords,onDispatch,showSuppliers=true,costHistory=[],onReceive,onOpenNewProduct,sectionRequest=0,requestedSection='compras'}:{products:Product[];sales:SaleRecord[];cart:PurchaseItem[];setCart:(c:PurchaseItem[] | ((current:PurchaseItem[])=>PurchaseItem[]))=>void;search:string;setSearch:(v:string)=>void;supplier:string;setSupplier:(v:string)=>void;suppliers?:Supplier[];setSuppliers:(items:Supplier[] | ((current:Supplier[])=>Supplier[]))=>void;records?:SupplierReturnRecord[];setRecords:(items:SupplierReturnRecord[] | ((current:SupplierReturnRecord[])=>SupplierReturnRecord[]))=>void;onDispatch:(record:SupplierReturnRecord)=>boolean;showSuppliers?:boolean;costHistory?:PurchaseCostHistoryEntry[];onReceive:(items:PurchaseItem[],paymentMethod:'Efectivo'|'Transferencia'|'Crédito',dueDate:string,invoiceNumber:string,invoiceDate:string,notes:string,purchaseTotal?:number,paymentTerms?:string)=>boolean;onOpenNewProduct:()=>void;sectionRequest?:number;requestedSection?:'compras'|'proveedores'|'nueva-compra'}) {
   const [section,setSection]=useState<'compras'|'proveedores'>('compras');
   useEffect(()=>{setSection(requestedSection==='proveedores'?'proveedores':'compras');if(requestedSection==='nueva-compra'){setPurchaseHeaderError('');setShowPurchaseModal(true);}},[sectionRequest,requestedSection]);
   const [showSuggestedPurchases,setShowSuggestedPurchases]=useState(false);
@@ -68,11 +68,11 @@ export function Purchases({products,sales,cart,setCart,search,setSearch,supplier
     setShowPurchaseModal(false);
   };
   const minExpiry=sixMonthExpiryThreshold();
-  const add=(p:Product)=>{setCart(cart.some(i=>i.id===p.id)?cart.map(i=>i.id===p.id?{...i,qty:i.qty+1}:i):[...cart,{...p,expiry:'',qty:1,unitCost:p.cost,purchaseTaxRate:p.taxEnabled?Number(p.taxRate??15):0}]);setSearch('');setError('');};
-  const change=(id:number,delta:number)=>setCart(cart.map(i=>i.id===id?{...i,qty:Math.max(1,i.qty+delta)}:i));
-  const updateCost=(id:number,value:number)=>setCart(cart.map(i=>i.id===id?{...i,unitCost:value}:i));
-  const updatePurchaseTax=(id:number,rate:number)=>setCart(cart.map(i=>i.id===id?{...i,purchaseTaxRate:rate}:i));
-  const updateExpiry=(id:number,value:string)=>{setCart(cart.map(i=>i.id===id?{...i,expiry:value}:i));setError('');};
+  const add=(p:Product)=>{setCart(current=>current.some(i=>i.id===p.id)?current.map(i=>i.id===p.id?{...i,qty:i.qty+1}:i):[...current,{...p,expiry:'',qty:1,unitCost:p.cost,purchaseTaxRate:p.taxEnabled?Number(p.taxRate??15):0}]);setSearch('');setError('');};
+  const change=(id:number,delta:number)=>setCart(current=>current.map(i=>i.id===id?{...i,qty:Math.max(1,i.qty+delta)}:i));
+  const updateCost=(id:number,value:number)=>setCart(current=>current.map(i=>i.id===id?{...i,unitCost:value}:i));
+  const updatePurchaseTax=(id:number,rate:number)=>setCart(current=>current.map(i=>i.id===id?{...i,purchaseTaxRate:rate}:i));
+  const updateExpiry=(id:number,value:string)=>{setCart(current=>current.map(i=>i.id===id?{...i,expiry:value}:i));setError('');};
   const invalidExpiry=cart.filter(i=>!isExpiryAtLeastSixMonths(i.expiry));
   const priceChanges=cart.map(item=>{const product=products.find(p=>p.id===item.id);const oldCost=product?.cost??item.cost;const delta=item.unitCost-oldCost;const changePct=oldCost>0?delta/oldCost*100:(item.unitCost>0?100:0);const oldMargin=product&&product.retail>0?(product.retail-oldCost)/product.retail*100:null;const newMargin=product&&product.retail>0?(product.retail-item.unitCost)/product.retail*100:null;return {item,oldCost,delta,changePct,oldMargin,newMargin};});
   const increases=priceChanges.filter(x=>x.delta>0.005);
@@ -80,9 +80,9 @@ export function Purchases({products,sales,cart,setCart,search,setSearch,supplier
   const recommendations=useMemo(()=>buildPurchaseRecommendations(products,sales),[products,sales]);
   if(section==='proveedores'&&showSuppliers)return <div className="content"><div id="suppliers-panel"><Suppliers suppliers={suppliers} setSuppliers={setSuppliers} products={products} records={records} setRecords={setRecords} onDispatch={onDispatch}/></div></div>;
   const addRecommended=(product:Product,quantity:number)=>{
-    setCart(cart.some(item=>item.id===product.id)
-      ? cart.map(item=>item.id===product.id?{...item,qty:item.qty+quantity}:item)
-      : [...cart,{...product,expiry:'',qty:quantity,unitCost:product.cost}]);
+    setCart(current=>current.some(item=>item.id===product.id)
+      ? current.map(item=>item.id===product.id?{...item,qty:item.qty+quantity}:item)
+      : [...current,{...product,expiry:'',qty:quantity,unitCost:product.cost}]);
     setSearch('');
     setError('');
   };
@@ -153,7 +153,7 @@ export function Purchases({products,sales,cart,setCart,search,setSearch,supplier
                 <button type="button" aria-label={`Aumentar cantidad de ${i.name}`} onClick={()=>change(i.id,1)}>+</button>
               </div>
               <div className="purchase-detail-total-cell"><strong className="purchase-detail-line-total">{money(i.unitCost*i.qty+linePurchaseTax(i))}</strong><small>ISV: {money(linePurchaseTax(i))}</small></div>
-              <button type="button" className="purchase-remove-item" aria-label={`Quitar ${i.name} de la compra`} title="Quitar producto" onClick={()=>setCart(cart.filter(item=>item.id!==i.id))}><Trash2 size={16}/></button>
+              <button type="button" className="purchase-remove-item" aria-label={`Quitar ${i.name} de la compra`} title="Quitar producto" onClick={()=>setCart(current=>current.filter(item=>item.id!==i.id))}><Trash2 size={16}/></button>
             </div>)}
           </div>
         </div>
