@@ -4326,3 +4326,55 @@ button.icon-btn:focus-visible svg,
 #purchases-panel .ai-purchase-launch>button:hover{background:#196f4c;transform:translateY(-2px);box-shadow:0 8px 20px rgba(18,87,59,.32)}
 #purchases-panel .ai-purchase-launch>button svg{width:19px;height:19px;flex:0 0 19px}
 @media(max-width:600px){#purchases-panel .ai-purchase-launch{right:16px;bottom:16px}#purchases-panel .ai-purchase-launch>button{height:48px;min-height:48px;padding:0 17px;font-size:12px}}
+
+
+/* Cierre diario: panel de conciliacion de efectivo */
+.cash-closing-page{display:grid;gap:16px}
+.cash-closing-intro{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;padding:4px 2px 2px}
+.cash-closing-kicker{font-size:10px;font-weight:800;letter-spacing:1.4px;color:#21845c}
+.cash-closing-intro h2{margin:5px 0 5px;font-size:23px;color:#183b34}
+.cash-closing-intro p{margin:0;color:#718780;font-size:12px}
+.cash-closing-date{display:grid;gap:5px;text-align:right;padding:10px 14px;border:1px solid #e0eae5;border-radius:10px;background:#fff}
+.cash-closing-date span{font-size:10px;color:#82958f}
+.cash-closing-date strong{font-size:12px;color:#31584b;text-transform:capitalize}
+.cash-closing-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.cash-closing-metric{min-width:0;padding:15px 16px;background:#fff;border:1px solid #e1eae6;border-radius:12px;box-shadow:0 3px 12px #173e3e08}
+.cash-closing-metric span,.cash-closing-metric small{display:block;color:#708780;font-size:11px}
+.cash-closing-metric strong{display:block;margin:9px 0 4px;font-size:20px;color:#213d35;font-variant-numeric:tabular-nums}
+.cash-closing-metric.positive strong{color:#21845c}
+.cash-closing-metric.negative strong{color:#b45b50}
+.cash-closing-metric.expected{background:#f0f8f4;border-color:#cfe5d9}
+.cash-closing-metric.expected strong{color:#176b4d}
+.cash-closing-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(320px,.85fr);gap:14px;align-items:start}
+.cash-closing-breakdown,.cash-count-card{padding:19px}
+.cash-closing-section-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding-bottom:13px;border-bottom:1px solid #edf2ef}
+.cash-closing-section-head h3{margin:0;color:#24453a;font-size:15px}
+.cash-closing-section-head p{margin:5px 0 0;color:#82938d;font-size:11px;line-height:1.5}
+.cash-closing-status{display:inline-flex;align-items:center;gap:5px;padding:6px 8px;border-radius:20px;background:#edf7f1;color:#21845c;font-size:10px;white-space:nowrap}
+.cash-closing-group{padding:15px 0 12px;border-bottom:1px solid #edf2ef}
+.cash-closing-group h4{display:flex;align-items:center;gap:8px;margin:0 0 8px;color:#34564a;font-size:12px}
+.cash-flow-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.cash-flow-dot.in{background:#26966b}.cash-flow-dot.out{background:#c46b5e}
+.cash-closing-line,.cash-closing-subtotal{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;font-size:12px}
+.cash-closing-line span{color:#708780}.cash-closing-line strong{color:#314b41;font-variant-numeric:tabular-nums}
+.cash-closing-subtotal{margin-top:4px;padding-top:10px;border-top:1px dashed #dce7e1;color:#526e62;font-weight:700}
+.cash-closing-subtotal strong{font-variant-numeric:tabular-nums;color:#24483a}
+.cash-closing-formula{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px;padding:14px;border-radius:10px;background:#f2f7f4;color:#547066;font-size:11px}
+.cash-closing-formula strong{font-size:17px;color:#176b4d;font-variant-numeric:tabular-nums}
+.cash-count-card{position:sticky;top:16px}
+.cash-count-card>.cash-closing-section-head>svg{color:#21845c}
+.cash-field{display:grid;gap:6px;margin-top:15px;color:#526d62;font-size:11px;font-weight:700}
+.cash-field input,.cash-field textarea{width:100%;min-width:0;border:1px solid #d8e5de;border-radius:8px;padding:11px 12px;background:#fff;color:#243d34;font:inherit;font-size:13px;outline:none;resize:vertical}
+.cash-field input{height:42px}.cash-field input:focus,.cash-field textarea:focus{border-color:#58a98a;box-shadow:0 0 0 3px #21845c18}
+.cash-difference{display:grid;gap:4px;margin-top:16px;padding:14px;border:1px solid;border-radius:10px}
+.cash-difference span{font-size:11px;font-weight:700}
+.cash-difference strong{font-size:25px;font-variant-numeric:tabular-nums}
+.cash-difference small{font-size:10px}
+.cash-difference.balanced{background:#eff8f2;border-color:#cce8d5;color:#176b4d}
+.cash-difference.surplus{background:#f0f6ff;border-color:#d6e4fa;color:#315f9b}
+.cash-difference.shortage{background:#fff5f2;border-color:#f0d8d0;color:#a44d3d}
+.cash-confirm-btn{width:100%;min-height:44px;margin-top:17px;font-size:12px}
+.cash-confirm-btn:disabled{opacity:.65;cursor:wait}
+.cash-closing-footnote{display:block;margin-top:9px;text-align:center;color:#82938d;font-size:10px}
+@media(max-width:1050px){.cash-closing-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.cash-closing-layout{grid-template-columns:1fr}.cash-count-card{position:static}}
+@media(max-width:600px){.cash-closing-intro{align-items:stretch;flex-direction:column}.cash-closing-date{text-align:left}.cash-closing-metrics{grid-template-columns:1fr 1fr;gap:8px}.cash-closing-metric{padding:12px}.cash-closing-metric strong{font-size:16px}.cash-closing-metric small{font-size:9px}.cash-closing-breakdown,.cash-count-card{padding:14px}.cash-closing-status{font-size:9px}.cash-closing-formula{align-items:flex-start;flex-direction:column}}
