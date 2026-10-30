@@ -372,9 +372,9 @@ export function useErpState(userId: string) {
     if(adjustment.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!Number.isFinite(item.unitPrice)||item.unitPrice<0))return false;
     const adjustedItems=saleAdjustments.filter(item=>item.saleId===adjustment.saleId&&item.type!=='Anulación').flatMap(item=>item.items);
     for(const line of adjustment.items){
-      const sold=sales.find(sale=>sale.id===adjustment.saleId)?.items?.find(item=>item.productId===line.productId);
+      const soldQuantity=(sales.find(sale=>sale.id===adjustment.saleId)?.items??[]).filter(item=>item.productId===line.productId).reduce((sum,item)=>sum+item.qty,0);
       const already=adjustedItems.filter(item=>item.productId===line.productId).reduce((sum,item)=>sum+item.quantity,0);
-      if(!sold||already+line.quantity>sold.qty)return false;
+      if(soldQuantity<=0||already+line.quantity>soldQuantity)return false;
     }
     if(adjustment.type==='Anulación'&&saleAdjustments.some(item=>item.saleId===adjustment.saleId&&item.type==='Anulación'))return false;
     const linkedReceivable=receivables.find(account=>account.saleId===adjustment.saleId);
