@@ -74,8 +74,10 @@ export function useErpState(userId: string) {
   const autoSaveTimerRef = useRef<number | null>(null);
   const saleInProgress = useRef(false);
   const purchaseInProgress = useRef(false);
+  const invoiceUpdateInProgress = useRef(false);
 
   useEffect(()=>{saleInProgress.current=false},[sales]);
+  useEffect(()=>{invoiceUpdateInProgress.current=false},[sales]);
   useEffect(()=>{purchaseInProgress.current=false},[purchases]);
 
   useEffect(()=>{saveJson('difarmas_customers',customers)},[customers]);
@@ -275,6 +277,7 @@ export function useErpState(userId: string) {
   };
 
   const updateStandardInvoice=(invoiceId:number,sold:CartItem[],customer='',customerRtn='',details?:StandardInvoiceDetails):boolean=>{
+    if(invoiceUpdateInProgress.current)return false;
     const original=sales.find(sale=>sale.id===invoiceId);
     if(!original||original.type!=='factura_estandar'||!sold.length||sold.some(item=>!Number.isFinite(item.qty)||item.qty<=0||!Number.isFinite(item.price)||item.price<0))return false;
     const oldQty=new Map<number,number>();
@@ -315,6 +318,7 @@ export function useErpState(userId: string) {
       taxTotal:details?.taxTotal,
       dueDate:details?.maxDate&&original.payment==='Crédito'?details.maxDate:original.dueDate
     };
+    invoiceUpdateInProgress.current=true;
     setProducts(updatedProducts);
     setInventoryMovements(current=>[...current,...movements]);
     setSales(current=>current.map(sale=>sale.id===invoiceId?updatedSale:sale));
