@@ -28,13 +28,13 @@ export function Finance({section='resumen',sales,purchases,expenses,setExpenses,
     const transactions=paymentTransactions.filter(t=>t.type==='Cobro'&&t.accountId===r.id);
     const recorded=transactions.reduce((total,t)=>total+t.amount,0);
     const cash=transactions.filter(t=>(t.paymentMethod??'Efectivo')==='Efectivo').reduce((total,t)=>total+t.amount,0);
-    return sum+Math.max(0,r.paid-recorded)+cash;
+    return sum+cash;
   },0);
   const cashSupplierPayments=payables.reduce((sum,r)=>{
     const transactions=paymentTransactions.filter(t=>t.type==='Pago proveedor'&&t.accountId===r.id);
     const recorded=transactions.reduce((total,t)=>total+t.amount,0);
     const cash=transactions.filter(t=>(t.paymentMethod??'Efectivo')==='Efectivo').reduce((total,t)=>total+t.amount,0);
-    return sum+Math.max(0,r.paid-recorded)+cash;
+    return sum+cash;
   },0);
   const { incoming: cashMovementIn, outgoing: cashMovementOut } = cashMovementTotals(movements);
   const cashFlow=cashSalesTotal+cashCollections+cashMovementIn-cashExpenseTotal-cashSupplierPayments-purchases.filter(p=>p.paymentMethod==='Efectivo').reduce((sum,p)=>sum+p.total,0)-cashMovementOut;
@@ -46,7 +46,7 @@ export function Finance({section='resumen',sales,purchases,expenses,setExpenses,
     if(accountTransactions.length>0) {
       return sum+accountTransactions.filter(t=>dateKey(t.date)===today&&(t.paymentMethod??'Efectivo')==='Efectivo').reduce((a,t)=>a+t.amount,0);
     }
-    return sum+(r.lastPaymentDate&&dateKey(r.lastPaymentDate)===today?Math.min(r.paid,r.total):0);
+    return sum;
   },0);
   const dayExpenses=expenses.filter(e=>dateKey(e.date)===today&&(e.paymentMethod??'Efectivo')==='Efectivo').reduce((a,e)=>a+e.amount,0);
   const dayCashPurchases=purchases.filter(p=>dateKey(p.date)===today&&p.paymentMethod==='Efectivo').reduce((a,p)=>a+p.total,0);
@@ -55,7 +55,7 @@ export function Finance({section='resumen',sales,purchases,expenses,setExpenses,
     if(accountTransactions.length>0) {
       return sum+accountTransactions.filter(t=>dateKey(t.date)===today&&(t.paymentMethod??'Efectivo')==='Efectivo').reduce((a,t)=>a+t.amount,0);
     }
-    return sum+(r.lastPaymentDate&&dateKey(r.lastPaymentDate)===today?Math.min(r.paid,r.total):0);
+    return sum;
   },0);
   const expected=calculateExpectedCash(opening,daySales,dayCollections,dayMovementIn,dayExpenses+dayCashPurchases,daySupplierPayments,dayMovementOut);
   const addExpense=()=>{if(!description.trim()||!Number.isFinite(amount)||amount<=0)return;setExpenses([...expenses,{id:Date.now(),description,amount,category,date:new Date().toISOString(),paymentMethod:expensePaymentMethod}]);setDescription('');setAmount(0);};
