@@ -344,11 +344,19 @@ export function useErpState(userId: string) {
   const recordSaleAdjustment=(adjustment:SaleAdjustmentRecord):boolean=>{
     if(saleAdjustments.some(item=>item.id===adjustment.id)||!sales.some(sale=>sale.id===adjustment.saleId)||!adjustment.items.length||!Number.isFinite(adjustment.amount)||adjustment.amount<=0)return false;
     if(adjustment.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!Number.isFinite(item.unitPrice)||item.unitPrice<0))return false;
+    const originalSale=sales.find(sale=>sale.id===adjustment.saleId);
+    if(!originalSale)return false;
+    const soldQuantities=new Map<number,number>();
+    (originalSale.items??[]).forEach(line=>soldQuantities.set(line.productId,(soldQuantities.get(line.productId)??0)+line.qty));
     const adjustedItems=saleAdjustments.filter(item=>item.saleId===adjustment.saleId&&item.type!=='Anulación').flatMap(item=>item.items);
-    for(const line of adjustment.items){
-      const sold=sales.find(sale=>sale.id===adjustment.saleId)?.items?.find(item=>item.productId===line.productId);
-      const already=adjustedItems.filter(item=>item.productId===line.productId).reduce((sum,item)=>sum+item.quantity,0);
-      if(!sold||already+line.quantity>sold.qty)return false;
+    const alreadyAdjusted=new Map<number,number>();
+    adjustedItems.forEach(item=>alreadyAdjusted.set(item.productId,(alreadyAdjusted.get(item.productId)??0)+item.quantity));
+    const requestedInThisAdjustment=new Map<number,number>();
+    adjustment.items.forEach(item=>requestedInThisAdjustment.set(item.productId,(requestedInThisAdjustment.get(item.productId)??0)+item.quantity));
+    for(const [productId,quantity] of requestedInThisAdjustment){
+      const soldQuantity=soldQuantities.get(productId)??0;
+      const already=alreadyAdjusted.get(productId)??0;
+      if(!soldQuantity||already+quantity>soldQuantity)return false;
     }
     if(adjustment.type==='Anulación'&&saleAdjustments.some(item=>item.saleId===adjustment.saleId&&item.type==='Anulación'))return false;
     let updated=products;
