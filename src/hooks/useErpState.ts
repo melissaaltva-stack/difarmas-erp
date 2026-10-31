@@ -365,15 +365,25 @@ export function useErpState(userId: string) {
       if(!soldQuantity||already+quantity>soldQuantity)return false;
     }
     if(adjustment.type==='Anulación'&&saleAdjustments.some(item=>item.saleId===adjustment.saleId&&item.type==='Anulación'))return false;
-    let updated=products;
-    const movements:InventoryMovement[]=[];
-    for(const line of adjustment.items){
-      if(!line.returnToStock)continue;
-      const product=updated.find(p=>p.id===line.productId);
-      if(!product)return false;
-      movements.push({id:Date.now()+line.productId,productId:line.productId,productName:line.productName,type:'Ajuste',quantity:line.quantity,stockBefore:product.stock,stockAfter:product.stock+line.quantity,unitCost:line.unitCost,referenceId:adjustment.id,date:new Date().toISOString(),note:'Devolución de venta '+adjustment.invoiceNumber});
-      updated=updated.map(p=>p.id===line.productId?{...p,stock:p.stock+line.quantity}:p);
+    const returnedByProduct=new Map<number,SaleAdjustmentRecord['items']>();
+    adjustment.items.filter(line=>line.returnToStock).forEach(line=>{
+      returnedByProduct.set(line.productId,[...(returnedByProduct.get(line.productId)??[]),line]);
+    });
+    for(const productId of returnedByProduct.keys()){
+      if(!products.some(product=>product.id===productId))return false;
     }
+    const movementDate=new Date().toISOString();
+    const movements:InventoryMovement[]=[...returnedByProduct].map(([productId,lines])=>{
+      const product=products.find(item=>item.id===productId)!;
+      const quantity=lines.reduce((sum,line)=>sum+line.quantity,0);
+      const totalCost=lines.reduce((sum,line)=>sum+line.quantity*line.unitCost,0);
+      return {id:Date.now()+productId,productId,productName:lines[0]?.productName??product.name,type:'Ajuste' as const,quantity,stockBefore:product.stock,stockAfter:product.stock+quantity,unitCost:quantity?totalCost/quantity:0,referenceId:adjustment.id,date:movementDate,note:'Devolución de venta '+adjustment.invoiceNumber};
+    });
+    const returnedQuantities=new Map(movements.map(movement=>[movement.productId,movement.quantity]));
+    const updated=products.map(product=>{
+      const quantity=returnedQuantities.get(product.id)??0;
+      return quantity?{...product,stock:product.stock+quantity}:product;
+    });
     const receivable=receivables.find(item=>item.saleId===adjustment.saleId);
     // Una devolución de una venta a crédito reduce primero el saldo pendiente.
     // No se reduce el importe ya abonado ni se registra un reembolso en efectivo
