@@ -348,6 +348,9 @@ export function useErpState(userId: string) {
   };
 
   const resolveSupplierReturn=(record:SupplierReturnRecord,status:SupplierReturnRecord['status']):boolean=>{
+    if(supplierDispatchInProgress.current.has(record.id))return false;
+    supplierDispatchInProgress.current.add(record.id);
+    try {
     const current=supplierReturns.find(item=>item.id===record.id);
     if(!current||current.status!=='Enviado al proveedor'||record.status!=='Enviado al proveedor')return false;
     if(status==='Rechazado') { setSupplierReturns(rows=>rows.map(row=>row.id===record.id?{...row,status}:row)); return true; }
@@ -381,6 +384,9 @@ export function useErpState(userId: string) {
       return true;
     }
     return false;
+    } finally {
+      supplierDispatchInProgress.current.delete(record.id);
+    }
   };
 
   const recordSaleAdjustment=(adjustment:SaleAdjustmentRecord):boolean=>{
