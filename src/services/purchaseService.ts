@@ -6,6 +6,8 @@ export function createPayableFromPurchase(
   supplier: string,
   dueDate: string,
   now = new Date(),
+  purchaseId?: number,
+  invoiceNumber?: string,
 ): Payable {
   return {
     id: Date.now(),
@@ -14,5 +16,7 @@ export function createPayableFromPurchase(
     paid: 0,
     dueDate,
     date: now.toISOString(),
+    purchaseId,
+    invoiceNumber: invoiceNumber?.trim() || undefined,
   };
 }
