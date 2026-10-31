@@ -367,7 +367,15 @@ export function useErpState(userId: string) {
       if([...quantities.keys()].some(id=>!products.some(product=>product.id===id)))return false;
       const date=new Date().toISOString();
       const movements:InventoryMovement[]=[...quantities].map(([productId,quantity])=>{const product=products.find(item=>item.id===productId)!;const lines=record.items.filter(item=>item.productId===productId);const cost=lines.reduce((sum,item)=>sum+item.quantity*item.unitCost,0)/quantity;return {id:Date.now()+productId,productId,productName:product.name,type:'Compra' as const,quantity,stockBefore:product.stock,stockAfter:product.stock+quantity,unitCost:cost,referenceId:record.id,date,note:'Reposición por cambio recibido de proveedor'};});
-      setProducts(rows=>rows.map(product=>{const quantity=quantities.get(product.id)??0;return quantity?{...product,stock:product.stock+quantity}:product;}));
+      setProducts(rows=>rows.map(product=>{
+        const quantity=quantities.get(product.id)??0;
+        if(!quantity)return product;
+        const lines=record.items.filter(item=>item.productId===product.id);
+        const receivedCost=lines.reduce((sum,item)=>sum+item.quantity*item.unitCost,0);
+        const newStock=product.stock+quantity;
+        const weightedCost=newStock>0?(product.stock*product.cost+receivedCost)/newStock:product.cost;
+        return {...product,stock:newStock,cost:weightedCost};
+      }));
       setInventoryMovements(rows=>[...rows,...movements]);
       setSupplierReturns(rows=>rows.map(row=>row.id===record.id?{...row,status}:row));
       return true;
