@@ -72,7 +72,7 @@ export function Purchases({products,sales,cart,setCart,search,setSearch,supplier
     setShowPurchaseModal(false);
   };
   const minExpiry=sixMonthExpiryThreshold();
-  const add=(p:Product)=>{setCart(cart.some(i=>i.id===p.id)?cart.map(i=>i.id===p.id?{...i,qty:i.qty+1}:i):[...cart,{...p,expiry:'',qty:1,unitCost:p.cost,purchaseTaxRate:p.taxEnabled?Number(p.taxRate??15):0}]);setSearch('');setError('');};
+  const add=(p:Product)=>{setCart(cart.some(i=>i.id===p.id)?cart.map(i=>i.id===p.id?{...i,qty:i.qty+1}:i):[...cart,{...p,expiry:p.expiry||'',qty:1,unitCost:p.cost,purchaseTaxRate:p.taxEnabled?Number(p.taxRate??15):0}]);setSearch('');setError('');};
   const change=(id:number,delta:number)=>setCart(cart.map(i=>i.id===id?{...i,qty:Math.max(1,i.qty+delta)}:i));
   const updateCost=(id:number,value:number)=>setCart(cart.map(i=>i.id===id?{...i,unitCost:value}:i));
   const updatePurchaseTax=(id:number,rate:number)=>setCart(cart.map(i=>i.id===id?{...i,purchaseTaxRate:rate}:i));
@@ -86,7 +86,7 @@ export function Purchases({products,sales,cart,setCart,search,setSearch,supplier
   const addRecommended=(product:Product,quantity:number)=>{
     setCart(cart.some(item=>item.id===product.id)
       ? cart.map(item=>item.id===product.id?{...item,qty:item.qty+quantity}:item)
-      : [...cart,{...product,expiry:'',qty:quantity,unitCost:product.cost}]);
+      : [...cart,{...product,expiry:product.expiry||'',qty:quantity,unitCost:product.cost}]);
     setSearch('');
     setError('');
   };
