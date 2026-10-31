@@ -74,6 +74,7 @@ export function useErpState(userId: string) {
   const autoSaveTimerRef = useRef<number | null>(null);
   const saleInProgress = useRef(false);
   const purchaseInProgress = useRef(false);
+  const supplierDispatchInProgress = useRef<Set<number>>(new Set());
 
   useEffect(()=>{saleInProgress.current=false},[sales]);
   useEffect(()=>{purchaseInProgress.current=false},[purchases]);
@@ -321,6 +322,8 @@ export function useErpState(userId: string) {
   };
 
   const recordSupplierDispatch=(record:SupplierReturnRecord):boolean=>{
+    const dispatchNote='Devolución enviada al proveedor: ';
+    if(supplierDispatchInProgress.current.has(record.id)||inventoryMovements.some(movement=>movement.referenceId===record.id&&movement.note.startsWith(dispatchNote)))return false;
     if(!record.items.length)return false;
     if(record.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!products.some(p=>p.id===item.productId&&p.stock>=item.quantity)))return false;
     const updated=products.map(product=>{
@@ -332,6 +335,7 @@ export function useErpState(userId: string) {
       if(!product)return [];
       return [{id:Date.now()+item.productId,productId:item.productId,productName:item.productName,type:'Ajuste' as const,quantity:item.quantity,stockBefore:product.stock,stockAfter:product.stock-item.quantity,unitCost:item.unitCost,referenceId:record.id,date:new Date().toISOString(),note:'Devolución enviada al proveedor: '+record.reason}];
     });
+    supplierDispatchInProgress.current.add(record.id);
     setProducts(updated);
     setInventoryMovements(current=>[...current,...movements]);
     return true;
