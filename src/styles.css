@@ -4422,3 +4422,83 @@ button.icon-btn:focus-visible svg,
 #purchases-panel .purchase-head .search{max-width:none;width:100%}
 @media(max-width:760px){#purchases-panel .purchase-inline-header-form{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){#purchases-panel .purchase-inline-header-form{grid-template-columns:minmax(0,1fr)}#purchases-panel .purchase-inline-header-top{align-items:flex-start;flex-direction:column}}
+
+
+/* Ajuste definitivo de la distribución de datos en Nueva compra:
+   campos alineados desde el mismo borde y ocupando el ancho real disponible. */
+#purchases-panel .purchase-head {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  width: 100%;
+  min-width: 0;
+  gap: 14px !important;
+  box-sizing: border-box;
+}
+#purchases-panel .purchase-inline-header {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  gap: 12px;
+  box-sizing: border-box;
+}
+#purchases-panel .purchase-inline-header-top {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+#purchases-panel .purchase-inline-header-form {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  align-items: end;
+  justify-content: stretch;
+  width: 100% !important;
+  min-width: 0;
+  margin: 0 !important;
+  padding: 0;
+  gap: 12px 14px;
+  box-sizing: border-box;
+}
+#purchases-panel .purchase-inline-header-form > label {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+#purchases-panel .purchase-inline-header-form input,
+#purchases-panel .purchase-inline-header-form select {
+  display: block;
+  width: 100% !important;
+  max-width: 100%;
+  min-width: 0;
+  height: 40px;
+  margin: 5px 0 0;
+  box-sizing: border-box;
+}
+#purchases-panel .purchase-head > .search {
+  display: flex;
+  align-items: center;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+#purchases-panel .purchase-head > .search input {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+}
+@media (max-width: 560px) {
+  #purchases-panel .purchase-inline-header-form {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 11px;
+  }
+}
