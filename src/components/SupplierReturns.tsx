@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { ClipboardList, PackageMinus, Plus, Search, Printer } from 'lucide-react';
-import type { Product, Supplier, SupplierReturnRecord, SupplierReturnItem } from '../domain/types';
+import type { Product, Supplier, SupplierReturnRecord, SupplierReturnItem, PurchaseRecord } from '../domain/types';
 
 const money=(value:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL',maximumFractionDigits:2}).format(value);
 
-export function SupplierReturns({products,suppliers,records,setRecords,onDispatch,onResolve}:{products:Product[];suppliers:Supplier[];records:SupplierReturnRecord[];setRecords:Dispatch<SetStateAction<SupplierReturnRecord[]>>;onDispatch:(record:SupplierReturnRecord)=>boolean;onResolve:(record:SupplierReturnRecord,status:SupplierReturnRecord['status'])=>boolean}) {
+export function SupplierReturns({products,suppliers,purchases,records,setRecords,onDispatch,onResolve}:{products:Product[];suppliers:Supplier[];purchases:PurchaseRecord[];records:SupplierReturnRecord[];setRecords:Dispatch<SetStateAction<SupplierReturnRecord[]>>;onDispatch:(record:SupplierReturnRecord)=>boolean;onResolve:(record:SupplierReturnRecord,status:SupplierReturnRecord['status'])=>boolean}) {
   const [supplier,setSupplier]=useState('');
   const [purchaseReference,setPurchaseReference]=useState('');
   const [productId,setProductId]=useState('');
@@ -18,6 +18,7 @@ export function SupplierReturns({products,suppliers,records,setRecords,onDispatc
   useEffect(()=>{dispatchLocks.current.clear();},[records]);
   const supplierProducts=supplier.trim()?products.filter(p=>String(p.supplier??'').trim().toLocaleLowerCase()===supplier.trim().toLocaleLowerCase()):[];
   const selected=supplierProducts.find(p=>String(p.id)===productId);
+  const supplierPurchases=purchases.filter(p=>p.supplier.trim().toLocaleLowerCase()===supplier.trim().toLocaleLowerCase());
   const validQty=Number(quantity);
   const create=()=>{
     setNotice('');
@@ -52,7 +53,7 @@ export function SupplierReturns({products,suppliers,records,setRecords,onDispatc
     <div className="card"><div className="card-title"><div><h3>Nueva devolución a proveedor</h3><p>La salida de inventario se registra únicamente al confirmar el envío.</p></div><PackageMinus size={20}/></div>
       <div className="form-grid">
         <label>Proveedor<select value={supplier} onChange={e=>{setSupplier(e.target.value);setProductId("");}}><option value="">Seleccionar proveedor</option>{suppliers.filter(s=>s.active).map(s=><option key={s.id} value={s.name}>{s.name}</option>)}</select></label>
-        <label>Factura / referencia de compra<input value={purchaseReference} onChange={e=>setPurchaseReference(e.target.value)} placeholder="Número de factura o compra"/></label>
+        <label>Factura de compra<select value={purchaseReference} onChange={e=>setPurchaseReference(e.target.value)} disabled={!supplier}><option value="">Seleccionar factura de compra</option>{supplierPurchases.map(p=><option key={p.id} value={String(p.id)}>{p.invoiceNumber?.trim()||`Compra #${p.id}`} · {new Date(p.date).toLocaleDateString("es-HN")}</option>)}</select>{supplier&&supplierPurchases.length===0&&<small className="helper">No hay compras registradas para este proveedor.</small>}</label>
         <label>Producto<select value={productId} onChange={e=>setProductId(e.target.value)} disabled={!supplier}><option value="">Seleccionar producto</option>{supplierProducts.map(p=><option key={p.id} value={p.id}>{p.name} · Stock: {p.stock}</option>)}</select>{supplier&&!supplierProducts.length&&<small className="helper">No hay productos vinculados a este proveedor. Revisa el proveedor asignado en el inventario.</small>}</label>
         <label>Cantidad<input type="number" min="1" max={selected?.stock??1} step="1" value={quantity} onChange={e=>setQuantity(e.target.value)}/>{selected&&<small className="helper">Disponible: {selected.stock} · Costo unitario: {money(selected.cost)}</small>}</label>
         <label>Motivo<select value={reason} onChange={e=>setReason(e.target.value)}><option>Producto dañado</option><option>Producto vencido</option><option>Vencimiento próximo</option><option>Error de despacho</option><option>Producto incorrecto</option><option>Retiro de producto</option><option>Otro</option></select></label>
