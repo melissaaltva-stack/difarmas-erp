@@ -356,8 +356,21 @@ export function useErpState(userId: string) {
       movements.push({id:Date.now()+line.productId,productId:line.productId,productName:line.productName,type:'Ajuste',quantity:line.quantity,stockBefore:product.stock,stockAfter:product.stock+line.quantity,unitCost:line.unitCost,referenceId:adjustment.id,date:new Date().toISOString(),note:'Devolución de venta '+adjustment.invoiceNumber});
       updated=updated.map(p=>p.id===line.productId?{...p,stock:p.stock+line.quantity}:p);
     }
+    const originalSale=sales.find(sale=>sale.id===adjustment.saleId);
+    const receivable=receivables.find(item=>item.saleId===adjustment.saleId);
+    // Una devolución de una venta a crédito reduce primero el saldo pendiente.
+    // No se reduce el importe ya abonado ni se registra un reembolso en efectivo
+    // automáticamente: ese movimiento requiere un pago real por separado.
+    const creditReduction=receivable
+      ? Math.min(adjustment.amount,Math.max(0,receivable.total-receivable.paid))
+      : 0;
     setProducts(updated);
     setInventoryMovements(current=>[...current,...movements]);
+    if(receivable&&creditReduction>0){
+      setReceivables(current=>current.map(item=>item.saleId===adjustment.saleId
+        ? {...item,total:Math.max(item.paid,item.total-creditReduction)}
+        : item));
+    }
     if(adjustment.paymentMethod.toLowerCase().includes('efectivo')){
       setCashMovements(current=>[{id:adjustment.id,type:'Salida',description:'Reembolso por '+adjustment.type+' '+adjustment.invoiceNumber,amount:adjustment.amount,category:'Devoluciones de ventas',date:new Date().toISOString()},...current]);
     }
