@@ -78,6 +78,8 @@ export function POS({products,customers,cart,setCart,saleType,setSaleType,paymen
   const [adjustmentQuantities,setAdjustmentQuantities]=useState<Record<number,number>>({});
   const [returnStock,setReturnStock]=useState(true);
   const [adjustmentNotice,setAdjustmentNotice]=useState('');
+  const adjustmentSubmissionLocks=useRef<Set<number>>(new Set());
+  useEffect(()=>{adjustmentSubmissionLocks.current.clear();},[saleAdjustments]);
   const selectedSale=sales.find(s=>String(s.id)===selectedSaleId);
   const adjustedForSale=saleAdjustments.filter(a=>a.saleId===selectedSale?.id);
   const adjustedQuantity=(productId:number)=>adjustedForSale.reduce((sum,a)=>sum+a.items.filter(i=>i.productId===productId).reduce((n,i)=>n+i.quantity,0),0);
@@ -88,12 +90,14 @@ export function POS({products,customers,cart,setCart,saleType,setSaleType,paymen
   const adjustmentAmount=adjustmentItems.reduce((sum,line)=>sum+line.unitPrice*line.quantity,0);
   const submitAdjustment=()=>{
     setAdjustmentNotice('');
+    if(selectedSale&&adjustmentSubmissionLocks.current.has(selectedSale.id))return;
     if(!selectedSale||!adjustmentReason.trim()){setAdjustmentNotice('Selecciona una factura e indica el motivo.');return;}
     if(adjustmentType==='Anulación'&&adjustedForSale.length){setAdjustmentNotice('Esta factura ya tiene ajustes. Registra una devolución parcial por el saldo pendiente o revisa el historial.');return;}
     if(!adjustmentItems.length){setAdjustmentNotice('No hay cantidades pendientes para devolver en esta factura.');return;}
     const record:SaleAdjustmentRecord={id:Date.now(),saleId:selectedSale.id,invoiceNumber:selectedSale.invoiceNumber||('V-'+selectedSale.id),type:adjustmentType,date:new Date().toISOString(),reason:adjustmentReason.trim(),items:adjustmentItems.map(line=>({productId:line.productId,productName:line.productName,quantity:line.quantity,unitPrice:line.unitPrice,unitCost:line.unitCost,returnToStock:returnStock})),amount:adjustmentAmount,paymentMethod:selectedSale.payment,notes:''};
+    adjustmentSubmissionLocks.current.add(selectedSale.id);
     if(onRecordAdjustment(record)){setAdjustmentNotice('Ajuste registrado. Verifica el comprobante y el procedimiento fiscal aplicable.');setSelectedSaleId('');setAdjustmentReason('');setAdjustmentQuantities({});}
-    else setAdjustmentNotice('No se pudo registrar. Verifica las cantidades ya devueltas y la sincronización.');
+    else {adjustmentSubmissionLocks.current.delete(selectedSale.id);setAdjustmentNotice('No se pudo registrar. Verifica las cantidades ya devueltas y la sincronización.');}
   };
   const invoicePrintConfig=invoice?(settings.invoicePrintFormats?.[invoice.format]??defaultInvoicePrintFormats[invoice.format]):(settings.invoicePrintFormats?.[printFormat]??defaultInvoicePrintFormats[printFormat]);
   const invoicePaymentMethod=invoice?paymentMethods.find(method=>method.name===invoice.payment):undefined;
