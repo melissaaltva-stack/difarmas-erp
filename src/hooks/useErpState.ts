@@ -347,6 +347,34 @@ export function useErpState(userId: string) {
     return true;
   };
 
+  const resolveSupplierReturn=(record:SupplierReturnRecord,status:SupplierReturnRecord['status']):boolean=>{
+    const current=supplierReturns.find(item=>item.id===record.id);
+    if(!current||current.status!=='Enviado al proveedor'||record.status!=='Enviado al proveedor')return false;
+    if(status==='Rechazado') { setSupplierReturns(rows=>rows.map(row=>row.id===record.id?{...row,status}:row)); return true; }
+    if(status==='Nota de crédito recibida') {
+      const ref=record.purchaseReference.trim().toLowerCase();
+      const purchase=purchases.find(item=>item.supplier.trim().toLowerCase()===record.supplier.trim().toLowerCase()&&!!ref&&(String(item.id)===ref||(item.invoiceNumber??'').trim().toLowerCase()===ref));
+      if(!purchase)return false;
+      const payable=payables.find(item=>item.supplier.trim().toLowerCase()===record.supplier.trim().toLowerCase()&&(item.purchaseId===purchase.id||((item.invoiceNumber??'').trim().toLowerCase()===(purchase.invoiceNumber??'').trim().toLowerCase()&&!!purchase.invoiceNumber)));
+      if(!payable||record.totalCost<=0||payable.total-payable.paid<=0)return false;
+      const reduction=Math.min(record.totalCost,payable.total-payable.paid);
+      setPayables(rows=>rows.map(item=>item.id===payable.id?{...item,total:Math.max(item.paid,item.total-reduction)}:item));
+      setSupplierReturns(rows=>rows.map(row=>row.id===record.id?{...row,status}:row));
+      return true;
+    }
+    if(status==='Cambio recibido') {
+      const quantities=new Map<number,number>();record.items.forEach(item=>quantities.set(item.productId,(quantities.get(item.productId)??0)+item.quantity));
+      if([...quantities.keys()].some(id=>!products.some(product=>product.id===id)))return false;
+      const date=new Date().toISOString();
+      const movements:InventoryMovement[]=[...quantities].map(([productId,quantity])=>{const product=products.find(item=>item.id===productId)!;const lines=record.items.filter(item=>item.productId===productId);const cost=lines.reduce((sum,item)=>sum+item.quantity*item.unitCost,0)/quantity;return {id:Date.now()+productId,productId,productName:product.name,type:'Compra' as const,quantity,stockBefore:product.stock,stockAfter:product.stock+quantity,unitCost:cost,referenceId:record.id,date,note:'Reposición por cambio recibido de proveedor'};});
+      setProducts(rows=>rows.map(product=>{const quantity=quantities.get(product.id)??0;return quantity?{...product,stock:product.stock+quantity}:product;}));
+      setInventoryMovements(rows=>[...rows,...movements]);
+      setSupplierReturns(rows=>rows.map(row=>row.id===record.id?{...row,status}:row));
+      return true;
+    }
+    return false;
+  };
+
   const recordSaleAdjustment=(adjustment:SaleAdjustmentRecord):boolean=>{
     if(saleAdjustments.some(item=>item.id===adjustment.id)||!sales.some(sale=>sale.id===adjustment.saleId)||!adjustment.items.length||!Number.isFinite(adjustment.amount)||adjustment.amount<=0)return false;
     if(adjustment.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!Number.isFinite(item.unitPrice)||item.unitPrice<0))return false;
@@ -447,5 +475,5 @@ export function useErpState(userId: string) {
     return true;
   };
 
-  return {active,setActive,customers,setCustomers,quotes,setQuotes,saveQuotes,suppliers,setSuppliers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,settings,setSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,purchases,purchaseCostHistory,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,cashClosures,setCashClosures,cashMovements,setCashMovements,paymentTransactions,setPaymentTransactions,missingProductRequests,setMissingProductRequests,supplierReturns,setSupplierReturns,saleAdjustments,setSaleAdjustments,recordSupplierDispatch,recordSaleAdjustment,recordMissingProduct,filtered,recordSale,updateStandardInvoice,saveProduct,deleteProduct,receivePurchase,syncStatus,syncError};
+  return {active,setActive,customers,setCustomers,quotes,setQuotes,saveQuotes,suppliers,setSuppliers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,settings,setSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,purchases,purchaseCostHistory,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,cashClosures,setCashClosures,cashMovements,setCashMovements,paymentTransactions,setPaymentTransactions,missingProductRequests,setMissingProductRequests,supplierReturns,setSupplierReturns,saleAdjustments,setSaleAdjustments,recordSupplierDispatch,resolveSupplierReturn,recordSaleAdjustment,recordMissingProduct,filtered,recordSale,updateStandardInvoice,saveProduct,deleteProduct,receivePurchase,syncStatus,syncError};
 }
