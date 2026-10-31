@@ -75,6 +75,7 @@ export function useErpState(userId: string) {
   const saleInProgress = useRef(false);
   const purchaseInProgress = useRef(false);
   const supplierDispatchInProgress = useRef<Set<number>>(new Set());
+  const supplierReturnResolutionInProgress = useRef<Set<number>>(new Set());
 
   useEffect(()=>{saleInProgress.current=false},[sales]);
   useEffect(()=>{purchaseInProgress.current=false},[purchases]);
@@ -348,8 +349,8 @@ export function useErpState(userId: string) {
   };
 
   const resolveSupplierReturn=(record:SupplierReturnRecord,status:SupplierReturnRecord['status']):boolean=>{
-    if(supplierDispatchInProgress.current.has(record.id))return false;
-    supplierDispatchInProgress.current.add(record.id);
+    if(supplierReturnResolutionInProgress.current.has(record.id))return false;
+    supplierReturnResolutionInProgress.current.add(record.id);
     try {
     const current=supplierReturns.find(item=>item.id===record.id);
     if(!current||current.status!=='Enviado al proveedor'||record.status!=='Enviado al proveedor')return false;
@@ -385,7 +386,7 @@ export function useErpState(userId: string) {
     }
     return false;
     } finally {
-      supplierDispatchInProgress.current.delete(record.id);
+      supplierReturnResolutionInProgress.current.delete(record.id);
     }
   };
 
