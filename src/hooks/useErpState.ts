@@ -324,16 +324,22 @@ export function useErpState(userId: string) {
   const recordSupplierDispatch=(record:SupplierReturnRecord):boolean=>{
     const dispatchNote='Devolución enviada al proveedor: ';
     if(supplierDispatchInProgress.current.has(record.id)||inventoryMovements.some(movement=>movement.referenceId===record.id&&movement.note?.startsWith(dispatchNote)))return false;
-    if(!record.items.length)return false;
-    if(record.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!products.some(p=>p.id===item.productId&&p.stock>=item.quantity)))return false;
+    if(!record.items.length||record.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!Number.isFinite(item.unitCost)||item.unitCost<0))return false;
+    const quantitiesByProduct=new Map<number,number>();
+    record.items.forEach(item=>quantitiesByProduct.set(item.productId,(quantitiesByProduct.get(item.productId)??0)+item.quantity));
+    if([...quantitiesByProduct].some(([productId,quantity])=>!products.some(product=>product.id===productId&&product.stock>=quantity)))return false;
     const updated=products.map(product=>{
-      const item=record.items.find(line=>line.productId===product.id);
-      return item?{...product,stock:product.stock-item.quantity}:product;
+      const quantity=quantitiesByProduct.get(product.id)??0;
+      return quantity?{...product,stock:product.stock-quantity}:product;
     });
-    const movements:InventoryMovement[]=record.items.flatMap(item=>{
-      const product=products.find(p=>p.id===item.productId);
+    const movementDate=new Date().toISOString();
+    const movements:InventoryMovement[]=[...quantitiesByProduct].flatMap(([productId,quantity])=>{
+      const product=products.find(item=>item.id===productId);
       if(!product)return [];
-      return [{id:Date.now()+item.productId,productId:item.productId,productName:item.productName,type:'Ajuste' as const,quantity:item.quantity,stockBefore:product.stock,stockAfter:product.stock-item.quantity,unitCost:item.unitCost,referenceId:record.id,date:new Date().toISOString(),note:'Devolución enviada al proveedor: '+record.reason}];
+      const matchingItems=record.items.filter(item=>item.productId===productId);
+      const totalCost=matchingItems.reduce((sum,item)=>sum+item.quantity*item.unitCost,0);
+      const unitCost=totalCost/quantity;
+      return [{id:Date.now()+productId,productId,productName:matchingItems[0]?.productName??product.name,type:'Ajuste' as const,quantity,stockBefore:product.stock,stockAfter:product.stock-quantity,unitCost,referenceId:record.id,date:movementDate,note:'Devolución enviada al proveedor: '+record.reason}];
     });
     supplierDispatchInProgress.current.add(record.id);
     setProducts(updated);
