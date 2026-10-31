@@ -19,6 +19,12 @@ export function Finance({section='resumen',sales,purchases,expenses,setExpenses,
   const paymentLocks=useRef<Set<string>>(new Set()); const closingRef=useRef(false); const [isClosing,setIsClosing]=useState(false);
   useEffect(()=>{paymentLocks.current.clear();},[receivables,payables,paymentTransactions]);
   useEffect(()=>{closingRef.current=false;setIsClosing(false);},[closures]);
+  useEffect(()=>{
+    if(closures.length){
+      const latest=closures.reduce((a,b)=>new Date(a.date).getTime()>new Date(b.date).getTime()?a:b);
+      setOpening(current=>current===0?latest.counted:current);
+    }
+  },[closures]);
 
   const salesTotal=sumSales(sales); const profit=sumProfit(sales); const expenseTotal=sumExpenses(expenses); const cashExpenseTotal=cashExpenses(expenses);
   const receivablePending=pendingReceivables(receivables); const payablePending=pendingPayables(payables);
@@ -38,6 +44,7 @@ export function Finance({section='resumen',sales,purchases,expenses,setExpenses,
   const { incoming: cashMovementIn, outgoing: cashMovementOut } = cashMovementTotals(movements);
   const cashFlow=cashSalesTotal+cashCollections+cashMovementIn-cashExpenseTotal-cashSupplierPayments-purchases.filter(p=>p.paymentMethod==='Efectivo').reduce((sum,p)=>sum+p.total,0)-cashMovementOut;
   const today=localDateKey();
+  const alreadyClosedToday=closures.some(closure=>dateKey(closure.date)===today);
   const dayMovementIn=movements.filter(m=>m.category!=='Banco'&&dateKey(m.date)===today&&m.type==='Entrada').reduce((a,m)=>a+m.amount,0); const dayMovementOut=movements.filter(m=>m.category!=='Banco'&&dateKey(m.date)===today&&m.type==='Salida').reduce((a,m)=>a+m.amount,0);
   const daySales=sales.filter(s=>dateKey(s.date)===today&&s.payment==='Efectivo').reduce((a,s)=>a+s.total,0);
   const dayCollections=receivables.reduce((sum,r)=>{
@@ -66,7 +73,7 @@ export function Finance({section='resumen',sales,purchases,expenses,setExpenses,
   const addExpense=()=>{if(!description.trim()||!Number.isFinite(amount)||amount<=0)return;const expense:Expense={id:Date.now(),description:description.trim(),amount,category,date:new Date().toISOString(),paymentMethod:expensePaymentMethod};setExpenses(current=>[...current,expense]);setDescription('');setAmount(0);};
   const collect=(r:Receivable)=>{const lock='Cobro:'+r.id;if(paymentLocks.current.has(lock))return;const balance=Math.max(0,r.total-r.paid);const value=paymentAmount[r.id]||0;if(!validPayment(value,balance))return;paymentLocks.current.add(lock);const date=new Date().toISOString();setReceivables(current=>current.map(x=>x.id===r.id?{...x,paid:Math.min(x.total,x.paid+value),lastPaymentDate:date}:x));setPaymentTransactions(current=>[{id:Date.now(),type:'Cobro',accountId:r.id,party:r.customer,amount:value,date,paymentMethod:collectionPaymentMethod},...current]);setPaymentAmount(current=>({...current,[r.id]:0}));};
   const paySupplier=(r:Payable)=>{const lock='Pago proveedor:'+r.id;if(paymentLocks.current.has(lock))return;const balance=Math.max(0,r.total-r.paid);const value=paymentAmount[r.id]||0;if(!validPayment(value,balance))return;paymentLocks.current.add(lock);const date=new Date().toISOString();setPayables(current=>current.map(x=>x.id===r.id?{...x,paid:Math.min(x.total,x.paid+value),lastPaymentDate:date}:x));setPaymentTransactions(current=>[{id:Date.now(),type:'Pago proveedor',accountId:r.id,party:r.supplier,amount:value,date,paymentMethod:supplierPaymentMethod},...current]);setPaymentAmount(current=>({...current,[r.id]:0}));};
-  const closeCash=()=>{if(closingRef.current||!Number.isFinite(opening)||opening<0||!Number.isFinite(counted)||counted<0)return;closingRef.current=true;setIsClosing(true);setClosures(current=>[createCashClosure(opening,daySales,dayCollections,dayExpenses,daySupplierPayments,expected,counted,note,new Date(),dayCashPurchases),...current]);setOpening(counted);setCounted(0);setNote('');};
+  const closeCash=()=>{if(closingRef.current||alreadyClosedToday||!Number.isFinite(opening)||opening<0||!Number.isFinite(counted)||counted<0)return;closingRef.current=true;setIsClosing(true);setClosures(current=>[createCashClosure(opening,daySales,dayCollections,dayExpenses,daySupplierPayments,expected,counted,note,new Date(),dayCashPurchases),...current]);setOpening(counted);setCounted(0);setNote('');};
   return <div className="content">
   {section === 'resumen' && <><div className="grid metrics"><article className="card metric"><div className="metric-top"><span>Ventas</span><ShoppingCart size={20}/></div><strong>{money(salesTotal)}</strong><small>{sales.length} operaciones</small></article><article className="card metric"><div className="metric-top"><span>Utilidad bruta</span><TrendingUp size={20}/></div><strong>{money(profit)}</strong></article><article className="card metric"><div className="metric-top"><span>Por cobrar</span><DollarSign size={20}/></div><strong>{money(receivablePending)}</strong></article><article className="card metric"><div className="metric-top"><span>Por pagar</span><Wallet size={20}/></div><strong>{money(payablePending)}</strong></article></div>
   <div className="grid metrics"><article className="card metric"><div className="metric-top"><span>Flujo de caja</span><Activity size={20}/></div><strong>{money(cashFlow)}</strong><small>Entradas de efectivo − egresos</small></article><article className="card metric"><div className="metric-top"><span>Ventas contado</span><DollarSign size={20}/></div><strong>{money(cashSalesTotal)}</strong></article><article className="card metric"><div className="metric-top"><span>Cobros</span><DollarSign size={20}/></div><strong>{money(collected)}</strong></article><article className="card metric"><div className="metric-top"><span>Pagos proveedores</span><Wallet size={20}/></div><strong>{money(supplierPaymentsTotal)}</strong></article></div></>}
@@ -110,7 +117,7 @@ export function Finance({section='resumen',sales,purchases,expenses,setExpenses,
         <label className="cash-field">Efectivo contado<input type="number" min="0" step="0.01" value={counted||''} onChange={e=>setCounted(Number(e.target.value))} placeholder="Escribe el total contado"/></label>
         <div className={`cash-difference ${counted-expected===0?'balanced':counted-expected>0?'surplus':'shortage'}`}><span>Diferencia de caja</span><strong>{money(counted-expected)}</strong><small>{counted-expected===0?'La caja está cuadrada':counted-expected>0?'Hay un sobrante de efectivo':'Hay un faltante de efectivo'}</small></div>
         <label className="cash-field">Observaciones <textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="Agrega una nota si hubo alguna diferencia..." rows={3}/></label>
-        <button className="primary cash-confirm-btn" onClick={closeCash} disabled={isClosing}>{isClosing?'Guardando cierre…':'Confirmar cierre de caja'}</button>
+        <button className="primary cash-confirm-btn" onClick={closeCash} disabled={isClosing||alreadyClosedToday}>{isClosing?'Guardando cierre…':alreadyClosedToday?'Caja cerrada hoy':'Confirmar cierre de caja'}</button>
         <small className="cash-closing-footnote">Al confirmar, el cierre quedará guardado en el historial.</small>
       </section>
     </div>
