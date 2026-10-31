@@ -16,7 +16,8 @@ export function SupplierReturns({products,suppliers,records,setRecords,onDispatc
   const [notice,setNotice]=useState('');
   const dispatchLocks=useRef<Set<number>>(new Set());
   useEffect(()=>{dispatchLocks.current.clear();},[records]);
-  const selected=products.find(p=>String(p.id)===productId);
+  const supplierProducts=supplier.trim()?products.filter(p=>String(p.supplier??'').trim().toLocaleLowerCase()===supplier.trim().toLocaleLowerCase()):[];
+  const selected=supplierProducts.find(p=>String(p.id)===productId);
   const validQty=Number(quantity);
   const create=()=>{
     setNotice('');
@@ -50,9 +51,9 @@ export function SupplierReturns({products,suppliers,records,setRecords,onDispatc
     <div className="page-head"><div><span className="pill">CONTROL DE PROVEEDORES</span><h2>Cambios y devoluciones</h2><p>Registra productos para cambio, devolución, nota de crédito o reclamación al proveedor.</p></div><div className="page-head-icon"><ClipboardList size={25}/></div></div>
     <div className="card"><div className="card-title"><div><h3>Nueva devolución a proveedor</h3><p>La salida de inventario se registra únicamente al confirmar el envío.</p></div><PackageMinus size={20}/></div>
       <div className="form-grid">
-        <label>Proveedor<select value={supplier} onChange={e=>setSupplier(e.target.value)}><option value="">Seleccionar proveedor</option>{suppliers.filter(s=>s.active).map(s=><option key={s.id} value={s.name}>{s.name}</option>)}</select></label>
+        <label>Proveedor<select value={supplier} onChange={e=>{setSupplier(e.target.value);setProductId("");}}><option value="">Seleccionar proveedor</option>{suppliers.filter(s=>s.active).map(s=><option key={s.id} value={s.name}>{s.name}</option>)}</select></label>
         <label>Factura / referencia de compra<input value={purchaseReference} onChange={e=>setPurchaseReference(e.target.value)} placeholder="Número de factura o compra"/></label>
-        <label>Producto<select value={productId} onChange={e=>setProductId(e.target.value)}><option value="">Seleccionar producto</option>{products.map(p=><option key={p.id} value={p.id}>{p.name} · Stock: {p.stock}</option>)}</select></label>
+        <label>Producto<select value={productId} onChange={e=>setProductId(e.target.value)} disabled={!supplier}><option value="">Seleccionar producto</option>{supplierProducts.map(p=><option key={p.id} value={p.id}>{p.name} · Stock: {p.stock}</option>)}</select>{supplier&&!supplierProducts.length&&<small className="helper">No hay productos vinculados a este proveedor. Revisa el proveedor asignado en el inventario.</small>}</label>
         <label>Cantidad<input type="number" min="1" max={selected?.stock??1} step="1" value={quantity} onChange={e=>setQuantity(e.target.value)}/>{selected&&<small className="helper">Disponible: {selected.stock} · Costo unitario: {money(selected.cost)}</small>}</label>
         <label>Motivo<select value={reason} onChange={e=>setReason(e.target.value)}><option>Producto dañado</option><option>Producto vencido</option><option>Vencimiento próximo</option><option>Error de despacho</option><option>Producto incorrecto</option><option>Retiro de producto</option><option>Otro</option></select></label>
         <label>Observaciones<input value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Lote, vencimiento, acuerdo con proveedor…"/></label>
