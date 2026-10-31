@@ -35,7 +35,7 @@ export function SupplierReturns({products,suppliers,records,setRecords,onDispatc
     if(record.status!=='Pendiente'||dispatchLocks.current.has(record.id))return;
     dispatchLocks.current.add(record.id);
     if(onDispatch(record)){updateStatus(record.id,'Enviado al proveedor');setNotice('Salida registrada y descontada del inventario.');}
-    else setNotice('No se pudo registrar la salida. Verifica el stock disponible y la sincronización.');
+    else {dispatchLocks.current.delete(record.id);setNotice('No se pudo registrar la salida. Verifica el stock disponible y la sincronización.');}
   };
   const printReturn=(record:SupplierReturnRecord)=>{
     const popup=window.open('','_blank','width=900,height=700');
