@@ -1,10 +1,11 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import { ClipboardList, PackageMinus, Plus, Search, Printer } from 'lucide-react';
 import type { Product, Supplier, SupplierReturnRecord, SupplierReturnItem } from '../domain/types';
 
 const money=(value:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL',maximumFractionDigits:2}).format(value);
 
-export function SupplierReturns({products,suppliers,records,setRecords,onDispatch}:{products:Product[];suppliers:Supplier[];records:SupplierReturnRecord[];setRecords:(items:SupplierReturnRecord[])=>void;onDispatch:(record:SupplierReturnRecord)=>boolean}) {
+export function SupplierReturns({products,suppliers,records,setRecords,onDispatch}:{products:Product[];suppliers:Supplier[];records:SupplierReturnRecord[];setRecords:Dispatch<SetStateAction<SupplierReturnRecord[]>>;onDispatch:(record:SupplierReturnRecord)=>boolean}) {
   const [supplier,setSupplier]=useState('');
   const [purchaseReference,setPurchaseReference]=useState('');
   const [productId,setProductId]=useState('');
@@ -14,6 +15,7 @@ export function SupplierReturns({products,suppliers,records,setRecords,onDispatc
   const [filter,setFilter]=useState('Todos');
   const [notice,setNotice]=useState('');
   const dispatchLocks=useRef<Set<number>>(new Set());
+  useEffect(()=>{dispatchLocks.current.clear();},[records]);
   const selected=products.find(p=>String(p.id)===productId);
   const validQty=Number(quantity);
   const create=()=>{
@@ -24,19 +26,17 @@ export function SupplierReturns({products,suppliers,records,setRecords,onDispatc
     }
     const item:SupplierReturnItem={productId:selected.id,productName:selected.name,code:selected.code,quantity:validQty,unitCost:selected.cost,reason};
     const record:SupplierReturnRecord={id:Date.now(),supplier:supplier.trim(),purchaseReference:purchaseReference.trim(),date:new Date().toISOString(),status:'Pendiente',items:[item],totalCost:item.quantity*item.unitCost,reason,notes:notes.trim()};
-    setRecords([record,...records]);
+    setRecords(current=>[record,...current]);
     setPurchaseReference('');setProductId('');setQuantity('1');setNotes('');
     setNotice('Devolución registrada como pendiente. El inventario no se modifica hasta confirmar la salida al proveedor.');
   };
-  const updateStatus=(id:number,status:SupplierReturnRecord['status'])=>setRecords(records.map(r=>r.id===id?{...r,status}:r));
+  const updateStatus=(id:number,status:SupplierReturnRecord['status'])=>setRecords(current=>current.map(r=>r.id===id?{...r,status}:r));
   const dispatch=(record:SupplierReturnRecord)=>{
     if(record.status!=='Pendiente'||dispatchLocks.current.has(record.id))return;
     dispatchLocks.current.add(record.id);
     try {
       if(onDispatch(record)){updateStatus(record.id,'Enviado al proveedor');setNotice('Salida registrada y descontada del inventario.');}
       else setNotice('No se pudo registrar la salida. Verifica el stock disponible y la sincronización.');
-    } finally {
-      dispatchLocks.current.delete(record.id);
     }
   };
   const printReturn=(record:SupplierReturnRecord)=>{
