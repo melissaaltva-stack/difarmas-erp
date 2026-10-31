@@ -309,9 +309,15 @@ export function useErpState(userId: string) {
       notes:details?.notes||undefined,
       discountTotal:details?.discountTotal,
       taxTotal:details?.taxTotal,
-      dueDate:details?.maxDate&&original.payment==='Crédito'?details.maxDate:original.dueDate
+      dueDate:details?.maxDate&&((settings.paymentMethods??[]).find(method=>method.name===original.payment)?.kind==='credit'||original.payment==='Crédito')?details.maxDate:original.dueDate
     };
-    setProducts(updatedProducts);setInventoryMovements(current=>[...current,...movements]);setSales(current=>current.map(sale=>sale.id===invoiceId?updatedSale:sale));return true;
+    const existingReceivable=receivables.find(item=>item.saleId===invoiceId);
+    if(existingReceivable&&updatedSale.total<existingReceivable.paid)return false;
+    setProducts(updatedProducts);
+    setInventoryMovements(current=>[...current,...movements]);
+    setSales(current=>current.map(sale=>sale.id===invoiceId?updatedSale:sale));
+    if(existingReceivable)setReceivables(current=>current.map(item=>item.saleId===invoiceId?{...item,total:updatedSale.total,customer:updatedSale.customer||item.customer,dueDate:updatedSale.dueDate||item.dueDate}:item));
+    return true;
   };
 
   const recordSupplierDispatch=(record:SupplierReturnRecord):boolean=>{
