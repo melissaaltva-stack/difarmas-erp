@@ -4502,3 +4502,34 @@ button.icon-btn:focus-visible svg,
     gap: 11px;
   }
 }
+
+
+/* Accesos de comparación e historial alineados en una sola fila. */
+#purchases-panel .purchase-tools-row{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-start;
+  flex-wrap:wrap;
+  gap:10px;
+  width:100%;
+  min-width:0;
+  margin:10px 0;
+}
+#purchases-panel .purchase-tools-row .purchase-history-launch{
+  display:flex;
+  flex:0 0 auto;
+  justify-content:flex-start;
+  margin:0;
+}
+#purchases-panel .purchase-tools-row .cost-comparison-button,
+#purchases-panel .purchase-tools-row .purchase-history-button{
+  width:auto;
+  white-space:nowrap;
+}
+@media(max-width:480px){
+  #purchases-panel .purchase-tools-row{gap:8px}
+  #purchases-panel .purchase-tools-row .purchase-history-launch{flex:1 1 calc(50% - 4px)}
+  #purchases-panel .purchase-tools-row .cost-comparison-button,
+  #purchases-panel .purchase-tools-row .purchase-history-button{width:100%;white-space:normal}
+}
