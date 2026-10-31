@@ -361,7 +361,10 @@ export function useErpState(userId: string) {
       if(!purchase)return false;
       const payable=payables.find(item=>item.supplier.trim().toLowerCase()===record.supplier.trim().toLowerCase()&&(item.purchaseId===purchase.id||((item.invoiceNumber??'').trim().toLowerCase()===(purchase.invoiceNumber??'').trim().toLowerCase()&&!!purchase.invoiceNumber)));
       if(!payable||record.totalCost<=0||payable.total-payable.paid<=0)return false;
-      const reduction=Math.min(record.totalCost,payable.total-payable.paid);
+      const outstanding=payable.total-payable.paid;
+      // Do not silently discard any credit-note value that exceeds this invoice's outstanding balance.
+      if(record.totalCost>outstanding)return false;
+      const reduction=record.totalCost;
       setPayables(rows=>rows.map(item=>item.id===payable.id?{...item,total:Math.max(item.paid,item.total-reduction)}:item));
       setSupplierReturns(rows=>rows.map(row=>row.id===record.id?{...row,status}:row));
       return true;
