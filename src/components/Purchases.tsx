@@ -86,7 +86,7 @@ export function Purchases({products,sales,cart,setCart,search,setSearch,supplier
   const addRecommended=(product:Product,quantity:number)=>{
     setCart(cart.some(item=>item.id===product.id)
       ? cart.map(item=>item.id===product.id?{...item,qty:item.qty+quantity}:item)
-      : [...cart,{...product,expiry:product.expiry||'',qty:quantity,unitCost:product.cost}]);
+      : [...cart,{...product,expiry:product.expiry||'',qty:quantity,unitCost:product.cost,purchaseTaxRate:product.taxEnabled?Number(product.taxRate??15):0}]);
     setSearch('');
     setError('');
   };
