@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ClipboardList, PackageMinus, Plus, Search, Printer } from 'lucide-react';
 import type { Product, Supplier, SupplierReturnRecord, SupplierReturnItem } from '../domain/types';
 
@@ -13,6 +13,7 @@ export function SupplierReturns({products,suppliers,records,setRecords,onDispatc
   const [notes,setNotes]=useState('');
   const [filter,setFilter]=useState('Todos');
   const [notice,setNotice]=useState('');
+  const dispatchLocks=useRef<Set<number>>(new Set());
   const selected=products.find(p=>String(p.id)===productId);
   const validQty=Number(quantity);
   const create=()=>{
@@ -29,9 +30,14 @@ export function SupplierReturns({products,suppliers,records,setRecords,onDispatc
   };
   const updateStatus=(id:number,status:SupplierReturnRecord['status'])=>setRecords(records.map(r=>r.id===id?{...r,status}:r));
   const dispatch=(record:SupplierReturnRecord)=>{
-    if(record.status!=='Pendiente')return;
-    if(onDispatch(record)){updateStatus(record.id,'Enviado al proveedor');setNotice('Salida registrada y descontada del inventario.');}
-    else setNotice('No se pudo registrar la salida. Verifica el stock disponible y la sincronización.');
+    if(record.status!=='Pendiente'||dispatchLocks.current.has(record.id))return;
+    dispatchLocks.current.add(record.id);
+    try {
+      if(onDispatch(record)){updateStatus(record.id,'Enviado al proveedor');setNotice('Salida registrada y descontada del inventario.');}
+      else setNotice('No se pudo registrar la salida. Verifica el stock disponible y la sincronización.');
+    } finally {
+      dispatchLocks.current.delete(record.id);
+    }
   };
   const printReturn=(record:SupplierReturnRecord)=>{
     const popup=window.open('','_blank','width=900,height=700');
