@@ -374,7 +374,6 @@ export function useErpState(userId: string) {
       movements.push({id:Date.now()+line.productId,productId:line.productId,productName:line.productName,type:'Ajuste',quantity:line.quantity,stockBefore:product.stock,stockAfter:product.stock+line.quantity,unitCost:line.unitCost,referenceId:adjustment.id,date:new Date().toISOString(),note:'Devolución de venta '+adjustment.invoiceNumber});
       updated=updated.map(p=>p.id===line.productId?{...p,stock:p.stock+line.quantity}:p);
     }
-    const originalSale=sales.find(sale=>sale.id===adjustment.saleId);
     const receivable=receivables.find(item=>item.saleId===adjustment.saleId);
     // Una devolución de una venta a crédito reduce primero el saldo pendiente.
     // No se reduce el importe ya abonado ni se registra un reembolso en efectivo
