@@ -43,7 +43,10 @@ export function Finance({section='resumen',sales,purchases,expenses,setExpenses,
   const dayCollections=receivables.reduce((sum,r)=>{
     const accountTransactions=paymentTransactions.filter(t=>t.type==='Cobro'&&t.accountId===r.id);
     if(accountTransactions.length>0) {
-      return sum+accountTransactions.filter(t=>dateKey(t.date)===today&&(t.paymentMethod??'Efectivo')==='Efectivo').reduce((a,t)=>a+t.amount,0);
+      const recorded=accountTransactions.reduce((total,t)=>total+t.amount,0);
+      const legacyUnrecorded=Math.max(0,r.paid-recorded);
+      const todayRecorded=accountTransactions.filter(t=>dateKey(t.date)===today&&(t.paymentMethod??'Efectivo')==='Efectivo').reduce((a,t)=>a+t.amount,0);
+      return sum+todayRecorded+(r.lastPaymentDate&&dateKey(r.lastPaymentDate)===today?legacyUnrecorded:0);
     }
     return sum+(r.lastPaymentDate&&dateKey(r.lastPaymentDate)===today?Math.min(r.paid,r.total):0);
   },0);
@@ -52,7 +55,10 @@ export function Finance({section='resumen',sales,purchases,expenses,setExpenses,
   const daySupplierPayments=payables.reduce((sum,r)=>{
     const accountTransactions=paymentTransactions.filter(t=>t.type==='Pago proveedor'&&t.accountId===r.id);
     if(accountTransactions.length>0) {
-      return sum+accountTransactions.filter(t=>dateKey(t.date)===today&&(t.paymentMethod??'Efectivo')==='Efectivo').reduce((a,t)=>a+t.amount,0);
+      const recorded=accountTransactions.reduce((total,t)=>total+t.amount,0);
+      const legacyUnrecorded=Math.max(0,r.paid-recorded);
+      const todayRecorded=accountTransactions.filter(t=>dateKey(t.date)===today&&(t.paymentMethod??'Efectivo')==='Efectivo').reduce((a,t)=>a+t.amount,0);
+      return sum+todayRecorded+(r.lastPaymentDate&&dateKey(r.lastPaymentDate)===today?legacyUnrecorded:0);
     }
     return sum+(r.lastPaymentDate&&dateKey(r.lastPaymentDate)===today?Math.min(r.paid,r.total):0);
   },0);
