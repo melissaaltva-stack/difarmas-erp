@@ -323,7 +323,7 @@ export function useErpState(userId: string) {
 
   const recordSupplierDispatch=(record:SupplierReturnRecord):boolean=>{
     const dispatchNote='Devolución enviada al proveedor: ';
-    if(supplierDispatchInProgress.current.has(record.id)||inventoryMovements.some(movement=>movement.referenceId===record.id&&movement.note.startsWith(dispatchNote)))return false;
+    if(supplierDispatchInProgress.current.has(record.id)||inventoryMovements.some(movement=>movement.referenceId===record.id&&movement.note?.startsWith(dispatchNote)))return false;
     if(!record.items.length)return false;
     if(record.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!products.some(p=>p.id===item.productId&&p.stock>=item.quantity)))return false;
     const updated=products.map(product=>{
