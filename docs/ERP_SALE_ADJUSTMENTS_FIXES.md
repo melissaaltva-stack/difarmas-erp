@@ -52,3 +52,14 @@ GitHub Actions para el commit `4e54d0be804a861c18c66be0b3541057ff53e2be` complet
 - No se alteraron compras, cuentas por pagar ni movimientos históricos.
 - Validación del lote de costo promedio en GitHub Actions (commit `92e0a4dfa1924fa3459a5288a36aea58399f0396`): `npm install`, auditoría de dependencias, `npm run build` y `npm test` finalizaron correctamente.
 - Hallazgo pendiente en devoluciones parciales: el POS consolida renglones repetidos por producto y calcula un precio/costo promedio. Si el mismo producto se vendió en renglones con descuentos o precios distintos, no permite identificar exactamente cuál renglón se está devolviendo. Para corregirlo de forma segura se requiere conservar un identificador por renglón de venta desde el POS hasta el registro de devolución; no se hizo una aproximación que pudiera alterar reembolsos históricos.
+
+## Corrección adicional: devoluciones por renglón de venta (2 de noviembre de 2026)
+
+- Cada nueva línea de venta conserva un identificador estable derivado de la línea del carrito.
+- La ventana de devoluciones presenta renglones individuales cuando un mismo producto se vendió más de una vez, incluso si cada renglón tiene precio o descuento distinto.
+- La cantidad devuelta se valida contra el renglón exacto y no solamente contra el producto.
+- Los ajustes guardan el identificador de línea; los registros históricos sin identificador conservan el comportamiento anterior de agrupación por producto y precio promedio ponderado.
+- La proyección de ventas netas reduce el renglón correcto y mantiene los renglones no devueltos sin alterar el registro original.
+- Se agregaron pruebas para devolución de una de dos líneas del mismo producto a precios distintos, rechazo de una segunda devolución duplicada y compatibilidad con ajustes históricos.
+
+**CI verificada:** ejecución 41542194676, commit 8aef4a9fa1b652d7583f7125fa18d37c26de2fd9. Compilación correcta, auditoría de dependencias sin vulnerabilidades y 92 pruebas aprobadas en 13 archivos.
