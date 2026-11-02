@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CartItem, CashClosure, CashMovement, Customer, ErpSettings, Expense, InventoryMovement, Module, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseItem, PurchaseRecord, Receivable, SaleRecord, Supplier, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord, QuoteRecord, StandardInvoiceDetails } from '../domain/types';
 import { loadJson, saveJson, loadNumber, saveNumber } from '../utils/storage';
-import { applyPurchaseToInventory, applySaleToInventory } from '../services/inventoryService';
+import { applyPurchaseToInventory, applySaleToInventory, calculateWeightedAverageCost } from '../services/inventoryService';
 import { buildSaleRecord, createReceivableFromSale } from '../services/salesService';
 import { createPayableFromPurchase } from '../services/purchaseService';
 import { createInventoryMovementsForPurchase, createInventoryMovementsForSale } from '../services/inventoryMovementService';
@@ -452,7 +452,7 @@ export function useErpState(userId: string) {
         const lines=record.items.filter(item=>item.productId===product.id);
         const receivedCost=lines.reduce((sum,item)=>sum+item.quantity*item.unitCost,0);
         const newStock=product.stock+quantity;
-        const weightedCost=newStock>0?(product.stock*product.cost+receivedCost)/newStock:product.cost;
+        const weightedCost=calculateWeightedAverageCost(product.stock,product.cost,quantity,receivedCost/quantity);
         return {...product,stock:newStock,cost:weightedCost};
       }));
       setInventoryMovements(rows=>[...rows,...movements]);
@@ -511,7 +511,7 @@ export function useErpState(userId: string) {
       if(!movement)return product;
       const newStock=product.stock+movement.quantity;
       const returnedValue=movement.quantity*movement.unitCost;
-      const weightedCost=newStock>0?(product.stock*product.cost+returnedValue)/newStock:product.cost;
+      const weightedCost=calculateWeightedAverageCost(product.stock,product.cost,movement.quantity,movement.unitCost);
       return {...product,stock:newStock,cost:weightedCost};
     });
     // En una venta a crédito, el ajuste reduce primero el saldo pendiente;
