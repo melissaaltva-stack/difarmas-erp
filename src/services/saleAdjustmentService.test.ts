@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { aggregateSaleLinesByProduct, applySaleAdjustmentsToSales } from './saleAdjustmentService';
+import { aggregateSaleLinesByProduct, applySaleAdjustmentsToSales, canApplySaleAdjustmentItems, getSaleLineBalances } from './saleAdjustmentService';
 import type { SaleAdjustmentRecord, SaleRecord } from '../domain/types';
 
 describe('applySaleAdjustmentsToSales', () => {
@@ -50,6 +50,31 @@ describe('applySaleAdjustmentsToSales', () => {
     expect(result.items).toHaveLength(1);
     expect(result.items?.[0].qty).toBe(1);
     expect(result.items?.[0].revenue).toBe(150);
+  });
+
+  it('returns only the selected duplicate-product sale line at its original price', () => {
+    const duplicate: SaleRecord = { ...sale, total: 300, cost: 120, profit: 180, items: [
+      { saleLineId: 'line-low', productId: 10, productName: 'Producto A', category: 'General', laboratory: 'Lab', qty: 1, unitCost: 60, unitPrice: 100, revenue: 100, cost: 60, profit: 40 },
+      { saleLineId: 'line-high', productId: 10, productName: 'Producto A', category: 'General', laboratory: 'Lab', qty: 1, unitCost: 60, unitPrice: 200, revenue: 200, cost: 60, profit: 140 },
+    ]};
+    const lineReturn: SaleAdjustmentRecord = { ...adjustment, amount: 200, items: [
+      { saleLineId: 'line-high', productId: 10, productName: 'Producto A', quantity: 1, unitPrice: 200, unitCost: 60, returnToStock: true },
+    ]};
+    expect(getSaleLineBalances(duplicate.items ?? [], [lineReturn]).map(row => [row.line.saleLineId, row.remainingQuantity])).toEqual([['line-low', 1], ['line-high', 0]]);
+    expect(canApplySaleAdjustmentItems(duplicate.items ?? [], [], lineReturn.items)).toBe(true);
+    expect(canApplySaleAdjustmentItems(duplicate.items ?? [], [lineReturn], lineReturn.items)).toBe(false);
+    const result = applySaleAdjustmentsToSales([duplicate], [lineReturn])[0];
+    expect(result.total).toBe(100);
+    expect(result.items?.map(line => [line.saleLineId, line.qty, line.revenue])).toEqual([['line-low', 1, 100]]);
+  });
+
+  it('allocates historical adjustments without line IDs by product in original sale order', () => {
+    const duplicateLines: SaleRecord['items'] = [
+      { saleLineId: 'first', productId: 10, productName: 'Producto A', category: 'General', laboratory: 'Lab', qty: 1, unitCost: 60, unitPrice: 100, revenue: 100, cost: 60, profit: 40 },
+      { saleLineId: 'second', productId: 10, productName: 'Producto A', category: 'General', laboratory: 'Lab', qty: 1, unitCost: 60, unitPrice: 200, revenue: 200, cost: 60, profit: 140 },
+    ];
+    const legacyReturn = { ...adjustment, items: [{ ...adjustment.items[0], quantity: 1 }] };
+    expect(getSaleLineBalances(duplicateLines ?? [], [legacyReturn]).map(row => row.remainingQuantity)).toEqual([0, 1]);
   });
 
   it('includes invoice tax in the refund while reducing net revenue and tax separately', () => {
