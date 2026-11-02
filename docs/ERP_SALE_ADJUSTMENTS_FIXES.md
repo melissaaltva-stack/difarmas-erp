@@ -36,3 +36,17 @@ GitHub Actions para el commit `4e54d0be804a861c18c66be0b3541057ff53e2be` complet
 - Se corrigió el cálculo de devoluciones de facturas estándar con ISV: el importe reembolsable incluye el impuesto de las líneas; los reportes reducen por separado ingreso neto e impuesto, conservando la utilidad calculada sin ISV. Se añadió validación de importes de impuesto y una prueba específica de devolución total con ISV.
 - Para ventas históricas sin detalle de líneas, el impuesto registrado se reduce proporcionalmente al importe del ajuste, sin reescribir los registros originales.
 - Validación del commit `4e461535e183e4229dd37281730a135bc5ec0c6d`: GitHub Actions completó correctamente `npm install`, auditoría de dependencias, `npm run build` y `npm test`. El check independiente de Vercel reportó límite de compilaciones del plan; no se publicó una vista previa nueva.
+
+## Auditoría de costo promedio y devoluciones a proveedores
+
+- Se centralizó el cálculo del costo promedio ponderado en `calculateWeightedAverageCost`, con validación de existencias, cantidades, costos, desbordamientos y redondeo uniforme a dos decimales.
+- Compras, devoluciones de ventas reincorporadas al inventario y cambios recibidos del proveedor usan ahora la misma regla de valuación.
+- Se evita confirmar un cambio recibido si la nueva existencia o valuación no puede calcularse correctamente.
+- Se añadieron pruebas unitarias del promedio ponderado, redondeo y entradas inválidas.
+- `purchaseCostHistory` conserva su significado de historial de costos de compra. Las devoluciones/cambios quedan reflejados en `inventoryMovements` con su costo unitario y referencia; no se registran falsamente como compras nuevas.
+
+### Pendientes identificados
+
+- Una nota de crédito de proveedor solo puede aplicarse actualmente contra una cuenta por pagar abierta. Si la compra original fue de contado o el proveedor emite un crédito superior al saldo pendiente, el flujo no puede registrar el excedente ni un saldo a favor del proveedor. Hace falta un subregistro de créditos de proveedor y su aplicación posterior; no se modificó el comportamiento financiero actual.
+- No existe conciliación transaccional del estado de devolución entre varios dispositivos; las protecciones actuales son locales al cliente.
+- No se alteraron compras, cuentas por pagar ni movimientos históricos.
