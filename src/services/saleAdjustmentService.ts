@@ -1,4 +1,38 @@
-import type { SaleAdjustmentRecord, SaleRecord } from '../domain/types';
+import type { SaleAdjustmentRecord, SaleLine, SaleRecord } from '../domain/types';
+
+/**
+ * Combines duplicate product rows into one reporting/return line using weighted
+ * average unit prices and costs. This prevents the POS return form from applying
+ * one quantity input independently to duplicate rows of the same product.
+ */
+export function aggregateSaleLinesByProduct(items: SaleLine[]): SaleLine[] {
+  const grouped = new Map<number, SaleLine>();
+  for (const line of items) {
+    const current = grouped.get(line.productId);
+    if (!current) {
+      grouped.set(line.productId, { ...line });
+      continue;
+    }
+    const qty = current.qty + line.qty;
+    const revenue = current.revenue + line.revenue;
+    const cost = current.cost + line.cost;
+    grouped.set(line.productId, {
+      ...current,
+      qty,
+      revenue,
+      cost,
+      profit: revenue - cost,
+      unitPrice: qty > 0 ? revenue / qty : current.unitPrice,
+      unitCost: qty > 0 ? cost / qty : current.unitCost,
+    });
+  }
+  return [...grouped.values()].map(line => ({
+    ...line,
+    unitPrice: line.qty > 0 ? line.revenue / line.qty : line.unitPrice,
+    unitCost: line.qty > 0 ? line.cost / line.qty : line.unitCost,
+    profit: line.revenue - line.cost,
+  }));
+}
 
 /**
  * Returns a reporting-only projection of sales after registered returns/voids.
@@ -36,14 +70,15 @@ export function applySaleAdjustmentsToSales(sales: SaleRecord[], adjustments: Sa
     }
 
     const remaining = new Map(lineReductions);
-    const items = sale.items.map(line => {
+    const items = aggregateSaleLinesByProduct(sale.items).map(line => {
       const requested = remaining.get(line.productId) ?? 0;
       const removedQty = Math.min(Math.max(0, line.qty), requested);
       remaining.set(line.productId, Math.max(0, requested - removedQty));
-      const ratio = line.qty > 0 ? (line.qty - removedQty) / line.qty : 0;
       const qty = Math.max(0, line.qty - removedQty);
-      const revenue = Math.max(0, line.revenue * ratio);
-      const cost = Math.max(0, line.cost * ratio);
+      const unitPrice = line.qty > 0 ? line.revenue / line.qty : line.unitPrice;
+      const unitCost = line.qty > 0 ? line.cost / line.qty : line.unitCost;
+      const revenue = Math.max(0, line.revenue - unitPrice * removedQty);
+      const cost = Math.max(0, line.cost - unitCost * removedQty);
       return { ...line, qty, revenue, cost, profit: revenue - cost };
     }).filter(line => line.qty > 0);
     const total = Math.max(0, sale.total - amountReduction);
