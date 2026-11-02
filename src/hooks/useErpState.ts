@@ -8,6 +8,7 @@ import { createInventoryMovementsForPurchase, createInventoryMovementsForSale } 
 import { loadErpSnapshot, saveErpSnapshot, saveQuotesForUser, type ErpSnapshot } from '../services/remoteErpState';
 import { ensureCustomerCodes } from '../services/customerCodeService';
 import { canApplySaleAdjustmentItems } from '../services/saleAdjustmentService';
+import { applySupplierCreditsToPurchase, splitSupplierCreditNote } from '../services/supplierCreditService';
 
 const initialProducts: Product[] = [
   { id: 1, code: '750100000001', name: 'Eutirox 50 mcg', category: 'Medicamentos', laboratory: 'Merck', presentation: 'Caja x 50 tabletas', cost: 250, retail: 330, wholesale: 310, stock: 18, minStock: 8, lot: 'EUT-2607', expiry: '2027-07-31', supplier: 'Distribuidora Nacional' },
