@@ -422,7 +422,7 @@ export function useErpState(userId: string) {
   };
 
   const resolveSupplierReturn=(record:SupplierReturnRecord,status:SupplierReturnRecord['status']):boolean=>{
-    if(supplierReturnResolutionInProgress.current.has(source.id)||supplierReturnResolutionCompleted.current.has(record.id))return false;
+    if(supplierReturnResolutionInProgress.current.has(record.id)||supplierReturnResolutionCompleted.current.has(record.id))return false;
     supplierReturnResolutionInProgress.current.add(record.id);
     try {
     const current=supplierReturns.find(item=>item.id===record.id);
@@ -433,12 +433,12 @@ export function useErpState(userId: string) {
       const ref=source.purchaseReference.trim().toLowerCase();
       const purchase=purchases.find(item=>item.supplier.trim().toLowerCase()===source.supplier.trim().toLowerCase()&&!!ref&&(String(item.id)===ref||(item.invoiceNumber??'').trim().toLowerCase()===ref));
       if(!purchase)return false;
-      const payable=payables.find(item=>item.supplier.trim().toLowerCase()===record.supplier.trim().toLowerCase()&&(item.purchaseId===purchase.id||((item.invoiceNumber??'').trim().toLowerCase()===(purchase.invoiceNumber??'').trim().toLowerCase()&&!!purchase.invoiceNumber)));
+      const payable=payables.find(item=>item.supplier.trim().toLowerCase()===source.supplier.trim().toLowerCase()&&(item.purchaseId===purchase.id||((item.invoiceNumber??'').trim().toLowerCase()===(purchase.invoiceNumber??'').trim().toLowerCase()&&!!purchase.invoiceNumber)));
       if(!payable||source.totalCost<=0||payable.total-payable.paid<=0)return false;
       const outstanding=payable.total-payable.paid;
       // Do not silently discard any credit-note value that exceeds this invoice's outstanding balance.
-      if(record.totalCost>outstanding)return false;
-      const reduction=record.totalCost;
+      if(source.totalCost>outstanding)return false;
+      const reduction=source.totalCost;
       supplierReturnResolutionCompleted.current.add(record.id);
       setPayables(rows=>rows.map(item=>item.id===payable.id?{...item,total:Math.max(item.paid,item.total-reduction)}:item));
       setSupplierReturns(rows=>rows.map(row=>row.id===record.id?{...row,status}:row));
@@ -453,7 +453,7 @@ export function useErpState(userId: string) {
         updatedProducts=products.map(product=>{
           const quantity=quantities.get(product.id)??0;
           if(!quantity)return product;
-          const lines=record.items.filter(item=>item.productId===product.id);
+          const lines=source.items.filter(item=>item.productId===product.id);
           const receivedCost=lines.reduce((sum,item)=>sum+item.quantity*item.unitCost,0);
           const newStock=product.stock+quantity;
           const weightedCost=calculateWeightedAverageCost(product.stock,product.cost,quantity,receivedCost/quantity);
