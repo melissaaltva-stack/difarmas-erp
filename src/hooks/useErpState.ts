@@ -489,6 +489,9 @@ export function useErpState(userId: string) {
     for(const productId of returnedByProduct.keys()){
       if(!products.some(product=>product.id===productId))return false;
     }
+    const receivable=receivables.find(item=>item.saleId===adjustment.saleId);
+    const receivableBalance=receivable?Math.max(0,receivable.total-receivable.paid):0;
+    if(adjustment.refundStatus==='Aplicado a cuenta'&&(!receivable||adjustment.amount>receivableBalance+0.01))return false;
     saleAdjustmentInProgress.current.add(adjustment.saleId);
     const movementDate=new Date().toISOString();
     const movements:InventoryMovement[]=[...returnedByProduct].map(([productId,lines])=>{
@@ -502,13 +505,9 @@ export function useErpState(userId: string) {
       const quantity=returnedQuantities.get(product.id)??0;
       return quantity?{...product,stock:product.stock+quantity}:product;
     });
-    const receivable=receivables.find(item=>item.saleId===adjustment.saleId);
-    // Una devolución de una venta a crédito reduce primero el saldo pendiente.
-    // No se reduce el importe ya abonado ni se registra un reembolso en efectivo
-    // automáticamente: ese movimiento requiere un pago real por separado.
-    const receivableBalance=receivable?Math.max(0,receivable.total-receivable.paid):0;
+    // En una venta a crédito, el ajuste reduce primero el saldo pendiente;
+    // el excedente queda pendiente o se liquida por el medio real seleccionado.
     const creditReduction=receivable?Math.min(adjustment.amount,receivableBalance):0;
-    if(adjustment.refundStatus==='Aplicado a cuenta'&&(!receivable||adjustment.amount>receivableBalance+0.01))return false;
     const refundAmount=Math.max(0,adjustment.amount-creditReduction);
     setProducts(updated);
     setInventoryMovements(current=>[...current,...movements]);
