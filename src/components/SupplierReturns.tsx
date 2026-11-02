@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { ClipboardList, PackageMinus, Plus, Search, Printer } from 'lucide-react';
-import type { Product, Supplier, SupplierReturnRecord, SupplierReturnItem, PurchaseRecord } from '../domain/types';
+import type { Product, Supplier, SupplierReturnRecord, SupplierReturnItem, PurchaseRecord, PurchaseCostHistoryEntry } from '../domain/types';
 
 const money=(value:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL',maximumFractionDigits:2}).format(value);
 
-export function SupplierReturns({products,suppliers,purchases,records,setRecords,onDispatch,onResolve}:{products:Product[];suppliers:Supplier[];purchases:PurchaseRecord[];records:SupplierReturnRecord[];setRecords:Dispatch<SetStateAction<SupplierReturnRecord[]>>;onDispatch:(record:SupplierReturnRecord)=>boolean;onResolve:(record:SupplierReturnRecord,status:SupplierReturnRecord['status'])=>boolean}) {
+export function SupplierReturns({products,suppliers,purchases,costHistory,records,setRecords,onDispatch,onResolve}:{products:Product[];suppliers:Supplier[];purchases:PurchaseRecord[];costHistory:PurchaseCostHistoryEntry[];records:SupplierReturnRecord[];setRecords:Dispatch<SetStateAction<SupplierReturnRecord[]>>;onDispatch:(record:SupplierReturnRecord)=>boolean;onResolve:(record:SupplierReturnRecord,status:SupplierReturnRecord['status'])=>boolean}) {
   const [supplier,setSupplier]=useState('');
   const [purchaseReference,setPurchaseReference]=useState('');
   const [productId,setProductId]=useState('');
@@ -16,17 +16,20 @@ export function SupplierReturns({products,suppliers,purchases,records,setRecords
   const [notice,setNotice]=useState('');
   const dispatchLocks=useRef<Set<number>>(new Set());
   useEffect(()=>{dispatchLocks.current.clear();},[records]);
-  const supplierProducts=supplier.trim()?products.filter(p=>String(p.supplier??'').trim().toLocaleLowerCase()===supplier.trim().toLocaleLowerCase()):[];
-  const selected=supplierProducts.find(p=>String(p.id)===productId);
   const supplierPurchases=purchases.filter(p=>p.supplier.trim().toLocaleLowerCase()===supplier.trim().toLocaleLowerCase());
+  const selectedPurchase=supplierPurchases.find(p=>String(p.id)===purchaseReference);
+  const purchaseLines=selectedPurchase?costHistory.filter(entry=>entry.purchaseId===selectedPurchase.id):[];
+  const supplierProducts=purchaseLines.map(entry=>products.find(p=>p.id===entry.productId)).filter((p):p is Product=>Boolean(p));
+  const selected=supplierProducts.find(p=>String(p.id)===productId);
+  const selectedPurchaseLine=purchaseLines.find(entry=>entry.productId===selected?.id);
   const validQty=Number(quantity);
   const create=()=>{
     setNotice('');
-    if(!supplier.trim()||!supplierPurchases.some(p=>String(p.id)===purchaseReference)||!selected||!Number.isInteger(validQty)||validQty<1||validQty>selected.stock||!reason.trim()){
-      setNotice('Selecciona proveedor, factura de compra y producto; revisa la cantidad disponible y el motivo.');
+    if(!supplier.trim()||!selectedPurchase||!selectedPurchaseLine||!selected||!Number.isInteger(validQty)||validQty<1||validQty>selected.stock||!reason.trim()){
+      setNotice('Selecciona una factura con historial de productos, el producto facturado y una cantidad válida.');
       return;
     }
-    const item:SupplierReturnItem={productId:selected.id,productName:selected.name,code:selected.code,quantity:validQty,unitCost:selected.cost,reason};
+    const item:SupplierReturnItem={productId:selected.id,productName:selected.name,code:selected.code,quantity:validQty,unitCost:selectedPurchaseLine.unitCost,reason};
     const record:SupplierReturnRecord={id:Date.now(),supplier:supplier.trim(),purchaseReference:purchaseReference.trim(),date:new Date().toISOString(),status:'Pendiente',items:[item],totalCost:item.quantity*item.unitCost,reason,notes:notes.trim()};
     setRecords(current=>[record,...current]);
     setPurchaseReference('');setProductId('');setQuantity('1');setNotes('');
@@ -54,7 +57,7 @@ export function SupplierReturns({products,suppliers,purchases,records,setRecords
       <div className="form-grid">
         <label>Proveedor<select value={supplier} onChange={e=>{setSupplier(e.target.value);setPurchaseReference('');setProductId("");}}><option value="">Seleccionar proveedor</option>{suppliers.filter(s=>s.active).map(s=><option key={s.id} value={s.name}>{s.name}</option>)}</select></label>
         <label>Factura de compra<select value={purchaseReference} onChange={e=>setPurchaseReference(e.target.value)} disabled={!supplier}><option value="">Seleccionar factura de compra</option>{supplierPurchases.map(p=><option key={p.id} value={String(p.id)}>{p.invoiceNumber?.trim()||`Compra #${p.id}`} · {new Date(p.date).toLocaleDateString("es-HN")}</option>)}</select>{supplier&&supplierPurchases.length===0&&<small className="helper">No hay compras registradas para este proveedor.</small>}</label>
-        <label>Producto<select value={productId} onChange={e=>setProductId(e.target.value)} disabled={!supplier}><option value="">Seleccionar producto</option>{supplierProducts.map(p=><option key={p.id} value={p.id}>{p.name} · Stock: {p.stock}</option>)}</select>{supplier&&!supplierProducts.length&&<small className="helper">No hay productos vinculados a este proveedor. Revisa el proveedor asignado en el inventario.</small>}</label>
+        <label>Producto<select value={productId} onChange={e=>setProductId(e.target.value)} disabled={!supplier}><option value="">Seleccionar producto</option>{supplierProducts.map(p=>{const line=purchaseLines.find(entry=>entry.productId===p.id);return <option key={p.id} value={p.id}>{p.name} · Facturado: {line?.quantity??0} · Stock: {p.stock}</option>;})}</select>{supplier&&purchaseReference&&!supplierProducts.length&&<small className="helper">Esta factura no tiene detalle de productos disponible. No se puede validar la devolución contra ella.</small>}</label>
         <label>Cantidad<input type="number" min="1" max={selected?.stock??1} step="1" value={quantity} onChange={e=>setQuantity(e.target.value)}/>{selected&&<small className="helper">Disponible: {selected.stock} · Costo unitario: {money(selected.cost)}</small>}</label>
         <label>Motivo<select value={reason} onChange={e=>setReason(e.target.value)}><option>Producto dañado</option><option>Producto vencido</option><option>Vencimiento próximo</option><option>Error de despacho</option><option>Producto incorrecto</option><option>Retiro de producto</option><option>Otro</option></select></label>
         <label>Observaciones<input value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Lote, vencimiento, acuerdo con proveedor…"/></label>
