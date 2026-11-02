@@ -44,7 +44,7 @@ export function AiAssistant({products,sales,purchases,expenses,receivables,payab
     {title:'Próximos vencimientos',value:String(expiryAlerts.length),detail:'Productos vencidos o que vencen en 90 días',icon:CalendarClock,kind:expiryAlerts.length?'warning':'ok'},
     {title:'Cuentas por cobrar',value:cash(ar),detail:overdueAR.length+' cuentas vencidas',icon:TrendingUp,kind:overdueAR.length?'warning':'normal'},
     {title:'Cuentas por pagar',value:cash(ap),detail:overdueAP.length+' cuentas vencidas',icon:Wallet,kind:overdueAP.length?'warning':'normal'}
-  ],[stockAlerts.length,expiryAlerts.length,ar,ap,overdueAR.length,overdueAP.length]);
+  ].filter((_,index)=>[canViewInventory,canViewInventory,canViewReceivables,canViewPayables][index]),[stockAlerts.length,expiryAlerts.length,ar,ap,overdueAR.length,overdueAP.length,canViewInventory,canViewReceivables,canViewPayables]);
   const generate=(raw:string)=>{
     setQuestion(raw);const q=raw.toLowerCase();let result='';
     if(q.includes('venc')||q.includes('caduc')||q.includes('fecha')){
