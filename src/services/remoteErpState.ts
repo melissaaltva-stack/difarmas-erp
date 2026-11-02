@@ -1,6 +1,6 @@
 import type {
   CashClosure, CashMovement, Customer, Supplier, ErpSettings, Expense, InventoryMovement, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseRecord,
-  Receivable, SaleRecord, MissingProductRequest, SupplierReturnRecord, SupplierCredit, SaleAdjustmentRecord, QuoteRecord,
+  Receivable, SaleRecord, MissingProductRequest, SupplierReturnRecord, SupplierCredit, Payable, SaleAdjustmentRecord, QuoteRecord,
 } from '../domain/types';
 import { requireSupabase } from './supabaseClient';
 
@@ -210,4 +210,49 @@ export function saveErpSnapshot(userId: string, snapshot: ErpSnapshot): Promise<
     if (saveQueues.get(userId) === next) saveQueues.delete(userId);
   }).catch(() => undefined);
   return next;
+}
+
+
+export type SupplierCreditNoteResolution = {
+  supplierReturns: SupplierReturnRecord[];
+  payables: Payable[];
+  supplierCredits: SupplierCredit[];
+  updatedAt: string;
+};
+
+/**
+ * Resolve a supplier credit note through a row-locked PostgreSQL function.
+ * The same per-account queue used by snapshot saves prevents a stale local
+ * autosave from racing this authoritative server-side transaction.
+ */
+export async function resolveSupplierCreditNoteAtomically(userId: string, returnId: number): Promise<SupplierCreditNoteResolution> {
+  if (!Number.isInteger(returnId) || returnId <= 0) throw new Error('La devolución indicada no es válida.');
+  const previous = saveQueues.get(userId) ?? Promise.resolve();
+  let result: SupplierCreditNoteResolution | null = null;
+  const next = previous.catch(() => undefined).then(async () => {
+    const client = requireSupabase();
+    const { data, error } = await client.rpc('resolve_supplier_credit_note', { p_return_id: returnId });
+    if (error) throw error;
+    if (!isRecord(data)
+      || !Array.isArray(data.supplierReturns)
+      || !Array.isArray(data.payables)
+      || !Array.isArray(data.supplierCredits)
+      || typeof data.updatedAt !== 'string') {
+      throw new Error('Supabase no devolvió la confirmación íntegra de la nota de crédito.');
+    }
+    result = {
+      supplierReturns: data.supplierReturns as SupplierReturnRecord[],
+      payables: data.payables as Payable[],
+      supplierCredits: data.supplierCredits as SupplierCredit[],
+      updatedAt: data.updatedAt,
+    };
+    lastSeenRevision.set(userId, data.updatedAt);
+  });
+  saveQueues.set(userId, next);
+  void next.finally(() => {
+    if (saveQueues.get(userId) === next) saveQueues.delete(userId);
+  }).catch(() => undefined);
+  await next;
+  if (!result) throw new Error('No se pudo confirmar el registro de la nota de crédito.');
+  return result;
 }
