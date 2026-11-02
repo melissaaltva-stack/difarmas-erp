@@ -107,6 +107,21 @@ describe('remoteErpState', () => {
     expect(mocks.query.update).toHaveBeenCalledWith(expect.objectContaining({ state: emptySnapshot }));
   });
 
+  it('preserves supplier credit balances and their application history from the cloud snapshot', async () => {
+    const supplierCredits = [{
+      id: 201, supplier: 'Droguería Central', sourceReturnId: 11, sourcePurchaseId: 22,
+      sourceReference: 'FC-22', amount: 100, remainingBalance: 40,
+      createdAt: '2026-11-02T10:00:00.000Z',
+      applications: [{ purchaseId: 23, invoiceNumber: 'FC-23', amount: 60, date: '2026-11-02T12:00:00.000Z' }],
+    }];
+    mocks.query.maybeSingle.mockResolvedValue({
+      data: { user_id: 'user-1', updated_at: '2026-11-02T12:00:00.000Z', state: { ...emptySnapshot, supplierCredits } },
+      error: null,
+    });
+    const { loadErpSnapshot } = await import('./remoteErpState');
+    await expect(loadErpSnapshot('user-1')).resolves.toMatchObject({ supplierCredits });
+  });
+
   it('preserves cash closures, cash movements, and collection/payment transactions from the cloud snapshot', async () => {
     const finance = {
       cashClosures: [{ id: 101, date: '2026-10-18', expected: 500, counted: 490, difference: -10 }],
