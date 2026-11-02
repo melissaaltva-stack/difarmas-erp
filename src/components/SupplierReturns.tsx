@@ -22,11 +22,14 @@ export function SupplierReturns({products,suppliers,purchases,costHistory,record
   const supplierProducts=purchaseLines.map(entry=>products.find(p=>p.id===entry.productId)).filter((p):p is Product=>Boolean(p));
   const selected=supplierProducts.find(p=>String(p.id)===productId);
   const selectedPurchaseLine=purchaseLines.find(entry=>entry.productId===selected?.id);
+  const alreadyReturned=selectedPurchaseLine&&selectedPurchase?records.filter(record=>record.purchaseReference===String(selectedPurchase.id)&&record.supplier.trim().toLocaleLowerCase()===selectedPurchase.supplier.trim().toLocaleLowerCase()&&record.status!=='Rechazado').flatMap(record=>record.items).filter(item=>item.productId===selectedPurchaseLine.productId).reduce((sum,item)=>sum+item.quantity,0):0;
+  const remainingInvoiceQty=Math.max(0,(selectedPurchaseLine?.quantity??0)-alreadyReturned);
+  const maxReturnQty=Math.min(selected?.stock??0,remainingInvoiceQty);
   const validQty=Number(quantity);
   const create=()=>{
     setNotice('');
-    if(!supplier.trim()||!selectedPurchase||!selectedPurchaseLine||!selected||!Number.isInteger(validQty)||validQty<1||validQty>selected.stock||!reason.trim()){
-      setNotice('Selecciona una factura con historial de productos, el producto facturado y una cantidad válida.');
+    if(!supplier.trim()||!selectedPurchase||!selectedPurchaseLine||!selected||!Number.isInteger(validQty)||validQty<1||validQty>maxReturnQty||!reason.trim()){
+      setNotice('Selecciona una factura con historial, un producto de esa factura y una cantidad dentro de lo comprado y disponible.');
       return;
     }
     const item:SupplierReturnItem={productId:selected.id,productName:selected.name,code:selected.code,quantity:validQty,unitCost:selectedPurchaseLine.unitCost,reason};
@@ -35,7 +38,7 @@ export function SupplierReturns({products,suppliers,purchases,costHistory,record
     setPurchaseReference('');setProductId('');setQuantity('1');setNotes('');
     setNotice('Devolución registrada como pendiente. El inventario no se modifica hasta confirmar la salida al proveedor.');
   };
-  const updateStatus=(record:SupplierReturnRecord,status:SupplierReturnRecord['status'])=>{if(onResolve(record,status)){setNotice(status==='Nota de crédito recibida'?'Nota de crédito aplicada al saldo pendiente de la factura vinculada.':status==='Cambio recibido'?'Reposición registrada en inventario.':'Devolución marcada como rechazada sin cambios en inventario ni cuentas por pagar.');}else{setNotice(status==='Nota de crédito recibida'?'No se aplicó: vincula la devolución con la factura de compra que tiene saldo pendiente en cuentas por pagar.':'No se pudo completar la operación. Verifica el estado y los datos de la devolución.');}};
+  const updateStatus=(record:SupplierReturnRecord,status:SupplierReturnRecord['status'])=>{if(onResolve(record,status)){setNotice(status==='Nota de crédito recibida'?'Nota de crédito aplicada al saldo pendiente de la factura vinculada.':status==='Cambio recibido'?'Reposición registrada en inventario.':'Devolución marcada como rechazada sin cambios en inventario ni cuentas por pagar.');}else{setNotice(status==='Nota de crédito recibida'?'No se aplicó: la nota de crédito solo puede reducir una factura con saldo pendiente en cuentas por pagar. Las compras de contado o ya pagadas requieren registrar el crédito del proveedor por separado.':'No se pudo completar la operación. Verifica el estado y los datos de la devolución.');}};
   const dispatch=(record:SupplierReturnRecord)=>{
     if(record.status!=='Pendiente'||dispatchLocks.current.has(record.id))return;
     dispatchLocks.current.add(record.id);
@@ -58,7 +61,7 @@ export function SupplierReturns({products,suppliers,purchases,costHistory,record
         <label>Proveedor<select value={supplier} onChange={e=>{setSupplier(e.target.value);setPurchaseReference('');setProductId("");}}><option value="">Seleccionar proveedor</option>{suppliers.filter(s=>s.active).map(s=><option key={s.id} value={s.name}>{s.name}</option>)}</select></label>
         <label>Factura de compra<select value={purchaseReference} onChange={e=>setPurchaseReference(e.target.value)} disabled={!supplier}><option value="">Seleccionar factura de compra</option>{supplierPurchases.map(p=><option key={p.id} value={String(p.id)}>{p.invoiceNumber?.trim()||`Compra #${p.id}`} · {new Date(p.date).toLocaleDateString("es-HN")}</option>)}</select>{supplier&&supplierPurchases.length===0&&<small className="helper">No hay compras registradas para este proveedor.</small>}</label>
         <label>Producto<select value={productId} onChange={e=>setProductId(e.target.value)} disabled={!supplier}><option value="">Seleccionar producto</option>{supplierProducts.map(p=>{const line=purchaseLines.find(entry=>entry.productId===p.id);return <option key={p.id} value={p.id}>{p.name} · Facturado: {line?.quantity??0} · Stock: {p.stock}</option>;})}</select>{supplier&&purchaseReference&&!supplierProducts.length&&<small className="helper">Esta factura no tiene detalle de productos disponible. No se puede validar la devolución contra ella.</small>}</label>
-        <label>Cantidad<input type="number" min="1" max={selected?.stock??1} step="1" value={quantity} onChange={e=>setQuantity(e.target.value)}/>{selected&&<small className="helper">Disponible: {selected.stock} · Costo unitario: {money(selected.cost)}</small>}</label>
+        <label>Cantidad<input type="number" min="1" max={maxReturnQty||1} step="1" value={quantity} onChange={e=>setQuantity(e.target.value)}/>{selected&&<small className="helper">Pendiente de devolver: {remainingInvoiceQty} · Stock disponible: {selected.stock} · Costo de factura: {money(selectedPurchaseLine?.unitCost??0)}</small>}</label>
         <label>Motivo<select value={reason} onChange={e=>setReason(e.target.value)}><option>Producto dañado</option><option>Producto vencido</option><option>Vencimiento próximo</option><option>Error de despacho</option><option>Producto incorrecto</option><option>Retiro de producto</option><option>Otro</option></select></label>
         <label>Observaciones<input value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Lote, vencimiento, acuerdo con proveedor…"/></label>
       </div>
