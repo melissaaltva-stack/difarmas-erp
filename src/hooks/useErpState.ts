@@ -506,9 +506,10 @@ export function useErpState(userId: string) {
     // Una devolución de una venta a crédito reduce primero el saldo pendiente.
     // No se reduce el importe ya abonado ni se registra un reembolso en efectivo
     // automáticamente: ese movimiento requiere un pago real por separado.
-    const creditReduction=receivable
-      ? Math.min(adjustment.amount,Math.max(0,receivable.total-receivable.paid))
-      : 0;
+    const receivableBalance=receivable?Math.max(0,receivable.total-receivable.paid):0;
+    const creditReduction=receivable?Math.min(adjustment.amount,receivableBalance):0;
+    if(adjustment.refundStatus==='Aplicado a cuenta'&&(!receivable||adjustment.amount>receivableBalance+0.01))return false;
+    const refundAmount=Math.max(0,adjustment.amount-creditReduction);
     setProducts(updated);
     setInventoryMovements(current=>[...current,...movements]);
     if(receivable&&creditReduction>0){
@@ -516,12 +517,13 @@ export function useErpState(userId: string) {
         ? {...item,total:Math.max(item.paid,item.total-creditReduction)}
         : item));
     }
-    if(adjustment.refundStatus==='Pagado'&&adjustment.refundPaymentMethod){
+    const settledAdjustment={...adjustment,refundAmount};
+    if(adjustment.refundStatus==='Pagado'&&adjustment.refundPaymentMethod&&refundAmount>0){
       const isCashRefund=adjustment.refundPaymentMethod.toLocaleLowerCase().includes('efectivo');
       const isBankRefund=/transfer|banco/i.test(adjustment.refundPaymentMethod);
-      setCashMovements(current=>[{id:adjustment.id,type:'Salida',description:'Reembolso '+adjustment.refundPaymentMethod+' por '+adjustment.type+' '+adjustment.invoiceNumber,amount:adjustment.amount,category:isCashRefund?'Devoluciones de ventas':isBankRefund?'Banco':'Otros reembolsos',date:new Date().toISOString()},...current]);
+      setCashMovements(current=>[{id:adjustment.id,type:'Salida',description:'Reembolso '+adjustment.refundPaymentMethod+' por '+adjustment.type+' '+adjustment.invoiceNumber,amount:refundAmount,category:isCashRefund?'Devoluciones de ventas':isBankRefund?'Banco':'Otros reembolsos',date:new Date().toISOString()},...current]);
     }
-    setSaleAdjustments(current=>[adjustment,...current]);
+    setSaleAdjustments(current=>[settledAdjustment,...current]);
     return true;
   };
 
