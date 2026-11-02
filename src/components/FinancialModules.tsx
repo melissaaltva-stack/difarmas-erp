@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { Printer, Search, Plus, CheckCircle2, AlertTriangle, FileText, FileSpreadsheet } from 'lucide-react';
 import type { Payable, PaymentTransaction, Receivable, SaleRecord, PurchaseRecord, Expense, CashClosure, ErpSettings, Product, InventoryMovement, CashMovement, Customer, Supplier, MissingProductRequest } from '../domain/types';
+import { csvCell } from '../utils/csv';
 
 const money=(n:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL'}).format(n);
 const day=(s:string)=>{if(!s)return '—';const d=new Date(s.length===10?s+'T12:00:00':s);return Number.isNaN(d.getTime())?s:d.toLocaleDateString('es-HN');};
@@ -9,7 +10,6 @@ const overdue=(due:string,balance:number)=>balance>0&&!!due&&due<new Date().toIS
 const balanceOf=(x:{total:number;paid:number})=>Math.max(0,x.total-x.paid);
 const validAmount=(v:number,b:number)=>Number.isFinite(v)&&v>0&&v<=b;
 const escapeHtml=(value:unknown)=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-const csvCell=(value:unknown)=>{const raw=String(value??'');const numeric=/^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(raw);const safe=!numeric&&/^[\s\u0000-\u001f]*[=+\-@]/.test(raw)?`'${raw}`:raw;return '"'+safe.replace(/"/g,'""')+'"';};
 
 export function ReceivablesModule({receivables,setReceivables,transactions,setTransactions}:{receivables:Receivable[];setReceivables:Dispatch<SetStateAction<Receivable[]>>;transactions:PaymentTransaction[];setTransactions:Dispatch<SetStateAction<PaymentTransaction[]>>}) {
   const [search,setSearch]=useState(''); const [status,setStatus]=useState('pendiente'); const [amounts,setAmounts]=useState<Record<number,string>>({}); const [methods,setMethods]=useState<Record<number,'Efectivo'|'Transferencia'>>({}); const [notice,setNotice]=useState(''); const processing=useRef<Set<number>>(new Set()); useEffect(()=>{processing.current.clear();},[receivables,transactions]);
