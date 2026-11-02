@@ -31,3 +31,5 @@ GitHub Actions para el commit `4e54d0be804a861c18c66be0b3541057ff53e2be` complet
 - Se agrupan filas repetidas del mismo producto en la selección de devolución del POS y en los cálculos netos, usando precio y costo unitario promedio ponderado. Esto evita aplicar una misma cantidad dos veces cuando el producto se agregó en varias líneas de la venta.
 
 - Al reingresar productos devueltos al inventario, se recalcula el costo promedio ponderado usando el costo histórico de las unidades devueltas. La existencia y el valor al costo quedan alineados; solo aplica cuando se marca el reingreso al stock.
+
+- Los reembolsos por tarjeta u otros medios no efectivos se clasifican como `No efectivo`; las transferencias se clasifican como `Banco`. Ninguno reduce el efectivo físico en el flujo ni en el cierre diario.
