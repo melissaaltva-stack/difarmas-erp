@@ -133,3 +133,21 @@ La revisión del hook confirma estas escrituras compuestas:
 - `paymentTransactions` se expone con setter directo desde el hook; el hook no impone una regla de negocio propia. La autorización debe seguir el módulo que origina cada cobro/pago y se debe revisar cada componente que lo llama antes de fijar la matriz final.
 
 Esto confirma que la validación debe permitir conjuntos de claves dependientes dentro de una sola transacción. Una regla que valide cada clave de forma aislada con un único permiso podría bloquear operaciones legítimas; una regla demasiado amplia podría habilitar modificaciones no deseadas.
+
+
+## Resultado de la revisión de cobros, pagos y reportes
+
+La inspección de `Finance.tsx`, `FinancialModules.tsx` y el enrutamiento de `App.tsx` aclara la matriz:
+
+- `paymentTransactions` se modifica desde Finanzas (cobros y pagos), desde Cuentas por cobrar (solo transacciones `Cobro`) y desde Cuentas por pagar (solo transacciones `Pago proveedor`). Por clave JSONB, la autorización debe ser `finanzas` o `cuentas_cobrar` o `cuentas_pagar`; pero esa unión es demasiado amplia a nivel de arreglo: un usuario con solo `cuentas_cobrar` podría intentar alterar transacciones de proveedores. Por eso no se debe habilitar esta clave con esa unión en el trigger final sin separar cobros y pagos o moverlos a RPCs/tablas independientes.
+- `receivables` cambia tanto al registrar ventas a crédito como al cobrar abonos. La autorización por clave permite `ventas`/facturación y `cuentas_cobrar`/finanzas, pero el usuario de ventas no debe poder editar abonos existentes solo por poder crear una cuenta por cobrar.
+- `payables` cambia al recibir compras a crédito, registrar pagos y aplicar notas de crédito de devoluciones. Autorizar toda la clave por `compras` permitiría alterar pagos; autorizarla por `cuentas_pagar` permitiría alterar datos de compras. Requiere separar operaciones.
+- `missingProductRequests` se crea desde Ventas/POS, pero el módulo Reportes permite cambiar el estado de las solicitudes. No conviene dar permiso de escritura a Reportes solo para esa acción; debe trasladarse esa actualización a una acción de Compras/Inventario o una RPC específica con validación de estado.
+
+### Consecuencia
+
+La matriz por clave es insuficiente para proteger estas tres áreas con mínimo privilegio. La alternativa segura no es ampliar permisos hasta que todo funcione: es dividir los datos sensibles en claves separadas (por ejemplo, `receivablePayments` y `payablePayments`) o, preferiblemente, crear operaciones servidor específicas que validen la acción y actualicen en una transacción los datos relacionados. Hasta entonces, el trigger solo podría aplicar una protección parcial y debe etiquetarse así; no se debe afirmar que aísla completamente los módulos.
+
+## Herramientas de prueba disponibles en el repositorio
+
+`package.json` incluye `vitest run` como script de pruebas y el comando de compilación `tsc -b && vite build`. Esto permite añadir pruebas unitarias de la lógica de autorización y ejecutar compilación/pruebas en un entorno de desarrollo. No demuestra que haya un servidor PostgreSQL/Supabase local disponible ni valida una migración contra la base real. La validación SQL debe ejecutarse en un proyecto de prueba separado antes de considerar producción.
