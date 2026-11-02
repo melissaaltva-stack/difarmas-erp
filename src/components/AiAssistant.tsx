@@ -1,27 +1,43 @@
 import { useMemo, useState } from 'react';
 import { BrainCircuit, Sparkles, AlertTriangle, Package, TrendingUp, Wallet, CalendarClock, Search } from 'lucide-react';
-import type { Product, SaleRecord, PurchaseRecord, Expense, Receivable, Payable, InventoryMovement } from '../domain/types';
+import type { Product, SaleRecord, PurchaseRecord, Expense, Receivable, Payable, InventoryMovement, Module } from '../domain/types';
 import { localDateKey } from '../utils/dates';
 
-type Props = { products: Product[]; sales: SaleRecord[]; purchases: PurchaseRecord[]; expenses: Expense[]; receivables: Receivable[]; payables: Payable[]; movements: InventoryMovement[] };
+type Props = { products: Product[]; sales: SaleRecord[]; purchases: PurchaseRecord[]; expenses: Expense[]; receivables: Receivable[]; payables: Payable[]; movements: InventoryMovement[]; permissions: Module[] };
 const cash=(n:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL'}).format(n);
 const dayKey=()=>localDateKey();
 const daysTo=(date:string)=>{if(!date)return Infinity;const d=new Date(date.length===10?date+'T12:00:00':date);return Number.isNaN(d.getTime())?Infinity:Math.ceil((d.getTime()-new Date(dayKey()+'T12:00:00').getTime())/86400000);};
 
-export function AiAssistant({products,sales,purchases,expenses,receivables,payables,movements}:Props){
+export function AiAssistant({products,sales,purchases,expenses,receivables,payables,movements,permissions}:Props){
+  // The assistant receives the same module boundaries as the rest of the ERP.
+  // Never calculate or reveal a domain summary from data the user cannot view.
+  const can = (module: Module) => permissions.includes(module);
+  const canViewInventory = can('inventario');
+  const canViewSales = can('ventas') || can('finanzas');
+  const canViewPurchases = can('compras');
+  const canViewExpenses = can('finanzas');
+  const canViewReceivables = can('cuentas_cobrar') || can('finanzas');
+  const canViewPayables = can('cuentas_pagar') || can('finanzas');
+  const safeProducts = canViewInventory ? products : [];
+  const safeSales = canViewSales ? sales : [];
+  const safePurchases = canViewPurchases ? purchases : [];
+  const safeExpenses = canViewExpenses ? expenses : [];
+  const safeReceivables = canViewReceivables ? receivables : [];
+  const safePayables = canViewPayables ? payables : [];
+  const safeMovements = canViewInventory ? movements : [];
   const [question,setQuestion]=useState('');
   const [answer,setAnswer]=useState('');
   const [active,setActive]=useState('resumen');
-  const stockAlerts=useMemo(()=>products.filter(p=>p.stock<=p.minStock),[products]);
-  const expiryAlerts=useMemo(()=>products.filter(p=>daysTo(p.expiry)<=90).sort((a,b)=>daysTo(a.expiry)-daysTo(b.expiry)),[products]);
-  const overdueAR=receivables.filter(x=>x.total>x.paid&&x.dueDate&&x.dueDate<dayKey());
-  const overdueAP=payables.filter(x=>x.total>x.paid&&x.dueDate&&x.dueDate<dayKey());
-  const ar=receivables.reduce((n,x)=>n+Math.max(0,x.total-x.paid),0);
-  const ap=payables.reduce((n,x)=>n+Math.max(0,x.total-x.paid),0);
+  const stockAlerts=useMemo(()=>safeProducts.filter(p=>p.stock<=p.minStock),[products]);
+  const expiryAlerts=useMemo(()=>safeProducts.filter(p=>daysTo(p.expiry)<=90).sort((a,b)=>daysTo(a.expiry)-daysTo(b.expiry)),[products]);
+  const overdueAR=safeReceivables.filter(x=>x.total>x.paid&&x.dueDate&&x.dueDate<dayKey());
+  const overdueAP=safePayables.filter(x=>x.total>x.paid&&x.dueDate&&x.dueDate<dayKey());
+  const ar=safeReceivables.reduce((n,x)=>n+Math.max(0,x.total-x.paid),0);
+  const ap=safePayables.reduce((n,x)=>n+Math.max(0,x.total-x.paid),0);
   const month=dayKey().slice(0,7);
-  const monthSales=sales.filter(x=>x.date.startsWith(month)).reduce((n,x)=>n+x.total,0);
-  const monthProfit=sales.filter(x=>x.date.startsWith(month)).reduce((n,x)=>n+x.profit,0);
-  const monthExpenses=expenses.filter(x=>x.date.startsWith(month)).reduce((n,x)=>n+x.amount,0);
+  const monthSales=safeSales.filter(x=>x.date.startsWith(month)).reduce((n,x)=>n+x.total,0);
+  const monthProfit=safeSales.filter(x=>x.date.startsWith(month)).reduce((n,x)=>n+x.profit,0);
+  const monthExpenses=safeExpenses.filter(x=>x.date.startsWith(month)).reduce((n,x)=>n+x.amount,0);
   const insights=useMemo(()=>[
     {title:'Inventario por reponer',value:String(stockAlerts.length),detail:'Productos en o por debajo del stock mínimo',icon:Package,kind:stockAlerts.length?'warning':'ok'},
     {title:'Próximos vencimientos',value:String(expiryAlerts.length),detail:'Productos vencidos o que vencen en 90 días',icon:CalendarClock,kind:expiryAlerts.length?'warning':'ok'},
@@ -43,16 +59,16 @@ export function AiAssistant({products,sales,purchases,expenses,receivables,payab
     }else if(q.includes('pagar')||q.includes('proveedor')||q.includes('cuenta por pagar')){
       result='PRIORIZAR PAGOS\n• Saldo total por pagar: '+cash(ap)+'\n• Cuentas vencidas: '+overdueAP.length+'\n'+(overdueAP.length?overdueAP.map(x=>'• '+x.supplier+' — saldo '+cash(Math.max(0,x.total-x.paid))+' — vencimiento '+x.dueDate).join('\n'):'No hay cuentas vencidas según las fechas registradas.')+'\n\nSugerencia: revisar caja disponible y condiciones del proveedor antes de programar pagos.';
     }else if(q.includes('movimiento')||q.includes('ajuste')){
-      result='ACTIVIDAD DE INVENTARIO\n• Movimientos registrados: '+movements.length+'\n• Ventas registradas: '+movements.filter(m=>m.type==='Venta').length+' movimientos\n• Compras registradas: '+movements.filter(m=>m.type==='Compra').length+' movimientos\n• Ajustes registrados: '+movements.filter(m=>m.type==='Ajuste').length+' movimientos\n\nUsa el reporte de movimientos de inventario para revisar fecha, producto y referencia.';
+      result='ACTIVIDAD DE INVENTARIO\n• Movimientos registrados: '+safeMovements.length+'\n• Ventas registradas: '+safeMovements.filter(m=>m.type==='Venta').length+' movimientos\n• Compras registradas: '+safeMovements.filter(m=>m.type==='Compra').length+' movimientos\n• Ajustes registrados: '+safeMovements.filter(m=>m.type==='Ajuste').length+' movimientos\n\nUsa el reporte de movimientos de inventario para revisar fecha, producto y referencia.';
     }else if(q.includes('compra')||q.includes('gasto')){
-      result='COMPRAS Y GASTOS DEL MES\n• Compras registradas: '+cash(purchases.filter(x=>x.date.startsWith(month)).reduce((n,x)=>n+x.total,0))+'\n• Gastos registrados: '+cash(monthExpenses)+'\n\nCompara estos importes con facturas, pagos y movimientos de caja para verificar que no falten registros.';
+      result='COMPRAS Y GASTOS DEL MES\n• Compras registradas: '+cash(safePurchases.filter(x=>x.date.startsWith(month)).reduce((n,x)=>n+x.total,0))+'\n• Gastos registrados: '+cash(monthExpenses)+'\n\nCompara estos importes con facturas, pagos y movimientos de caja para verificar que no falten registros.';
     }else{
       result='RESUMEN OPERATIVO\n• Ventas de este mes: '+cash(monthSales)+'\n• Utilidad registrada en ventas: '+cash(monthProfit)+'\n• Gastos registrados este mes: '+cash(monthExpenses)+'\n• Productos por reponer: '+stockAlerts.length+'\n• Productos con vencimiento en 90 días o menos: '+expiryAlerts.length+'\n• Saldo por cobrar: '+cash(ar)+' ('+overdueAR.length+' vencidas)\n• Saldo por pagar: '+cash(ap)+' ('+overdueAP.length+' vencidas)\n\nElige una consulta rápida para obtener una lista más detallada. Las sugerencias se calculan con los datos guardados en el ERP.';
     }
     setAnswer(result);setActive(q.includes('venc')||q.includes('caduc')?'vencimientos':q.includes('stock')||q.includes('invent')||q.includes('repon')||q.includes('comprar')?'stock':q.includes('cobrar')||q.includes('cliente')?'cobros':q.includes('pagar')||q.includes('proveedor')?'pagos':q.includes('venta')||q.includes('rentab')||q.includes('ganancia')?'ventas':'resumen');
   };
   return <div className="content ai-page">
-    <section className="ai-hero"><div><span className="pill"><Sparkles size={12} style={{display:'inline',verticalAlign:'middle'}}/> ASISTENTE INTELIGENTE</span><h2>Tu copiloto de DIFARMÁS</h2><p>Detecta prioridades y consulta ventas, inventario, vencimientos y cuentas por cobrar o pagar.</p></div><BrainCircuit size={52}/></section>
+    <section className="ai-hero"><div><span className="pill"><Sparkles size={12} style={{display:'inline',verticalAlign:'middle'}}/> ASISTENTE INTELIGENTE</span><h2>Tu copiloto de DIFARMÁS</h2><p>Detecta prioridades usando únicamente los módulos que tienes autorizados.</p></div><BrainCircuit size={52}/></section>
     <div className="grid metrics ai-metrics">{insights.map(({title,value,detail,icon:Icon,kind})=><article className="card metric" key={title}><div className="metric-top"><span>{title}</span><Icon size={18}/></div><strong>{value}</strong><small>{detail}</small>{kind==='warning'&&<span className="ai-warning"><AlertTriangle size={13}/> Requiere revisión</span>}</article>)}</div>
     <section className="card ai-query"><h3><Sparkles size={18}/> ¿Qué necesitas revisar?</h3><form onSubmit={e=>{e.preventDefault();if(question.trim())generate(question.trim());}}><input value={question} onChange={e=>setQuestion(e.target.value)} placeholder="Ej.: ¿Qué productos debo reponer?" aria-label="Consulta al asistente"/><button className="primary" type="submit"><Search size={16}/> Analizar</button></form><div className="ai-prompts">{['Resumen del negocio','Productos por reponer','Próximos vencimientos','Ventas y rentabilidad','Cuentas por cobrar vencidas','Pagos a proveedores','Compras y gastos'].map(p=><button type="button" className="secondary" key={p} onClick={()=>generate(p)}>{p}</button>)}</div></section>
     {answer&&<section className="card ai-answer"><div className="ai-answer-head"><BrainCircuit size={20}/><strong>Análisis del asistente</strong><button className="secondary" onClick={()=>{void navigator.clipboard?.writeText(answer);}}>Copiar</button></div><pre>{answer}</pre></section>}
