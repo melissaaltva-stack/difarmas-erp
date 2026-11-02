@@ -1,4 +1,4 @@
-import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
+import { useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import { Plus, Search, Pencil, UserRound, UsersRound, X, Save, Ban, CheckCircle2, FileText, CreditCard, Receipt, Building2 } from 'lucide-react';
 import type { Customer } from '../domain/types';
 import { nextCustomerCode } from '../services/customerCodeService';
@@ -96,6 +96,8 @@ export function Customers({customers,setCustomers}:{customers:Customer[];setCust
   const [editing,setEditing]=useState<Customer|null>(null);
   const [form,setForm]=useState<CustomerForm>(emptyForm);
   const [error,setError]=useState('');
+  const lastCustomerId=useRef(0);
+  const nextCustomerId=()=>{const highestStoredId=customers.reduce((highest,customer)=>Math.max(highest,Number(customer.id)||0),0);const nextId=Math.max(Date.now(),highestStoredId,lastCustomerId.current)+1;lastCustomerId.current=nextId;return nextId;};
   const filtered=useMemo(()=>customers.filter(c=>[c.code??'',c.name,c.rtn??'',c.phone,c.email??'',c.address??''].join(' ').toLocaleLowerCase().includes(query.toLocaleLowerCase())),[customers,query]);
   const startNew=()=>{setEditing(null);setForm(emptyForm);setError('');setShowForm(true);};
   const startEdit=(customer:Customer)=>{setEditing(customer);setForm(customerToForm(customer));setError('');setShowForm(true);};
@@ -108,7 +110,7 @@ export function Customers({customers,setCustomers}:{customers:Customer[];setCust
     if(form.paymentTerms==='Crédito'&&creditDays<1){setError('Para términos de crédito, indica al menos 1 día de plazo.');return;}
     const rtn=form.rtn.trim();
     if(rtn&&customers.some(c=>c.id!==editing?.id&&(c.rtn??'').replace(/[^0-9A-Za-z]/g,'').toLowerCase()===rtn.replace(/[^0-9A-Za-z]/g,'').toLowerCase())){setError('Ya existe un cliente con ese RTN.');return;}
-    const record=toCustomer(form,editing?.id??Date.now(),editing?.code??nextCustomerCode(customers));
+    const record=toCustomer(form,editing?.id??nextCustomerId(),editing?.code??nextCustomerCode(customers));
     setCustomers(current=>editing?current.map(c=>c.id===editing.id?record:c):[record,...current]);
     setShowForm(false);setEditing(null);setForm(emptyForm);setError('');
   };
@@ -139,6 +141,8 @@ export function Customers({customers,setCustomers}:{customers:Customer[];setCust
 export function RegisterCustomerModal({customers,onClose,onSave}:{customers:Customer[];onClose:()=>void;onSave:(customer:Customer)=>void}) {
   const [form,setForm]=useState<CustomerForm>(emptyForm);
   const [error,setError]=useState('');
+  const lastCustomerId=useRef(0);
+  const nextCustomerId=()=>{const highestStoredId=customers.reduce((highest,customer)=>Math.max(highest,Number(customer.id)||0),0);const nextId=Math.max(Date.now(),highestStoredId,lastCustomerId.current)+1;lastCustomerId.current=nextId;return nextId;};
   const save=()=>{
     const name=form.name.trim(),creditLimit=Number(form.creditLimit),creditDays=Number(form.creditDays),rtn=form.rtn.trim();
     if(!name){setError('Escribe el nombre del cliente o razón social.');return;}
@@ -146,7 +150,7 @@ export function RegisterCustomerModal({customers,onClose,onSave}:{customers:Cust
     if(!Number.isInteger(creditDays)||creditDays<0||creditDays>365){setError('Los días de crédito deben ser un número entero entre 0 y 365.');return;}
     if(form.paymentTerms==='Crédito'&&creditDays<1){setError('Para términos de crédito, indica al menos 1 día de plazo.');return;}
     if(rtn&&customers.some(c=>(c.rtn??'').replace(/[^0-9A-Za-z]/g,'').toLowerCase()===rtn.replace(/[^0-9A-Za-z]/g,'').toLowerCase())){setError('Ya existe un cliente con ese RTN.');return;}
-    onSave(toCustomer(form,Date.now(),nextCustomerCode(customers)));
+    onSave(toCustomer(form,nextCustomerId(),nextCustomerCode(customers)));
   };
   return <div className="modal-backdrop customer-form-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onClose();}}><div className="modal customer-modal customer-form-modal" role="dialog" aria-modal="true" aria-label="Registrar nuevo cliente">
     <div className="customer-form-header"><div className="customer-form-title-icon"><UserRound size={22}/></div><div><h2>Registrar nuevo cliente</h2><p>Completa los datos y condiciones de pago del cliente.</p></div><button className="icon-btn" type="button" onClick={onClose} aria-label="Cerrar"><X size={18}/></button></div>
