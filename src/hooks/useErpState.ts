@@ -588,7 +588,26 @@ export function useErpState(userId: string) {
       ...items.map((item):PurchaseCostHistoryEntry=>({id:nextPurchaseCostHistoryId(),purchaseId:referenceId,productId:item.id,productCode:item.code,productName:item.name,supplier:purchaseSupplier.trim(),unitCost:item.unitCost,quantity:item.qty,date:receivedAt})),
       ...current,
     ]);
-    if(paymentMethod==='Crédito'){const payable=createPayableFromPurchase(items,purchaseSupplier,dueDate,new Date(),referenceId,invoiceNumber,nextPayableId());setPayables(current=>[...current,{...payable,total}]);}
+    if(paymentMethod==='Crédito'){
+      const payable=createPayableFromPurchase(items,purchaseSupplier,dueDate,new Date(),referenceId,invoiceNumber,nextPayableId());
+      let outstanding=total;
+      const matchingCredits=supplierCredits.filter(credit=>credit.supplier.trim().toLocaleLowerCase()===supplierKey&&credit.remainingBalance>0);
+      const appliedById=new Map<number,number>();
+      for(const credit of matchingCredits){
+        if(outstanding<=0)break;
+        const applied=Math.min(outstanding,credit.remainingBalance);
+        if(applied>0){appliedById.set(credit.id,applied);outstanding-=applied;}
+      }
+      const appliedTotal=total-outstanding;
+      setPayables(current=>[...current,{...payable,total:outstanding}]);
+      if(appliedById.size){
+        const applicationDate=new Date().toISOString();
+        setSupplierCredits(current=>current.map(credit=>{
+          const applied=appliedById.get(credit.id)??0;
+          return applied>0?{...credit,remainingBalance:Math.max(0,credit.remainingBalance-applied),applications:[...credit.applications,{purchaseId:referenceId,invoiceNumber:invoiceNumber||undefined,amount:applied,date:applicationDate}]}:credit;
+        }));
+      }
+    }
     return true;
   };
 
