@@ -440,13 +440,17 @@ export function useErpState(userId: string) {
       const purchase=purchases.find(item=>item.supplier.trim().toLowerCase()===source.supplier.trim().toLowerCase()&&!!ref&&(String(item.id)===ref||(item.invoiceNumber??'').trim().toLowerCase()===ref));
       if(!purchase)return false;
       const payable=payables.find(item=>item.supplier.trim().toLowerCase()===source.supplier.trim().toLowerCase()&&(item.purchaseId===purchase.id||((item.invoiceNumber??'').trim().toLowerCase()===(purchase.invoiceNumber??'').trim().toLowerCase()&&!!purchase.invoiceNumber)));
-      if(!payable||source.totalCost<=0||payable.total-payable.paid<=0)return false;
-      const outstanding=payable.total-payable.paid;
-      // Do not silently discard any credit-note value that exceeds this invoice's outstanding balance.
-      if(source.totalCost>outstanding)return false;
-      const reduction=source.totalCost;
+      if(!Number.isFinite(source.totalCost)||source.totalCost<=0)return false;
+      const outstanding=payable?Math.max(0,payable.total-payable.paid):0;
+      const reduction=Math.min(source.totalCost,outstanding);
+      const creditRemainder=Math.max(0,source.totalCost-reduction);
+      if(creditRemainder>0&&!supplierCredits.some(credit=>credit.sourceReturnId===source.id)){
+        const now=new Date().toISOString();
+        const credit:SupplierCredit={id:nextSupplierCreditId(),supplier:source.supplier.trim(),sourceReturnId:source.id,sourcePurchaseId:purchase.id,sourceReference:purchase.invoiceNumber?.trim()||String(purchase.id),amount:creditRemainder,remainingBalance:creditRemainder,createdAt:now,applications:[]};
+        setSupplierCredits(rows=>[...rows,credit]);
+      }
       supplierReturnResolutionCompleted.current.add(record.id);
-      setPayables(rows=>rows.map(item=>item.id===payable.id?{...item,total:Math.max(item.paid,item.total-reduction)}:item));
+      if(reduction>0&&payable)setPayables(rows=>rows.map(item=>item.id===payable.id?{...item,total:Math.max(item.paid,item.total-reduction)}:item));
       setSupplierReturns(rows=>rows.map(row=>row.id===record.id?{...row,status}:row));
       return true;
     }
