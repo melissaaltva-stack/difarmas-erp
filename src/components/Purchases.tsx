@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { ShoppingCart, Search, Boxes, CalendarClock, History, TrendingUp, TrendingDown, Minus, AlertTriangle, Sparkles, Plus, Trash2 } from 'lucide-react';
 import type { PurchaseItem, Product, Supplier, PurchaseCostHistoryEntry, SaleRecord, PurchaseRecord } from '../domain/types';
@@ -48,13 +48,20 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
       if(!Number.isNaN(base.getTime())){base.setDate(base.getDate()+days);setDueDate(localDateKey(base));}
     }
   };
+  const lastSupplierId = useRef(0);
+  const nextSupplierId = () => {
+    const highestStoredId = suppliers.reduce((highest,item)=>Math.max(highest,Number(item.id)||0),0);
+    const nextId = Math.max(Date.now(),highestStoredId,lastSupplierId.current)+1;
+    lastSupplierId.current=nextId;
+    return nextId;
+  };
   const saveNewSupplierFromPurchase=()=>{
     const name=newSupplierForm.name.trim();
     if(!name){setSupplierFormError('El nombre del proveedor es obligatorio.');return;}
     if(suppliers.some(item=>item.name.trim().toLocaleLowerCase()===name.toLocaleLowerCase())){
       setSupplierFormError('Ya existe un proveedor con ese nombre.');return;
     }
-    const created:Supplier={...newSupplierForm,id:Date.now(),name};
+    const created:Supplier={...newSupplierForm,id:nextSupplierId(),name};
     setSuppliers(current=>[created,...current]);
     setSupplier(created.name);
     updatePaymentTerms(created.paymentTerms==='Contado'?'Contado - Efectivo':created.paymentTerms);
