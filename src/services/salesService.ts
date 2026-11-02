@@ -7,8 +7,8 @@ export function buildSaleRecord(
   customer = '',
   dueDate = '',
   now = new Date(),
+  id = Date.now(),
 ): SaleRecord {
-  const id = Date.now();
   const total = sold.reduce((sum, item) => sum + item.price * item.qty, 0);
   const cost = sold.reduce((sum, item) => sum + item.cost * item.qty, 0);
   const items: SaleLine[] = sold.map(item => ({
