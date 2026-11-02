@@ -95,14 +95,14 @@ export function POS({products,customers,cart,setCart,saleType,setSaleType,paymen
   const normalizeInvoiceSearch=(value:string)=>value.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').trim().toLocaleLowerCase();
   const matchingSales=[...sales].filter(s=>!invoiceSearch.trim()||normalizeInvoiceSearch([String(s.id),s.invoiceNumber??'',s.customer??'',new Date(s.date).toLocaleString('es-HN'),...(s.items??[]).map(i=>i.productName)].join(' ')).includes(normalizeInvoiceSearch(invoiceSearch))).sort((a,b)=>new Date(b.date).getTime()-new Date(a.date).getTime()).slice(0,8);
   const adjustmentItems=selectedSale?(adjustmentType==='Devolución parcial'?saleProductLines.map(line=>({...line,quantity:Math.min(remainingQuantity(line.productId,line.qty),Math.max(0,Number(adjustmentQuantities[line.productId]??0)))})).filter(line=>line.quantity>0):saleProductLines.map(line=>({...line,quantity:remainingQuantity(line.productId,line.qty)})).filter(line=>line.quantity>0)) : [];
-  const adjustmentAmount=adjustmentItems.reduce((sum,line)=>sum+line.unitPrice*line.quantity,0);
+  const adjustmentAmount=adjustmentItems.reduce((sum,line)=>sum+(line.unitPrice+(line.qty>0?(line.taxAmount??0)/line.qty:0))*line.quantity,0);
   const submitAdjustment=()=>{
     setAdjustmentNotice('');
     if(selectedSale&&adjustmentSubmissionLocks.current.has(selectedSale.id))return;
     if(!selectedSale||!adjustmentReason.trim()){setAdjustmentNotice('Selecciona una factura e indica el motivo.');return;}
     if(adjustmentType==='Anulación'&&adjustedForSale.length){setAdjustmentNotice('Esta factura ya tiene ajustes. Registra una devolución parcial por el saldo pendiente o revisa el historial.');return;}
     if(!adjustmentItems.length){setAdjustmentNotice('No hay cantidades pendientes para devolver en esta factura.');return;}
-    const record:SaleAdjustmentRecord={id:nextSaleAdjustmentId(),saleId:selectedSale.id,invoiceNumber:selectedSale.invoiceNumber||('V-'+selectedSale.id),type:adjustmentType,date:new Date().toISOString(),reason:adjustmentReason.trim(),items:adjustmentItems.map(line=>({productId:line.productId,productName:line.productName,quantity:line.quantity,unitPrice:line.unitPrice,unitCost:line.unitCost,returnToStock:returnStock})),amount:adjustmentAmount,paymentMethod:selectedSale.payment,refundPaymentMethod,refundStatus,notes:''};
+    const record:SaleAdjustmentRecord={id:nextSaleAdjustmentId(),saleId:selectedSale.id,invoiceNumber:selectedSale.invoiceNumber||('V-'+selectedSale.id),type:adjustmentType,date:new Date().toISOString(),reason:adjustmentReason.trim(),items:adjustmentItems.map(line=>({productId:line.productId,productName:line.productName,quantity:line.quantity,unitPrice:line.unitPrice,unitTaxAmount:line.qty>0?(line.taxAmount??0)/line.qty:0,unitCost:line.unitCost,returnToStock:returnStock})),amount:adjustmentAmount,paymentMethod:selectedSale.payment,refundPaymentMethod,refundStatus,notes:''};
     adjustmentSubmissionLocks.current.add(selectedSale.id);
     if(onRecordAdjustment(record)){setAdjustmentNotice('Ajuste registrado. Verifica el comprobante y el procedimiento fiscal aplicable.');setSelectedSaleId('');setAdjustmentReason('');setAdjustmentQuantities({});}
     else {adjustmentSubmissionLocks.current.delete(selectedSale.id);setAdjustmentNotice('No se pudo registrar. Verifica las cantidades ya devueltas y la sincronización.');}
