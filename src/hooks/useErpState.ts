@@ -8,7 +8,7 @@ import { createInventoryMovementsForPurchase, createInventoryMovementsForSale } 
 import { loadErpSnapshot, saveErpSnapshot, saveQuotesForUser, type ErpSnapshot } from '../services/remoteErpState';
 import { ensureCustomerCodes } from '../services/customerCodeService';
 import { canApplySaleAdjustmentItems } from '../services/saleAdjustmentService';
-import { applySupplierCreditsToPurchase, splitSupplierCreditNote } from '../services/supplierCreditService';
+import { appendSupplierCreditOnce, applySupplierCreditsToPurchase, splitSupplierCreditNote } from '../services/supplierCreditService';
 
 const initialProducts: Product[] = [
   { id: 1, code: '750100000001', name: 'Eutirox 50 mcg', category: 'Medicamentos', laboratory: 'Merck', presentation: 'Caja x 50 tabletas', cost: 250, retail: 330, wholesale: 310, stock: 18, minStock: 8, lot: 'EUT-2607', expiry: '2027-07-31', supplier: 'Distribuidora Nacional' },
@@ -447,7 +447,7 @@ export function useErpState(userId: string) {
       if(creditRemainder>0){
         const now=new Date().toISOString();
         const credit:SupplierCredit={id:nextSupplierCreditId(),supplier:source.supplier.trim(),sourceReturnId:source.id,sourcePurchaseId:purchase.id,sourceReference:purchase.invoiceNumber?.trim()||String(purchase.id),amount:creditRemainder,remainingBalance:creditRemainder,createdAt:now,applications:[]};
-        setSupplierCredits(rows=>rows.some(existing=>existing.sourceReturnId===source.id)?rows:[...rows,credit]);
+        setSupplierCredits(rows=>appendSupplierCreditOnce(rows,credit));
       }
       supplierReturnResolutionCompleted.current.add(record.id);
       if(reduction>0&&payable)setPayables(rows=>rows.map(item=>item.id===payable.id?{...item,total:Math.max(item.paid,item.total-reduction)}:item));
