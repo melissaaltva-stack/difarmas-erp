@@ -5,10 +5,10 @@ import { applyPurchaseToInventory, applySaleToInventory, calculateWeightedAverag
 import { buildSaleRecord, createReceivableFromSale } from '../services/salesService';
 import { createPayableFromPurchase } from '../services/purchaseService';
 import { createInventoryMovementsForPurchase, createInventoryMovementsForSale } from '../services/inventoryMovementService';
-import { loadErpSnapshot, saveErpSnapshot, saveQuotesForUser, type ErpSnapshot } from '../services/remoteErpState';
+import { loadErpSnapshot, saveErpSnapshot, saveQuotesForUser, resolveSupplierCreditNoteAtomically, type ErpSnapshot } from '../services/remoteErpState';
 import { ensureCustomerCodes } from '../services/customerCodeService';
 import { canApplySaleAdjustmentItems } from '../services/saleAdjustmentService';
-import { appendSupplierCreditOnce, applySupplierCreditsToPurchase, splitSupplierCreditNote } from '../services/supplierCreditService';
+import { applySupplierCreditsToPurchase } from '../services/supplierCreditService';
 
 const initialProducts: Product[] = [
   { id: 1, code: '750100000001', name: 'Eutirox 50 mcg', category: 'Medicamentos', laboratory: 'Merck', presentation: 'Caja x 50 tabletas', cost: 250, retail: 330, wholesale: 310, stock: 18, minStock: 8, lot: 'EUT-2607', expiry: '2027-07-31', supplier: 'Distribuidora Nacional' },
@@ -428,7 +428,7 @@ export function useErpState(userId: string) {
     return true;
   };
 
-  const resolveSupplierReturn=(record:SupplierReturnRecord,status:SupplierReturnRecord['status']):boolean=>{
+  const resolveSupplierReturn=async(record:SupplierReturnRecord,status:SupplierReturnRecord['status']):Promise<boolean>=>{
     if(supplierReturnResolutionInProgress.current.has(record.id)||supplierReturnResolutionCompleted.current.has(record.id))return false;
     supplierReturnResolutionInProgress.current.add(record.id);
     try {
@@ -437,22 +437,17 @@ export function useErpState(userId: string) {
     const source=current;
     if(status==='Rechazado') { supplierReturnResolutionCompleted.current.add(record.id); setSupplierReturns(rows=>rows.map(row=>row.id===record.id?{...row,status}:row)); return true; }
     if(status==='Nota de crédito recibida') {
-      const ref=source.purchaseReference.trim().toLowerCase();
-      const purchase=purchases.find(item=>item.supplier.trim().toLowerCase()===source.supplier.trim().toLowerCase()&&!!ref&&(String(item.id)===ref||(item.invoiceNumber??'').trim().toLowerCase()===ref));
-      if(!purchase)return false;
-      const payable=payables.find(item=>item.supplier.trim().toLowerCase()===source.supplier.trim().toLowerCase()&&(item.purchaseId===purchase.id||((item.invoiceNumber??'').trim().toLowerCase()===(purchase.invoiceNumber??'').trim().toLowerCase()&&!!purchase.invoiceNumber)));
-      if(!Number.isFinite(source.totalCost)||source.totalCost<=0)return false;
-      let reduction:number; let creditRemainder:number;
-      try { ({reduction,creditRemainder}=splitSupplierCreditNote(source.totalCost,payable?Math.max(0,payable.total-payable.paid):0)); } catch { return false; }
-      if(creditRemainder>0){
-        const now=new Date().toISOString();
-        const credit:SupplierCredit={id:nextSupplierCreditId(),supplier:source.supplier.trim(),sourceReturnId:source.id,sourcePurchaseId:purchase.id,sourceReference:purchase.invoiceNumber?.trim()||String(purchase.id),amount:creditRemainder,remainingBalance:creditRemainder,createdAt:now,applications:[]};
-        setSupplierCredits(rows=>appendSupplierCreditOnce(rows,credit));
+      try {
+        const resolved=await resolveSupplierCreditNoteAtomically(userId,record.id);
+        supplierReturnResolutionCompleted.current.add(record.id);
+        setSupplierReturns(resolved.supplierReturns);
+        setPayables(resolved.payables);
+        setSupplierCredits(resolved.supplierCredits);
+        return true;
+      } catch (error) {
+        console.error('No se pudo resolver la nota de crédito del proveedor:',error);
+        return false;
       }
-      supplierReturnResolutionCompleted.current.add(record.id);
-      if(reduction>0&&payable)setPayables(rows=>rows.map(item=>item.id===payable.id?{...item,total:Math.max(item.paid,item.total-reduction)}:item));
-      setSupplierReturns(rows=>rows.map(row=>row.id===record.id?{...row,status}:row));
-      return true;
     }
     if(status==='Cambio recibido') {
       const quantities=new Map<number,number>();source.items.forEach(item=>quantities.set(item.productId,(quantities.get(item.productId)??0)+item.quantity));
