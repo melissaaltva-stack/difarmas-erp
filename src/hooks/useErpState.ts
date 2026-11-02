@@ -319,6 +319,7 @@ export function useErpState(userId: string) {
     }) : base.items;
     const sale:SaleRecord={
       ...base,
+      paymentKind:(settings.paymentMethods??[]).find(method=>method.name===payment)?.kind??(payment==='Efectivo'?'cash':payment==='Crédito'?'credit':'other'),
       type:invoiceDetails?'factura_estandar':base.type,
       invoiceNumber,
       customer:customer.trim()||undefined,
