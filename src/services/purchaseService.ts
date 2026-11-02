@@ -8,9 +8,10 @@ export function createPayableFromPurchase(
   now = new Date(),
   purchaseId?: number,
   invoiceNumber?: string,
+  payableId?: number,
 ): Payable {
   return {
-    id: Date.now(),
+    id: payableId ?? Date.now(),
     supplier,
     total: purchaseTotal(items),
     paid: 0,
