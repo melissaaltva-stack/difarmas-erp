@@ -143,26 +143,26 @@ export function useErpState(userId: string) {
   useEffect(()=>{saleInProgress.current=false},[sales]);
   useEffect(()=>{purchaseInProgress.current=false},[purchases]);
 
-  useEffect(()=>{saveJson('difarmas_customers',customers)},[customers]);
-  useEffect(()=>{saveJson('difarmas_quotes',quotes)},[quotes]);
-  useEffect(()=>{saveJson('difarmas_suppliers',suppliers)},[suppliers]);
-  useEffect(()=>{saveJson('difarmas_products',products)},[products]);
-  useEffect(()=>{saveNumber('difarmas_monthly_goal',monthlyGoal)},[monthlyGoal]);
-  useEffect(()=>{saveNumber('difarmas_fixed_expenses',fixedExpenses)},[fixedExpenses]);
-  useEffect(()=>{saveJson('difarmas_sales',sales)},[sales]);
-  useEffect(()=>{saveJson('difarmas_purchases',purchases)},[purchases]);
-  useEffect(()=>{saveJson('difarmas_purchase_cost_history',purchaseCostHistory)},[purchaseCostHistory]);
-  useEffect(()=>{saveJson('difarmas_settings',settings)},[settings]);
-  useEffect(()=>{saveJson('difarmas_expenses',expenses)},[expenses]);
-  useEffect(()=>{saveJson('difarmas_receivables',receivables)},[receivables]);
-  useEffect(()=>{saveJson('difarmas_payables',payables)},[payables]);
-  useEffect(()=>{saveJson('difarmas_inventory_movements',inventoryMovements)},[inventoryMovements]);
-  useEffect(()=>{saveJson('difarmas_cash_closures',cashClosures)},[cashClosures]);
-  useEffect(()=>{saveJson('difarmas_cash_movements',cashMovements)},[cashMovements]);
-  useEffect(()=>{saveJson('difarmas_payment_transactions',paymentTransactions)},[paymentTransactions]);
-  useEffect(()=>{saveJson('difarmas_missing_product_requests',missingProductRequests)},[missingProductRequests]);
-  useEffect(()=>{saveJson('difarmas_supplier_returns',supplierReturns)},[supplierReturns]);
-  useEffect(()=>{saveJson('difarmas_sale_adjustments',saleAdjustments)},[saleAdjustments]);
+  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_customers',customers)},[remoteReady,customers]);
+  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_quotes',quotes)},[remoteReady,quotes]);
+  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_suppliers',suppliers)},[remoteReady,suppliers]);
+  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_products',products)},[remoteReady,products]);
+  useEffect(()=>{if(!remoteReady)return;saveNumber('difarmas_monthly_goal',monthlyGoal)},[remoteReady,monthlyGoal]);
+  useEffect(()=>{if(!remoteReady)return;saveNumber('difarmas_fixed_expenses',fixedExpenses)},[remoteReady,fixedExpenses]);
+  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_sales',sales)},[remoteReady,sales]);
+  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_purchases',purchases)},[remoteReady,purchases]);
+  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_purchase_cost_history',purchaseCostHistory)},[remoteReady,purchaseCostHistory]);
+  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_settings',settings)},[remoteReady,settings]);
+  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_expenses',expenses)},[remoteReady,expenses]);
+  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_receivables',receivables)},[remoteReady,receivables]);
+  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_payables',payables)},[remoteReady,payables]);
+  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_inventory_movements',inventoryMovements)},[remoteReady,inventoryMovements]);
+  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_cash_closures',cashClosures)},[remoteReady,cashClosures]);
+  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_cash_movements',cashMovements)},[remoteReady,cashMovements]);
+  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_payment_transactions',paymentTransactions)},[remoteReady,paymentTransactions]);
+  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_missing_product_requests',missingProductRequests)},[remoteReady,missingProductRequests]);
+  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_supplier_returns',supplierReturns)},[remoteReady,supplierReturns]);
+  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_sale_adjustments',saleAdjustments)},[remoteReady,saleAdjustments]);
 
   const snapshot = useMemo<ErpSnapshot>(() => ({
     customers, quotes, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables,
