@@ -395,10 +395,12 @@ export function useErpState(userId: string) {
 
   const recordSupplierDispatch=(record:SupplierReturnRecord):boolean=>{
     const dispatchNote='Devolución enviada al proveedor: ';
-    if(supplierDispatchInProgress.current.has(record.id)||inventoryMovements.some(movement=>movement.referenceId===record.id&&movement.note?.startsWith(dispatchNote)))return false;
-    if(!record.items.length||record.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!Number.isFinite(item.unitCost)||item.unitCost<0))return false;
+    const current=supplierReturns.find(item=>item.id===record.id);
+    if(!current||current.status!=='Pendiente'||record.status!=='Pendiente')return false;
+    if(supplierDispatchInProgress.current.has(current.id)||inventoryMovements.some(movement=>movement.referenceId===current.id&&movement.note?.startsWith(dispatchNote)))return false;
+    if(!current.items.length||current.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!Number.isFinite(item.unitCost)||item.unitCost<0))return false;
     const quantitiesByProduct=new Map<number,number>();
-    record.items.forEach(item=>quantitiesByProduct.set(item.productId,(quantitiesByProduct.get(item.productId)??0)+item.quantity));
+    current.items.forEach(item=>quantitiesByProduct.set(item.productId,(quantitiesByProduct.get(item.productId)??0)+item.quantity));
     if([...quantitiesByProduct].some(([productId,quantity])=>!products.some(product=>product.id===productId&&product.stock>=quantity)))return false;
     const updated=products.map(product=>{
       const quantity=quantitiesByProduct.get(product.id)??0;
@@ -408,30 +410,31 @@ export function useErpState(userId: string) {
     const movements:InventoryMovement[]=[...quantitiesByProduct].flatMap(([productId,quantity])=>{
       const product=products.find(item=>item.id===productId);
       if(!product)return [];
-      const matchingItems=record.items.filter(item=>item.productId===productId);
+      const matchingItems=current.items.filter(item=>item.productId===productId);
       const totalCost=matchingItems.reduce((sum,item)=>sum+item.quantity*item.unitCost,0);
       const unitCost=totalCost/quantity;
-      return [{id:nextInventoryMovementId(),productId,productName:matchingItems[0]?.productName??product.name,type:'Ajuste' as const,quantity,stockBefore:product.stock,stockAfter:product.stock-quantity,unitCost,referenceId:record.id,date:movementDate,note:'Devolución enviada al proveedor: '+record.reason}];
+      return [{id:nextInventoryMovementId(),productId,productName:matchingItems[0]?.productName??product.name,type:'Ajuste' as const,quantity,stockBefore:product.stock,stockAfter:product.stock-quantity,unitCost,referenceId:current.id,date:movementDate,note:'Devolución enviada al proveedor: '+current.reason}];
     });
-    supplierDispatchInProgress.current.add(record.id);
+    supplierDispatchInProgress.current.add(current.id);
     setProducts(updated);
     setInventoryMovements(current=>[...current,...movements]);
     return true;
   };
 
   const resolveSupplierReturn=(record:SupplierReturnRecord,status:SupplierReturnRecord['status']):boolean=>{
-    if(supplierReturnResolutionInProgress.current.has(record.id)||supplierReturnResolutionCompleted.current.has(record.id))return false;
+    if(supplierReturnResolutionInProgress.current.has(source.id)||supplierReturnResolutionCompleted.current.has(record.id))return false;
     supplierReturnResolutionInProgress.current.add(record.id);
     try {
     const current=supplierReturns.find(item=>item.id===record.id);
     if(!current||current.status!=='Enviado al proveedor'||record.status!=='Enviado al proveedor')return false;
+    const source=current;
     if(status==='Rechazado') { supplierReturnResolutionCompleted.current.add(record.id); setSupplierReturns(rows=>rows.map(row=>row.id===record.id?{...row,status}:row)); return true; }
     if(status==='Nota de crédito recibida') {
-      const ref=record.purchaseReference.trim().toLowerCase();
-      const purchase=purchases.find(item=>item.supplier.trim().toLowerCase()===record.supplier.trim().toLowerCase()&&!!ref&&(String(item.id)===ref||(item.invoiceNumber??'').trim().toLowerCase()===ref));
+      const ref=source.purchaseReference.trim().toLowerCase();
+      const purchase=purchases.find(item=>item.supplier.trim().toLowerCase()===source.supplier.trim().toLowerCase()&&!!ref&&(String(item.id)===ref||(item.invoiceNumber??'').trim().toLowerCase()===ref));
       if(!purchase)return false;
       const payable=payables.find(item=>item.supplier.trim().toLowerCase()===record.supplier.trim().toLowerCase()&&(item.purchaseId===purchase.id||((item.invoiceNumber??'').trim().toLowerCase()===(purchase.invoiceNumber??'').trim().toLowerCase()&&!!purchase.invoiceNumber)));
-      if(!payable||record.totalCost<=0||payable.total-payable.paid<=0)return false;
+      if(!payable||source.totalCost<=0||payable.total-payable.paid<=0)return false;
       const outstanding=payable.total-payable.paid;
       // Do not silently discard any credit-note value that exceeds this invoice's outstanding balance.
       if(record.totalCost>outstanding)return false;
@@ -442,7 +445,7 @@ export function useErpState(userId: string) {
       return true;
     }
     if(status==='Cambio recibido') {
-      const quantities=new Map<number,number>();record.items.forEach(item=>quantities.set(item.productId,(quantities.get(item.productId)??0)+item.quantity));
+      const quantities=new Map<number,number>();source.items.forEach(item=>quantities.set(item.productId,(quantities.get(item.productId)??0)+item.quantity));
       if([...quantities.keys()].some(id=>!products.some(product=>product.id===id)))return false;
       const date=new Date().toISOString();
       let updatedProducts:Product[];
