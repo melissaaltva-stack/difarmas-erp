@@ -1,6 +1,6 @@
 -- Farmi: enforce account status and read-only roles at the database boundary.
--- Keeps each account's existing snapshot and ownership model unchanged.
--- Apply this migration in the linked Supabase project's SQL Editor before relying on it.
+-- Roles are read from trusted Supabase app_metadata, matching App.tsx.
+-- Existing account ownership and snapshot data are preserved.
 
 drop policy if exists "erp_state_select_own" on public.erp_state;
 create policy "erp_state_select_own"
@@ -20,7 +20,8 @@ create policy "erp_state_insert_own"
   with check (
     (select auth.uid()) = user_id
     and coalesce((auth.jwt() -> 'app_metadata' ->> 'farmi_active')::boolean, true) = true
-    and coalesce(auth.jwt() -> 'app_metadata' ->> 'farmi_role', '') <> 'Solo lectura'
+    and (auth.jwt() -> 'app_metadata' ->> 'farmi_role') in
+      ('Administrador', 'Supervisor', 'Ventas', 'Compras', 'Finanzas')
   );
 
 drop policy if exists "erp_state_update_own" on public.erp_state;
@@ -31,12 +32,15 @@ create policy "erp_state_update_own"
   using (
     (select auth.uid()) = user_id
     and coalesce((auth.jwt() -> 'app_metadata' ->> 'farmi_active')::boolean, true) = true
-    and coalesce(auth.jwt() -> 'app_metadata' ->> 'farmi_role', '') <> 'Solo lectura'
+    and (auth.jwt() -> 'app_metadata' ->> 'farmi_role') in
+      ('Administrador', 'Supervisor', 'Ventas', 'Compras', 'Finanzas')
   )
   with check (
     (select auth.uid()) = user_id
     and coalesce((auth.jwt() -> 'app_metadata' ->> 'farmi_active')::boolean, true) = true
-    and coalesce(auth.jwt() -> 'app_metadata' ->> 'farmi_role', '') <> 'Solo lectura'
+    and (auth.jwt() -> 'app_metadata' ->> 'farmi_role') in
+      ('Administrador', 'Supervisor', 'Ventas', 'Compras', 'Finanzas')
   );
 
--- No DELETE policy is added. Existing account ownership and snapshot data remain intact.
+-- Unknown/missing roles and Solo lectura fail closed for writes.
+-- No DELETE policy is added.
