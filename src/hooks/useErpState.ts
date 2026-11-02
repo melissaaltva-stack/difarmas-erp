@@ -170,12 +170,13 @@ export function useErpState(userId: string) {
   useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_payment_transactions',paymentTransactions)},[remoteReady,paymentTransactions]);
   useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_missing_product_requests',missingProductRequests)},[remoteReady,missingProductRequests]);
   useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_supplier_returns',supplierReturns)},[remoteReady,supplierReturns]);
+  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_supplier_credits',supplierCredits)},[remoteReady,supplierCredits]);
   useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_sale_adjustments',saleAdjustments)},[remoteReady,saleAdjustments]);
 
   const snapshot = useMemo<ErpSnapshot>(() => ({
     customers, quotes, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables,
-    inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests, supplierReturns, saleAdjustments,
-  }), [customers, quotes, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables, inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests, supplierReturns, saleAdjustments]);
+    inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests, supplierReturns, supplierCredits, saleAdjustments,
+  }), [customers, quotes, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables, inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests, supplierReturns, supplierCredits, saleAdjustments]);
 
   // Load the signed-in user's snapshot before allowing remote writes. A first login
   // seeds the cloud record from this browser's existing local data.
