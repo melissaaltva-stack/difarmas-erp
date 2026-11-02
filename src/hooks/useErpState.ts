@@ -139,8 +139,10 @@ export function useErpState(userId: string) {
   const purchaseInProgress = useRef(false);
   const supplierDispatchInProgress = useRef<Set<number>>(new Set());
   const supplierReturnResolutionInProgress = useRef<Set<number>>(new Set());
+  const saleAdjustmentInProgress = useRef<Set<number>>(new Set());
 
   useEffect(()=>{saleInProgress.current=false},[sales]);
+  useEffect(()=>{saleAdjustmentInProgress.current.clear()},[saleAdjustments]);
   useEffect(()=>{purchaseInProgress.current=false},[purchases]);
 
   useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_customers',customers)},[remoteReady,customers]);
@@ -459,6 +461,7 @@ export function useErpState(userId: string) {
   };
 
   const recordSaleAdjustment=(adjustment:SaleAdjustmentRecord):boolean=>{
+    if(saleAdjustmentInProgress.current.has(adjustment.saleId))return false;
     if(saleAdjustments.some(item=>item.id===adjustment.id)||!sales.some(sale=>sale.id===adjustment.saleId)||!adjustment.items.length||!Number.isFinite(adjustment.amount)||adjustment.amount<=0)return false;
     if(adjustment.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!Number.isFinite(item.unitPrice)||item.unitPrice<0||!Number.isFinite(item.unitCost)||item.unitCost<0))return false;
     const originalSale=sales.find(sale=>sale.id===adjustment.saleId);
@@ -486,6 +489,7 @@ export function useErpState(userId: string) {
     for(const productId of returnedByProduct.keys()){
       if(!products.some(product=>product.id===productId))return false;
     }
+    saleAdjustmentInProgress.current.add(adjustment.saleId);
     const movementDate=new Date().toISOString();
     const movements:InventoryMovement[]=[...returnedByProduct].map(([productId,lines])=>{
       const product=products.find(item=>item.id===productId)!;
@@ -512,8 +516,10 @@ export function useErpState(userId: string) {
         ? {...item,total:Math.max(item.paid,item.total-creditReduction)}
         : item));
     }
-    if(adjustment.paymentMethod.toLowerCase().includes('efectivo')){
-      setCashMovements(current=>[{id:adjustment.id,type:'Salida',description:'Reembolso por '+adjustment.type+' '+adjustment.invoiceNumber,amount:adjustment.amount,category:'Devoluciones de ventas',date:new Date().toISOString()},...current]);
+    if(adjustment.refundStatus==='Pagado'&&adjustment.refundPaymentMethod){
+      const isCashRefund=adjustment.refundPaymentMethod.toLocaleLowerCase().includes('efectivo');
+      const isBankRefund=/transfer|banco/i.test(adjustment.refundPaymentMethod);
+      setCashMovements(current=>[{id:adjustment.id,type:'Salida',description:'Reembolso '+adjustment.refundPaymentMethod+' por '+adjustment.type+' '+adjustment.invoiceNumber,amount:adjustment.amount,category:isCashRefund?'Devoluciones de ventas':isBankRefund?'Banco':'Otros reembolsos',date:new Date().toISOString()},...current]);
     }
     setSaleAdjustments(current=>[adjustment,...current]);
     return true;
