@@ -426,7 +426,7 @@ export function useErpState(userId: string) {
     supplierReturnResolutionInProgress.current.add(record.id);
     try {
     const current=supplierReturns.find(item=>item.id===record.id);
-    if(!current||current.status!=='Enviado al proveedor'||record.status!=='Enviado al proveedor')return false;
+    if(!current||current.status!=='Enviado al proveedor')return false;
     const source=current;
     if(status==='Rechazado') { supplierReturnResolutionCompleted.current.add(record.id); setSupplierReturns(rows=>rows.map(row=>row.id===record.id?{...row,status}:row)); return true; }
     if(status==='Nota de crédito recibida') {
@@ -461,7 +461,7 @@ export function useErpState(userId: string) {
           return {...product,stock:newStock,cost:weightedCost};
         });
       } catch { return false; }
-      const movements:InventoryMovement[]=[...quantities].map(([productId,quantity])=>{const product=products.find(item=>item.id===productId)!;const lines=record.items.filter(item=>item.productId===productId);const cost=lines.reduce((sum,item)=>sum+item.quantity*item.unitCost,0)/quantity;return {id:nextInventoryMovementId(),productId,productName:product.name,type:'Compra' as const,quantity,stockBefore:product.stock,stockAfter:product.stock+quantity,unitCost:cost,referenceId:record.id,date,note:'Reposición por cambio recibido de proveedor'};});
+      const movements:InventoryMovement[]=[...quantities].map(([productId,quantity])=>{const product=products.find(item=>item.id===productId)!;const lines=source.items.filter(item=>item.productId===productId);const cost=lines.reduce((sum,item)=>sum+item.quantity*item.unitCost,0)/quantity;return {id:nextInventoryMovementId(),productId,productName:product.name,type:'Compra' as const,quantity,stockBefore:product.stock,stockAfter:product.stock+quantity,unitCost:cost,referenceId:record.id,date,note:'Reposición por cambio recibido de proveedor'};});
       supplierReturnResolutionCompleted.current.add(record.id);
       setProducts(updatedProducts);
       setInventoryMovements(rows=>[...rows,...movements]);
