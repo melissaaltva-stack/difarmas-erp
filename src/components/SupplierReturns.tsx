@@ -22,8 +22,8 @@ export function SupplierReturns({products,suppliers,purchases,records,setRecords
   const validQty=Number(quantity);
   const create=()=>{
     setNotice('');
-    if(!supplier.trim()||!selected||!Number.isInteger(validQty)||validQty<1||validQty>selected.stock||!reason.trim()){
-      setNotice('Revisa proveedor, producto, cantidad (máximo el stock disponible) y motivo.');
+    if(!supplier.trim()||!supplierPurchases.some(p=>String(p.id)===purchaseReference)||!selected||!Number.isInteger(validQty)||validQty<1||validQty>selected.stock||!reason.trim()){
+      setNotice('Selecciona proveedor, factura de compra y producto; revisa la cantidad disponible y el motivo.');
       return;
     }
     const item:SupplierReturnItem={productId:selected.id,productName:selected.name,code:selected.code,quantity:validQty,unitCost:selected.cost,reason};
@@ -52,7 +52,7 @@ export function SupplierReturns({products,suppliers,purchases,records,setRecords
     <div className="page-head"><div><span className="pill">CONTROL DE PROVEEDORES</span><h2>Cambios y devoluciones</h2><p>Registra productos para cambio, devolución, nota de crédito o reclamación al proveedor.</p></div><div className="page-head-icon"><ClipboardList size={25}/></div></div>
     <div className="card"><div className="card-title"><div><h3>Nueva devolución a proveedor</h3><p>La salida de inventario se registra únicamente al confirmar el envío.</p></div><PackageMinus size={20}/></div>
       <div className="form-grid">
-        <label>Proveedor<select value={supplier} onChange={e=>{setSupplier(e.target.value);setProductId("");}}><option value="">Seleccionar proveedor</option>{suppliers.filter(s=>s.active).map(s=><option key={s.id} value={s.name}>{s.name}</option>)}</select></label>
+        <label>Proveedor<select value={supplier} onChange={e=>{setSupplier(e.target.value);setPurchaseReference('');setProductId("");}}><option value="">Seleccionar proveedor</option>{suppliers.filter(s=>s.active).map(s=><option key={s.id} value={s.name}>{s.name}</option>)}</select></label>
         <label>Factura de compra<select value={purchaseReference} onChange={e=>setPurchaseReference(e.target.value)} disabled={!supplier}><option value="">Seleccionar factura de compra</option>{supplierPurchases.map(p=><option key={p.id} value={String(p.id)}>{p.invoiceNumber?.trim()||`Compra #${p.id}`} · {new Date(p.date).toLocaleDateString("es-HN")}</option>)}</select>{supplier&&supplierPurchases.length===0&&<small className="helper">No hay compras registradas para este proveedor.</small>}</label>
         <label>Producto<select value={productId} onChange={e=>setProductId(e.target.value)} disabled={!supplier}><option value="">Seleccionar producto</option>{supplierProducts.map(p=><option key={p.id} value={p.id}>{p.name} · Stock: {p.stock}</option>)}</select>{supplier&&!supplierProducts.length&&<small className="helper">No hay productos vinculados a este proveedor. Revisa el proveedor asignado en el inventario.</small>}</label>
         <label>Cantidad<input type="number" min="1" max={selected?.stock??1} step="1" value={quantity} onChange={e=>setQuantity(e.target.value)}/>{selected&&<small className="helper">Disponible: {selected.stock} · Costo unitario: {money(selected.cost)}</small>}</label>
