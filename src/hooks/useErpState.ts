@@ -139,10 +139,12 @@ export function useErpState(userId: string) {
   const purchaseInProgress = useRef(false);
   const supplierDispatchInProgress = useRef<Set<number>>(new Set());
   const supplierReturnResolutionInProgress = useRef<Set<number>>(new Set());
+  const supplierReturnResolutionCompleted = useRef<Set<number>>(new Set());
   const saleAdjustmentInProgress = useRef<Set<number>>(new Set());
 
   useEffect(()=>{saleInProgress.current=false},[sales]);
   useEffect(()=>{saleAdjustmentInProgress.current.clear()},[saleAdjustments]);
+  useEffect(()=>{supplierReturnResolutionCompleted.current.clear()},[supplierReturns]);
   useEffect(()=>{purchaseInProgress.current=false},[purchases]);
 
   useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_customers',customers)},[remoteReady,customers]);
@@ -416,12 +418,12 @@ export function useErpState(userId: string) {
   };
 
   const resolveSupplierReturn=(record:SupplierReturnRecord,status:SupplierReturnRecord['status']):boolean=>{
-    if(supplierReturnResolutionInProgress.current.has(record.id))return false;
+    if(supplierReturnResolutionInProgress.current.has(record.id)||supplierReturnResolutionCompleted.current.has(record.id))return false;
     supplierReturnResolutionInProgress.current.add(record.id);
     try {
     const current=supplierReturns.find(item=>item.id===record.id);
     if(!current||current.status!=='Enviado al proveedor'||record.status!=='Enviado al proveedor')return false;
-    if(status==='Rechazado') { setSupplierReturns(rows=>rows.map(row=>row.id===record.id?{...row,status}:row)); return true; }
+    if(status==='Rechazado') { supplierReturnResolutionCompleted.current.add(record.id); setSupplierReturns(rows=>rows.map(row=>row.id===record.id?{...row,status}:row)); return true; }
     if(status==='Nota de crédito recibida') {
       const ref=record.purchaseReference.trim().toLowerCase();
       const purchase=purchases.find(item=>item.supplier.trim().toLowerCase()===record.supplier.trim().toLowerCase()&&!!ref&&(String(item.id)===ref||(item.invoiceNumber??'').trim().toLowerCase()===ref));
@@ -432,6 +434,7 @@ export function useErpState(userId: string) {
       // Do not silently discard any credit-note value that exceeds this invoice's outstanding balance.
       if(record.totalCost>outstanding)return false;
       const reduction=record.totalCost;
+      supplierReturnResolutionCompleted.current.add(record.id);
       setPayables(rows=>rows.map(item=>item.id===payable.id?{...item,total:Math.max(item.paid,item.total-reduction)}:item));
       setSupplierReturns(rows=>rows.map(row=>row.id===record.id?{...row,status}:row));
       return true;
@@ -441,6 +444,7 @@ export function useErpState(userId: string) {
       if([...quantities.keys()].some(id=>!products.some(product=>product.id===id)))return false;
       const date=new Date().toISOString();
       const movements:InventoryMovement[]=[...quantities].map(([productId,quantity])=>{const product=products.find(item=>item.id===productId)!;const lines=record.items.filter(item=>item.productId===productId);const cost=lines.reduce((sum,item)=>sum+item.quantity*item.unitCost,0)/quantity;return {id:nextInventoryMovementId(),productId,productName:product.name,type:'Compra' as const,quantity,stockBefore:product.stock,stockAfter:product.stock+quantity,unitCost:cost,referenceId:record.id,date,note:'Reposición por cambio recibido de proveedor'};});
+      supplierReturnResolutionCompleted.current.add(record.id);
       setProducts(rows=>rows.map(product=>{
         const quantity=quantities.get(product.id)??0;
         if(!quantity)return product;
