@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { SupplierCredit } from '../domain/types';
-import { applySupplierCreditsToPurchase, splitSupplierCreditNote } from './supplierCreditService';
+import { appendSupplierCreditOnce, applySupplierCreditsToPurchase, splitSupplierCreditNote } from './supplierCreditService';
 
 const credit=(overrides:Partial<SupplierCredit>={}):SupplierCredit=>({
   id:1,supplier:'Droguería Central',sourceReturnId:10,sourcePurchaseId:20,sourceReference:'FC-20',
@@ -8,6 +8,13 @@ const credit=(overrides:Partial<SupplierCredit>={}):SupplierCredit=>({
 });
 
 describe('supplier credit ledger',()=>{
+  it('does not create a second supplier credit for the same return',()=>{
+    const existing=credit({sourceReturnId:99});
+    const duplicate=credit({id:2,sourceReturnId:99,amount:45,remainingBalance:45});
+    const result=appendSupplierCreditOnce([existing],duplicate);
+    expect(result).toEqual([existing]);
+  });
+
   it('applies a credit note to the open payable and keeps only the excess as supplier credit',()=>{
     expect(splitSupplierCreditNote(125,80)).toEqual({reduction:80,creditRemainder:45});
   });
