@@ -35,16 +35,30 @@ paymentMethods:[
 billingInfo:{cai:'',authorizedRangeStart:'',authorizedRangeEnd:'',authorizationExpiry:'',establishmentCode:'',emissionPoint:'',documentTypeCode:'01',isvRate:15,fiscalLegend:'Documento interno. Configure la autorización fiscal vigente del SAR antes de emitir comprobantes fiscales.'}
 };
 
+function loadUserJson<T>(userId: string, key: string, fallback: T): T {
+  // Do not hydrate a new account with another account's browser cache, even
+  // for the first render before the account-change effect has run.
+  const owner = localStorage.getItem('difarmas_owner_user_id');
+  if (owner && owner !== userId) return fallback;
+  return loadJson<T>(key, fallback);
+}
+
+function loadUserNumber(userId: string, key: string, fallback: number): number {
+  const owner = localStorage.getItem('difarmas_owner_user_id');
+  if (owner && owner !== userId) return fallback;
+  return loadNumber(key, fallback);
+}
+
 export function useErpState(userId: string) {
   const [active, setActive] = useState<Module>('dashboard');
-  const [customers,setCustomersRaw]=useState<Customer[]>(()=>ensureCustomerCodes(loadJson<Customer[]>('difarmas_customers',[])));
+  const [customers,setCustomersRaw]=useState<Customer[]>(()=>ensureCustomerCodes(loadUserJson<Customer[]>(userId,'difarmas_customers',[])));
   const setCustomers=(value:Customer[]|((current:Customer[])=>Customer[]))=>setCustomersRaw(current=>ensureCustomerCodes(typeof value==='function'?value(current):value,current));
-  const [quotes,setQuotes]=useState<QuoteRecord[]>(()=>loadJson<QuoteRecord[]>('difarmas_quotes',[]));
-  const [suppliers,setSuppliers]=useState<Supplier[]>(()=>loadJson<Supplier[]>('difarmas_suppliers',[]));
-  const [products, setProducts] = useState<Product[]>(() => loadJson<Product[]>('difarmas_products',initialProducts));
+  const [quotes,setQuotes]=useState<QuoteRecord[]>(()=>loadUserJson<QuoteRecord[]>(userId,'difarmas_quotes',[]));
+  const [suppliers,setSuppliers]=useState<Supplier[]>(()=>loadUserJson<Supplier[]>(userId,'difarmas_suppliers',[]));
+  const [products, setProducts] = useState<Product[]>(() => loadUserJson<Product[]>(userId,'difarmas_products',initialProducts));
   const [search, setSearch] = useState('');
-  const [monthlyGoal, setMonthlyGoal] = useState(() => loadNumber('difarmas_monthly_goal',100000));
-  const [fixedExpenses, setFixedExpenses] = useState(() => loadNumber('difarmas_fixed_expenses',25000));
+  const [monthlyGoal, setMonthlyGoal] = useState(() => loadUserNumber(userId,'difarmas_monthly_goal',100000));
+  const [fixedExpenses, setFixedExpenses] = useState(() => loadUserNumber(userId,'difarmas_fixed_expenses',25000));
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -54,7 +68,7 @@ export function useErpState(userId: string) {
   const [purchaseCart, setPurchaseCart] = useState<PurchaseItem[]>([]);
   const [purchaseSearch, setPurchaseSearch] = useState('');
   const [purchaseSupplier, setPurchaseSupplier] = useState('');
-  const [sales, setSales] = useState<SaleRecord[]>(()=>loadJson<SaleRecord[]>('difarmas_sales',[]));
+  const [sales, setSales] = useState<SaleRecord[]>(()=>loadUserJson<SaleRecord[]>(userId,'difarmas_sales',[]));
   const lastSaleId = useRef(0);
   const nextSaleId = () => {
     const highestStoredId = sales.reduce((highest,sale)=>Math.max(highest,Number(sale.id)||0),0);
@@ -62,8 +76,8 @@ export function useErpState(userId: string) {
     lastSaleId.current=nextId;
     return nextId;
   };
-  const [purchases, setPurchases] = useState<PurchaseRecord[]>(()=>loadJson<PurchaseRecord[]>('difarmas_purchases',[]));
-  const [purchaseCostHistory, setPurchaseCostHistory] = useState<PurchaseCostHistoryEntry[]>(()=>loadJson<PurchaseCostHistoryEntry[]>('difarmas_purchase_cost_history',[]));
+  const [purchases, setPurchases] = useState<PurchaseRecord[]>(()=>loadUserJson<PurchaseRecord[]>(userId,'difarmas_purchases',[]));
+  const [purchaseCostHistory, setPurchaseCostHistory] = useState<PurchaseCostHistoryEntry[]>(()=>loadUserJson<PurchaseCostHistoryEntry[]>(userId,'difarmas_purchase_cost_history',[]));
   const lastPurchaseId = useRef(0);
   const nextPurchaseId = () => {
     const highestStoredId = purchases.reduce((highest,purchase)=>Math.max(highest,Number(purchase.id)||0),0);
@@ -78,10 +92,10 @@ export function useErpState(userId: string) {
     lastPurchaseCostHistoryId.current=nextId;
     return nextId;
   };
-  const [settings,setSettings] = useState<ErpSettings>(()=>loadJson<ErpSettings>('difarmas_settings',initialSettings));
-  const [expenses, setExpenses] = useState<Expense[]>(()=>loadJson<Expense[]>('difarmas_expenses',[]));
-  const [receivables, setReceivables] = useState<Receivable[]>(()=>loadJson<Receivable[]>('difarmas_receivables',[]));
-  const [payables, setPayables] = useState<Payable[]>(()=>loadJson<Payable[]>('difarmas_payables',[]));
+  const [settings,setSettings] = useState<ErpSettings>(()=>loadUserJson<ErpSettings>(userId,'difarmas_settings',initialSettings));
+  const [expenses, setExpenses] = useState<Expense[]>(()=>loadUserJson<Expense[]>(userId,'difarmas_expenses',[]));
+  const [receivables, setReceivables] = useState<Receivable[]>(()=>loadUserJson<Receivable[]>(userId,'difarmas_receivables',[]));
+  const [payables, setPayables] = useState<Payable[]>(()=>loadUserJson<Payable[]>(userId,'difarmas_payables',[]));
   const lastPayableId = useRef(0);
   const nextPayableId = () => {
     const highestStoredId = payables.reduce((highest,payable)=>Math.max(highest,Number(payable.id)||0),0);
@@ -89,7 +103,7 @@ export function useErpState(userId: string) {
     lastPayableId.current=nextId;
     return nextId;
   };
-  const [inventoryMovements, setInventoryMovements] = useState<InventoryMovement[]>(()=>loadJson<InventoryMovement[]>('difarmas_inventory_movements',[]));
+  const [inventoryMovements, setInventoryMovements] = useState<InventoryMovement[]>(()=>loadUserJson<InventoryMovement[]>(userId,'difarmas_inventory_movements',[]));
   const lastInventoryMovementId = useRef(0);
   const nextInventoryMovementId = () => {
     const highestStoredId = inventoryMovements.reduce((highest,movement)=>Math.max(highest,Number(movement.id)||0),0);
@@ -97,10 +111,10 @@ export function useErpState(userId: string) {
     lastInventoryMovementId.current=nextId;
     return nextId;
   };
-  const [cashClosures, setCashClosures] = useState<CashClosure[]>(()=>loadJson<CashClosure[]>('difarmas_cash_closures',[]));
-  const [cashMovements, setCashMovements] = useState<CashMovement[]>(()=>loadJson<CashMovement[]>('difarmas_cash_movements',[]));
-  const [paymentTransactions, setPaymentTransactions] = useState<PaymentTransaction[]>(()=>loadJson<PaymentTransaction[]>('difarmas_payment_transactions',[]));
-  const [missingProductRequests, setMissingProductRequests] = useState<MissingProductRequest[]>(()=>loadJson<MissingProductRequest[]>('difarmas_missing_product_requests',[]));
+  const [cashClosures, setCashClosures] = useState<CashClosure[]>(()=>loadUserJson<CashClosure[]>(userId,'difarmas_cash_closures',[]));
+  const [cashMovements, setCashMovements] = useState<CashMovement[]>(()=>loadUserJson<CashMovement[]>(userId,'difarmas_cash_movements',[]));
+  const [paymentTransactions, setPaymentTransactions] = useState<PaymentTransaction[]>(()=>loadUserJson<PaymentTransaction[]>(userId,'difarmas_payment_transactions',[]));
+  const [missingProductRequests, setMissingProductRequests] = useState<MissingProductRequest[]>(()=>loadUserJson<MissingProductRequest[]>(userId,'difarmas_missing_product_requests',[]));
   const lastMissingProductRequestId = useRef(0);
   const nextMissingProductRequestId = () => {
     const highestStoredId = missingProductRequests.reduce((highest,request)=>Math.max(highest,Number(request.id)||0),0);
@@ -115,8 +129,8 @@ export function useErpState(userId: string) {
     lastProductId.current=nextId;
     return nextId;
   };
-  const [supplierReturns, setSupplierReturns] = useState<SupplierReturnRecord[]>(()=>loadJson<SupplierReturnRecord[]>('difarmas_supplier_returns',[]));
-  const [saleAdjustments, setSaleAdjustments] = useState<SaleAdjustmentRecord[]>(()=>loadJson<SaleAdjustmentRecord[]>('difarmas_sale_adjustments',[]));
+  const [supplierReturns, setSupplierReturns] = useState<SupplierReturnRecord[]>(()=>loadUserJson<SupplierReturnRecord[]>(userId,'difarmas_supplier_returns',[]));
+  const [saleAdjustments, setSaleAdjustments] = useState<SaleAdjustmentRecord[]>(()=>loadUserJson<SaleAdjustmentRecord[]>(userId,'difarmas_sale_adjustments',[]));
   const [remoteReady, setRemoteReady] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'loading'|'saving'|'synced'|'error'>('loading');
   const [syncError, setSyncError] = useState<string | null>(null);
