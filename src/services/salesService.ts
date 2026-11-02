@@ -11,7 +11,8 @@ export function buildSaleRecord(
 ): SaleRecord {
   const total = sold.reduce((sum, item) => sum + item.price * item.qty, 0);
   const cost = sold.reduce((sum, item) => sum + item.cost * item.qty, 0);
-  const items: SaleLine[] = sold.map(item => ({
+  const items: SaleLine[] = sold.map((item, index) => ({
+    saleLineId: item.cartLineId ?? `sale-${id}-line-${index}`,
     productId: item.id,
     productName: item.name,
     category: item.category,
