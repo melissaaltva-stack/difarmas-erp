@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { csvCell } from './csv';
 
 describe('CSV spreadsheet safety', () => {
-  it.each(['=1+1', '+SUM(A1:A2)', '-CMD()', '@HYPERLINK("https://example.com")', '  =1+1', '\t=1+1'])(
+  it.each(['=1+1', '+SUM(A1:A2)', '-CMD()', '@HYPERLINK("https://example.com")', '  =1+1', '\t=1+1', '\uFEFF=1+1'])(
     'neutralizes formula-like text: %s',
     (value) => {
       expect(csvCell(value)).toBe('"\'' + value.replace(/"/g, '""') + '"');
