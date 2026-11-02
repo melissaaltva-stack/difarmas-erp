@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CartItem, Product, PurchaseItem } from '../domain/types';
-import { applyPurchaseToInventory, applySaleToInventory } from './inventoryService';
+import { applyPurchaseToInventory, applySaleToInventory, calculateWeightedAverageCost } from './inventoryService';
 
 const product: Product = {
   id: 1, code: 'P-1', name: 'Producto prueba', category: 'Medicamentos',
@@ -12,6 +12,15 @@ const cartItem = (qty: number): CartItem => ({ ...product, qty, price: 15 });
 const purchaseItem = (qty: number, unitCost: number): PurchaseItem => ({ ...product, qty, unitCost });
 
 describe('inventoryService', () => {
+  it('uses the same rounded weighted-average cost for purchase and returned stock', () => {
+    expect(calculateWeightedAverageCost(5, 10, 1, 20)).toBe(11.67);
+    expect(calculateWeightedAverageCost(0, 10, 2, 12.345)).toBe(12.35);
+  });
+
+  it('rejects invalid weighted-average cost inputs and overflow', () => {
+    expect(() => calculateWeightedAverageCost(-1, 10, 1, 12)).toThrow(/valores válidos/);
+    expect(() => calculateWeightedAverageCost(Number.MAX_VALUE, 10, 1, 12)).toThrow(/fuera de rango/);
+  });
   it('reduces stock for a valid sale', () => {
     expect(applySaleToInventory([product], [cartItem(2)])[0].stock).toBe(3);
   });
