@@ -131,6 +131,9 @@ export function useErpState(userId: string) {
     return nextId;
   };
   const [supplierReturns, setSupplierReturns] = useState<SupplierReturnRecord[]>(()=>loadUserJson<SupplierReturnRecord[]>(userId,'difarmas_supplier_returns',[]));
+  const [supplierCredits,setSupplierCredits]=useState<SupplierCredit[]>(()=>loadUserJson<SupplierCredit[]>(userId,'difarmas_supplier_credits',[]));
+  const lastSupplierCreditId=useRef(0);
+  const nextSupplierCreditId=()=>{const highest=supplierCredits.reduce((max,item)=>Math.max(max,Number(item.id)||0),0);const next=Math.max(Date.now(),highest,lastSupplierCreditId.current)+1;lastSupplierCreditId.current=next;return next;};
   const [saleAdjustments, setSaleAdjustments] = useState<SaleAdjustmentRecord[]>(()=>loadUserJson<SaleAdjustmentRecord[]>(userId,'difarmas_sale_adjustments',[]));
   const [remoteReady, setRemoteReady] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'loading'|'saving'|'synced'|'error'>('loading');
