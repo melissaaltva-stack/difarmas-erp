@@ -78,9 +78,10 @@ export function createCashClosure(
   note: string,
   now = new Date(),
   purchasesCash = 0,
+  id = Date.now(),
 ): CashClosure {
   return {
-    id: Date.now(),
+    id,
     date: now.toISOString(),
     opening,
     cashSales: cashSalesValue,
@@ -101,6 +102,7 @@ export function addCashMovement(
   amount: number,
   category: string,
   now = new Date(),
+  id = Date.now(),
 ): CashMovement {
-  return { id: Date.now(), type, description, amount, category, date: now.toISOString() };
+  return { id, type, description, amount, category, date: now.toISOString() };
 }
