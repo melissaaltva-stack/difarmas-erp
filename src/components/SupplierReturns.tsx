@@ -5,7 +5,7 @@ import type { Product, Supplier, SupplierReturnRecord, SupplierReturnItem, Purch
 
 const money=(value:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL',maximumFractionDigits:2}).format(value);
 
-export function SupplierReturns({products,suppliers,purchases,costHistory,records,setRecords,credits=[],onDispatch,onResolve}:{products:Product[];suppliers:Supplier[];purchases:PurchaseRecord[];costHistory:PurchaseCostHistoryEntry[];records:SupplierReturnRecord[];setRecords:Dispatch<SetStateAction<SupplierReturnRecord[]>>;credits?:SupplierCredit[];onDispatch:(record:SupplierReturnRecord)=>boolean;onResolve:(record:SupplierReturnRecord,status:SupplierReturnRecord['status'])=>boolean}) {
+export function SupplierReturns({products,suppliers,purchases,costHistory,records,setRecords,credits=[],onDispatch,onResolve}:{products:Product[];suppliers:Supplier[];purchases:PurchaseRecord[];costHistory:PurchaseCostHistoryEntry[];records:SupplierReturnRecord[];setRecords:Dispatch<SetStateAction<SupplierReturnRecord[]>>;credits?:SupplierCredit[];onDispatch:(record:SupplierReturnRecord)=>boolean;onResolve:(record:SupplierReturnRecord,status:SupplierReturnRecord['status'])=>Promise<boolean>}) {
   const [supplier,setSupplier]=useState('');
   const [purchaseReference,setPurchaseReference]=useState('');
   const [productId,setProductId]=useState('');
@@ -42,7 +42,7 @@ export function SupplierReturns({products,suppliers,purchases,costHistory,record
     setPurchaseReference('');setProductId('');setQuantity('1');setNotes('');
     setNotice('Devolución registrada como pendiente. El inventario no se modifica hasta confirmar la salida al proveedor.');
   };
-  const updateStatus=(record:SupplierReturnRecord,status:SupplierReturnRecord['status'])=>{if(onResolve(record,status)){setNotice(status==='Nota de crédito recibida'?'Nota de crédito registrada. El saldo pendiente se redujo y el excedente quedó como crédito disponible del proveedor.':status==='Cambio recibido'?'Reposición registrada en inventario.':'Devolución marcada como rechazada sin cambios en inventario ni cuentas por pagar.');}else{setNotice(status==='Nota de crédito recibida'?'No se pudo registrar la nota de crédito. Verifica que la devolución esté enviada y que la factura de compra vinculada exista.':'No se pudo completar la operación. Verifica el estado y los datos de la devolución.');}};
+  const updateStatus=async(record:SupplierReturnRecord,status:SupplierReturnRecord['status'])=>{if(await onResolve(record,status)){setNotice(status==='Nota de crédito recibida'?'Nota de crédito registrada de forma segura en Supabase. El saldo pendiente se redujo y el excedente quedó como crédito disponible del proveedor.':status==='Cambio recibido'?'Reposición registrada en inventario.':'Devolución marcada como rechazada sin cambios en inventario ni cuentas por pagar.');}else{setNotice(status==='Nota de crédito recibida'?'No se pudo registrar la nota de crédito. Puede que otra sesión ya la haya procesado. Actualiza el ERP y verifica el historial.':'No se pudo completar la operación. Verifica el estado y los datos de la devolución.');}};
   const dispatch=(record:SupplierReturnRecord)=>{
     if(record.status!=='Pendiente'||dispatchLocks.current.has(record.id))return;
     dispatchLocks.current.add(record.id);
