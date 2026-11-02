@@ -444,17 +444,22 @@ export function useErpState(userId: string) {
       const quantities=new Map<number,number>();record.items.forEach(item=>quantities.set(item.productId,(quantities.get(item.productId)??0)+item.quantity));
       if([...quantities.keys()].some(id=>!products.some(product=>product.id===id)))return false;
       const date=new Date().toISOString();
+      let updatedProducts:Product[];
+      try {
+        updatedProducts=products.map(product=>{
+          const quantity=quantities.get(product.id)??0;
+          if(!quantity)return product;
+          const lines=record.items.filter(item=>item.productId===product.id);
+          const receivedCost=lines.reduce((sum,item)=>sum+item.quantity*item.unitCost,0);
+          const newStock=product.stock+quantity;
+          const weightedCost=calculateWeightedAverageCost(product.stock,product.cost,quantity,receivedCost/quantity);
+          if(!Number.isFinite(newStock))throw new Error('Existencia fuera de rango');
+          return {...product,stock:newStock,cost:weightedCost};
+        });
+      } catch { return false; }
       const movements:InventoryMovement[]=[...quantities].map(([productId,quantity])=>{const product=products.find(item=>item.id===productId)!;const lines=record.items.filter(item=>item.productId===productId);const cost=lines.reduce((sum,item)=>sum+item.quantity*item.unitCost,0)/quantity;return {id:nextInventoryMovementId(),productId,productName:product.name,type:'Compra' as const,quantity,stockBefore:product.stock,stockAfter:product.stock+quantity,unitCost:cost,referenceId:record.id,date,note:'Reposición por cambio recibido de proveedor'};});
       supplierReturnResolutionCompleted.current.add(record.id);
-      setProducts(rows=>rows.map(product=>{
-        const quantity=quantities.get(product.id)??0;
-        if(!quantity)return product;
-        const lines=record.items.filter(item=>item.productId===product.id);
-        const receivedCost=lines.reduce((sum,item)=>sum+item.quantity*item.unitCost,0);
-        const newStock=product.stock+quantity;
-        const weightedCost=calculateWeightedAverageCost(product.stock,product.cost,quantity,receivedCost/quantity);
-        return {...product,stock:newStock,cost:weightedCost};
-      }));
+      setProducts(updatedProducts);
       setInventoryMovements(rows=>[...rows,...movements]);
       setSupplierReturns(rows=>rows.map(row=>row.id===record.id?{...row,status}:row));
       return true;
