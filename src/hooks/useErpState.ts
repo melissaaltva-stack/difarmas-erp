@@ -505,10 +505,14 @@ export function useErpState(userId: string) {
       const totalCost=lines.reduce((sum,line)=>sum+line.quantity*line.unitCost,0);
       return {id:nextInventoryMovementId(),productId,productName:lines[0]?.productName??product.name,type:'Ajuste' as const,quantity,stockBefore:product.stock,stockAfter:product.stock+quantity,unitCost:quantity?totalCost/quantity:0,referenceId:adjustment.id,date:movementDate,note:'Devolución de venta '+adjustment.invoiceNumber};
     });
-    const returnedQuantities=new Map(movements.map(movement=>[movement.productId,movement.quantity]));
+    const returnedMovements=new Map(movements.map(movement=>[movement.productId,movement]));
     const updated=products.map(product=>{
-      const quantity=returnedQuantities.get(product.id)??0;
-      return quantity?{...product,stock:product.stock+quantity}:product;
+      const movement=returnedMovements.get(product.id);
+      if(!movement)return product;
+      const newStock=product.stock+movement.quantity;
+      const returnedValue=movement.quantity*movement.unitCost;
+      const weightedCost=newStock>0?(product.stock*product.cost+returnedValue)/newStock:product.cost;
+      return {...product,stock:newStock,cost:weightedCost};
     });
     // En una venta a crédito, el ajuste reduce primero el saldo pendiente;
     // el excedente queda pendiente o se liquida por el medio real seleccionado.
