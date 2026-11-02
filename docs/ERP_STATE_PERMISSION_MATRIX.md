@@ -78,3 +78,41 @@ No se debe resolver con una excepción general para cualquier INSERT.
 ## Decisión pendiente
 
 No crear ni aplicar aún el trigger de producción. Primero se debe implementar y probar una ruta segura de inicialización, y confirmar las operaciones de `paymentTransactions` y la configuración. También se debe decidir si el objetivo es proteger snapshots privados por usuario o habilitar datos compartidos por equipo; el esquema actual solo soporta lo primero.
+
+
+## Revisión adicional del endpoint de cuentas y la inicialización
+
+Inspección de `api/admin-users.ts` en la rama de diseño:
+
+- El endpoint valida el token de sesión con `auth.getUser(accessToken)` y exige administrador para crear, invitar o modificar cuentas.
+- La clave de servicio de Supabase se lee solo en el servidor (`SUPABASE_SERVICE_ROLE_KEY` o `SUPABASE_SECRET_KEY`); no se debe trasladar al navegador.
+- La creación directa asigna `farmi_role`, `farmi_permissions` y `farmi_active` en `app_metadata`.
+- La invitación crea primero el usuario y después asigna `app_metadata`. Si falla el segundo paso, el endpoint devuelve error, pero la invitación ya existe; la cuenta debe revisarse y no debe suponerse que quedó lista.
+- El endpoint no crea una fila en `erp_state`. Por tanto, no existe hoy una inicialización confiable desde el servidor que resuelva el primer INSERT.
+- La aplicación carga el snapshot remoto y, si no existe, el cliente intenta insertar el snapshot local completo. El comentario del hook confirma que esa primera carga puede sembrar datos locales existentes. No es seguro reemplazar ese comportamiento por un snapshot vacío sin una migración explícita: podría ignorar información local válida.
+
+### Decisión técnica sobre INSERT
+
+No se recomienda crear automáticamente una fila vacía en el endpoint de usuarios: el alta de una cuenta no conoce si existe información local legítima que deba migrarse, y una fila vacía haría que el cliente tratara la cuenta como ya inicializada.
+
+Tampoco es suficiente una RPC que acepte cualquier JSON del navegador y compruebe solo que la fila aún no existe. Eso seguiría permitiendo que el primer INSERT incluya datos de módulos no autorizados.
+
+La ruta segura debe separar dos casos:
+
+1. **Cuenta realmente nueva, sin datos que importar:** inicialización desde un estado canónico mínimo, validado en servidor/base de datos y sin permitir que el cliente agregue claves arbitrarias.
+2. **Cuenta con datos locales que deben conservarse:** flujo de importación inicial explícito, autenticado y de una sola vez, que valide las claves y dependencias permitidas antes de insertar. Si el snapshot contiene datos de módulos no autorizados, debe detenerse y pedir intervención administrativa; no debe descartar ni copiar esos datos silenciosamente.
+
+Hasta implementar esos dos caminos y probarlos, el INSERT directo desde el navegador no debe considerarse protegido por la matriz.
+
+## Riesgo de granularidad detectado
+
+La matriz de permisos por clave es una primera barrera, pero no equivale a permisos por acción. Por ejemplo, autorizar `products` para que Ventas descuente existencias también permite que una escritura directa modifique otros campos del arreglo de productos, como costo, precio o datos de producto. De igual forma, autorizar `customers` desde Ventas permite modificar el arreglo completo de clientes.
+
+Por ello, esta matriz reduce el acceso entre módulos, pero no constituye aislamiento completo de campos o registros. La solución de mayor seguridad a mediano plazo es mover operaciones sensibles a RPCs específicas (registrar venta, recibir compra, ajustar inventario, cobrar cuenta) o normalizar las tablas por entidad y aplicar RLS por operación. No se debe presentar el trigger JSONB como sustituto de ese diseño.
+
+## Verificaciones adicionales antes de cerrar la matriz
+
+- Confirmar cada llamada que modifica `paymentTransactions` y `missingProductRequests`, y si hay acciones financieras/comerciales que las generan indirectamente.
+- Separar `settings` de los datos administrativos de usuarios: la copia `settings.users` no es autoridad y la gestión real ocurre por el endpoint de Auth.
+- Revisar las rutas de cobro/pago para no autorizar un módulo de lectura a escribir por una dependencia accidental.
+- Asegurar que el rol `Administrador` y su lista completa de permisos se mantengan coherentes entre `api/admin-users.ts`, `Settings.tsx` y las funciones SQL.
