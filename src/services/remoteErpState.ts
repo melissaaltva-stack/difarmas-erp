@@ -24,6 +24,7 @@ export type ErpSnapshot = {
   paymentTransactions?: PaymentTransaction[];
   missingProductRequests?: MissingProductRequest[];
   supplierReturns?: SupplierReturnRecord[];
+  supplierCredits?: SupplierCredit[];
   saleAdjustments?: SaleAdjustmentRecord[];
 };
 
