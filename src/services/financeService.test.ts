@@ -53,6 +53,7 @@ describe('financeService', () => {
       { id: 1, type: 'Entrada', description: 'Aporte efectivo', amount: 100, category: 'Aporte', date: '2026-10-12' },
       { id: 2, type: 'Salida', description: 'Retiro efectivo', amount: 25, category: 'Retiro', date: '2026-10-12' },
       { id: 3, type: 'Entrada', description: 'Depósito bancario', amount: 500, category: 'Banco', date: '2026-10-12' },
+      { id: 4, type: 'Salida', description: 'Reembolso tarjeta', amount: 90, category: 'No efectivo', date: '2026-10-12' },
     ] as const;
     expect(cashMovementTotals([...movements])).toEqual({ incoming: 100, outgoing: 25 });
   });
