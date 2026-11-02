@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { MessageCircle, Plus, Search, Send, ShoppingBag, CheckCircle2, Clock3, UserRound, ExternalLink, Copy, Trash2 } from 'lucide-react';
 import type { Customer, ErpSettings, Product } from '../domain/types';
 
@@ -19,6 +19,7 @@ const channelIcon=(channel:Channel)=>channel==='WhatsApp'?MessageCircle:channel=
 
 export function SocialSales({products,customers,settings}:{products:Product[];customers:Customer[];settings:ErpSettings}) {
   const [leads,setLeads]=useState<Lead[]>(()=>safeLoad<Lead[]>(STORE_KEY,[]));
+  const nextLeadId=useRef(Math.max(Date.now(),...leads.map(lead=>Number.isSafeInteger(lead.id)?lead.id+1:0)));
   const [links,setLinks]=useState<SocialLinks>(()=>({...defaultLinks,...safeLoad<Partial<SocialLinks>>(LINKS_KEY,{})}));
   const [query,setQuery]=useState('');
   const [filter,setFilter]=useState<'Todos'|Stage>('Todos');
@@ -33,7 +34,7 @@ export function SocialSales({products,customers,settings}:{products:Product[];cu
   const selected=leads.find(l=>l.id===selectedId)??null;
   const count=(stage:Stage)=>leads.filter(l=>l.status===stage).length;
   const openNew=()=>{setForm(blankLead());setShowForm(true);setNotice('');};
-  const saveLead=()=>{if(!form.customerName.trim()){setNotice('Escribe el nombre del cliente.');return;}const now=new Date().toISOString();const lead:Lead={...form,id:Date.now(),customerName:form.customerName.trim(),phone:form.phone.trim(),topic:form.topic.trim()||'Consulta general',notes:form.notes.trim(),createdAt:now,updatedAt:now};setLeads(current=>[lead,...current]);setSelectedId(lead.id);setShowForm(false);setForm(blankLead());setNotice('Conversación registrada.');};
+  const saveLead=()=>{if(!form.customerName.trim()){setNotice('Escribe el nombre del cliente.');return;}const now=new Date().toISOString();const id=Math.max(Date.now(),nextLeadId.current+1);nextLeadId.current=id;const lead:Lead={...form,id,customerName:form.customerName.trim(),phone:form.phone.trim(),topic:form.topic.trim()||'Consulta general',notes:form.notes.trim(),createdAt:now,updatedAt:now};setLeads(current=>[lead,...current]);setSelectedId(lead.id);setShowForm(false);setForm(blankLead());setNotice('Conversación registrada.');};
   const updateLead=(id:number,patch:Partial<Lead>)=>setLeads(current=>current.map(l=>l.id===id?{...l,...patch,updatedAt:new Date().toISOString()}:l));
   const createWhatsAppUrl=(lead:Lead,text:string)=>{const number=phoneDigits(lead.phone);return number?'https://wa.me/'+number+'?text='+encodeURIComponent(text):'';};
   const makeProductMessage=(product:Product)=>'Hola, gracias por contactar a DIFARMÁS. '+product.name+' ('+product.presentation+') tiene precio de '+money(product.retail)+'. Disponibilidad sujeta a confirmación. ¿Desea que le ayudemos con su pedido?';
