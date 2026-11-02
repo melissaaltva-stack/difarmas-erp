@@ -529,7 +529,7 @@ export function useErpState(userId: string) {
     if(adjustment.refundStatus==='Pagado'&&adjustment.refundPaymentMethod&&refundAmount>0){
       const isCashRefund=adjustment.refundPaymentMethod.toLocaleLowerCase().includes('efectivo');
       const isBankRefund=/transfer|banco/i.test(adjustment.refundPaymentMethod);
-      setCashMovements(current=>[{id:adjustment.id,type:'Salida',description:'Reembolso '+adjustment.refundPaymentMethod+' por '+adjustment.type+' '+adjustment.invoiceNumber,amount:refundAmount,category:isCashRefund?'Devoluciones de ventas':isBankRefund?'Banco':'Otros reembolsos',date:new Date().toISOString()},...current]);
+      setCashMovements(current=>[{id:adjustment.id,type:'Salida',description:'Reembolso '+adjustment.refundPaymentMethod+' por '+adjustment.type+' '+adjustment.invoiceNumber,amount:refundAmount,category:isCashRefund?'Devoluciones de ventas':isBankRefund?'Banco':'No efectivo',date:new Date().toISOString()},...current]);
     }
     setSaleAdjustments(current=>[settledAdjustment,...current]);
     return true;
