@@ -583,17 +583,23 @@ export function useErpState(userId: string) {
     const calculatedTotal=items.reduce((sum,item)=>sum+item.qty*item.unitCost,0);
     const total=typeof enteredTotal==='number'&&Number.isFinite(enteredTotal)&&enteredTotal>=0?enteredTotal:calculatedTotal;
     const receivedAt = new Date().toISOString();
-    setPurchases(current=>[{id:referenceId,supplier:purchaseSupplier,total,paymentMethod:paymentMethod as 'Efectivo'|'Transferencia'|'Crédito',date:receivedAt,invoiceNumber,invoiceDate,notes,paymentTerms,dueDate:paymentMethod==='Crédito'?dueDate:undefined},...current]);
+    const applicationDate=new Date().toISOString();
+    let appliedSupplierCredit=0;
+    let updatedSupplierCredits=supplierCredits;
+    try {
+      const application=applySupplierCreditsToPurchase(supplierCredits,purchaseSupplier,referenceId,invoiceNumber,total,applicationDate);
+      appliedSupplierCredit=application.appliedTotal;
+      updatedSupplierCredits=application.credits;
+    } catch { purchaseInProgress.current=false; return false; }
+    setPurchases(current=>[{id:referenceId,supplier:purchaseSupplier,total,supplierCreditApplied:appliedSupplierCredit,paymentMethod:paymentMethod as 'Efectivo'|'Transferencia'|'Crédito',date:receivedAt,invoiceNumber,invoiceDate,notes,paymentTerms,dueDate:paymentMethod==='Crédito'?dueDate:undefined},...current]);
+    if(appliedSupplierCredit>0)setSupplierCredits(updatedSupplierCredits);
     setPurchaseCostHistory(current=>[
       ...items.map((item):PurchaseCostHistoryEntry=>({id:nextPurchaseCostHistoryId(),purchaseId:referenceId,productId:item.id,productCode:item.code,productName:item.name,supplier:purchaseSupplier.trim(),unitCost:item.unitCost,quantity:item.qty,date:receivedAt})),
       ...current,
     ]);
     if(paymentMethod==='Crédito'){
       const payable=createPayableFromPurchase(items,purchaseSupplier,dueDate,new Date(),referenceId,invoiceNumber,nextPayableId());
-      const applicationDate=new Date().toISOString();
-      const application=applySupplierCreditsToPurchase(supplierCredits,purchaseSupplier,referenceId,invoiceNumber,total,applicationDate);
-      setPayables(current=>[...current,{...payable,total:application.remainingPayable}]);
-      if(application.appliedTotal>0)setSupplierCredits(application.credits);
+      setPayables(current=>[...current,{...payable,total:Math.max(0,total-appliedSupplierCredit)}]);
     }
     return true;
   };
