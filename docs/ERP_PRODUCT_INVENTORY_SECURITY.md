@@ -1,0 +1,103 @@
+# Seguridad de productos e inventario en FARMI
+
+Estado: diseño basado en revisión estática. No conectado a persistencia; no se ejecutaron migraciones ni se modificó producción.
+
+## Hallazgo
+
+El tipo `Product` mezcla en una sola entidad:
+- Identidad y ficha: código, nombre, categoría, laboratorio, presentación, ingredientes, imagen y proveedor.
+- Datos comerciales: costo, precio minorista, mayorista, precios adicionales, impuestos y promociones.
+- Operación: stock, stock mínimo, lote y vencimiento.
+
+La clave JSONB `products` guarda todo junto. Autorizar escritura de esa clave permite que Ventas, por ejemplo, cambie costos o precios aunque solo necesite descontar existencias. La comparación de claves top-level no separa propiedades internas.
+
+Además, `useErpState` expone `setProducts`; la seguridad no puede depender de que la interfaz o los componentes oculten campos.
+
+## Operaciones revisadas
+
+| Operación | Efectos actuales | Control requerido |
+|---|---|---|
+| `recordSale` | Descuenta stock; agrega venta y movimiento; puede crear CxC | Descuento solo por venta validada; no modificar ficha ni precios maestros |
+| `updateStandardInvoice` | Recalcula stock y líneas de factura; puede actualizar CxC | Validar factura original, cantidades y efectos financieros en servidor |
+| `receivePurchase` | Incrementa stock/costo; agrega compra, historial, movimiento y posible CxP | Recepción validada, costo calculado en servidor y lote/vencimiento asociados |
+| `recordSaleAdjustment` | Puede reponer stock y ajustar CxC | Referencia a venta original y límite de cantidades devueltas |
+| `recordSupplierDispatch` | Descuenta stock y registra movimiento | Devolución autorizada, existencia y cantidades verificadas |
+| `resolveSupplierReturn` | Repone stock/costo o ajusta CxP | Resolución ligada al expediente y transacción atómica |
+| `saveProduct` | Crea/reemplaza producto; puede generar ajuste de stock | Separar edición maestra de ajuste de existencias |
+| `deleteProduct` | Elimina producto del arreglo | Archivar; conservar referencias históricas |
+
+## Separación recomendada
+
+### Catálogo
+Código, nombre, categoría, laboratorio, presentación, ingredientes, imagen y proveedor predeterminado. Ventas solo consulta. Las modificaciones deben pasar por una operación específica de catálogo y permiso de inventario/administración.
+
+### Precios y costos
+Costo, precio minorista, mayorista, listas adicionales, margen, impuestos y promociones requieren capacidad separada y auditoría. Ventas consulta precios permitidos pero no modifica el maestro. Compras registra costos de adquisición mediante recepción; no reemplaza arbitrariamente el producto completo. Cambios manuales deben guardar autor, fecha, valor anterior/nuevo y motivo.
+
+### Existencias, lotes y vencimientos
+El stock debe derivarse de movimientos, no ser un número libre enviado por el cliente:
+- Venta confirmada: descuenta.
+- Recepción confirmada: incrementa por lote.
+- Devolución validada: ajusta según destino de la mercancía.
+- Ajuste manual: permiso específico, motivo y auditoría.
+- Lotes y vencimientos: registrados por recepción y consumidos según reglas aprobadas.
+
+## Arquitectura objetivo
+
+No recomiendo triggers que comparen solo JSONB ni permisos sobre la clave completa. La granularidad actual es insuficiente.
+
+Separar progresivamente:
+1. `products`: identidad y ficha maestra.
+2. `product_prices` e historial de precios/costos.
+3. `inventory_lots`: producto, lote, vencimiento y cantidades.
+4. `inventory_movements`: libro de movimientos append-only; correcciones mediante reversos/ajustes auditados.
+5. Operaciones transaccionales de servidor para venta, recepción, devoluciones, despacho y ajuste.
+
+Cada operación debe validar sesión y permiso en servidor, bloquear filas necesarias, comprobar cantidades/referencias, aplicar idempotencia y escribir todos los efectos relacionados en una transacción. El cliente no debe decidir el stock final ni el costo promedio final.
+
+## Contratos mínimos
+
+### Registrar venta
+Aceptar líneas y cantidades, cliente y datos de pago. Validar producto vendible, disponibilidad por lote, precio autorizado, permiso de ventas e idempotencia. Crear venta, movimientos y CxC aplicable en una transacción. No aceptar objetos Product completos para actualizarlos.
+
+### Recibir compra
+Aceptar proveedor, documento, líneas, cantidades, costos, lotes y vencimientos. Validar proveedor/documento, importes, duplicados y permiso; calcular existencias y costo conforme a política aprobada. Crear compra, movimientos, historial y CxP en una transacción.
+
+### Ajustar inventario
+Exigir permiso específico, producto/lote válido, cantidad, motivo y referencia. Registrar saldo anterior, variación, saldo resultante, autor y fecha. No permitir saldos negativos salvo regla explícita.
+
+### Devoluciones
+Vincular a venta/compra original, validar unidades previamente devueltas y registrar destino de mercancía. Los efectos de inventario y cuentas deben ser atómicos o coordinados mediante identificadores idempotentes.
+
+## Riesgos adicionales
+
+- `inventoryMovements` está en otra clave JSONB y podría falsificarse o borrarse si se autoriza escritura completa.
+- `purchaseCostHistory` debe ser append-only.
+- Las líneas históricas de venta/compra contienen copias de nombre, costo y precio; no deben reescribirse al editar el catálogo.
+- Borrar productos puede romper referencias; preferir archivar.
+- Los setters expuestos por el hook son una vía para saltarse reglas de interfaz.
+- La RLS actual de `erp_state` no inspecciona propiedades internas ni garantiza atomicidad entre colecciones.
+
+## Pruebas de aceptación pendientes
+
+1. Ventas registra una venta válida: stock y movimiento cambian; costo, precio y ficha permanecen intactos.
+2. Ventas intenta enviar cambios simultáneos de stock y costo: rechazo.
+3. Compras recibe mercancía: stock, lote, vencimiento, costo e historial se actualizan según reglas.
+4. Compras intenta cambiar precio minorista/mayorista sin permiso: rechazo.
+5. Ajuste autorizado registra motivo, autor, fecha y movimiento.
+6. Reintentos no duplican ventas, recepciones ni movimientos.
+7. No se vende más de lo disponible en el lote aplicable.
+8. Devoluciones no superan unidades vendidas/compradas disponibles.
+9. El cliente no puede borrar ni editar movimientos históricos.
+10. Fallos intermedios no dejan documentos, stock y cuentas desincronizados.
+11. Lecturas de catálogo/precios respetan permisos.
+12. Productos archivados conservan referencias históricas.
+
+## Estado y cautelas
+
+- Revisión estática de `src/hooks/useErpState.ts` y `src/domain/types.ts` realizada.
+- No implementado el modelo normalizado ni RPC.
+- No se ejecutaron migraciones ni se conectó al autosave.
+- No se modificó `main` ni producción.
+- Tests automatizados y validación Supabase/PostgreSQL pendientes.
+- Antes de migrar, inventariar snapshots existentes y diseñar migración reversible que preserve IDs y referencias. No crear filas vacías ni alterar la inicialización/importación local sin plan de preservación de datos.
