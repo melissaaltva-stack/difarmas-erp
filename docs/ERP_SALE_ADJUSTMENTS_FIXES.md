@@ -24,3 +24,6 @@ Rama: `security/erp-state-permission-matrix`
 ## Validación
 
 GitHub Actions para el commit `4e54d0be804a861c18c66be0b3541057ff53e2be` completó correctamente instalación, auditoría de dependencias, build TypeScript/Vite y pruebas Vitest. Los cambios posteriores de presentación del historial requieren su propio resultado CI.
+
+- Se bloqueó la edición de una factura estándar después de que tenga devoluciones/anulaciones, para evitar desalinear el detalle original, el inventario y los ajustes ya aplicados.
+- Se añadió una reserva local de resolución de devoluciones a proveedor hasta que el cambio de estado se refleje, evitando repetir una nota de crédito o reingreso de mercancía por doble clic inmediato.
