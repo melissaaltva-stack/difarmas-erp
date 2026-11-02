@@ -3,6 +3,10 @@ import type { SupplierCredit } from '../domain/types';
 const toCents=(value:number)=>Math.round(value*100);
 const fromCents=(value:number)=>value/100;
 
+export function appendSupplierCreditOnce(credits:SupplierCredit[],credit:SupplierCredit):SupplierCredit[]{
+  return credits.some(existing=>existing.sourceReturnId===credit.sourceReturnId)?credits:[...credits,credit];
+}
+
 export function splitSupplierCreditNote(amount:number,outstanding:number):{reduction:number;creditRemainder:number}{
   if(!Number.isFinite(amount)||amount<=0||!Number.isFinite(outstanding)||outstanding<0)throw new RangeError('El importe de la nota de crédito o el saldo pendiente no es válido.');
   const noteCents=toCents(amount);
