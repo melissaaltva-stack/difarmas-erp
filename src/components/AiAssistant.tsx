@@ -6,25 +6,26 @@ import { localDateKey } from '../utils/dates';
 type Props = { products: Product[]; sales: SaleRecord[]; purchases: PurchaseRecord[]; expenses: Expense[]; receivables: Receivable[]; payables: Payable[]; movements: InventoryMovement[]; permissions: Module[] };
 const cash=(n:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL'}).format(n);
 const dayKey=()=>localDateKey();
+export function scopeAssistantData(data: Omit<Props, 'permissions'>, permissions: Module[]) {
+  const can = (module: Module) => permissions.includes(module);
+  return {
+    products: can('inventario') ? data.products : [],
+    sales: can('ventas') || can('finanzas') ? data.sales : [],
+    purchases: can('compras') ? data.purchases : [],
+    expenses: can('finanzas') ? data.expenses : [],
+    receivables: can('cuentas_cobrar') || can('finanzas') ? data.receivables : [],
+    payables: can('cuentas_pagar') || can('finanzas') ? data.payables : [],
+    movements: can('inventario') ? data.movements : [],
+  };
+}
+
 const daysTo=(date:string)=>{if(!date)return Infinity;const d=new Date(date.length===10?date+'T12:00:00':date);return Number.isNaN(d.getTime())?Infinity:Math.ceil((d.getTime()-new Date(dayKey()+'T12:00:00').getTime())/86400000);};
 
 export function AiAssistant({products,sales,purchases,expenses,receivables,payables,movements,permissions}:Props){
   // The assistant receives the same module boundaries as the rest of the ERP.
   // Never calculate or reveal a domain summary from data the user cannot view.
-  const can = (module: Module) => permissions.includes(module);
-  const canViewInventory = can('inventario');
-  const canViewSales = can('ventas') || can('finanzas');
-  const canViewPurchases = can('compras');
-  const canViewExpenses = can('finanzas');
-  const canViewReceivables = can('cuentas_cobrar') || can('finanzas');
-  const canViewPayables = can('cuentas_pagar') || can('finanzas');
-  const safeProducts = canViewInventory ? products : [];
-  const safeSales = canViewSales ? sales : [];
-  const safePurchases = canViewPurchases ? purchases : [];
-  const safeExpenses = canViewExpenses ? expenses : [];
-  const safeReceivables = canViewReceivables ? receivables : [];
-  const safePayables = canViewPayables ? payables : [];
-  const safeMovements = canViewInventory ? movements : [];
+  const scoped = scopeAssistantData({products,sales,purchases,expenses,receivables,payables,movements},permissions);
+  const {products:safeProducts,sales:safeSales,purchases:safePurchases,expenses:safeExpenses,receivables:safeReceivables,payables:safePayables,movements:safeMovements} = scoped;
   const [question,setQuestion]=useState('');
   const [answer,setAnswer]=useState('');
   const [active,setActive]=useState('resumen');
