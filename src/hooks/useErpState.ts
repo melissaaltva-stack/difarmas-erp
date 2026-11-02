@@ -517,7 +517,7 @@ export function useErpState(userId: string) {
         ? {...item,total:Math.max(item.paid,item.total-creditReduction)}
         : item));
     }
-    const settledAdjustment={...adjustment,refundAmount};
+    const settledAdjustment={...adjustment,refundAmount,refundStatus:refundAmount===0&&receivable?'Aplicado a cuenta':(adjustment.refundStatus??'Pendiente')};
     if(adjustment.refundStatus==='Pagado'&&adjustment.refundPaymentMethod&&refundAmount>0){
       const isCashRefund=adjustment.refundPaymentMethod.toLocaleLowerCase().includes('efectivo');
       const isBankRefund=/transfer|banco/i.test(adjustment.refundPaymentMethod);
