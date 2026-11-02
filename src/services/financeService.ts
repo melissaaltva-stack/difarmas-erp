@@ -39,7 +39,7 @@ export function supplierPayments(payables: Payable[]): number {
 
 export function cashMovementTotals(movements: CashMovement[]): { incoming: number; outgoing: number } {
   // Bank movements affect a bank balance, not the physical cash drawer.
-  const cashMovements = movements.filter(movement => movement.category !== 'Banco');
+  const cashMovements = movements.filter(movement => movement.category !== 'Banco' && movement.category !== 'No efectivo');
   return {
     incoming: cashMovements.filter(movement => movement.type === 'Entrada').reduce((sum, movement) => sum + movement.amount, 0),
     outgoing: cashMovements.filter(movement => movement.type === 'Salida').reduce((sum, movement) => sum + movement.amount, 0),
