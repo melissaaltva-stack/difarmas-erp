@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { ShoppingCart, Search, Boxes, CalendarClock, History, TrendingUp, TrendingDown, Minus, AlertTriangle, Sparkles, Plus, Trash2 } from 'lucide-react';
-import type { PurchaseItem, Product, Supplier, PurchaseCostHistoryEntry, SaleRecord, PurchaseRecord } from '../domain/types';
+import type { PurchaseItem, Product, Supplier, PurchaseCostHistoryEntry, SaleRecord, PurchaseRecord, SupplierCredit } from '../domain/types';
 import { buildPurchaseRecommendations } from '../services/purchaseRecommendationService';
 import { localDateKey } from '../utils/dates';
 import { isExpiryAtLeastSixMonths, sixMonthExpiryThreshold } from '../services/expiryService';
@@ -10,7 +10,7 @@ import type { SupplierReturnRecord } from '../domain/types';
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
 const percent = (value:number) => `${value.toLocaleString('es-HN',{maximumFractionDigits:1,minimumFractionDigits:1})}%`;
 
-export function Purchases({products,sales,purchases,cart,setCart,search,setSearch,supplier,setSupplier,suppliers=[],setSuppliers,records=[],setRecords,onDispatch,onResolve,showSuppliers=true,costHistory=[],onReceive,onOpenNewProduct,onEditProduct,sectionRequest=0,requestedSection='compras'}:{products:Product[];sales:SaleRecord[];purchases:PurchaseRecord[];cart:PurchaseItem[];setCart:(c:PurchaseItem[])=>void;search:string;setSearch:(v:string)=>void;supplier:string;setSupplier:(v:string)=>void;suppliers?:Supplier[];setSuppliers:Dispatch<SetStateAction<Supplier[]>>;records?:SupplierReturnRecord[];setRecords:Dispatch<SetStateAction<SupplierReturnRecord[]>>;onDispatch:(record:SupplierReturnRecord)=>boolean;onResolve:(record:SupplierReturnRecord,status:SupplierReturnRecord['status'])=>boolean;showSuppliers?:boolean;costHistory?:PurchaseCostHistoryEntry[];onReceive:(items:PurchaseItem[],paymentMethod:'Efectivo'|'Transferencia'|'Crédito',dueDate:string,invoiceNumber:string,invoiceDate:string,notes:string,purchaseTotal?:number,paymentTerms?:string)=>boolean;onOpenNewProduct:()=>void;onEditProduct:(product:Product)=>void;sectionRequest?:number;requestedSection?:'compras'|'proveedores'|'nueva-compra'}) {
+export function Purchases({products,sales,purchases,cart,setCart,search,setSearch,supplier,setSupplier,suppliers=[],setSuppliers,records=[],setRecords,credits=[],onDispatch,onResolve,showSuppliers=true,costHistory=[],onReceive,onOpenNewProduct,onEditProduct,sectionRequest=0,requestedSection='compras'}:{products:Product[];sales:SaleRecord[];purchases:PurchaseRecord[];cart:PurchaseItem[];setCart:(c:PurchaseItem[])=>void;search:string;setSearch:(v:string)=>void;supplier:string;setSupplier:(v:string)=>void;suppliers?:Supplier[];setSuppliers:Dispatch<SetStateAction<Supplier[]>>;records?:SupplierReturnRecord[];setRecords:Dispatch<SetStateAction<SupplierReturnRecord[]>>;credits?:SupplierCredit[];onDispatch:(record:SupplierReturnRecord)=>boolean;onResolve:(record:SupplierReturnRecord,status:SupplierReturnRecord['status'])=>boolean;showSuppliers?:boolean;costHistory?:PurchaseCostHistoryEntry[];onReceive:(items:PurchaseItem[],paymentMethod:'Efectivo'|'Transferencia'|'Crédito',dueDate:string,invoiceNumber:string,invoiceDate:string,notes:string,purchaseTotal?:number,paymentTerms?:string)=>boolean;onOpenNewProduct:()=>void;onEditProduct:(product:Product)=>void;sectionRequest?:number;requestedSection?:'compras'|'proveedores'|'nueva-compra'}) {
   const [section,setSection]=useState<'compras'|'proveedores'>('compras');
   useEffect(()=>{setSection(requestedSection==='proveedores'?'proveedores':'compras');if(requestedSection==='nueva-compra'){setPurchaseHeaderError('');setShowPurchaseModal(true);}},[sectionRequest,requestedSection]);
   const [showSuggestedPurchases,setShowSuggestedPurchases]=useState(false);
@@ -90,7 +90,7 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
   const increases=priceChanges.filter(x=>x.delta>0.005);
   const marginWarnings=priceChanges.filter(x=>x.newMargin!==null&&x.newMargin<0);
   const recommendations=useMemo(()=>buildPurchaseRecommendations(products,sales),[products,sales]);
-  if(section==='proveedores'&&showSuppliers)return <div className="content"><div id="suppliers-panel"><Suppliers suppliers={suppliers} setSuppliers={setSuppliers} products={products} purchases={purchases} costHistory={costHistory} records={records} setRecords={setRecords} onDispatch={onDispatch} onResolve={onResolve}/></div></div>;
+  if(section==='proveedores'&&showSuppliers)return <div className="content"><div id="suppliers-panel"><Suppliers suppliers={suppliers} setSuppliers={setSuppliers} products={products} purchases={purchases} costHistory={costHistory} records={records} setRecords={setRecords} credits={credits} onDispatch={onDispatch} onResolve={onResolve}/></div></div>;
   const addRecommended=(product:Product,quantity:number)=>{
     setCart(cart.some(item=>item.id===product.id)
       ? cart.map(item=>item.id===product.id?{...item,qty:item.qty+quantity}:item)
