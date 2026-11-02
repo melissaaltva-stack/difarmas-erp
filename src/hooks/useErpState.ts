@@ -62,6 +62,13 @@ export function useErpState(userId: string) {
   const [receivables, setReceivables] = useState<Receivable[]>(()=>loadJson<Receivable[]>('difarmas_receivables',[]));
   const [payables, setPayables] = useState<Payable[]>(()=>loadJson<Payable[]>('difarmas_payables',[]));
   const [inventoryMovements, setInventoryMovements] = useState<InventoryMovement[]>(()=>loadJson<InventoryMovement[]>('difarmas_inventory_movements',[]));
+  const lastInventoryMovementId = useRef(0);
+  const nextInventoryMovementId = () => {
+    const highestStoredId = inventoryMovements.reduce((highest,movement)=>Math.max(highest,Number(movement.id)||0),0);
+    const nextId = Math.max(Date.now(),highestStoredId,lastInventoryMovementId.current)+1;
+    lastInventoryMovementId.current=nextId;
+    return nextId;
+  };
   const [cashClosures, setCashClosures] = useState<CashClosure[]>(()=>loadJson<CashClosure[]>('difarmas_cash_closures',[]));
   const [cashMovements, setCashMovements] = useState<CashMovement[]>(()=>loadJson<CashMovement[]>('difarmas_cash_movements',[]));
   const [paymentTransactions, setPaymentTransactions] = useState<PaymentTransaction[]>(()=>loadJson<PaymentTransaction[]>('difarmas_payment_transactions',[]));
@@ -270,7 +277,7 @@ export function useErpState(userId: string) {
       dueDate:payment==='Crédito'||((settings.paymentMethods??[]).find(method=>method.name===payment)?.kind==='credit')?dueDate:undefined
     };
     setProducts(updated);
-    setInventoryMovements(current=>[...current,...createInventoryMovementsForSale(products,sold,sale.id)]);
+    setInventoryMovements(current=>[...current,...createInventoryMovementsForSale(products,sold,sale.id,nextInventoryMovementId)]);
     setSales(current=>[...current,sale]);
     if((settings.paymentMethods??[]).find(method=>method.name===payment)?.kind==='credit'||payment==='Crédito') setReceivables(current=>[...current,createReceivableFromSale(sale,customer,dueDate)]);
     return true;
@@ -286,7 +293,7 @@ export function useErpState(userId: string) {
     for(const item of sold){const product=products.find(p=>p.id===item.id);if(!product||product.stock+(oldQty.get(item.id)??0)<(newQty.get(item.id)??0))return false;}
     const updatedProducts=products.map(product=>{const before=oldQty.get(product.id)??0;const after=newQty.get(product.id)??0;return before===after?product:{...product,stock:product.stock+before-after};});
     const movements:InventoryMovement[]=[];
-    for(const product of products){const before=oldQty.get(product.id)??0;const after=newQty.get(product.id)??0;if(before===after)continue;movements.push({id:Date.now()+product.id,productId:product.id,productName:product.name,type:'Ajuste',quantity:Math.abs(after-before),stockBefore:product.stock,stockAfter:product.stock+before-after,unitCost:product.cost,referenceId:invoiceId,date:new Date().toISOString(),note:'Corrección de detalle de factura estándar '+(original.invoiceNumber??invoiceId)});}
+    for(const product of products){const before=oldQty.get(product.id)??0;const after=newQty.get(product.id)??0;if(before===after)continue;movements.push({id:nextInventoryMovementId(),productId:product.id,productName:product.name,type:'Ajuste',quantity:Math.abs(after-before),stockBefore:product.stock,stockAfter:product.stock+before-after,unitCost:product.cost,referenceId:invoiceId,date:new Date().toISOString(),note:'Corrección de detalle de factura estándar '+(original.invoiceNumber??invoiceId)});}
     const items=sold.map(item=>{
       const d=details?.lines.find(row=>row.productId===item.id);
       const net=d?.netTotal??item.price*item.qty;
@@ -340,7 +347,7 @@ export function useErpState(userId: string) {
       const matchingItems=record.items.filter(item=>item.productId===productId);
       const totalCost=matchingItems.reduce((sum,item)=>sum+item.quantity*item.unitCost,0);
       const unitCost=totalCost/quantity;
-      return [{id:Date.now()+productId,productId,productName:matchingItems[0]?.productName??product.name,type:'Ajuste' as const,quantity,stockBefore:product.stock,stockAfter:product.stock-quantity,unitCost,referenceId:record.id,date:movementDate,note:'Devolución enviada al proveedor: '+record.reason}];
+      return [{id:nextInventoryMovementId(),productId,productName:matchingItems[0]?.productName??product.name,type:'Ajuste' as const,quantity,stockBefore:product.stock,stockAfter:product.stock-quantity,unitCost,referenceId:record.id,date:movementDate,note:'Devolución enviada al proveedor: '+record.reason}];
     });
     supplierDispatchInProgress.current.add(record.id);
     setProducts(updated);
@@ -373,7 +380,7 @@ export function useErpState(userId: string) {
       const quantities=new Map<number,number>();record.items.forEach(item=>quantities.set(item.productId,(quantities.get(item.productId)??0)+item.quantity));
       if([...quantities.keys()].some(id=>!products.some(product=>product.id===id)))return false;
       const date=new Date().toISOString();
-      const movements:InventoryMovement[]=[...quantities].map(([productId,quantity])=>{const product=products.find(item=>item.id===productId)!;const lines=record.items.filter(item=>item.productId===productId);const cost=lines.reduce((sum,item)=>sum+item.quantity*item.unitCost,0)/quantity;return {id:Date.now()+productId,productId,productName:product.name,type:'Compra' as const,quantity,stockBefore:product.stock,stockAfter:product.stock+quantity,unitCost:cost,referenceId:record.id,date,note:'Reposición por cambio recibido de proveedor'};});
+      const movements:InventoryMovement[]=[...quantities].map(([productId,quantity])=>{const product=products.find(item=>item.id===productId)!;const lines=record.items.filter(item=>item.productId===productId);const cost=lines.reduce((sum,item)=>sum+item.quantity*item.unitCost,0)/quantity;return {id:nextInventoryMovementId(),productId,productName:product.name,type:'Compra' as const,quantity,stockBefore:product.stock,stockAfter:product.stock+quantity,unitCost:cost,referenceId:record.id,date,note:'Reposición por cambio recibido de proveedor'};});
       setProducts(rows=>rows.map(product=>{
         const quantity=quantities.get(product.id)??0;
         if(!quantity)return product;
@@ -423,7 +430,7 @@ export function useErpState(userId: string) {
       const product=products.find(item=>item.id===productId)!;
       const quantity=lines.reduce((sum,line)=>sum+line.quantity,0);
       const totalCost=lines.reduce((sum,line)=>sum+line.quantity*line.unitCost,0);
-      return {id:Date.now()+productId,productId,productName:lines[0]?.productName??product.name,type:'Ajuste' as const,quantity,stockBefore:product.stock,stockAfter:product.stock+quantity,unitCost:quantity?totalCost/quantity:0,referenceId:adjustment.id,date:movementDate,note:'Devolución de venta '+adjustment.invoiceNumber};
+      return {id:nextInventoryMovementId(),productId,productName:lines[0]?.productName??product.name,type:'Ajuste' as const,quantity,stockBefore:product.stock,stockAfter:product.stock+quantity,unitCost:quantity?totalCost/quantity:0,referenceId:adjustment.id,date:movementDate,note:'Devolución de venta '+adjustment.invoiceNumber};
     });
     const returnedQuantities=new Map(movements.map(movement=>[movement.productId,movement.quantity]));
     const updated=products.map(product=>{
@@ -460,7 +467,7 @@ export function useErpState(userId: string) {
       setProducts(current=>current.map(p=>p.id===editing.id?saved:p));
       if (previous && previous.stock !== saved.stock) {
         const difference = saved.stock - previous.stock;
-        setInventoryMovements(current=>[...current,{id:Date.now(),productId:saved.id,productName:saved.name,type:'Ajuste',quantity:Math.abs(difference),stockBefore:previous.stock,stockAfter:saved.stock,unitCost:saved.cost,date:new Date().toISOString(),note:difference>0?'Ajuste de entrada manual':'Ajuste de salida manual'}]);
+        setInventoryMovements(current=>[...current,{id:nextInventoryMovementId(),productId:saved.id,productName:saved.name,type:'Ajuste',quantity:Math.abs(difference),stockBefore:previous.stock,stockAfter:saved.stock,unitCost:saved.cost,date:new Date().toISOString(),note:difference>0?'Ajuste de entrada manual':'Ajuste de salida manual'}]);
       }
     } else {
       saved = {...product,id:product.id||Date.now()};
@@ -483,7 +490,7 @@ export function useErpState(userId: string) {
     purchaseInProgress.current=true;
     const referenceId = Date.now();
     setProducts(updated);
-    setInventoryMovements(current=>[...current,...createInventoryMovementsForPurchase(products,items,referenceId)]);
+    setInventoryMovements(current=>[...current,...createInventoryMovementsForPurchase(products,items,referenceId,nextInventoryMovementId)]);
     const calculatedTotal=items.reduce((sum,item)=>sum+item.qty*item.unitCost,0);
     const total=typeof enteredTotal==='number'&&Number.isFinite(enteredTotal)&&enteredTotal>=0?enteredTotal:calculatedTotal;
     const receivedAt = new Date().toISOString();
