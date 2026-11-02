@@ -578,12 +578,10 @@ export function useErpState(userId: string) {
     try { updated = applyPurchaseToInventory(products,items,purchaseSupplier); } catch { return false; }
     purchaseInProgress.current=true;
     const referenceId = nextPurchaseId();
-    setProducts(updated);
-    setInventoryMovements(current=>[...current,...createInventoryMovementsForPurchase(products,items,referenceId,nextInventoryMovementId)]);
     const calculatedTotal=items.reduce((sum,item)=>sum+item.qty*item.unitCost,0);
     const total=typeof enteredTotal==='number'&&Number.isFinite(enteredTotal)&&enteredTotal>=0?enteredTotal:calculatedTotal;
     const receivedAt = new Date().toISOString();
-    const applicationDate=new Date().toISOString();
+    const applicationDate=receivedAt;
     let appliedSupplierCredit=0;
     let updatedSupplierCredits=supplierCredits;
     try {
@@ -591,6 +589,8 @@ export function useErpState(userId: string) {
       appliedSupplierCredit=application.appliedTotal;
       updatedSupplierCredits=application.credits;
     } catch { purchaseInProgress.current=false; return false; }
+    setProducts(updated);
+    setInventoryMovements(current=>[...current,...createInventoryMovementsForPurchase(products,items,referenceId,nextInventoryMovementId)]);
     setPurchases(current=>[{id:referenceId,supplier:purchaseSupplier,total,supplierCreditApplied:appliedSupplierCredit,paymentMethod:paymentMethod as 'Efectivo'|'Transferencia'|'Crédito',date:receivedAt,invoiceNumber,invoiceDate,notes,paymentTerms,dueDate:paymentMethod==='Crédito'?dueDate:undefined},...current]);
     if(appliedSupplierCredit>0)setSupplierCredits(updatedSupplierCredits);
     setPurchaseCostHistory(current=>[
