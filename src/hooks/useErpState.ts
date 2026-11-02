@@ -57,6 +57,20 @@ export function useErpState(userId: string) {
   const [sales, setSales] = useState<SaleRecord[]>(()=>loadJson<SaleRecord[]>('difarmas_sales',[]));
   const [purchases, setPurchases] = useState<PurchaseRecord[]>(()=>loadJson<PurchaseRecord[]>('difarmas_purchases',[]));
   const [purchaseCostHistory, setPurchaseCostHistory] = useState<PurchaseCostHistoryEntry[]>(()=>loadJson<PurchaseCostHistoryEntry[]>('difarmas_purchase_cost_history',[]));
+  const lastPurchaseId = useRef(0);
+  const nextPurchaseId = () => {
+    const highestStoredId = purchases.reduce((highest,purchase)=>Math.max(highest,Number(purchase.id)||0),0);
+    const nextId = Math.max(Date.now(),highestStoredId,lastPurchaseId.current)+1;
+    lastPurchaseId.current=nextId;
+    return nextId;
+  };
+  const lastPurchaseCostHistoryId = useRef(0);
+  const nextPurchaseCostHistoryId = () => {
+    const highestStoredId = purchaseCostHistory.reduce((highest,entry)=>Math.max(highest,Number(entry.id)||0),0);
+    const nextId = Math.max(Date.now(),highestStoredId,lastPurchaseCostHistoryId.current)+1;
+    lastPurchaseCostHistoryId.current=nextId;
+    return nextId;
+  };
   const [settings,setSettings] = useState<ErpSettings>(()=>loadJson<ErpSettings>('difarmas_settings',initialSettings));
   const [expenses, setExpenses] = useState<Expense[]>(()=>loadJson<Expense[]>('difarmas_expenses',[]));
   const [receivables, setReceivables] = useState<Receivable[]>(()=>loadJson<Receivable[]>('difarmas_receivables',[]));
@@ -488,7 +502,7 @@ export function useErpState(userId: string) {
     let updated: Product[];
     try { updated = applyPurchaseToInventory(products,items,purchaseSupplier); } catch { return false; }
     purchaseInProgress.current=true;
-    const referenceId = Date.now();
+    const referenceId = nextPurchaseId();
     setProducts(updated);
     setInventoryMovements(current=>[...current,...createInventoryMovementsForPurchase(products,items,referenceId,nextInventoryMovementId)]);
     const calculatedTotal=items.reduce((sum,item)=>sum+item.qty*item.unitCost,0);
@@ -496,7 +510,7 @@ export function useErpState(userId: string) {
     const receivedAt = new Date().toISOString();
     setPurchases(current=>[{id:referenceId,supplier:purchaseSupplier,total,paymentMethod:paymentMethod as 'Efectivo'|'Transferencia'|'Crédito',date:receivedAt,invoiceNumber,invoiceDate,notes,paymentTerms,dueDate:paymentMethod==='Crédito'?dueDate:undefined},...current]);
     setPurchaseCostHistory(current=>[
-      ...items.map((item,index):PurchaseCostHistoryEntry=>({id:referenceId+index,purchaseId:referenceId,productId:item.id,productCode:item.code,productName:item.name,supplier:purchaseSupplier.trim(),unitCost:item.unitCost,quantity:item.qty,date:receivedAt})),
+      ...items.map((item):PurchaseCostHistoryEntry=>({id:nextPurchaseCostHistoryId(),purchaseId:referenceId,productId:item.id,productCode:item.code,productName:item.name,supplier:purchaseSupplier.trim(),unitCost:item.unitCost,quantity:item.qty,date:receivedAt})),
       ...current,
     ]);
     if(paymentMethod==='Crédito'){const payable=createPayableFromPurchase(items,purchaseSupplier,dueDate,new Date(),referenceId,invoiceNumber);setPayables(current=>[...current,{...payable,total}]);}
