@@ -55,6 +55,13 @@ export function useErpState(userId: string) {
   const [purchaseSearch, setPurchaseSearch] = useState('');
   const [purchaseSupplier, setPurchaseSupplier] = useState('');
   const [sales, setSales] = useState<SaleRecord[]>(()=>loadJson<SaleRecord[]>('difarmas_sales',[]));
+  const lastSaleId = useRef(0);
+  const nextSaleId = () => {
+    const highestStoredId = sales.reduce((highest,sale)=>Math.max(highest,Number(sale.id)||0),0);
+    const nextId = Math.max(Date.now(),highestStoredId,lastSaleId.current)+1;
+    lastSaleId.current=nextId;
+    return nextId;
+  };
   const [purchases, setPurchases] = useState<PurchaseRecord[]>(()=>loadJson<PurchaseRecord[]>('difarmas_purchases',[]));
   const [purchaseCostHistory, setPurchaseCostHistory] = useState<PurchaseCostHistoryEntry[]>(()=>loadJson<PurchaseCostHistoryEntry[]>('difarmas_purchase_cost_history',[]));
   const lastPurchaseId = useRef(0);
@@ -283,7 +290,7 @@ export function useErpState(userId: string) {
     try { updated = applySaleToInventory(products,sold); } catch { return false; }
     saleInProgress.current=true;
     const recordDate=invoiceDetails?.invoiceDate ? new Date(invoiceDetails.invoiceDate+'T12:00:00') : new Date();
-    const base=buildSaleRecord(sold,payment,invoiceDetails?'factura_estandar':saleType,customer,dueDate,recordDate);
+    const base=buildSaleRecord(sold,payment,invoiceDetails?'factura_estandar':saleType,customer,dueDate,recordDate,nextSaleId());
     const items=invoiceDetails ? (base.items??[]).map(line=>{
       const d=invoiceDetails.lines.find(row=>row.productId===line.productId);
       if(!d)return line;
