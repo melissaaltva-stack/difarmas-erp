@@ -52,6 +52,23 @@ describe('applySaleAdjustmentsToSales', () => {
     expect(result.items?.[0].revenue).toBe(150);
   });
 
+  it('includes invoice tax in the refund while reducing net revenue and tax separately', () => {
+    const taxedSale: SaleRecord = {
+      ...sale, total: 115, taxTotal: 15, cost: 60, profit: 40,
+      items: [{ productId: 10, productName: 'Producto A', category: 'General', laboratory: 'Lab', qty: 1, unitCost: 60, unitPrice: 100, revenue: 100, cost: 60, profit: 40, taxAmount: 15, lineTotal: 115 }],
+    };
+    const taxedReturn: SaleAdjustmentRecord = {
+      ...adjustment, amount: 115,
+      items: [{ ...adjustment.items[0], quantity: 1, unitTaxAmount: 15 }],
+    };
+    const result = applySaleAdjustmentsToSales([taxedSale], [taxedReturn])[0];
+    expect(result.total).toBe(0);
+    expect(result.taxTotal).toBe(0);
+    expect(result.cost).toBe(0);
+    expect(result.profit).toBe(0);
+    expect(result.items).toHaveLength(0);
+  });
+
   it('keeps sales without adjustments unchanged', () => {
     expect(applySaleAdjustmentsToSales([sale], [])[0]).toBe(sale);
   });
