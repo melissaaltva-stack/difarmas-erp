@@ -81,6 +81,14 @@ describe('applySaleAdjustmentsToSales', () => {
     expect(result.profit).toBe(80);
   });
 
+  it('reduces legacy invoice tax proportionally when line tax detail is unavailable', () => {
+    const legacyInvoice = { ...sale, total: 230, taxTotal: 30, items: undefined };
+    const legacyReturn = { ...adjustment, amount: 115 };
+    const result = applySaleAdjustmentsToSales([legacyInvoice], [legacyReturn])[0];
+    expect(result.total).toBe(115);
+    expect(result.taxTotal).toBe(15);
+  });
+
   it('caps adjustments at the original sale total', () => {
     const oversized = { ...adjustment, amount: 999 };
     expect(applySaleAdjustmentsToSales([sale], [oversized])[0].total).toBe(0);
