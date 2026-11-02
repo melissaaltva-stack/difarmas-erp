@@ -468,7 +468,7 @@ export function useErpState(userId: string) {
   const recordSaleAdjustment=(adjustment:SaleAdjustmentRecord):boolean=>{
     if(saleAdjustmentInProgress.current.has(adjustment.saleId))return false;
     if(saleAdjustments.some(item=>item.id===adjustment.id)||!sales.some(sale=>sale.id===adjustment.saleId)||!adjustment.items.length||!Number.isFinite(adjustment.amount)||adjustment.amount<=0)return false;
-    if(adjustment.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!Number.isFinite(item.unitPrice)||item.unitPrice<0||!Number.isFinite(item.unitCost)||item.unitCost<0))return false;
+    if(adjustment.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!Number.isFinite(item.unitPrice)||item.unitPrice<0||!Number.isFinite(item.unitTaxAmount??0)||(item.unitTaxAmount??0)<0||!Number.isFinite(item.unitCost)||item.unitCost<0))return false;
     const originalSale=sales.find(sale=>sale.id===adjustment.saleId);
     if(!originalSale)return false;
     const calculatedAmount=adjustment.items.reduce((sum,item)=>sum+(item.unitPrice+(item.unitTaxAmount??0))*item.quantity,0);
