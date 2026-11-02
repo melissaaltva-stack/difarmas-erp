@@ -83,7 +83,7 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
   const increases=priceChanges.filter(x=>x.delta>0.005);
   const marginWarnings=priceChanges.filter(x=>x.newMargin!==null&&x.newMargin<0);
   const recommendations=useMemo(()=>buildPurchaseRecommendations(products,sales),[products,sales]);
-  if(section==='proveedores'&&showSuppliers)return <div className="content"><div id="suppliers-panel"><Suppliers suppliers={suppliers} setSuppliers={setSuppliers} products={products} purchases={purchases} records={records} setRecords={setRecords} onDispatch={onDispatch} onResolve={onResolve}/></div></div>;
+  if(section==='proveedores'&&showSuppliers)return <div className="content"><div id="suppliers-panel"><Suppliers suppliers={suppliers} setSuppliers={setSuppliers} products={products} purchases={purchases} costHistory={costHistory} records={records} setRecords={setRecords} onDispatch={onDispatch} onResolve={onResolve}/></div></div>;
   const addRecommended=(product:Product,quantity:number)=>{
     setCart(cart.some(item=>item.id===product.id)
       ? cart.map(item=>item.id===product.id?{...item,qty:item.qty+quantity}:item)
