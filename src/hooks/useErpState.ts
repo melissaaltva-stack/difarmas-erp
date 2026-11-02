@@ -442,9 +442,8 @@ export function useErpState(userId: string) {
       if(!purchase)return false;
       const payable=payables.find(item=>item.supplier.trim().toLowerCase()===source.supplier.trim().toLowerCase()&&(item.purchaseId===purchase.id||((item.invoiceNumber??'').trim().toLowerCase()===(purchase.invoiceNumber??'').trim().toLowerCase()&&!!purchase.invoiceNumber)));
       if(!Number.isFinite(source.totalCost)||source.totalCost<=0)return false;
-      const outstanding=payable?Math.max(0,payable.total-payable.paid):0;
-      const reduction=Math.min(source.totalCost,outstanding);
-      const creditRemainder=Math.max(0,source.totalCost-reduction);
+      let reduction:number; let creditRemainder:number;
+      try { ({reduction,creditRemainder}=splitSupplierCreditNote(source.totalCost,payable?Math.max(0,payable.total-payable.paid):0)); } catch { return false; }
       if(creditRemainder>0&&!supplierCredits.some(credit=>credit.sourceReturnId===source.id)){
         const now=new Date().toISOString();
         const credit:SupplierCredit={id:nextSupplierCreditId(),supplier:source.supplier.trim(),sourceReturnId:source.id,sourcePurchaseId:purchase.id,sourceReference:purchase.invoiceNumber?.trim()||String(purchase.id),amount:creditRemainder,remainingBalance:creditRemainder,createdAt:now,applications:[]};
@@ -591,23 +590,10 @@ export function useErpState(userId: string) {
     ]);
     if(paymentMethod==='Crédito'){
       const payable=createPayableFromPurchase(items,purchaseSupplier,dueDate,new Date(),referenceId,invoiceNumber,nextPayableId());
-      let outstanding=total;
-      const matchingCredits=supplierCredits.filter(credit=>credit.supplier.trim().toLocaleLowerCase()===supplierKey&&credit.remainingBalance>0);
-      const appliedById=new Map<number,number>();
-      for(const credit of matchingCredits){
-        if(outstanding<=0)break;
-        const applied=Math.min(outstanding,credit.remainingBalance);
-        if(applied>0){appliedById.set(credit.id,applied);outstanding-=applied;}
-      }
-      const appliedTotal=total-outstanding;
-      setPayables(current=>[...current,{...payable,total:outstanding}]);
-      if(appliedById.size){
-        const applicationDate=new Date().toISOString();
-        setSupplierCredits(current=>current.map(credit=>{
-          const applied=appliedById.get(credit.id)??0;
-          return applied>0?{...credit,remainingBalance:Math.max(0,credit.remainingBalance-applied),applications:[...credit.applications,{purchaseId:referenceId,invoiceNumber:invoiceNumber||undefined,amount:applied,date:applicationDate}]}:credit;
-        }));
-      }
+      const applicationDate=new Date().toISOString();
+      const application=applySupplierCreditsToPurchase(supplierCredits,purchaseSupplier,referenceId,invoiceNumber,total,applicationDate);
+      setPayables(current=>[...current,{...payable,total:application.remainingPayable}]);
+      if(application.appliedTotal>0)setSupplierCredits(application.credits);
     }
     return true;
   };
