@@ -438,6 +438,7 @@ export function useErpState(userId: string) {
     if(status==='Rechazado') { supplierReturnResolutionCompleted.current.add(record.id); setSupplierReturns(rows=>rows.map(row=>row.id===record.id?{...row,status}:row)); return true; }
     if(status==='Nota de crédito recibida') {
       try {
+        if(autoSaveTimerRef.current!==null){window.clearTimeout(autoSaveTimerRef.current);autoSaveTimerRef.current=null;}
         const resolved=await resolveSupplierCreditNoteAtomically(userId,record.id);
         supplierReturnResolutionCompleted.current.add(record.id);
         setSupplierReturns(resolved.supplierReturns);
