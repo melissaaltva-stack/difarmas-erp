@@ -4,39 +4,41 @@ export type SaleLineBalance = { line: SaleLine; remainingQuantity: number; adjus
 
 /** Tracks returns against the exact original sale line; legacy rows fall back to product order. */
 export function getSaleLineBalances(items: SaleLine[], adjustments: SaleAdjustmentRecord[]): SaleLineBalance[] {
-  const remaining = items.map(line => Math.max(0, Number(line.qty) || 0));
+  const sourceItems = items.length > 0 && items.every(line => !line.saleLineId) ? aggregateSaleLinesByProduct(items) : items;
+  const remaining = sourceItems.map(line => Math.max(0, Number(line.qty) || 0));
   const indexById = new Map<string, number>();
-  items.forEach((line, index) => { if (line.saleLineId) indexById.set(line.saleLineId, index); });
+  sourceItems.forEach((line, index) => { if (line.saleLineId) indexById.set(line.saleLineId, index); });
   for (const adjustment of adjustments) for (const item of adjustment.items ?? []) {
     let toAllocate = Math.max(0, Number(item.quantity) || 0);
     if (!toAllocate) continue;
     if (item.saleLineId) {
       const index = indexById.get(item.saleLineId);
-      if (index !== undefined && items[index].productId === item.productId) remaining[index] = Math.max(0, remaining[index] - toAllocate);
+      if (index !== undefined && sourceItems[index].productId === item.productId) remaining[index] = Math.max(0, remaining[index] - toAllocate);
       continue;
     }
     for (let index = 0; index < items.length && toAllocate > 0; index++) {
-      if (items[index].productId !== item.productId) continue;
+      if (sourceItems[index].productId !== item.productId) continue;
       const applied = Math.min(remaining[index], toAllocate);
       remaining[index] -= applied; toAllocate -= applied;
     }
   }
-  return items.map((line, index) => ({ line, remainingQuantity: remaining[index], adjustedQuantity: Math.max(0, (Number(line.qty) || 0) - remaining[index]) }));
+  return sourceItems.map((line, index) => ({ line, remainingQuantity: remaining[index], adjustedQuantity: Math.max(0, (Number(line.qty) || 0) - remaining[index]) }));
 }
 
 export function canApplySaleAdjustmentItems(saleItems: SaleLine[], existing: SaleAdjustmentRecord[], requested: SaleAdjustmentRecord['items']): boolean {
-  const remaining = getSaleLineBalances(saleItems, existing).map(row => row.remainingQuantity);
+  const sourceItems = saleItems.length > 0 && saleItems.every(line => !line.saleLineId) ? aggregateSaleLinesByProduct(saleItems) : saleItems;
+  const remaining = getSaleLineBalances(sourceItems, existing).map(row => row.remainingQuantity);
   const indexById = new Map<string, number>();
-  saleItems.forEach((line, index) => { if (line.saleLineId) indexById.set(line.saleLineId, index); });
+  sourceItems.forEach((line, index) => { if (line.saleLineId) indexById.set(line.saleLineId, index); });
   for (const item of requested) {
     let toAllocate = item.quantity;
     if (item.saleLineId) {
       const index = indexById.get(item.saleLineId);
-      if (index === undefined || saleItems[index].productId !== item.productId || remaining[index] < toAllocate) return false;
+      if (index === undefined || sourceItems[index].productId !== item.productId || remaining[index] < toAllocate) return false;
       remaining[index] -= toAllocate; continue;
     }
-    for (let index = 0; index < saleItems.length && toAllocate > 0; index++) {
-      if (saleItems[index].productId !== item.productId) continue;
+    for (let index = 0; index < sourceItems.length && toAllocate > 0; index++) {
+      if (sourceItems[index].productId !== item.productId) continue;
       const applied = Math.min(remaining[index], toAllocate);
       remaining[index] -= applied; toAllocate -= applied;
     }
