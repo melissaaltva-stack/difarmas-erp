@@ -68,7 +68,7 @@ begin
   if v_return is null then
     raise exception 'No se encontró la devolución indicada.' using errcode = 'P0002';
   end if;
-  if v_return ->> 'status' <> 'Enviado al proveedor' then
+  if (v_return ->> 'status') is distinct from 'Enviado al proveedor' then
     raise exception 'Esta devolución ya fue procesada o cambió de estado. Recarga el ERP.' using errcode = '23505';
   end if;
   if exists (
