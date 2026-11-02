@@ -5,7 +5,7 @@ import type { Product, Supplier, SupplierReturnRecord, PurchaseRecord, PurchaseC
 import { SupplierReturns } from './SupplierReturns';
 type SupplierForm = Omit<Supplier, 'id'>;
 const emptySupplier = (): SupplierForm => ({ name:'', contact:'', phone:'', email:'', rtn:'', address:'', paymentTerms:'Contado', notes:'', active:true });
-export function Suppliers({suppliers,setSuppliers,products,purchases,costHistory,records,setRecords,credits=[],onDispatch,onResolve}:{suppliers:Supplier[];setSuppliers:Dispatch<SetStateAction<Supplier[]>>;products:Product[];purchases:PurchaseRecord[];costHistory:PurchaseCostHistoryEntry[];records:SupplierReturnRecord[];setRecords:Dispatch<SetStateAction<SupplierReturnRecord[]>>;credits?:SupplierCredit[];onDispatch:(record:SupplierReturnRecord)=>boolean;onResolve:(record:SupplierReturnRecord,status:SupplierReturnRecord['status'])=>boolean}) {
+export function Suppliers({suppliers,setSuppliers,products,purchases,costHistory,records,setRecords,credits=[],onDispatch,onResolve}:{suppliers:Supplier[];setSuppliers:Dispatch<SetStateAction<Supplier[]>>;products:Product[];purchases:PurchaseRecord[];costHistory:PurchaseCostHistoryEntry[];records:SupplierReturnRecord[];setRecords:Dispatch<SetStateAction<SupplierReturnRecord[]>>;credits?:SupplierCredit[];onDispatch:(record:SupplierReturnRecord)=>boolean;onResolve:(record:SupplierReturnRecord,status:SupplierReturnRecord['status'])=>Promise<boolean>}) {
   const lastSupplierId = useRef(0);
   const nextSupplierId = () => {
     const highestStoredId = suppliers.reduce((highest,supplier)=>Math.max(highest,Number(supplier.id)||0),0);
