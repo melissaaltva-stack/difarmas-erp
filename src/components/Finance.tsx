@@ -48,7 +48,7 @@ export function Finance({section='resumen',sales,purchases,expenses,setExpenses,
   const today=localDateKey();
   const alreadyClosedToday=closures.some(closure=>dateKey(closure.date)===today);
   const dayMovementIn=movements.filter(m=>m.category!=='Banco'&&dateKey(m.date)===today&&m.type==='Entrada').reduce((a,m)=>a+m.amount,0); const dayMovementOut=movements.filter(m=>m.category!=='Banco'&&dateKey(m.date)===today&&m.type==='Salida').reduce((a,m)=>a+m.amount,0);
-  const daySales=sales.filter(s=>dateKey(s.date)===today&&s.payment==='Efectivo').reduce((a,s)=>a+s.total,0);
+  const daySales=sales.filter(s=>dateKey(s.date)===today&&(s.paymentKind==='cash'||(!s.paymentKind&&s.payment==='Efectivo'))).reduce((a,s)=>a+s.total,0);
   const dayCollections=receivables.reduce((sum,r)=>{
     const accountTransactions=paymentTransactions.filter(t=>t.type==='Cobro'&&t.accountId===r.id);
     if(accountTransactions.length>0) {
