@@ -37,7 +37,7 @@ Rama: `security/erp-state-permission-matrix`
 
 La protección de duplicados en el flujo de devolución opera dentro de la sesión del navegador y el guardado de la instantánea usa control de revisión. Esto no equivale a una transacción idempotente del lado del servidor entre dispositivos concurrentes. Para garantizar esa condición estrictamente se necesitaría una operación RPC/backend transaccional; no se creó ni modificó una función o tabla de Supabase.
 
-Los créditos se aplican automáticamente a nuevas compras registradas como **Crédito**. Las compras pagadas de contado no consumen el crédito automáticamente, porque hacerlo requeriría reflejar cómo el proveedor liquida o descuenta ese importe del pago real.
+Los créditos se aplican automáticamente a nuevas compras de cualquier forma de pago. En compras de contado y transferencia, el desembolso se calcula por el importe neto después del crédito aplicado; en compras a crédito, solo el remanente genera una cuenta por pagar.
 
 ## Seguridad y despliegue
 
