@@ -1,6 +1,6 @@
 import type {
   CashClosure, CashMovement, Customer, Supplier, ErpSettings, Expense, InventoryMovement, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseRecord,
-  Receivable, SaleRecord, MissingProductRequest, SupplierReturnRecord, SupplierCredit, Payable, SaleAdjustmentRecord, QuoteRecord,
+  Receivable, SaleRecord, MissingProductRequest, SupplierReturnRecord, SupplierCredit, SaleAdjustmentRecord, QuoteRecord,
 } from '../domain/types';
 import { requireSupabase } from './supabaseClient';
 
