@@ -34,3 +34,5 @@ GitHub Actions para el commit `4e54d0be804a861c18c66be0b3541057ff53e2be` complet
 
 - Los reembolsos por tarjeta u otros medios no efectivos se clasifican como `No efectivo`; las transferencias se clasifican como `Banco`. Ninguno reduce el efectivo físico en el flujo ni en el cierre diario.
 - Se corrigió el cálculo de devoluciones de facturas estándar con ISV: el importe reembolsable incluye el impuesto de las líneas; los reportes reducen por separado ingreso neto e impuesto, conservando la utilidad calculada sin ISV. Se añadió validación de importes de impuesto y una prueba específica de devolución total con ISV.
+- Para ventas históricas sin detalle de líneas, el impuesto registrado se reduce proporcionalmente al importe del ajuste, sin reescribir los registros originales.
+- Validación del último lote: pendiente de ejecución confirmada. El check de Vercel reportó límite de compilaciones del plan; no se considera build aprobado y no se publicó una vista previa nueva.
