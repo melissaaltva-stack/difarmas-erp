@@ -1,6 +1,24 @@
 import type { CartItem, Product, PurchaseItem } from '../domain/types';
 import { isExpiryAtLeastSixMonths } from './expiryService';
 
+export function calculateWeightedAverageCost(existingStock:number, existingUnitCost:number, incomingQuantity:number, incomingUnitCost:number):number {
+  if (![existingStock, existingUnitCost, incomingQuantity, incomingUnitCost].every(Number.isFinite)
+    || existingStock < 0 || existingUnitCost < 0 || incomingQuantity <= 0 || incomingUnitCost < 0) {
+    throw new Error('Existencias, cantidades y costos deben ser valores válidos.');
+  }
+  const newStock = existingStock + incomingQuantity;
+  const previousValue = existingStock * existingUnitCost;
+  const incomingValue = incomingQuantity * incomingUnitCost;
+  const average = (previousValue + incomingValue) / newStock;
+  if (!Number.isFinite(newStock) || newStock <= 0 || !Number.isFinite(previousValue)
+    || !Number.isFinite(incomingValue) || !Number.isFinite(average)) {
+    throw new Error('El costo promedio calculado está fuera de rango.');
+  }
+  const rounded = Number(average.toFixed(2));
+  if (!Number.isFinite(rounded)) throw new Error('El costo promedio calculado no es válido.');
+  return rounded;
+}
+
 export function applySaleToInventory(products: Product[], sold: CartItem[]): Product[] {
   if (!sold.length) throw new Error('La venta debe contener al menos un producto.');
   if (new Set(sold.map(item => item.id)).size !== sold.length) throw new Error('La venta contiene productos duplicados.');
@@ -35,14 +53,11 @@ export function applyPurchaseToInventory(products: Product[], items: PurchaseIte
     const item = items.find(line => line.id === product.id);
     if (!item) return product;
     const newStock = product.stock + item.qty;
-    const previousInventoryValue = product.cost * product.stock;
-    const purchaseValue = item.unitCost * item.qty;
-    const averageCost = (previousInventoryValue + purchaseValue) / newStock;
-    if (!Number.isFinite(newStock) || newStock <= 0 || !Number.isFinite(previousInventoryValue) || !Number.isFinite(purchaseValue) || !Number.isFinite(averageCost)) throw new Error('La compra produciría una existencia o costo fuera de rango. Verifica los datos.');
-    const roundedCost = Number(averageCost.toFixed(2));
-    if (!Number.isFinite(roundedCost)) throw new Error('El costo promedio calculado no es válido.');
+    let averageCost:number;
+    try { averageCost = calculateWeightedAverageCost(product.stock, product.cost, item.qty, item.unitCost); }
+    catch { throw new Error('La compra produciría una existencia o costo fuera de rango. Verifica los datos.'); }
     const expiry = product.expiry && product.stock > 0 ? (product.expiry < item.expiry ? product.expiry : item.expiry) : item.expiry;
-    return { ...product, stock: newStock, cost: roundedCost, expiry, supplier: supplier.trim() || product.supplier };
+    return { ...product, stock: newStock, cost: averageCost, expiry, supplier: supplier.trim() || product.supplier };
   });
 }
 
