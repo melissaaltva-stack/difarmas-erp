@@ -345,7 +345,7 @@ export function useErpState(userId: string) {
 
   const updateStandardInvoice=(invoiceId:number,sold:CartItem[],customer='',customerRtn='',details?:StandardInvoiceDetails):boolean=>{
     const original=sales.find(sale=>sale.id===invoiceId);
-    if(!original||original.type!=='factura_estandar'||!sold.length||sold.some(item=>!Number.isFinite(item.qty)||item.qty<=0||!Number.isFinite(item.price)||item.price<0))return false;
+    if(!original||original.type!=='factura_estandar'||saleAdjustments.some(adjustment=>adjustment.saleId===invoiceId)||!sold.length||sold.some(item=>!Number.isFinite(item.qty)||item.qty<=0||!Number.isFinite(item.price)||item.price<0))return false;
     const oldQty=new Map<number,number>();
     (original.items??[]).forEach(line=>oldQty.set(line.productId,(oldQty.get(line.productId)??0)+line.qty));
     const newQty=new Map<number,number>();
