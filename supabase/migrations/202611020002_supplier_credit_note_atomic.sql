@@ -34,7 +34,7 @@ begin
   if v_user_id is null then
     raise exception 'Debes iniciar sesión para registrar la nota de crédito.' using errcode = '42501';
   end if;
-  if not v_active or v_role not in ('Administrador','Supervisor','Compras','Finanzas') then
+  if not v_active or v_role is null or v_role not in ('Administrador','Supervisor','Compras','Finanzas') then
     raise exception 'Tu usuario no tiene permiso para registrar notas de crédito de proveedores.' using errcode = '42501';
   end if;
   if p_return_id is null or p_return_id <= 0 then
