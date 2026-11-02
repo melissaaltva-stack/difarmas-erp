@@ -151,3 +151,27 @@ La matriz por clave es insuficiente para proteger estas tres áreas con mínimo 
 ## Herramientas de prueba disponibles en el repositorio
 
 `package.json` incluye `vitest run` como script de pruebas y el comando de compilación `tsc -b && vite build`. Esto permite añadir pruebas unitarias de la lógica de autorización y ejecutar compilación/pruebas en un entorno de desarrollo. No demuestra que haya un servidor PostgreSQL/Supabase local disponible ni valida una migración contra la base real. La validación SQL debe ejecutarse en un proyecto de prueba separado antes de considerar producción.
+
+
+## Hallazgo de la migración de rol ya existente
+
+La lectura directa de `202611020001_erp_state_role_write_guard.sql` confirma que:
+
+- La política INSERT permite roles de escritura sin validar permisos de módulo.
+- La política UPDATE valida estado activo y rol, pero no permisos individuales ni claves JSON modificadas.
+- `coalesce(farmi_active::boolean, true)` trata la ausencia de `farmi_active` como cuenta activa. Esto es una decisión de compatibilidad, no un cierre estricto. Para un modelo de fallo seguro, el estado debe estar explícitamente establecido en `true`, o debe existir una migración administrativa previa que complete el metadato de las cuentas legítimas.
+- La política SELECT también filtra por activo, lo que puede hacer que una cuenta inactiva no vea su snapshot; antes de endurecerlo debe definirse si la cuenta inactiva debe quedar bloqueada por completo o si se requiere lectura para soporte/recuperación.
+- No hay política DELETE, lo cual debe conservarse.
+
+No cambiaré el valor por defecto de `farmi_active` sin inventariar primero las cuentas existentes y sus metadatos: hacerlo de forma abrupta podría bloquear cuentas válidas.
+
+## Secuencia recomendada para la implementación
+
+1. Mantener esta rama como trabajo de seguridad aislado.
+2. Definir el modelo de autorización de acciones sensibles (cobros, pagos, cuentas por cobrar/pagar y estados de solicitudes), sin intentar resolverlo solo con permisos por clave JSON.
+3. Diseñar la inicialización inicial y la importación de datos locales como flujos separados, preservando la información.
+4. Crear pruebas automatizadas para la función de comparación de claves y las políticas/RPC, con usuarios de prueba y una base Supabase local o un proyecto aislado.
+5. Ejecutar `npm test` y `npm run build` cuando el repositorio esté disponible en un entorno de ejecución; la inspección remota del código no equivale a haber ejecutado esas pruebas.
+6. Revisar migración y casos de prueba antes de solicitar aprobación para aplicarlos en cualquier proyecto Supabase.
+
+**Estado actual:** documentación y análisis solamente. No existe todavía una migración final de permisos por módulo ni una ruta segura de inicialización implementada.
