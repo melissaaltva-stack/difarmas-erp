@@ -1,9 +1,23 @@
 import type { SupplierCredit } from '../domain/types';
 
-const toCents=(value:number)=>Math.round(value*100);
+const MAX_CENTS = Number.MAX_SAFE_INTEGER;
+const toCents=(value:number)=>{
+  if(!Number.isFinite(value)||Math.abs(value)>MAX_CENTS/100)throw new RangeError('El importe excede el rango monetario seguro.');
+  const cents=Math.round(value*100);
+  if(!Number.isSafeInteger(cents))throw new RangeError('El importe excede el rango monetario seguro.');
+  return cents;
+};
 const fromCents=(value:number)=>value/100;
 
+function isValidCredit(credit:SupplierCredit):boolean{
+  return !!credit&&typeof credit.supplier==='string'&&credit.supplier.trim().length>0
+    &&Number.isFinite(credit.remainingBalance)&&credit.remainingBalance>=0
+    &&Number.isSafeInteger(toCents(credit.remainingBalance))
+    &&Array.isArray(credit.applications);
+}
+
 export function appendSupplierCreditOnce(credits:SupplierCredit[],credit:SupplierCredit):SupplierCredit[]{
+  if(!Array.isArray(credits)||!credit||!Number.isInteger(credit.sourceReturnId)||credit.sourceReturnId<=0)throw new RangeError('El crédito del proveedor no es válido.');
   return credits.some(existing=>existing.sourceReturnId===credit.sourceReturnId)?credits:[...credits,credit];
 }
 
@@ -16,8 +30,10 @@ export function splitSupplierCreditNote(amount:number,outstanding:number):{reduc
 }
 
 export function applySupplierCreditsToPurchase(credits:SupplierCredit[],supplier:string,purchaseId:number,invoiceNumber:string,invoiceTotal:number,date:string):{credits:SupplierCredit[];remainingPayable:number;appliedTotal:number}{
-  if(!supplier.trim()||!Number.isInteger(purchaseId)||purchaseId<=0||!Number.isFinite(invoiceTotal)||invoiceTotal<0)throw new RangeError('Los datos para aplicar el crédito del proveedor no son válidos.');
-  let remainingCents=toCents(invoiceTotal);
+  if(!Array.isArray(credits)||typeof supplier!=='string'||!supplier.trim()||!Number.isInteger(purchaseId)||purchaseId<=0||!Number.isFinite(invoiceTotal)||invoiceTotal<0)throw new RangeError('Los datos para aplicar el crédito del proveedor no son válidos.');
+  const remainingInvoiceCents=toCents(invoiceTotal);
+  credits.forEach(credit=>{if(!isValidCredit(credit))throw new RangeError('El saldo o historial de un crédito de proveedor no es válido.');});
+  let remainingCents=remainingInvoiceCents;
   const target=supplier.trim().toLocaleLowerCase();
   let appliedTotalCents=0;
   const updated=credits.map(credit=>{
