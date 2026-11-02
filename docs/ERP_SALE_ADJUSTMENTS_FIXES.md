@@ -63,3 +63,12 @@ GitHub Actions para el commit `4e54d0be804a861c18c66be0b3541057ff53e2be` complet
 - Se agregaron pruebas para devolución de una de dos líneas del mismo producto a precios distintos, rechazo de una segunda devolución duplicada y compatibilidad con ajustes históricos.
 
 **CI verificada:** ejecución 41542194676, commit 8aef4a9fa1b652d7583f7125fa18d37c26de2fd9. Compilación correcta, auditoría de dependencias sin vulnerabilidades y 92 pruebas aprobadas en 13 archivos.
+
+## Validación adicional de devoluciones a proveedores (2 de noviembre de 2026)
+
+- La salida de inventario ahora verifica el registro persistido en el estado ERP: solo permite despachar devoluciones que siguen en estado "Pendiente".
+- Las cantidades, costos, productos y motivo se toman del registro almacenado, no de los datos enviados por el componente. Esto evita que una referencia manipulada o desactualizada cambie el movimiento de inventario.
+- La resolución de cambio recibido y nota de crédito también usa los datos del registro guardado, no los valores de una copia antigua del componente.
+- No se modificó el comportamiento contable de las notas de crédito. Sigue pendiente el subregistro de crédito a favor para compras de contado, facturas pagadas o importes que exceden una cuenta por pagar; se mantiene el rechazo explícito para no perder valor ni crear saldos incorrectos.
+
+**CI verificada:** ejecución 41544608729, commit 0de35f29cd7375a93a366b47ab99e8b4031daabf. Compilación, auditoría de dependencias y pruebas completadas correctamente.
