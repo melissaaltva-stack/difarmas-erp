@@ -46,6 +46,20 @@ describe('supplier credit ledger',()=>{
     expect(result.credits[0].remainingBalance).toBe(65);
   });
 
+  it('applies supplier credit to a cash purchase so only the net amount is paid in cash',()=>{
+    const result=applySupplierCreditsToPurchase([credit({remainingBalance:40})],'Droguería Central',43,'FC-43',100,'2026-11-02T12:00:00.000Z');
+    expect(result.appliedTotal).toBe(40);
+    expect(result.remainingPayable).toBe(60);
+    expect(result.credits[0].remainingBalance).toBe(0);
+  });
+
+  it('covers a cash purchase completely without producing a negative payment',()=>{
+    const result=applySupplierCreditsToPurchase([credit({remainingBalance:120})],'Droguería Central',44,'FC-44',90,'2026-11-02T12:00:00.000Z');
+    expect(result.appliedTotal).toBe(90);
+    expect(result.remainingPayable).toBe(0);
+    expect(result.credits[0].remainingBalance).toBe(30);
+  });
+
   it('does not apply credits from a different supplier',()=>{
     const result=applySupplierCreditsToPurchase([credit({supplier:'Proveedor B'})],'Droguería Central',42,'FC-42',40,'2026-11-02T12:00:00.000Z');
     expect(result.remainingPayable).toBe(40);
