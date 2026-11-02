@@ -24,12 +24,16 @@ export function aggregateSaleLinesByProduct(items: SaleLine[]): SaleLine[] {
       profit: revenue - cost,
       unitPrice: qty > 0 ? revenue / qty : current.unitPrice,
       unitCost: qty > 0 ? cost / qty : current.unitCost,
+      taxAmount: (current.taxAmount ?? 0) + (line.taxAmount ?? 0),
+      lineTotal: (current.lineTotal ?? current.revenue) + (line.lineTotal ?? line.revenue),
     });
   }
   return [...grouped.values()].map(line => ({
     ...line,
     unitPrice: line.qty > 0 ? line.revenue / line.qty : line.unitPrice,
     unitCost: line.qty > 0 ? line.cost / line.qty : line.unitCost,
+    taxAmount: line.taxAmount ?? 0,
+    lineTotal: line.lineTotal ?? line.revenue,
     profit: line.revenue - line.cost,
   }));
 }
@@ -53,11 +57,13 @@ export function applySaleAdjustmentsToSales(sales: SaleRecord[], adjustments: Sa
     const amountReduction = Math.min(Math.max(0, sale.total), saleAdjustments.reduce((sum, row) => sum + Math.max(0, row.amount || 0), 0));
     const lineReductions = new Map<number, number>();
     let costReductionFromLines = 0;
+    let taxReductionFromLines = 0;
     for (const adjustment of saleAdjustments) {
       for (const item of adjustment.items ?? []) {
         const qty = Math.max(0, Number(item.quantity) || 0);
         lineReductions.set(item.productId, (lineReductions.get(item.productId) ?? 0) + qty);
         costReductionFromLines += qty * Math.max(0, Number(item.unitCost) || 0);
+        taxReductionFromLines += qty * Math.max(0, Number(item.unitTaxAmount) || 0);
       }
     }
 
@@ -79,11 +85,14 @@ export function applySaleAdjustmentsToSales(sales: SaleRecord[], adjustments: Sa
       const unitCost = line.qty > 0 ? line.cost / line.qty : line.unitCost;
       const revenue = Math.max(0, line.revenue - unitPrice * removedQty);
       const cost = Math.max(0, line.cost - unitCost * removedQty);
-      return { ...line, qty, revenue, cost, profit: revenue - cost };
+      const taxAmount = Math.max(0, (line.taxAmount ?? 0) - ((line.taxAmount ?? 0) / Math.max(1, line.qty)) * removedQty);
+      const lineTotal = revenue + taxAmount;
+      return { ...line, qty, revenue, cost, taxAmount, lineTotal, profit: revenue - cost };
     }).filter(line => line.qty > 0);
     const total = Math.max(0, sale.total - amountReduction);
     const costReduction = Math.min(Math.max(0, sale.cost), costReductionFromLines);
     const cost = Math.max(0, sale.cost - costReduction);
-    return { ...sale, total, cost, profit: total - cost, items };
+    const taxTotal = Math.max(0, (sale.taxTotal ?? 0) - taxReductionFromLines);
+    return { ...sale, total, cost, profit: (items ?? []).reduce((sum, line) => sum + line.profit, 0), taxTotal, items };
   });
 }
