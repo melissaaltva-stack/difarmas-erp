@@ -208,6 +208,7 @@ export function useErpState(userId: string) {
       setPaymentTransactions([]);
       setMissingProductRequests([]);
       setSupplierReturns([]);
+      setSupplierCredits([]);
       setSaleAdjustments([]);
       setMonthlyGoal(100000);
       setFixedExpenses(25000);
@@ -233,6 +234,7 @@ export function useErpState(userId: string) {
         if (remote.paymentTransactions !== undefined) setPaymentTransactions(remote.paymentTransactions);
         setMissingProductRequests(remote.missingProductRequests ?? []);
         setSupplierReturns(remote.supplierReturns ?? []);
+        setSupplierCredits(remote.supplierCredits ?? []);
         setSaleAdjustments(remote.saleAdjustments ?? []);
         setMonthlyGoal(remote.monthlyGoal);
         setFixedExpenses(remote.fixedExpenses);
