@@ -1,41 +1,64 @@
 import type { SaleAdjustmentRecord, SaleLine, SaleRecord } from '../domain/types';
 
-/**
- * Combines duplicate product rows into one reporting/return line using weighted
- * average unit prices and costs. This prevents the POS return form from applying
- * one quantity input independently to duplicate rows of the same product.
- */
+export type SaleLineBalance = { line: SaleLine; remainingQuantity: number; adjustedQuantity: number };
+
+/** Tracks returns against the exact original sale line; legacy rows fall back to product order. */
+export function getSaleLineBalances(items: SaleLine[], adjustments: SaleAdjustmentRecord[]): SaleLineBalance[] {
+  const remaining = items.map(line => Math.max(0, Number(line.qty) || 0));
+  const indexById = new Map<string, number>();
+  items.forEach((line, index) => { if (line.saleLineId) indexById.set(line.saleLineId, index); });
+  for (const adjustment of adjustments) for (const item of adjustment.items ?? []) {
+    let toAllocate = Math.max(0, Number(item.quantity) || 0);
+    if (!toAllocate) continue;
+    if (item.saleLineId) {
+      const index = indexById.get(item.saleLineId);
+      if (index !== undefined && items[index].productId === item.productId) remaining[index] = Math.max(0, remaining[index] - toAllocate);
+      continue;
+    }
+    for (let index = 0; index < items.length && toAllocate > 0; index++) {
+      if (items[index].productId !== item.productId) continue;
+      const applied = Math.min(remaining[index], toAllocate);
+      remaining[index] -= applied; toAllocate -= applied;
+    }
+  }
+  return items.map((line, index) => ({ line, remainingQuantity: remaining[index], adjustedQuantity: Math.max(0, (Number(line.qty) || 0) - remaining[index]) }));
+}
+
+export function canApplySaleAdjustmentItems(saleItems: SaleLine[], existing: SaleAdjustmentRecord[], requested: SaleAdjustmentRecord['items']): boolean {
+  const remaining = getSaleLineBalances(saleItems, existing).map(row => row.remainingQuantity);
+  const indexById = new Map<string, number>();
+  saleItems.forEach((line, index) => { if (line.saleLineId) indexById.set(line.saleLineId, index); });
+  for (const item of requested) {
+    let toAllocate = item.quantity;
+    if (item.saleLineId) {
+      const index = indexById.get(item.saleLineId);
+      if (index === undefined || saleItems[index].productId !== item.productId || remaining[index] < toAllocate) return false;
+      remaining[index] -= toAllocate; continue;
+    }
+    for (let index = 0; index < saleItems.length && toAllocate > 0; index++) {
+      if (saleItems[index].productId !== item.productId) continue;
+      const applied = Math.min(remaining[index], toAllocate);
+      remaining[index] -= applied; toAllocate -= applied;
+    }
+    if (toAllocate > 0) return false;
+  }
+  return true;
+}
+
+/** Legacy helper for reports that intentionally need product-level aggregation. */
 export function aggregateSaleLinesByProduct(items: SaleLine[]): SaleLine[] {
   const grouped = new Map<number, SaleLine>();
   for (const line of items) {
     const current = grouped.get(line.productId);
-    if (!current) {
-      grouped.set(line.productId, { ...line });
-      continue;
-    }
-    const qty = current.qty + line.qty;
-    const revenue = current.revenue + line.revenue;
-    const cost = current.cost + line.cost;
-    grouped.set(line.productId, {
-      ...current,
-      qty,
-      revenue,
-      cost,
-      profit: revenue - cost,
-      unitPrice: qty > 0 ? revenue / qty : current.unitPrice,
-      unitCost: qty > 0 ? cost / qty : current.unitCost,
-      taxAmount: (current.taxAmount ?? 0) + (line.taxAmount ?? 0),
-      lineTotal: (current.lineTotal ?? current.revenue) + (line.lineTotal ?? line.revenue),
-    });
+    if (!current) { grouped.set(line.productId, { ...line }); continue; }
+    const qty = current.qty + line.qty, revenue = current.revenue + line.revenue, cost = current.cost + line.cost;
+    grouped.set(line.productId, { ...current, saleLineId: undefined, qty, revenue, cost, profit: revenue - cost,
+      unitPrice: qty ? revenue / qty : current.unitPrice, unitCost: qty ? cost / qty : current.unitCost,
+      taxAmount: (current.taxAmount ?? 0) + (line.taxAmount ?? 0), lineTotal: (current.lineTotal ?? current.revenue) + (line.lineTotal ?? line.revenue) });
   }
-  return [...grouped.values()].map(line => ({
-    ...line,
-    unitPrice: line.qty > 0 ? line.revenue / line.qty : line.unitPrice,
-    unitCost: line.qty > 0 ? line.cost / line.qty : line.unitCost,
-    taxAmount: line.taxAmount ?? 0,
-    lineTotal: line.lineTotal ?? line.revenue,
-    profit: line.revenue - line.cost,
-  }));
+  return [...grouped.values()].map(line => ({ ...line, unitPrice: line.qty ? line.revenue / line.qty : line.unitPrice,
+    unitCost: line.qty ? line.cost / line.qty : line.unitCost, taxAmount: line.taxAmount ?? 0,
+    lineTotal: line.lineTotal ?? line.revenue, profit: line.revenue - line.cost }));
 }
 
 /**
@@ -55,16 +78,12 @@ export function applySaleAdjustmentsToSales(sales: SaleRecord[], adjustments: Sa
     const saleAdjustments = bySale.get(sale.id) ?? [];
     if (!saleAdjustments.length) return sale;
     const amountReduction = Math.min(Math.max(0, sale.total), saleAdjustments.reduce((sum, row) => sum + Math.max(0, row.amount || 0), 0));
-    const lineReductions = new Map<number, number>();
     let costReductionFromLines = 0;
     let taxReductionFromLines = 0;
-    for (const adjustment of saleAdjustments) {
-      for (const item of adjustment.items ?? []) {
-        const qty = Math.max(0, Number(item.quantity) || 0);
-        lineReductions.set(item.productId, (lineReductions.get(item.productId) ?? 0) + qty);
-        costReductionFromLines += qty * Math.max(0, Number(item.unitCost) || 0);
-        taxReductionFromLines += qty * Math.max(0, Number(item.unitTaxAmount) || 0);
-      }
+    for (const adjustment of saleAdjustments) for (const item of adjustment.items ?? []) {
+      const qty = Math.max(0, Number(item.quantity) || 0);
+      costReductionFromLines += qty * Math.max(0, Number(item.unitCost) || 0);
+      taxReductionFromLines += qty * Math.max(0, Number(item.unitTaxAmount) || 0);
     }
 
     if (!sale.items?.length) {
@@ -76,19 +95,15 @@ export function applySaleAdjustmentsToSales(sales: SaleRecord[], adjustments: Sa
       return { ...sale, total, cost, profit: total - cost, taxTotal };
     }
 
-    const remaining = new Map(lineReductions);
-    const items = aggregateSaleLinesByProduct(sale.items).map(line => {
-      const requested = remaining.get(line.productId) ?? 0;
-      const removedQty = Math.min(Math.max(0, line.qty), requested);
-      remaining.set(line.productId, Math.max(0, requested - removedQty));
-      const qty = Math.max(0, line.qty - removedQty);
+    const items = getSaleLineBalances(sale.items, saleAdjustments).map(({line, remainingQuantity}) => {
+      const removedQty = Math.max(0, line.qty - remainingQuantity);
       const unitPrice = line.qty > 0 ? line.revenue / line.qty : line.unitPrice;
       const unitCost = line.qty > 0 ? line.cost / line.qty : line.unitCost;
       const revenue = Math.max(0, line.revenue - unitPrice * removedQty);
       const cost = Math.max(0, line.cost - unitCost * removedQty);
       const taxAmount = Math.max(0, (line.taxAmount ?? 0) - ((line.taxAmount ?? 0) / Math.max(1, line.qty)) * removedQty);
       const lineTotal = revenue + taxAmount;
-      return { ...line, qty, revenue, cost, taxAmount, lineTotal, profit: revenue - cost };
+      return { ...line, qty: remainingQuantity, revenue, cost, taxAmount, lineTotal, profit: revenue - cost };
     }).filter(line => line.qty > 0);
     const total = Math.max(0, sale.total - amountReduction);
     const costReduction = Math.min(Math.max(0, sale.cost), costReductionFromLines);
