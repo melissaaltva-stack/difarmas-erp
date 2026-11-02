@@ -16,7 +16,7 @@ export function getSaleLineBalances(items: SaleLine[], adjustments: SaleAdjustme
       if (index !== undefined && sourceItems[index].productId === item.productId) remaining[index] = Math.max(0, remaining[index] - toAllocate);
       continue;
     }
-    for (let index = 0; index < items.length && toAllocate > 0; index++) {
+    for (let index = 0; index < sourceItems.length && toAllocate > 0; index++) {
       if (sourceItems[index].productId !== item.productId) continue;
       const applied = Math.min(remaining[index], toAllocate);
       remaining[index] -= applied; toAllocate -= applied;
