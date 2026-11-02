@@ -94,6 +94,20 @@ export function useErpState(userId: string) {
   const [cashMovements, setCashMovements] = useState<CashMovement[]>(()=>loadJson<CashMovement[]>('difarmas_cash_movements',[]));
   const [paymentTransactions, setPaymentTransactions] = useState<PaymentTransaction[]>(()=>loadJson<PaymentTransaction[]>('difarmas_payment_transactions',[]));
   const [missingProductRequests, setMissingProductRequests] = useState<MissingProductRequest[]>(()=>loadJson<MissingProductRequest[]>('difarmas_missing_product_requests',[]));
+  const lastMissingProductRequestId = useRef(0);
+  const nextMissingProductRequestId = () => {
+    const highestStoredId = missingProductRequests.reduce((highest,request)=>Math.max(highest,Number(request.id)||0),0);
+    const nextId = Math.max(Date.now(),highestStoredId,lastMissingProductRequestId.current)+1;
+    lastMissingProductRequestId.current=nextId;
+    return nextId;
+  };
+  const lastProductId = useRef(0);
+  const nextProductId = () => {
+    const highestStoredId = products.reduce((highest,product)=>Math.max(highest,Number(product.id)||0),0);
+    const nextId = Math.max(Date.now(),highestStoredId,lastProductId.current)+1;
+    lastProductId.current=nextId;
+    return nextId;
+  };
   const [supplierReturns, setSupplierReturns] = useState<SupplierReturnRecord[]>(()=>loadJson<SupplierReturnRecord[]>('difarmas_supplier_returns',[]));
   const [saleAdjustments, setSaleAdjustments] = useState<SaleAdjustmentRecord[]>(()=>loadJson<SaleAdjustmentRecord[]>('difarmas_sale_adjustments',[]));
   const [remoteReady, setRemoteReady] = useState(false);
@@ -255,7 +269,7 @@ export function useErpState(userId: string) {
   const recordMissingProduct=(request:Omit<MissingProductRequest,'id'|'requestedAt'|'status'>):boolean=>{
     const name=request.name.trim();
     if(!name||!Number.isFinite(request.quantity)||request.quantity<1)return false;
-    setMissingProductRequests(current=>[{...request,name,id:Date.now(),requestedAt:new Date().toISOString(),status:'Pendiente'},...current]);
+    setMissingProductRequests(current=>[{...request,name,id:nextMissingProductRequestId(),requestedAt:new Date().toISOString(),status:'Pendiente'},...current]);
     return true;
   };
 
@@ -491,7 +505,7 @@ export function useErpState(userId: string) {
         setInventoryMovements(current=>[...current,{id:nextInventoryMovementId(),productId:saved.id,productName:saved.name,type:'Ajuste',quantity:Math.abs(difference),stockBefore:previous.stock,stockAfter:saved.stock,unitCost:saved.cost,date:new Date().toISOString(),note:difference>0?'Ajuste de entrada manual':'Ajuste de salida manual'}]);
       }
     } else {
-      saved = {...product,id:product.id||Date.now()};
+      saved = {...product,id:nextProductId()};
       setProducts(current=>[...current,saved]);
     }
     setEditing(null); setShowForm(false);
