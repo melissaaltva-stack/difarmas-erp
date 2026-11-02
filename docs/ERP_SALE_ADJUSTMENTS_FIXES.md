@@ -33,3 +33,4 @@ GitHub Actions para el commit `4e54d0be804a861c18c66be0b3541057ff53e2be` complet
 - Al reingresar productos devueltos al inventario, se recalcula el costo promedio ponderado usando el costo histórico de las unidades devueltas. La existencia y el valor al costo quedan alineados; solo aplica cuando se marca el reingreso al stock.
 
 - Los reembolsos por tarjeta u otros medios no efectivos se clasifican como `No efectivo`; las transferencias se clasifican como `Banco`. Ninguno reduce el efectivo físico en el flujo ni en el cierre diario.
+- Se corrigió el cálculo de devoluciones de facturas estándar con ISV: el importe reembolsable incluye el impuesto de las líneas; los reportes reducen por separado ingreso neto e impuesto, conservando la utilidad calculada sin ISV. Se añadió validación de importes de impuesto y una prueba específica de devolución total con ISV.
