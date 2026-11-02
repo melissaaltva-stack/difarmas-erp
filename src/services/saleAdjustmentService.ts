@@ -72,7 +72,8 @@ export function applySaleAdjustmentsToSales(sales: SaleRecord[], adjustments: Sa
       const costReduction = Math.min(Math.max(0, sale.cost), Math.max(0, sale.cost * ratio));
       const total = Math.max(0, sale.total - amountReduction);
       const cost = Math.max(0, sale.cost - costReduction);
-      return { ...sale, total, cost, profit: total - cost };
+      const taxTotal = Math.max(0, (sale.taxTotal ?? 0) * (1 - ratio));
+      return { ...sale, total, cost, profit: total - cost, taxTotal };
     }
 
     const remaining = new Map(lineReductions);
