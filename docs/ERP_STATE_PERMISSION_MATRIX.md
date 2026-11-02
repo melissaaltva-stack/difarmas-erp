@@ -116,3 +116,20 @@ Por ello, esta matriz reduce el acceso entre módulos, pero no constituye aislam
 - Separar `settings` de los datos administrativos de usuarios: la copia `settings.users` no es autoridad y la gestión real ocurre por el endpoint de Auth.
 - Revisar las rutas de cobro/pago para no autorizar un módulo de lectura a escribir por una dependencia accidental.
 - Asegurar que el rol `Administrador` y su lista completa de permisos se mantengan coherentes entre `api/admin-users.ts`, `Settings.tsx` y las funciones SQL.
+
+
+## Traza de setters confirmada en `useErpState.ts`
+
+La revisión del hook confirma estas escrituras compuestas:
+
+- `recordSale`: `products`, `inventoryMovements`, `sales` y condicionalmente `receivables`.
+- `updateStandardInvoice`: `products`, `inventoryMovements`, `sales` y, si existe saldo, `receivables`.
+- `recordSaleAdjustment`: `products`, `inventoryMovements`, `saleAdjustments`; además `receivables` para ventas a crédito y `cashMovements` cuando el reembolso es en efectivo.
+- `receivePurchase`: `products`, `inventoryMovements`, `purchases`, `purchaseCostHistory` y condicionalmente `payables`.
+- `recordSupplierDispatch`: `products` e `inventoryMovements`.
+- `resolveSupplierReturn`: puede modificar `supplierReturns`, `products`, `inventoryMovements` y/o `payables`, según el resultado de la devolución.
+- `saveProduct`: `products` y, si cambia existencias, `inventoryMovements`.
+- `recordMissingProduct`: agrega a `missingProductRequests`.
+- `paymentTransactions` se expone con setter directo desde el hook; el hook no impone una regla de negocio propia. La autorización debe seguir el módulo que origina cada cobro/pago y se debe revisar cada componente que lo llama antes de fijar la matriz final.
+
+Esto confirma que la validación debe permitir conjuntos de claves dependientes dentro de una sola transacción. Una regla que valide cada clave de forma aislada con un único permiso podría bloquear operaciones legítimas; una regla demasiado amplia podría habilitar modificaciones no deseadas.
