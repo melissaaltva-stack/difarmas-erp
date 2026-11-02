@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { ClipboardList, PackageMinus, Plus, Search, Printer } from 'lucide-react';
-import type { Product, Supplier, SupplierReturnRecord, SupplierReturnItem, PurchaseRecord, PurchaseCostHistoryEntry } from '../domain/types';
+import type { Product, Supplier, SupplierReturnRecord, SupplierReturnItem, PurchaseRecord, PurchaseCostHistoryEntry, SupplierCredit } from '../domain/types';
 
 const money=(value:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL',maximumFractionDigits:2}).format(value);
 
-export function SupplierReturns({products,suppliers,purchases,costHistory,records,setRecords,onDispatch,onResolve}:{products:Product[];suppliers:Supplier[];purchases:PurchaseRecord[];costHistory:PurchaseCostHistoryEntry[];records:SupplierReturnRecord[];setRecords:Dispatch<SetStateAction<SupplierReturnRecord[]>>;onDispatch:(record:SupplierReturnRecord)=>boolean;onResolve:(record:SupplierReturnRecord,status:SupplierReturnRecord['status'])=>boolean}) {
+export function SupplierReturns({products,suppliers,purchases,costHistory,records,setRecords,credits=[],onDispatch,onResolve}:{products:Product[];suppliers:Supplier[];purchases:PurchaseRecord[];costHistory:PurchaseCostHistoryEntry[];records:SupplierReturnRecord[];setRecords:Dispatch<SetStateAction<SupplierReturnRecord[]>>;credits?:SupplierCredit[];onDispatch:(record:SupplierReturnRecord)=>boolean;onResolve:(record:SupplierReturnRecord,status:SupplierReturnRecord['status'])=>boolean}) {
   const [supplier,setSupplier]=useState('');
   const [purchaseReference,setPurchaseReference]=useState('');
   const [productId,setProductId]=useState('');
@@ -14,6 +14,8 @@ export function SupplierReturns({products,suppliers,purchases,costHistory,record
   const [notes,setNotes]=useState('');
   const [filter,setFilter]=useState('Todos');
   const [notice,setNotice]=useState('');
+  const availableCredits=credits.filter(credit=>credit.remainingBalance>0);
+  const totalAvailableCredit=availableCredits.reduce((sum,credit)=>sum+credit.remainingBalance,0);
   const dispatchLocks=useRef<Set<number>>(new Set());
   const lastSupplierReturnId=useRef(0);
   const nextSupplierReturnId=()=>{const highestStoredId=records.reduce((highest,record)=>Math.max(highest,Number(record.id)||0),0);const nextId=Math.max(Date.now(),highestStoredId,lastSupplierReturnId.current)+1;lastSupplierReturnId.current=nextId;return nextId;};
@@ -40,7 +42,7 @@ export function SupplierReturns({products,suppliers,purchases,costHistory,record
     setPurchaseReference('');setProductId('');setQuantity('1');setNotes('');
     setNotice('Devolución registrada como pendiente. El inventario no se modifica hasta confirmar la salida al proveedor.');
   };
-  const updateStatus=(record:SupplierReturnRecord,status:SupplierReturnRecord['status'])=>{if(onResolve(record,status)){setNotice(status==='Nota de crédito recibida'?'Nota de crédito aplicada al saldo pendiente de la factura vinculada.':status==='Cambio recibido'?'Reposición registrada en inventario.':'Devolución marcada como rechazada sin cambios en inventario ni cuentas por pagar.');}else{setNotice(status==='Nota de crédito recibida'?'No se aplicó: la nota de crédito solo puede reducir una factura con saldo pendiente en cuentas por pagar. Las compras de contado o ya pagadas requieren registrar el crédito del proveedor por separado.':'No se pudo completar la operación. Verifica el estado y los datos de la devolución.');}};
+  const updateStatus=(record:SupplierReturnRecord,status:SupplierReturnRecord['status'])=>{if(onResolve(record,status)){setNotice(status==='Nota de crédito recibida'?'Nota de crédito registrada. El saldo pendiente se redujo y el excedente quedó como crédito disponible del proveedor.':status==='Cambio recibido'?'Reposición registrada en inventario.':'Devolución marcada como rechazada sin cambios en inventario ni cuentas por pagar.');}else{setNotice(status==='Nota de crédito recibida'?'No se pudo registrar la nota de crédito. Verifica que la devolución esté enviada y que la factura de compra vinculada exista.':'No se pudo completar la operación. Verifica el estado y los datos de la devolución.');}};
   const dispatch=(record:SupplierReturnRecord)=>{
     if(record.status!=='Pendiente'||dispatchLocks.current.has(record.id))return;
     dispatchLocks.current.add(record.id);
@@ -70,6 +72,7 @@ export function SupplierReturns({products,suppliers,purchases,costHistory,record
       {notice&&<p className={notice.startsWith('No se pudo')||notice.startsWith('Revisa')?'form-error':'helper'} role="status">{notice}</p>}
       <button className="primary" type="button" onClick={create}><Plus size={16}/> Registrar devolución</button>
     </div>
+    <section className="card"><div className="card-title"><div><h3>Créditos disponibles de proveedores</h3><p>Saldo a favor para aplicar a futuras compras a crédito. No representa efectivo.</p></div><strong>{money(totalAvailableCredit)}</strong></div>{availableCredits.length===0?<div className="cart-empty">No hay créditos pendientes de aplicar.</div>:<div className="table-wrap"><table><thead><tr><th>Proveedor</th><th>Factura origen</th><th>Fecha</th><th>Crédito original</th><th>Saldo disponible</th><th>Aplicaciones</th></tr></thead><tbody>{availableCredits.map(credit=><tr key={credit.id}><td>{credit.supplier}</td><td>{credit.sourceReference}</td><td>{new Date(credit.createdAt).toLocaleDateString('es-HN')}</td><td>{money(credit.amount)}</td><td><strong>{money(credit.remainingBalance)}</strong></td><td>{credit.applications.length?credit.applications.map((application,index)=><div key={credit.id+'-'+index}><small>{application.invoiceNumber||'Compra #'+application.purchaseId} · {money(application.amount)}</small></div>):'Sin aplicar'}</td></tr>)}</tbody></table></div>}</section>
     <section className="card"><div className="card-title"><div><h3>Historial de devoluciones</h3><p>{records.length} registro(s)</p></div><div className="search"><Search size={16}/><select aria-label="Filtrar por estado" value={filter} onChange={e=>setFilter(e.target.value)}><option>Todos</option><option>Pendiente</option><option>Enviado al proveedor</option><option>Cambio recibido</option><option>Nota de crédito recibida</option><option>Rechazado</option></select></div></div>
       {visible.length===0?<div className="cart-empty">No hay devoluciones para mostrar.</div>:<div className="table-wrap"><table><thead><tr><th>Fecha</th><th>Proveedor</th><th>Referencia</th><th>Producto / motivo</th><th>Cantidad</th><th>Costo</th><th>Estado / acción</th></tr></thead><tbody>{visible.map(r=><tr key={r.id}><td>{new Date(r.date).toLocaleDateString('es-HN')}</td><td>{r.supplier}</td><td>{r.purchaseReference||'—'}</td><td>{r.items.map(i=><div key={i.productId}><strong>{i.productName}</strong><small>{i.reason}{r.notes ? ' · '+r.notes : ''}</small></div>)}</td><td>{r.items.reduce((sum,i)=>sum+i.quantity,0)}</td><td>{money(r.totalCost)}</td><td><span className="pill">{r.status}</span><div className="table-actions"><button className="secondary" type="button" onClick={()=>printReturn(r)}><Printer size={14}/> Imprimir</button>{r.status==='Pendiente'&&<button className="secondary" type="button" onClick={()=>dispatch(r)}>Confirmar salida</button>}{r.status==='Enviado al proveedor'&&<><button className="secondary" type="button" onClick={()=>updateStatus(r,'Cambio recibido')}>Cambio recibido</button><button className="secondary" type="button" onClick={()=>updateStatus(r,'Nota de crédito recibida')}>Nota de crédito</button><button className="secondary" type="button" onClick={()=>updateStatus(r,'Rechazado')}>Rechazado</button></>}</div></td></tr>)}</tbody></table></div>}
     </section>
