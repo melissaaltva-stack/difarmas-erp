@@ -7,6 +7,7 @@ import { createPayableFromPurchase } from '../services/purchaseService';
 import { createInventoryMovementsForPurchase, createInventoryMovementsForSale } from '../services/inventoryMovementService';
 import { loadErpSnapshot, saveErpSnapshot, saveQuotesForUser, type ErpSnapshot } from '../services/remoteErpState';
 import { ensureCustomerCodes } from '../services/customerCodeService';
+import { canApplySaleAdjustmentItems } from '../services/saleAdjustmentService';
 
 const initialProducts: Product[] = [
   { id: 1, code: '750100000001', name: 'Eutirox 50 mcg', category: 'Medicamentos', laboratory: 'Merck', presentation: 'Caja x 50 tabletas', cost: 250, retail: 330, wholesale: 310, stock: 18, minStock: 8, lot: 'EUT-2607', expiry: '2027-07-31', supplier: 'Distribuidora Nacional' },
@@ -357,11 +358,11 @@ export function useErpState(userId: string) {
     const updatedProducts=products.map(product=>{const before=oldQty.get(product.id)??0;const after=newQty.get(product.id)??0;return before===after?product:{...product,stock:product.stock+before-after};});
     const movements:InventoryMovement[]=[];
     for(const product of products){const before=oldQty.get(product.id)??0;const after=newQty.get(product.id)??0;if(before===after)continue;movements.push({id:nextInventoryMovementId(),productId:product.id,productName:product.name,type:'Ajuste',quantity:Math.abs(after-before),stockBefore:product.stock,stockAfter:product.stock+before-after,unitCost:product.cost,referenceId:invoiceId,date:new Date().toISOString(),note:'Corrección de detalle de factura estándar '+(original.invoiceNumber??invoiceId)});}
-    const items=sold.map(item=>{
+    const items=sold.map((item,index)=>{
       const d=details?.lines.find(row=>row.productId===item.id);
       const net=d?.netTotal??item.price*item.qty;
       const cost=item.cost*item.qty;
-      return {productId:item.id,productName:item.name,category:item.category,laboratory:item.laboratory,qty:item.qty,unitCost:item.cost,unitPrice:details&&item.qty?net/item.qty:item.price,revenue:net,cost,profit:net-cost,...(d?{unit:d.unit,baseUnitPrice:item.price,discountPercent:d.discountPercent,taxPercent:d.taxPercent,discountAmount:d.discountAmount,taxAmount:d.taxAmount,lineTotal:d.lineTotal}:{})};
+      return {saleLineId:item.cartLineId??original.items?.[index]?.saleLineId??`sale-${invoiceId}-line-${index}`,productId:item.id,productName:item.name,category:item.category,laboratory:item.laboratory,qty:item.qty,unitCost:item.cost,unitPrice:details&&item.qty?net/item.qty:item.price,revenue:net,cost,profit:net-cost,...(d?{unit:d.unit,baseUnitPrice:item.price,discountPercent:d.discountPercent,taxPercent:d.taxPercent,discountAmount:d.discountAmount,taxAmount:d.taxAmount,lineTotal:d.lineTotal}:{})};
     });
     const updatedSale:SaleRecord={
       ...original,
@@ -479,18 +480,8 @@ export function useErpState(userId: string) {
     const calculatedAmount=adjustment.items.reduce((sum,item)=>sum+(item.unitPrice+(item.unitTaxAmount??0))*item.quantity,0);
     const alreadyAdjustedAmount=saleAdjustments.filter(item=>item.saleId===adjustment.saleId&&item.type!=='Anulación').reduce((sum,item)=>sum+item.amount,0);
     if(!Number.isFinite(calculatedAmount)||Math.abs(calculatedAmount-adjustment.amount)>0.01||adjustment.amount>Math.max(0,originalSale.total-alreadyAdjustedAmount)+0.01)return false;
-    const soldQuantities=new Map<number,number>();
-    (originalSale.items??[]).forEach(line=>soldQuantities.set(line.productId,(soldQuantities.get(line.productId)??0)+line.qty));
-    const adjustedItems=saleAdjustments.filter(item=>item.saleId===adjustment.saleId&&item.type!=='Anulación').flatMap(item=>item.items);
-    const alreadyAdjusted=new Map<number,number>();
-    adjustedItems.forEach(item=>alreadyAdjusted.set(item.productId,(alreadyAdjusted.get(item.productId)??0)+item.quantity));
-    const requestedInThisAdjustment=new Map<number,number>();
-    adjustment.items.forEach(item=>requestedInThisAdjustment.set(item.productId,(requestedInThisAdjustment.get(item.productId)??0)+item.quantity));
-    for(const [productId,quantity] of requestedInThisAdjustment){
-      const soldQuantity=soldQuantities.get(productId)??0;
-      const already=alreadyAdjusted.get(productId)??0;
-      if(!soldQuantity||already+quantity>soldQuantity)return false;
-    }
+    const priorAdjustments=saleAdjustments.filter(item=>item.saleId===adjustment.saleId);
+    if(!originalSale.items?.length||!canApplySaleAdjustmentItems(originalSale.items,priorAdjustments,adjustment.items))return false;
     if(adjustment.type==='Anulación'&&saleAdjustments.some(item=>item.saleId===adjustment.saleId&&item.type==='Anulación'))return false;
     const returnedByProduct=new Map<number,SaleAdjustmentRecord['items']>();
     adjustment.items.filter(line=>line.returnToStock).forEach(line=>{
