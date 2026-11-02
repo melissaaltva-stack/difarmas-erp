@@ -58,7 +58,6 @@ function App({ userId, userEmail, userAppMetadata, signOut }: { userId: string; 
   const permissions=userAccess?.permissions??['dashboard','configuracion'];
   // Existing user records may predate the reports module. Preserve role-based access for those accounts.
   const canSee=(module:string)=>permissions.includes(module as Module);
-  const activeAllowed = active==='finanzas' ? (financeSection==='cobrar' ? canSee('cuentas_cobrar') : financeSection==='pagar' ? canSee('cuentas_pagar') : canSee('finanzas')) : canSee(active);
   const visibleNav=nav.filter(([id])=>id!=='proveedores'&&id!=='cuentas_cobrar'&&id!=='cuentas_pagar'&&(id==='compras'?(canSee('compras')||canSee('proveedores')):canSee(id)));
   const [mobileMenuOpen,setMobileMenuOpen]=useState(false);
   const [newProductOrigin,setNewProductOrigin]=useState<'inventory'|'purchase'>('inventory');
@@ -66,6 +65,7 @@ function App({ userId, userEmail, userAppMetadata, signOut }: { userId: string; 
   const [customersExpanded,setCustomersExpanded]=useState(false);
   const [financeExpanded,setFinanceExpanded]=useState(false);
   const [financeSection,setFinanceSection]=useState<'resumen'|'gastos'|'ventas'|'compras_recibidas'|'cobrar'|'pagar'|'historial_pagos'|'movimientos'|'cierre'|'historial_cierres'|'gestion'>('resumen');
+  const activeAllowed = active==='finanzas' ? (financeSection==='cobrar' ? canSee('cuentas_cobrar') : financeSection==='pagar' ? canSee('cuentas_pagar') : canSee('finanzas')) : canSee(active);
   const financeItems=[['resumen','Resumen financiero'],['gastos','Gastos'],['ventas','Ventas registradas'],['compras_recibidas','Compras recibidas'],['cobrar','Cuentas por cobrar'],['pagar','Cuentas por pagar'],['historial_pagos','Historial de cobros y pagos'],['movimientos','Movimientos de caja'],['cierre','Cierre de caja diario'],['historial_cierres','Historial de cierres'],['gestion','Gestión y análisis']] as const;
   const goToFinanceSection=(target:typeof financeSection)=>{setFinanceSection(target);startTransition(()=>setActive('finanzas'));setFinanceExpanded(true);setMobileMenuOpen(false);};
   const [purchaseSectionRequest,setPurchaseSectionRequest]=useState(0);
