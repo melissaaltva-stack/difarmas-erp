@@ -475,6 +475,9 @@ export function useErpState(userId: string) {
   const receivePurchase=(items:PurchaseItem[],paymentMethod:string,dueDate:string,invoiceNumber='',invoiceDate='',notes='',enteredTotal?:number,paymentTerms='Contado - Efectivo'):boolean=>{
     if (purchaseInProgress.current) return false;
     if (!items.length || items.some(item => !Number.isFinite(item.qty) || item.qty <= 0 || !Number.isFinite(item.unitCost) || item.unitCost < 0)) return false;
+    const supplierKey=purchaseSupplier.trim().toLocaleLowerCase();
+    const invoiceKey=invoiceNumber.trim().toLocaleLowerCase();
+    if(invoiceKey && purchases.some(p=>p.supplier.trim().toLocaleLowerCase()===supplierKey && String(p.invoiceNumber??'').trim().toLocaleLowerCase()===invoiceKey)) return false;
     let updated: Product[];
     try { updated = applyPurchaseToInventory(products,items,purchaseSupplier); } catch { return false; }
     purchaseInProgress.current=true;
