@@ -6,7 +6,7 @@
 export const csvCell = (value: unknown): string => {
   const raw = String(value ?? '');
   const numeric = /^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(raw);
-  const formulaLike = /^[\s\u0000-\u001f]*[=+\-@]/.test(raw);
+  const formulaLike = /^[\s\u0000-\u001f\uFEFF]*[=+\-@]/.test(raw);
   const safe = !numeric && formulaLike ? `'${raw}` : raw;
   return '"' + safe.replace(/"/g, '""') + '"';
 };
