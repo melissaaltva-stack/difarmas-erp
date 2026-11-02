@@ -15,6 +15,8 @@ export function SupplierReturns({products,suppliers,purchases,costHistory,record
   const [filter,setFilter]=useState('Todos');
   const [notice,setNotice]=useState('');
   const dispatchLocks=useRef<Set<number>>(new Set());
+  const lastSupplierReturnId=useRef(0);
+  const nextSupplierReturnId=()=>{const highestStoredId=records.reduce((highest,record)=>Math.max(highest,Number(record.id)||0),0);const nextId=Math.max(Date.now(),highestStoredId,lastSupplierReturnId.current)+1;lastSupplierReturnId.current=nextId;return nextId;};
   useEffect(()=>{dispatchLocks.current.clear();},[records]);
   const supplierPurchases=purchases.filter(p=>p.supplier.trim().toLocaleLowerCase()===supplier.trim().toLocaleLowerCase());
   const selectedPurchase=supplierPurchases.find(p=>String(p.id)===purchaseReference);
@@ -33,7 +35,7 @@ export function SupplierReturns({products,suppliers,purchases,costHistory,record
       return;
     }
     const item:SupplierReturnItem={productId:selected.id,productName:selected.name,code:selected.code,quantity:validQty,unitCost:selectedPurchaseLine.unitCost,reason};
-    const record:SupplierReturnRecord={id:Date.now(),supplier:supplier.trim(),purchaseReference:purchaseReference.trim(),date:new Date().toISOString(),status:'Pendiente',items:[item],totalCost:item.quantity*item.unitCost,reason,notes:notes.trim()};
+    const record:SupplierReturnRecord={id:nextSupplierReturnId(),supplier:supplier.trim(),purchaseReference:purchaseReference.trim(),date:new Date().toISOString(),status:'Pendiente',items:[item],totalCost:item.quantity*item.unitCost,reason,notes:notes.trim()};
     setRecords(current=>[record,...current]);
     setPurchaseReference('');setProductId('');setQuantity('1');setNotes('');
     setNotice('Devolución registrada como pendiente. El inventario no se modifica hasta confirmar la salida al proveedor.');
