@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { Truck, Search, Plus, Pencil, Trash2, X, Save, ClipboardList } from 'lucide-react';
 import type { Product, Supplier, SupplierReturnRecord, PurchaseRecord, PurchaseCostHistoryEntry } from '../domain/types';
@@ -6,10 +6,17 @@ import { SupplierReturns } from './SupplierReturns';
 type SupplierForm = Omit<Supplier, 'id'>;
 const emptySupplier = (): SupplierForm => ({ name:'', contact:'', phone:'', email:'', rtn:'', address:'', paymentTerms:'Contado', notes:'', active:true });
 export function Suppliers({suppliers,setSuppliers,products,purchases,costHistory,records,setRecords,onDispatch,onResolve}:{suppliers:Supplier[];setSuppliers:Dispatch<SetStateAction<Supplier[]>>;products:Product[];purchases:PurchaseRecord[];costHistory:PurchaseCostHistoryEntry[];records:SupplierReturnRecord[];setRecords:Dispatch<SetStateAction<SupplierReturnRecord[]>>;onDispatch:(record:SupplierReturnRecord)=>boolean;onResolve:(record:SupplierReturnRecord,status:SupplierReturnRecord['status'])=>boolean}) {
+  const lastSupplierId = useRef(0);
+  const nextSupplierId = () => {
+    const highestStoredId = suppliers.reduce((highest,supplier)=>Math.max(highest,Number(supplier.id)||0),0);
+    const nextId = Math.max(Date.now(),highestStoredId,lastSupplierId.current)+1;
+    lastSupplierId.current=nextId;
+    return nextId;
+  };
   const [query,setQuery]=useState(''); const [returnsOpen,setReturnsOpen]=useState(false); const [viewing,setViewing]=useState<Supplier|null>(null); const [modalOpen,setModalOpen]=useState(false); const [editing,setEditing]=useState<Supplier|null>(null); const [form,setForm]=useState<SupplierForm>(emptySupplier()); const [error,setError]=useState('');
   const visible=useMemo(()=>suppliers.filter(s=>[s.name,s.contact,s.phone,s.rtn,s.email].join(' ').toLowerCase().includes(query.toLowerCase())),[suppliers,query]);
   const start=(s?:Supplier)=>{setEditing(s??null);setForm(s?{name:s.name,contact:s.contact,phone:s.phone,email:s.email,rtn:s.rtn,address:s.address,paymentTerms:s.paymentTerms,notes:s.notes,active:s.active}:emptySupplier());setError('');setModalOpen(true);};
-  const save=()=>{if(!form.name.trim()){setError('El nombre del proveedor es obligatorio.');return;}if(suppliers.some(s=>s.name.trim().toLowerCase()===form.name.trim().toLowerCase()&&s.id!==editing?.id)){setError('Ya existe un proveedor con ese nombre.');return;}if(editing)setSuppliers(current=>current.map(s=>s.id===editing.id?{...form,id:editing.id,name:form.name.trim()}:s));else setSuppliers(current=>[{...form,id:Date.now(),name:form.name.trim()},...current]);setModalOpen(false);setEditing(null);setError('');};
+  const save=()=>{if(!form.name.trim()){setError('El nombre del proveedor es obligatorio.');return;}if(suppliers.some(s=>s.name.trim().toLowerCase()===form.name.trim().toLowerCase()&&s.id!==editing?.id)){setError('Ya existe un proveedor con ese nombre.');return;}if(editing)setSuppliers(current=>current.map(s=>s.id===editing.id?{...form,id:editing.id,name:form.name.trim()}:s));else setSuppliers(current=>[{...form,id:nextSupplierId(),name:form.name.trim()},...current]);setModalOpen(false);setEditing(null);setError('');};
   const field=(key:keyof SupplierForm,label:string,placeholder:string,type='text')=><label>{label}<input type={type} value={String(form[key]??'')} placeholder={placeholder} onChange={e=>setForm({...form,[key]:e.target.value})}/></label>;
   return <div className="content">
     <div className="grid metrics supplier-metrics"><article className="card metric"><div className="metric-top"><span>Total proveedores</span><Truck size={20}/></div><strong>{suppliers.length}</strong></article><article className="card metric"><div className="metric-top"><span>Activos</span></div><strong>{suppliers.filter(s=>s.active).length}</strong></article><article className="card metric"><div className="metric-top"><span>Inactivos</span></div><strong>{suppliers.filter(s=>!s.active).length}</strong></article></div>
