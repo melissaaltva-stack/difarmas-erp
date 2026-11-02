@@ -34,6 +34,11 @@ describe('financeService', () => {
     expect(cashSales(sales)).toBe(100);
   });
 
+  it('counts custom cash payment categories', () => {
+    const custom: SaleRecord[] = [{ id: 4, total: 75, cost: 40, profit: 35, payment: 'Caja', paymentKind: 'cash', type: 'minorista', date: '2026-10-12T10:03:00.000Z' }];
+    expect(cashSales(custom)).toBe(75);
+  });
+
   it('counts cash expenses but excludes bank transfers from physical cash', () => {
     const expenses: Expense[] = [
       { id: 1, description: 'Alquiler', amount: 1000, category: 'Alquiler', date: '2026-10-12', paymentMethod: 'Efectivo' },
