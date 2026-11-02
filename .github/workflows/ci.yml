@@ -4,7 +4,7 @@ run-name: Build DIFARMÁS ERP #${{ github.run_number }}
 
 on:
   push:
-    branches: [main, ci/verify-build, refactor/erp-architecture]
+    branches: [main, ci/verify-build, refactor/erp-architecture, security/erp-state-permission-matrix]
   pull_request:
     branches: [main]
 
