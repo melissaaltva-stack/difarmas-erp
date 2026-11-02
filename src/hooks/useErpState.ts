@@ -444,10 +444,10 @@ export function useErpState(userId: string) {
       if(!Number.isFinite(source.totalCost)||source.totalCost<=0)return false;
       let reduction:number; let creditRemainder:number;
       try { ({reduction,creditRemainder}=splitSupplierCreditNote(source.totalCost,payable?Math.max(0,payable.total-payable.paid):0)); } catch { return false; }
-      if(creditRemainder>0&&!supplierCredits.some(credit=>credit.sourceReturnId===source.id)){
+      if(creditRemainder>0){
         const now=new Date().toISOString();
         const credit:SupplierCredit={id:nextSupplierCreditId(),supplier:source.supplier.trim(),sourceReturnId:source.id,sourcePurchaseId:purchase.id,sourceReference:purchase.invoiceNumber?.trim()||String(purchase.id),amount:creditRemainder,remainingBalance:creditRemainder,createdAt:now,applications:[]};
-        setSupplierCredits(rows=>[...rows,credit]);
+        setSupplierCredits(rows=>rows.some(existing=>existing.sourceReturnId===source.id)?rows:[...rows,credit]);
       }
       supplierReturnResolutionCompleted.current.add(record.id);
       if(reduction>0&&payable)setPayables(rows=>rows.map(item=>item.id===payable.id?{...item,total:Math.max(item.paid,item.total-reduction)}:item));
