@@ -30,12 +30,14 @@ Rama: `security/erp-state-permission-matrix`
 - Flujo de caja y cierre diario descuentan únicamente el importe neto en efectivo, no el total bruto cuando hubo crédito aplicado.
 - Antes de recibir la compra, la pantalla muestra el crédito que se aplicará y el importe neto que se pagará o quedará por pagar.
 - El historial de proveedores conserva visibles también los créditos totalmente utilizados, con saldo cero y sus facturas de aplicación.
-- La creación del crédito usa una inserción idempotente en el actualizador de estado para impedir duplicados en actualizaciones concurrentes dentro de la misma instancia.
-- Se añadieron pruebas para compra de contado cubierta parcial o totalmente y para evitar registrar dos veces la misma devolución.
+- La creación del crédito se realiza ahora mediante `resolve_supplier_credit_note`, una función PostgreSQL transaccional que bloquea la fila `erp_state` de la cuenta, valida el estado actual y actualiza devolución, cuenta por pagar y subledger en una sola transacción.
+- Dos dispositivos que intenten procesar la misma devolución se serializan por el bloqueo de fila: el primero cambia el estado; el segundo recibe un rechazo porque la devolución ya no está en estado `Enviado al proveedor` o el crédito ya existe.
+- El RPC valida sesión, estado activo y rol autorizado en `app_metadata`; no usa `service_role` y no crea tablas nuevas.
+- El cliente serializa la llamada con los guardados de la instantánea y cancela el autosave pendiente para evitar que un snapshot antiguo revierta el resultado confirmado por el servidor.
 
 ## Límites conocidos
 
-La protección de duplicados en el flujo de devolución opera dentro de la sesión del navegador y el guardado de la instantánea usa control de revisión. Esto no equivale a una transacción idempotente del lado del servidor entre dispositivos concurrentes. Para garantizar esa condición estrictamente se necesitaría una operación RPC/backend transaccional; no se creó ni modificó una función o tabla de Supabase.
+La protección transaccional ya está implementada en código y en la migración `supabase/migrations/202611020002_supplier_credit_note_atomic.sql`. **Debe aplicarse esa migración al proyecto Supabase conectado al entorno de prueba antes de usar el botón “Nota de crédito”**. Hasta aplicar la migración, el RPC no existirá y la operación fallará de forma segura; no se debe volver al registro local como alternativa.
 
 Los créditos se aplican automáticamente a nuevas compras de cualquier forma de pago. En compras de contado y transferencia, el desembolso se calcula por el importe neto después del crédito aplicado; en compras a crédito, solo el remanente genera una cuenta por pagar.
 
@@ -43,5 +45,5 @@ Los créditos se aplican automáticamente a nuevas compras de cualquier forma de
 
 - Cambios aislados en `security/erp-state-permission-matrix`.
 - No se fusionó a producción.
-- No se modificaron datos existentes ni el esquema de Supabase.
-- No se realizó despliegue de producción.
+- Se añadió una migración SQL para una función RPC; no se ejecutó desde este entorno porque no hay una conexión administrativa al proyecto Supabase.
+- No se modificaron datos existentes ni se desplegó a producción.
