@@ -548,14 +548,14 @@ export function useErpState(userId: string) {
     let saved:Product;
     if (editing) {
       const previous = products.find(p=>p.id===editing.id);
-      saved = {...product,id:editing.id};
+      saved = {...product,id:editing.id,...(product.itemType==='Servicio'?{stock:0,minStock:0,lot:'',expiry:'',supplier:''}:{})};
       setProducts(current=>current.map(p=>p.id===editing.id?saved:p));
       if (previous && previous.stock !== saved.stock) {
         const difference = saved.stock - previous.stock;
         setInventoryMovements(current=>[...current,{id:nextInventoryMovementId(),productId:saved.id,productName:saved.name,type:'Ajuste',quantity:Math.abs(difference),stockBefore:previous.stock,stockAfter:saved.stock,unitCost:saved.cost,date:new Date().toISOString(),note:difference>0?'Ajuste de entrada manual':'Ajuste de salida manual'}]);
       }
     } else {
-      saved = {...product,id:nextProductId()};
+      saved = {...product,id:nextProductId(),...(product.itemType==='Servicio'?{stock:0,minStock:0,lot:'',expiry:'',supplier:''}:{})};
       setProducts(current=>[...current,saved]);
     }
     setEditing(null); setShowForm(false);
