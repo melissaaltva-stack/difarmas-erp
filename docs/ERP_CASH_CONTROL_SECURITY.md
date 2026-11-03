@@ -128,3 +128,27 @@ La interfaz permite registrar pagos desde `PayablesModule` y desde `Finance.tsx`
 **Corrección recomendada:** definir un único tipo de documento y un único asignador de correlativos por establecimiento, punto de emisión y tipo documental. Reservar cada número mediante una operación transaccional del servidor, con unicidad en base de datos, validación de CAI/rango/fecha y registro de factura en la misma transacción. Mantener separados los documentos comerciales internos de los comprobantes fiscales SAR y mostrar claramente su estado. No reutilizar ni retroceder correlativos tras una emisión confirmada. La implementación requiere una decisión de diseño fiscal y autorización expresa antes de tocar base de datos o producción.
 
 **Estado:** hallazgos documentados; no se cambió la lógica de facturación, la configuración fiscal, Supabase ni producción.
+
+## Sesiones, caché local y protección de datos del navegador
+
+**SESSION-01 — Datos operativos persistidos en texto legible en el navegador**
+
+src/hooks/useErpState.ts persiste múltiples colecciones del ERP mediante saveJson y saveNumber; src/utils/storage.ts serializa los valores directamente con JSON.stringify en localStorage. El snapshot remoto incluye clientes, productos, ventas, compras, costos, cuentas por cobrar/pagar, gastos, movimientos, cierres y configuración. Por tanto, parte sustancial de la información comercial y financiera queda disponible en el almacenamiento del perfil del navegador en formato legible para cualquier script que se ejecute en el mismo origen y para quien obtenga acceso al perfil/desbloqueo del dispositivo.
+
+La clave difarmas_owner_user_id evita hidratar normalmente la caché de una cuenta distinta cuando ya existe un propietario guardado, pero no cifra los datos ni es una barrera criptográfica. Si la clave de propietario no existe, el código permite cargar la caché anterior como semilla de la primera cuenta; esto conserva compatibilidad de migración, pero exige especial cuidado en equipos compartidos o perfiles de navegador reutilizados.
+
+**SESSION-02 — Cerrar sesión no elimina la caché de negocio**
+
+AuthGate.signOut ejecuta supabase.auth.signOut() y actualiza el estado React, pero no limpia las claves difarmas_* ni difarmas_owner_user_id. El hook conserva por diseño esos datos locales después de cerrar sesión. La comprobación del propietario reduce el riesgo de que otra cuenta cargue la copia por error, pero la información permanece en el navegador y puede ser vista por una persona con acceso al mismo perfil o por código malicioso ejecutado en el origen.
+
+**SESSION-03 — Sesión Supabase persistente**
+
+src/services/supabaseClient.ts configura persistSession: true y autoRefreshToken: true. Esto es el comportamiento habitual para mantener la sesión, no un hallazgo por sí solo. El acceso debe seguir dependiendo de la validación del token y de RLS/servidor; la persistencia de sesión no sustituye la revocación inmediata ni la autorización por operación. El signOut llama al cierre global de Supabase y solo actualiza el estado local después de recibir respuesta satisfactoria.
+
+**Controles positivos observados:** el cliente utiliza únicamente VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY; .env.example advierte expresamente no exponer claves secretas ni service_role en el navegador. remoteErpState.ts filtra por user_id, comprueba que el propietario devuelto coincida con el usuario y aplica actualización condicional por updated_at para rechazar sobrescrituras obsoletas. Esto mejora aislamiento y concurrencia de snapshots, pero no cifra la copia local ni convierte las operaciones financieras en transacciones independientes.
+
+**Severidad:** media para privacidad de datos en dispositivos compartidos/perfiles reutilizados; alta si el navegador o el origen llegaran a sufrir XSS, porque el almacenamiento local no es una frontera frente a scripts del mismo origen. No se observó exposición de la clave service role en los archivos cliente revisados. Esta revisión estática no demuestra que haya ocurrido una filtración.
+
+**Corrección recomendada:** definir una política explícita para dispositivos compartidos. Como mínimo, limpiar las claves de caché operativa y el identificador de propietario después de un cierre de sesión exitoso, y no permitir que una cuenta nueva use una caché sin propietario como semilla salvo un flujo de migración controlado. Antes de hacerlo, diseñar cómo se conserva cualquier cambio pendiente y cómo se recuperan datos si el usuario cierra sesión sin sincronización; no borrar información no sincronizada silenciosamente. Para protección fuerte, reducir los datos sensibles almacenados en el navegador y servirlos bajo autorización, reforzar prevención XSS/CSP y controles de sesión. No guardar secretos de servidor en el cliente.
+
+**Estado:** hallazgos documentados; no se modificó código funcional, almacenamiento del navegador del usuario, Supabase, políticas, usuarios ni producción.
