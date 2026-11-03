@@ -54,8 +54,16 @@ function App({ userId, userEmail, userAppMetadata, signOut }: { userId: string; 
   ] as const;
   const roleOptions:UserAccess['role'][]=['Administrador','Supervisor','Ventas','Compras','Finanzas','Solo lectura'];
   const metadataRole=typeof userAppMetadata.farmi_role==='string'&&roleOptions.includes(userAppMetadata.farmi_role as UserAccess['role'])?userAppMetadata.farmi_role as UserAccess['role']:undefined;
+  const roleDefaultPermissions:Record<UserAccess['role'],Module[]>={
+    Administrador:nav.map(([id])=>id),
+    Supervisor:['dashboard','facturacion_estandar','ventas','redes_sociales','inventario','clientes','cotizaciones','compras','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','proveedores'],
+    Ventas:['dashboard','facturacion_estandar','ventas','redes_sociales','clientes','cotizaciones'],
+    Compras:['dashboard','inventario','compras','proveedores'],
+    Finanzas:['dashboard','facturacion_estandar','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','compras'],
+    'Solo lectura':['dashboard','ventas','redes_sociales','clientes','cotizaciones','inventario','compras','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','proveedores'],
+  };
   const metadataPermissions=Array.isArray(userAppMetadata.farmi_permissions)?userAppMetadata.farmi_permissions.filter((value):value is Module=>nav.some(item=>item[0]===value)):undefined;
-  const tokenAccess:UserAccess|undefined=metadataRole?{id:userId,email:userEmail,name:userEmail.split('@')[0],role:metadataRole,permissions:metadataPermissions??[],active:userAppMetadata.farmi_active!==false}:undefined;
+  const tokenAccess:UserAccess|undefined=metadataRole?{id:userId,email:userEmail,name:userEmail.split('@')[0],role:metadataRole,permissions:metadataPermissions??roleDefaultPermissions[metadataRole],active:userAppMetadata.farmi_active!==false}:undefined;
   const userAccess=tokenAccess;
   const permissions=userAccess?.permissions??['dashboard','configuracion'];
   // Existing user records may predate the reports module. Preserve role-based access for those accounts.
