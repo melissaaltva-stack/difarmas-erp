@@ -53,3 +53,14 @@ Esto no prueba que se pueda emitir un reembolso sin una sesión autorizada: es u
 **Corrección recomendada:** separar “aprobado/pendiente” de “pagado”; registrar el pago mediante una operación de servidor que exija usuario autorizado, importe, medio, referencia obligatoria para medios electrónicos, fecha y clave de idempotencia. Crear el movimiento de caja/banco y actualizar el estado del reembolso en la misma transacción. Para efectivo, requerir confirmación y registro auditable del responsable.
 
 **Estado:** documentado; sin cambios funcionales ni datos.
+
+
+## Cuentas por cobrar: confirmación de abonos
+
+En `ReceivablesModule`, `collect` incrementa `receivables[].paid` y agrega un elemento a `paymentTransactions` mediante dos actualizaciones locales separadas. El aviso de éxito se muestra inmediatamente. `useErpState` persiste ambos campos dentro del snapshot completo con guardado diferido; la revisión optimista de `erp_state.updated_at` detecta conflictos de otras sesiones, pero la interfaz ya pudo mostrar el abono como registrado antes de que el guardado remoto termine. Si el guardado falla, se marca el estado global de sincronización como error, pero no se revierte automáticamente el abono local.
+
+**Riesgo:** conciliación financiera y confirmación engañosa ante fallo de sincronización (medio). No se ha demostrado pérdida permanente de datos; el snapshot puede permanecer localmente modificado y requerir recarga/reconciliación.
+
+**Recomendación:** registrar el abono en una operación de servidor transaccional e idempotente que valide saldo, método, importe y referencia, actualice la cuenta y añada el movimiento de cobro en una sola transacción. Mostrar éxito solo tras recibir confirmación del servidor y reconciliar el estado local con la respuesta confirmada. No aplicar una corrección solo de interfaz como sustituto de atomicidad.
+
+**Estado:** hallazgo documentado; sin cambios en Supabase ni en datos de negocio.
