@@ -55,7 +55,7 @@ function App({ userId, userEmail, userAppMetadata, signOut }: { userId: string; 
   const roleOptions:UserAccess['role'][]=['Administrador','Supervisor','Ventas','Compras','Finanzas','Solo lectura'];
   const metadataRole=typeof userAppMetadata.farmi_role==='string'&&roleOptions.includes(userAppMetadata.farmi_role as UserAccess['role'])?userAppMetadata.farmi_role as UserAccess['role']:undefined;
   const metadataPermissions=Array.isArray(userAppMetadata.farmi_permissions)?userAppMetadata.farmi_permissions.filter((value):value is Module=>nav.some(item=>item[0]===value)):undefined;
-  const tokenAccess:UserAccess|undefined=metadataRole?{id:userId,email:userEmail,name:userEmail.split('@')[0],role:metadataRole,permissions:metadataPermissions??[],active:userAppMetadata.farmi_active!==false}:undefined;
+  const tokenAccess:UserAccess|undefined=metadataRole?{id:userId,email:userEmail,name:userEmail.split('@')[0],role:metadataRole,permissions:metadataPermissions??[],active:userAppMetadata.farmi_active===true}:undefined;
   const userAccess=tokenAccess;
   const permissions=userAccess?.permissions??['dashboard','configuracion'];
   // Existing user records may predate the reports module. Preserve role-based access for those accounts.
@@ -67,7 +67,7 @@ function App({ userId, userEmail, userAppMetadata, signOut }: { userId: string; 
   const [customersExpanded,setCustomersExpanded]=useState(false);
   const [financeExpanded,setFinanceExpanded]=useState(false);
   const [financeSection,setFinanceSection]=useState<'resumen'|'gastos'|'ventas'|'compras_recibidas'|'cobrar'|'pagar'|'historial_pagos'|'movimientos'|'cierre'|'historial_cierres'|'gestion'>('resumen');
-  const activeAllowed = active==='finanzas' ? (financeSection==='cobrar' ? canSee('cuentas_cobrar') : financeSection==='pagar' ? canSee('cuentas_pagar') : canSee('finanzas')) : canSee(active);
+  const activeAllowed = userAccess?.active === true && (active==='finanzas' ? (financeSection==='cobrar' ? canSee('cuentas_cobrar') : financeSection==='pagar' ? canSee('cuentas_pagar') : canSee('finanzas')) : canSee(active));
   const financeItems=[['resumen','Resumen financiero'],['gastos','Gastos'],['ventas','Ventas registradas'],['compras_recibidas','Compras recibidas'],['cobrar','Cuentas por cobrar'],['pagar','Cuentas por pagar'],['historial_pagos','Historial de cobros y pagos'],['movimientos','Movimientos de caja'],['cierre','Cierre de caja diario'],['historial_cierres','Historial de cierres'],['gestion','Gestión y análisis']] as const;
   const goToFinanceSection=(target:typeof financeSection)=>{setFinanceSection(target);startTransition(()=>setActive('finanzas'));setFinanceExpanded(true);setMobileMenuOpen(false);};
   const [purchaseSectionRequest,setPurchaseSectionRequest]=useState(0);
