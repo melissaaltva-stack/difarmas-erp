@@ -23,7 +23,7 @@ La acción `bootstrap` consulta la lista de usuarios, comprueba que no haya admi
 
 La acción `invite` ya no utiliza `req.headers.origin`. Usa `FARMI_SITE_URL` configurada en el servidor y valida que la URL sea HTTPS (se admite localhost para desarrollo). Si la configuración es inválida, la invitación se detiene con error 503. El fallback es el dominio principal conocido de FARMI.
 
-**Pendiente operativo:** configurar `FARMI_SITE_URL` en cada entorno Preview/Production y confirmar que el destino esté permitido en Supabase Auth Redirect URLs.
+**Pendiente operativo:** configurar `FARMI_SITE_URL` en cada entorno Preview/Production y confirmar que el destino esté permitido en Supabase Auth Redirect URLs. Si el envío de invitación funciona pero falla la asignación de metadata, el endpoint intenta borrar la invitación incompleta; si la limpieza falla, devuelve un error explícito para revisión manual.
 
 ### ADMIN-05 — Claims ausentes se convierten en rol Ventas en la presentación
 **Severidad: media.**
