@@ -64,3 +64,18 @@ En `ReceivablesModule`, `collect` incrementa `receivables[].paid` y agrega un el
 **Recomendación:** registrar el abono en una operación de servidor transaccional e idempotente que valide saldo, método, importe y referencia, actualice la cuenta y añada el movimiento de cobro en una sola transacción. Mostrar éxito solo tras recibir confirmación del servidor y reconciliar el estado local con la respuesta confirmada. No aplicar una corrección solo de interfaz como sustituto de atomicidad.
 
 **Estado:** hallazgo documentado; sin cambios en Supabase ni en datos de negocio.
+
+
+## Cuentas por pagar: doble flujo de registro y confirmación
+
+La interfaz permite registrar pagos desde `PayablesModule` y desde `Finance.tsx` (`paySupplier`). Ambos flujos modifican `payables[].paid` y agregan `PaymentTransaction` tipo `Pago proveedor` en el estado local; ambos se persisten posteriormente dentro del snapshot completo. Los bloqueos `processing` / `paymentLocks` viven únicamente en memoria del navegador y se limpian al cambiar los arrays. No constituyen una reserva compartida entre pestañas o dispositivos ni una garantía de idempotencia en el servidor.
+
+`PayablesModule.pay` muestra inmediatamente “Pago registrado correctamente”; `Finance.tsx.paySupplier` tampoco espera una confirmación remota antes de finalizar la acción. El guardado real del snapshot es diferido y puede fallar por conflicto de revisión o conexión. En ese caso, la interfaz puede haber mostrado el pago como realizado localmente aunque no esté confirmado en Supabase. La misma obligación puede intentarse pagar desde sesiones diferentes; la revisión optimista protege la fila completa de sobrescrituras silenciosas, pero no ejecuta una transacción financiera que reserve saldo y registre el pago de forma indivisible.
+
+**Conciliación de caja:** `Finance.tsx` calcula los pagos de proveedor en efectivo a partir de `paymentTransactions` y usa esos importes en el flujo de caja y el cierre diario. No se observó una omisión general de los pagos registrados en ese cálculo. El riesgo se presenta cuando el movimiento de pago y el saldo de la obligación no quedan confirmados juntos en la nube.
+
+**Severidad:** media-alta para integridad de cuentas por pagar y confirmación del pago; posible impacto en conciliación si una sesión cree que el pago quedó registrado cuando el guardado falló. No se ha demostrado una doble salida bancaria real ni pérdida permanente de datos.
+
+**Corrección recomendada:** consolidar ambos puntos de entrada en una única operación transaccional de servidor, con clave de idempotencia, bloqueo/validación del saldo pendiente y registro atómico del pago y su método/fecha. Devolver el estado confirmado y mostrar éxito solo después de esa respuesta; ante conflicto, recargar el saldo confirmado y no dejar el pago local como exitoso. Mantener los dos accesos de interfaz si se desea, pero deben invocar la misma operación autorizada.
+
+**Estado:** hallazgo documentado; no se modificaron datos de negocio, Supabase ni el comportamiento funcional.
