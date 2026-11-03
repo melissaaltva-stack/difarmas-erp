@@ -67,7 +67,7 @@ function App({ userId, userEmail, userAppMetadata, signOut }: { userId: string; 
   const [customersExpanded,setCustomersExpanded]=useState(false);
   const [financeExpanded,setFinanceExpanded]=useState(false);
   const [financeSection,setFinanceSection]=useState<'resumen'|'gastos'|'ventas'|'compras_recibidas'|'cobrar'|'pagar'|'historial_pagos'|'movimientos'|'cierre'|'historial_cierres'|'gestion'>('resumen');
-  const activeAllowed = userAccess?.active === true && (active==='finanzas' ? (financeSection==='cobrar' ? canSee('cuentas_cobrar') : financeSection==='pagar' ? canSee('cuentas_pagar') : canSee('finanzas')) : canSee(active));
+  const activeAllowed = userAccess?.active === true && (active==='finanzas' ? (financeSection==='cobrar' ? canSee('cuentas_cobrar') : financeSection==='pagar' ? canSee('cuentas_pagar') : financeSection==='ventas' ? canSee('ventas') : financeSection==='compras_recibidas' ? canSee('compras') : canSee('finanzas')) : canSee(active));
   const financeItems=[['resumen','Resumen financiero'],['gastos','Gastos'],['ventas','Ventas registradas'],['compras_recibidas','Compras recibidas'],['cobrar','Cuentas por cobrar'],['pagar','Cuentas por pagar'],['historial_pagos','Historial de cobros y pagos'],['movimientos','Movimientos de caja'],['cierre','Cierre de caja diario'],['historial_cierres','Historial de cierres'],['gestion','Gestión y análisis']] as const;
   const goToFinanceSection=(target:typeof financeSection)=>{setFinanceSection(target);startTransition(()=>setActive('finanzas'));setFinanceExpanded(true);setMobileMenuOpen(false);};
   const [purchaseSectionRequest,setPurchaseSectionRequest]=useState(0);
@@ -88,7 +88,7 @@ function App({ userId, userEmail, userAppMetadata, signOut }: { userId: string; 
         </div>}
       </div> : id==='finanzas' ? <div className="nav-group" key={id}>
         <button type="button" className="nav nav-parent" aria-expanded={financeExpanded} aria-controls="finance-subnav" onClick={()=>setFinanceExpanded(open=>!open)}><Icon size={19}/><span>Finanzas</span><span className="nav-chevron">{financeExpanded?'▾':'▸'}</span></button>
-        {financeExpanded&&<div className="nav-submenu" id="finance-subnav">{financeItems.filter(([key])=>key!=='cobrar'&&key!=='pagar'||(key==='cobrar'?canSee('cuentas_cobrar'):canSee('cuentas_pagar'))).map(([key,title])=><button type="button" key={key} className={active==='finanzas'&&financeSection===key?'active':''} onMouseEnter={()=>void preloadModule('finanzas')} onClick={()=>goToFinanceSection(key)}>{title}</button>)}</div>}
+        {financeExpanded&&<div className="nav-submenu" id="finance-subnav">{financeItems.filter(([key])=>key==='cobrar'?canSee('cuentas_cobrar'):key==='pagar'?canSee('cuentas_pagar'):key==='ventas'?canSee('ventas'):key==='compras_recibidas'?canSee('compras'):true).map(([key,title])=><button type="button" key={key} className={active==='finanzas'&&financeSection===key?'active':''} onMouseEnter={()=>void preloadModule('finanzas')} onClick={()=>goToFinanceSection(key)}>{title}</button>)}</div>}
       </div> : <button key={id} className={active === id ? 'nav active' : 'nav'} onMouseEnter={()=>void preloadModule(id)} onClick={() => {if(id==='facturacion_estandar')setSaleType('minorista');startTransition(()=>setActive(id));setMobileMenuOpen(false);}}><Icon size={19}/>{label}</button>)}
       <div className="sidebar-footer"><Activity size={17}/> Sistema MVP v0.7</div>
     </aside>
