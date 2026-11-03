@@ -28,7 +28,7 @@ const ROLE_PERMISSIONS: Record<Role, string[]> = {
 };
 const ROLES: Role[] = ['Administrador','Supervisor','Ventas','Compras','Finanzas','Solo lectura'];
 const isRole = (value: unknown): value is Role => typeof value === 'string' && ROLES.includes(value as Role);
-const isAdmin = (user: User) => user.app_metadata?.farmi_admin === true || user.app_metadata?.farmi_role === 'Administrador';
+const isAdmin = (user: User) => user.app_metadata?.farmi_active === true && (user.app_metadata?.farmi_admin === true || user.app_metadata?.farmi_role === 'Administrador');
 
 function safePermissions(role: Role, value: unknown): string[] {
   if (role === 'Administrador' && !Array.isArray(value)) return [...MODULES];
@@ -60,9 +60,10 @@ function safeUser(user: User) {
     createdAt: user.created_at,
     lastSignInAt: user.last_sign_in_at ?? null,
     emailConfirmed: Boolean(user.email_confirmed_at),
-    role: isRole(metadata.farmi_role) ? metadata.farmi_role : 'Ventas',
-    permissions: safePermissions(isRole(metadata.farmi_role) ? metadata.farmi_role : 'Ventas', metadata.farmi_permissions),
-    active: metadata.farmi_active !== false && !user.banned_until,
+    // Unprovisioned accounts must never be presented as ordinary active users.
+    role: isRole(metadata.farmi_role) ? metadata.farmi_role : 'Solo lectura',
+    permissions: safePermissions(isRole(metadata.farmi_role) ? metadata.farmi_role : 'Solo lectura', metadata.farmi_permissions),
+    active: metadata.farmi_active === true && !user.banned_until,
     isAdmin: isAdmin(user),
   };
 }
@@ -197,7 +198,15 @@ export default async function handler(req: Req, res: Res) {
         });
         if (error || !data.user) return reply(res, 400, { error: error?.message ?? 'No se pudo enviar la invitación. Comprueba la configuración de correo de Supabase.' });
         const { data: updated, error: updateError } = await adminClient.auth.admin.updateUserById(data.user.id, { app_metadata: metadata });
-        if (updateError || !updated.user) return reply(res, 500, { error: 'Se creó la invitación, pero no se pudieron guardar los permisos. Revisa este usuario antes de que inicie sesión.' });
+        if (updateError || !updated.user) {
+          // Compensate for the non-transactional invite + metadata sequence.
+          // If cleanup also fails, explicitly report the orphan for manual review.
+          const { error: cleanupError } = await adminClient.auth.admin.deleteUser(data.user.id);
+          if (cleanupError) {
+            return reply(res, 500, { error: 'La invitación se creó, pero falló el guardado de permisos y también la limpieza automática. Esta cuenta requiere revisión administrativa antes de usar el sistema.' });
+          }
+          return reply(res, 500, { error: 'No se pudieron guardar los permisos; la invitación incompleta fue cancelada automáticamente. Inténtalo nuevamente.' });
+        }
         newUser = updated.user;
       }
       return reply(res, 201, { user: safeUser(newUser), mode: action });
