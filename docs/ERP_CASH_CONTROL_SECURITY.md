@@ -79,3 +79,20 @@ La interfaz permite registrar pagos desde `PayablesModule` y desde `Finance.tsx`
 **Corrección recomendada:** consolidar ambos puntos de entrada en una única operación transaccional de servidor, con clave de idempotencia, bloqueo/validación del saldo pendiente y registro atómico del pago y su método/fecha. Devolver el estado confirmado y mostrar éxito solo después de esa respuesta; ante conflicto, recargar el saldo confirmado y no dejar el pago local como exitoso. Mantener los dos accesos de interfaz si se desea, pero deben invocar la misma operación autorizada.
 
 **Estado:** hallazgo documentado; no se modificaron datos de negocio, Supabase ni el comportamiento funcional.
+
+
+## Gastos, movimientos manuales y cierre diario
+
+**Gastos:** `Finance.tsx.addExpense` valida descripción no vacía e importe finito mayor que cero y agrega el gasto al estado local. El método de pago se conserva para distinguir efectivo de transferencia. No se observa confirmación individual del servidor; el gasto se incluye en el snapshot general y depende de la sincronización diferida. Una falla de sincronización puede dejar el navegador mostrando el gasto localmente sin confirmación remota.
+
+**Movimientos manuales:** el formulario de caja valida descripción e importe finito positivo y crea un movimiento con ID generado en el cliente. La categoría `Banco` se excluye del efectivo físico; las demás categorías participan en el cálculo de entradas/salidas. El registro se agrega al estado local y no tiene operación remota individual ni idempotencia. Dos sesiones pueden generar movimientos independientes sin una secuencia compartida. No se encontró una validación de autorización por tipo/categoría en el componente; la protección de escritura depende del mecanismo general de snapshot.
+
+**Cierre diario:** `alreadyClosedToday` consulta cierres cargados en el navegador y `closingRef` evita doble clic en esa instancia. El cierre se agrega con `setClosures` y se persiste en el snapshot general. No hay restricción única en servidor por usuario y fecha ni transacción que reserve el día y capture simultáneamente los movimientos que forman el saldo. Dos dispositivos con la misma revisión inicial pueden intentar crear cierres del mismo día; el control optimista del snapshot puede rechazar una de las escrituras por conflicto, pero no equivale a una operación atómica con clave única. El botón se deshabilita localmente al cambiar `isClosing`, y el estado se reinicia cuando cambia `closures`.
+
+**Conciliación revisada:** el efectivo esperado incluye ventas al contado, cobros en efectivo, movimientos manuales de caja, gastos en efectivo, compras al contado y pagos a proveedores en efectivo. Las compras al contado y pagos a proveedores se calculan por separado; no se observó que una compra a crédito se reste como compra al contado. El cierre guarda `dayExpenses` y `dayCashPurchases` en campos separados. Esta revisión de código no demuestra que todos los datos históricos estén completos ni que no existan registros duplicados preexistentes.
+
+**Severidad:** media-alta para la unicidad y consistencia de cierres; media para gastos y movimientos por ausencia de confirmación remota individual e idempotencia. No se ha demostrado una duplicación efectiva de cierres o movimientos en producción.
+
+**Corrección recomendada:** centralizar el registro de gastos, movimientos y cierres en operaciones de servidor autorizadas, con validación de importe, método/categoría, fecha y usuario; claves de idempotencia; y cierre diario único por usuario/fecha mediante restricción y transacción. Mostrar éxito solo tras confirmación del servidor. Para el cierre, calcular y congelar en la misma transacción los movimientos elegibles y el saldo inicial/final.
+
+**Estado:** hallazgos documentados; no se modificaron datos de negocio, Supabase, políticas ni comportamiento funcional.
