@@ -30,3 +30,26 @@ Cambios de código en commits:
 El estado de Vercel para el commit más reciente estaba pendiente al redactar este informe. No se afirma que la compilación haya pasado hasta que el proveedor confirme el resultado.
 
 No se modificó Supabase, no se ejecutaron migraciones ni se tocaron datos reales. No se fusionó ni desplegó a producción.
+
+## Revalidación — 2026-11-03
+
+Se releyó el flujo actual de `useErpState.ts`, `remoteErpState.ts`, `storage.ts` y `AuthGate.tsx`.
+
+- Se confirma que el cambio de cuenta bloquea la hidratación desde una caché cuyo propietario registrado sea otro usuario.
+- Se confirma que las escrituras locales y el autosave remoto esperan a que la lectura remota termine correctamente.
+- Se confirma que un error de lectura mantiene `remoteReady=false`, por lo que no se habilita el autosave que podría reemplazar el snapshot.
+- La carga heredada sin `difarmas_owner_user_id` todavía admite caché local. No se cambió porque bloquearla sin un flujo de importación/respaldo podría dejar datos históricos sin recuperar.
+- El cierre de sesión no elimina la caché. Tampoco se implementó borrado automático: no existe una confirmación fiable de que no haya operaciones pendientes de sincronización.
+- Las claves gerenciales `difarmas_exec_actions`, `difarmas_management_tasks`, `difarmas_audit_history`, `difarmas_campaigns` y `difarmas_price_history` siguen siendo locales y no están separadas por usuario. No deben considerarse datos privados ni bitácora formal.
+
+### Validación automatizada
+
+El commit `4f54cd385d717171c06f3abda72cb927250146c9` pasó GitHub Actions:
+- instalación de dependencias;
+- auditoría npm;
+- compilación TypeScript/Vite;
+- pruebas automatizadas.
+
+Ejecución: https://github.com/melissaaltva-stack/difarmas-erp/actions/runs/41741411041
+
+No existe despliegue Vercel asociado a ese commit. Esta revalidación es estática y automatizada; no representa una prueba de dos cuentas en un navegador real. No se modificó Supabase ni se borró almacenamiento local.
