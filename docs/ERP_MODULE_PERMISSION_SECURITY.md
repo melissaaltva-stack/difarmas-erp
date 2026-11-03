@@ -40,3 +40,42 @@ La autorización de Supabase/RLS sigue siendo una capa distinta: este hallazgo n
 ## Alcance y estado
 
 Revisión estática de `Settings.tsx`, `api/admin-users.ts`, `App.tsx`, `useErpState.ts` y `remoteErpState.ts` en la rama `security/erp-state-permission-matrix`. No se ejecutaron operaciones con usuarios reales, no se modificó código funcional, Supabase, datos, policies, grants ni variables de entorno. No se promovió a producción.
+
+## PERM-02 — El rol Finanzas incluía el módulo operativo de Compras
+
+**Severidad: media para segregación de funciones.**
+
+### Evidencia
+- El preset 'Finanzas' en Settings.tsx y ROLE_PERMISSIONS en api/admin-users.ts incluía el módulo 'compras'.
+- App.tsx entrega a Purchases operaciones de recepción de compra, alta/edición de productos y actualización de proveedores/devoluciones. Por tanto, una cuenta con ese permiso no se limita a consultar el resumen de compras recibidas desde Finanzas: también puede entrar al flujo operativo de Compras y recibir mercancía.
+- Finanzas ya dispone de una vista de consulta de compras recibidas dentro de su módulo financiero; no necesita el módulo operativo completo para consultar esos registros.
+
+### Corrección aplicada en esta rama
+- Se retiró 'compras' del preset 'Finanzas' tanto en src/components/Settings.tsx como en api/admin-users.ts.
+- Esto corrige los valores predeterminados para nuevas asignaciones y para cambios de rol realizados desde la interfaz.
+
+### Limitación importante
+Los permisos personalizados ya guardados en app_metadata.farmi_permissions no se reescriben automáticamente al cambiar el preset del código. No se modificaron cuentas ni claims reales. Un administrador deberá revisar y guardar explícitamente el permiso de las cuentas Finanzas existentes después de validar el Preview.
+
+## Matriz de autorización: estado confirmado
+
+| Rol | Hallazgo confirmado |
+| --- | --- |
+| Administrador | Acceso amplio esperado; las protecciones de concurrencia ADMIN-03/07 siguen pendientes. |
+| Supervisor | Tiene acceso a los módulos operativos y financieros incluidos en su preset; no hay separación general read/write en servidor. |
+| Ventas | No tiene Inventario ni Compras en el preset, pero las mutaciones de clientes, ventas y cotizaciones se ejecutan mediante callbacks cliente. |
+| Compras | Tiene acceso a Inventario y Compras, incluyendo recepción y edición de productos; coherente con la función operativa, pero no validado por permiso de módulo en servidor. |
+| Finanzas | Se corrigió el preset para retirar Compras operativo. Mantiene consultas financieras y CxC/CxP; las operaciones financieras continúan siendo callbacks cliente. |
+| Solo lectura | PERM-01 sigue abierto: el preset concede módulos con callbacks de escritura y el modelo de permisos no distingue lectura de escritura. |
+
+La matriz es una revisión estática de las rutas y callbacks. No equivale a pruebas de autorización HTTP ni a una prueba con cuentas de cada rol.
+
+## Bloqueos para una corrección integral
+
+No es seguro afirmar que todos los roles están protegidos mientras:
+1. erp_state almacena un snapshot JSONB completo y las policies RLS actuales autorizan por propietario/estado general de cuenta, no por módulo ni por clave JSONB.
+2. Las mutaciones de ventas, inventario, compras, clientes, cobros, pagos y caja se realizan principalmente en el navegador y se sincronizan mediante snapshot.
+3. El rol Solo lectura no tiene una capacidad independiente de escritura/lectura.
+4. Las operaciones de cobro/pago, cierre de caja, recepción de compras, cambio recibido de proveedor y cambios de administrador necesitan transacciones/idempotencia autoritativas en servidor.
+
+La solución completa requiere diseñar y probar endpoints/RPCs con autorización por operación y transacciones, además de un cambio coordinado de RLS/esquema. No se aplicó ninguna migración, policy, grant, cambio de usuario, claim ni dato de Supabase durante esta auditoría.
