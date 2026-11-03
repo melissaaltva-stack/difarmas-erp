@@ -33,9 +33,9 @@ export function Inventory({products, search, setSearch, movements, onNew, onEdit
   const detailClickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [labelsOpen, setLabelsOpen] = useState(false);
   const [labelSearch, setLabelSearch] = useState('');
-  const selectedProducts = useMemo(() => products.filter(p => selected.includes(p.id) && p.code.trim()), [products, selected]);
+  const selectedProducts = useMemo(() => products.filter(p => p.itemType!=='Servicio'&&selected.includes(p.id)&&p.code.trim()), [products, selected]);
   const expiryDays = (p:Product) => daysUntil(p.expiry);
-  const labelProducts = useMemo(() => products.filter(p => (p.name+' '+p.laboratory+' '+p.code+' '+p.category+' '+p.presentation).toLowerCase().includes(labelSearch.trim().toLowerCase())), [products, labelSearch]);
+  const labelProducts = useMemo(() => products.filter(p => p.itemType!=='Servicio'&&(p.name+' '+p.laboratory+' '+p.code+' '+p.category+' '+p.presentation).toLowerCase().includes(labelSearch.trim().toLowerCase())), [products, labelSearch]);
   const selectLabelVisible = (checked:boolean) => setSelected(current => checked ? [...new Set([...current,...labelProducts.map(p=>p.id)])] : current.filter(id => !labelProducts.some(p=>p.id===id)));
   const missingExpiry = products.filter(p => p.itemType!=='Servicio'&&(!p.expiry || !Number.isFinite(expiryDays(p))));
   const expiredValue = expired.reduce((sum,p)=>sum+Math.max(0,p.stock)*Math.max(0,p.cost),0);
@@ -51,7 +51,7 @@ export function Inventory({products, search, setSearch, movements, onNew, onEdit
   const toggle = (id:number, checked:boolean) => setSelected(current => checked ? [...new Set([...current,id])] : current.filter(x => x !== id));
   const selectVisible = (checked:boolean) => setSelected(current => checked ? [...new Set([...current,...visibleProducts.map(p=>p.id)])] : current.filter(id => !visibleProducts.some(p=>p.id===id)));
   return <div className="content inventory-page">
-    <div className="page-head inventory-page-head-compact"><div className="inventory-actions"><button className="secondary" onClick={()=>setLabelsOpen(true)} disabled={selected.length===0}><Printer size={17}/> Imprimir etiquetas ({selected.length})</button><button className="primary" onClick={onNew}><Plus size={17}/> Nuevo producto</button></div></div>
+    <div className="page-head inventory-page-head-compact"><div className="inventory-actions"><button className="secondary" onClick={()=>setLabelsOpen(true)} disabled={selectedProducts.length===0}><Printer size={17}/> Imprimir etiquetas ({selected.length})</button><button className="primary" onClick={onNew}><Plus size={17}/> Nuevo producto</button></div></div>
     <div className="inventory-toolbar card"><div className="search"><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar por código, producto, categoría..." /></div><span className="count">{products.length} productos</span></div>
     <div className="inventory-alerts">
       {lowStock.length > 0 && <div className="card alert-card"><AlertTriangle size={18}/><div><strong>{lowStock.length} con stock bajo</strong><small>{lowStock.slice(0,3).map(p=>p.name).join(', ')}</small></div></div>}
