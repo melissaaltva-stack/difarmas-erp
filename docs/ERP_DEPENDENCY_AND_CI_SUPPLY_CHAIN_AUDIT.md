@@ -22,15 +22,13 @@ Los workflows usan referencias como `actions/checkout@v4`, `actions/setup-node@v
 
 **Recomendación:** fijar cada acción de terceros a un SHA completo verificado y mantener un comentario con su versión legible. Automatizar actualizaciones revisadas (por ejemplo, Dependabot).
 
-## Hallazgo SUPPLY-03 — El workflow de CI no se ejecuta en esta rama por push
+## SUPPLY-03 — Cobertura CI de la rama de auditoría
 
-**Severidad: baja/media para cobertura.**
+<badge>Corregido en configuración de rama</badge>
 
-`.github/workflows/ci.yml` ejecuta en push solo para `main`, `ci/verify-build` y `refactor/erp-architecture`; los Pull Requests hacia `main` sí disparan el workflow. La rama `security/erp-state-permission-matrix` no está incluida en la lista de push.
+La versión actual de `.github/workflows/ci.yml` ya incluye `security/erp-state-permission-matrix` en los triggers de `push`, además de `main`, `ci/verify-build` y `refactor/erp-architecture`. Los Pull Requests hacia `main` también disparan el workflow.
 
-**Impacto:** los commits directos de esta rama no reciben build/test automático hasta que se abra un PR hacia main. La revisión documental no demuestra que los tests pasen.
-
-**Recomendación:** incluir la rama de seguridad en los triggers de push o trabajar mediante PR y exigir el estado CI exitoso antes de fusionar.
+**Estado:** el defecto descrito en la revisión anterior ya no está presente en el archivo actual de esta rama. La presencia del trigger no equivale a un CI exitoso; cada ejecución debe verificarse en GitHub.
 
 ## Hallazgo SUPPLY-04 — El workflow de despliegue instala dependencias sin lockfile
 
