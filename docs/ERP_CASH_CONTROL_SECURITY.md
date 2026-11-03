@@ -152,3 +152,30 @@ src/services/supabaseClient.ts configura persistSession: true y autoRefreshToken
 **Corrección recomendada:** definir una política explícita para dispositivos compartidos. Como mínimo, limpiar las claves de caché operativa y el identificador de propietario después de un cierre de sesión exitoso, y no permitir que una cuenta nueva use una caché sin propietario como semilla salvo un flujo de migración controlado. Antes de hacerlo, diseñar cómo se conserva cualquier cambio pendiente y cómo se recuperan datos si el usuario cierra sesión sin sincronización; no borrar información no sincronizada silenciosamente. Para protección fuerte, reducir los datos sensibles almacenados en el navegador y servirlos bajo autorización, reforzar prevención XSS/CSP y controles de sesión. No guardar secretos de servidor en el cliente.
 
 **Estado:** hallazgos documentados; no se modificó código funcional, almacenamiento del navegador del usuario, Supabase, políticas, usuarios ni producción.
+
+
+## Controles de plataforma: RLS, políticas y cabeceras del navegador
+
+**PLATFORM-01 — RLS está habilitado, pero la migración no fuerza RLS para el propietario de la tabla**
+
+La migración inicial `202610170001_erp_state.sql` crea `public.erp_state`, habilita Row Level Security y concede SELECT/INSERT/UPDATE a `authenticated`, sin DELETE. Las políticas comparan `auth.uid()` con `user_id`. La migración de endurecimiento `202611020001_erp_state_role_write_guard.sql` recrea SELECT/INSERT/UPDATE para exigir además cuenta activa y rol de la aplicación en INSERT/UPDATE. No se observa `ALTER TABLE ... FORCE ROW LEVEL SECURITY` en estas migraciones.
+
+**Interpretación:** RLS protege las solicitudes ordinarias de los roles cliente sujetos a políticas, pero el propietario de la tabla y roles con privilegios de bypass pueden no quedar sujetos a RLS. Esto no constituye por sí solo una vulnerabilidad para el rol `authenticated`; es una limitación del perímetro de defensa en profundidad. No se consultó ni modificó el estado real de privilegios de la tabla en el proyecto remoto.
+
+**PLATFORM-02 — La autorización RLS es por cuenta y rol general, no por permiso de módulo**
+
+Las políticas de `erp_state` permiten UPDATE a cualquier usuario activo cuyo `farmi_role` pertenezca a Administrador, Supervisor, Ventas, Compras o Finanzas. No comprueban `farmi_permissions` ni limitan las claves JSON que cada rol puede modificar. Como el snapshot contiene módulos distintos en una misma fila JSON, una cuenta con permiso de escritura a nivel de fila puede enviar cambios a datos de otros módulos aunque la interfaz oculte esas pantallas. El rol Solo lectura queda fuera de la lista de escritura en esta migración, pero la separación de permisos por módulo no está aplicada en la base de datos.
+
+**Severidad:** alta para separación de funciones y mínimo privilegio. La exposición depende de la aplicación efectiva de esta migración en Supabase; no se ha verificado el estado remoto y no debe asumirse que el archivo SQL ya fue aplicado.
+
+**Corrección recomendada:** migrar operaciones críticas a tablas/funciones de servidor con autorización por acción y permiso; evitar aceptar reemplazos arbitrarios del JSON completo. Si se conserva la tabla snapshot durante una transición, definir una estrategia de autorización de escritura por rol y módulo y probarla con cuentas de cada rol antes de aplicarla. Evaluar FORCE RLS y privilegios de tabla con una migración controlada, revisando primero funciones administrativas y flujos legítimos.
+
+**PLATFORM-03 — No se observó una política explícita de Content Security Policy ni cabeceras de seguridad en el repositorio**
+
+En `index.html` no hay meta CSP ni otras cabeceras de seguridad declaradas. En la raíz del repositorio revisada no se encontró `vercel.json` ni un archivo de configuración de cabeceras equivalente. `vite.config.ts` solo configura React y la ruta base. La función API del catálogo sí establece `X-Content-Type-Options: nosniff`, pero esa cabecera protege esa respuesta y no acredita que el documento principal y los assets tengan una política global.
+
+**Severidad:** media como oportunidad de defensa en profundidad frente a XSS, clickjacking y carga de recursos no autorizados. Esta revisión del repositorio no confirma las cabeceras que Vercel u otra capa de infraestructura pueda añadir automáticamente; deben verificarse en las respuestas HTTP reales antes de concluir que faltan en producción.
+
+**Corrección recomendada:** comprobar cabeceras del dominio desplegado y después definir una política CSP compatible con Supabase y los recursos reales; añadir al menos `frame-ancestors` mediante CSP o `X-Frame-Options`, `Referrer-Policy`, `X-Content-Type-Options` y una política de permisos apropiada. Aplicar HSTS solo tras confirmar HTTPS en todos los subdominios relevantes. No activar una CSP restrictiva sin probar login, recuperación de contraseña, imágenes y llamadas de Supabase.
+
+**Estado:** hallazgos de revisión estática; no se alteraron políticas, grants, roles, funciones, datos, cabeceras del dominio ni configuración de Vercel.
