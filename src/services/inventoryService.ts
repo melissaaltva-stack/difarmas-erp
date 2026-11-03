@@ -34,15 +34,16 @@ export function applySaleToInventory(products: Product[], sold: CartItem[]): Pro
   for (const [productId,quantity] of requestedByProduct) {
     const product=products.find(p=>p.id===productId);
     if(!product) throw new Error('No se encontró un producto del carrito en el inventario.');
-    if(quantity>product.stock) throw new Error('Stock insuficiente para el producto seleccionado.');
+    if(product.itemType!=='Servicio'&&quantity>product.stock) throw new Error('Stock insuficiente para el producto seleccionado.');
   }
-  return products.map(product => { const quantity=requestedByProduct.get(product.id)??0; return quantity>0 ? { ...product, stock: product.stock - quantity } : product; });
+  return products.map(product => { const quantity=requestedByProduct.get(product.id)??0; return quantity>0&&product.itemType!=='Servicio' ? { ...product, stock: product.stock - quantity } : product; });
 }
 
 export function applyPurchaseToInventory(products: Product[], items: PurchaseItem[], supplier: string): Product[] {
   if (!items.length) throw new Error('La compra debe contener al menos un producto.');
   if (new Set(items.map(item => item.id)).size !== items.length) throw new Error('La compra contiene productos duplicados.');
   if (items.some(item => !products.some(product => product.id === item.id))) throw new Error('No se encontró un producto de la compra en el inventario.');
+  if (items.some(item => products.find(product=>product.id===item.id)?.itemType==='Servicio')) throw new Error('Los servicios no se pueden recibir como mercancía ni aumentar existencias.');
   const invalid = items.find(item => !Number.isFinite(item.qty) || item.qty <= 0 || !Number.isFinite(item.unitCost) || item.unitCost < 0 || !Number.isFinite(item.qty * item.unitCost));
   if (invalid) throw new Error('Cantidad y costo de compra deben ser válidos.');
   const invalidExpiry = items.find(item => !isExpiryAtLeastSixMonths(item.expiry));
