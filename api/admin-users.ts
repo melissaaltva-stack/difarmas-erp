@@ -232,7 +232,7 @@ export default async function handler(req: Req, res: Res) {
       const target = targetData.user;
       const oldRole = isRole(target.app_metadata?.farmi_role) ? target.app_metadata.farmi_role : 'Ventas';
       const role = isRole(body.role) ? body.role : oldRole;
-      const active = typeof body.active === 'boolean' ? body.active : (target.app_metadata?.farmi_active !== false && !target.banned_until);
+      const active = typeof body.active === 'boolean' ? body.active : (target.app_metadata?.farmi_active === true && !target.banned_until);
       const permissions = safePermissions(role, body.permissions ?? target.app_metadata?.farmi_permissions);
 
       const allUsers = await listAllUsers();
