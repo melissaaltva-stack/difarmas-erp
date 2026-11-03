@@ -133,6 +133,11 @@ export default async function handler(req: Req, res: Res) {
       return reply(res, 200, { isAdmin: true, user: safeUser(data.user), message: 'Administración activada correctamente.' });
     }
 
+    // Bootstrap is handled above; every other account-management action
+    // requires an explicit active claim. Missing metadata must not imply access.
+    if (currentUser.app_metadata?.farmi_active !== true) {
+      return reply(res, 403, { error: 'La cuenta no tiene una autorización activa confirmada. Solicita al administrador que revise tus permisos.' });
+    }
     if (!isAdmin(currentUser)) return reply(res, 403, { error: 'Solo un administrador autorizado puede gestionar cuentas.' });
 
     if (action === 'list') {
