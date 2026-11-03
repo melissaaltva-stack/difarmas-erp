@@ -116,11 +116,7 @@ export default async function handler(req: Req, res: Res) {
 
     if (!querySucceeded) {
       console.error('[store-catalog] Supabase read failed', lastFailure);
-      return reply(res, 502, {
-        error: 'No se pudo consultar el catálogo del ERP.',
-        ...(lastFailure?.status ? { upstreamStatus: lastFailure.status } : {}),
-        ...(lastFailure?.code ? { upstreamCode: lastFailure.code } : {}),
-      });
+      return reply(res, 502, { error: 'No se pudo consultar el catálogo del ERP.' });
     }
 
     const state = asRecord(row?.state);
