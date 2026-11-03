@@ -179,3 +179,22 @@ En `index.html` no hay meta CSP ni otras cabeceras de seguridad declaradas. En l
 **Corrección recomendada:** comprobar cabeceras del dominio desplegado y después definir una política CSP compatible con Supabase y los recursos reales; añadir al menos `frame-ancestors` mediante CSP o `X-Frame-Options`, `Referrer-Policy`, `X-Content-Type-Options` y una política de permisos apropiada. Aplicar HSTS solo tras confirmar HTTPS en todos los subdominios relevantes. No activar una CSP restrictiva sin probar login, recuperación de contraseña, imágenes y llamadas de Supabase.
 
 **Estado:** hallazgos de revisión estática; no se alteraron políticas, grants, roles, funciones, datos, cabeceras del dominio ni configuración de Vercel.
+
+
+## CASH-05 — Operaciones de venta, compra e inventario no son transacciones atómicas
+
+La revisión de `src/hooks/useErpState.ts` confirma que ventas, edición de facturas, recepción de compras, ajustes de inventario y devoluciones actualizan varias colecciones locales y dependen después del guardado del snapshot. El cliente puede recibir éxito local antes de la confirmación remota de todos los cambios relacionados. El control de revisión del snapshot no convierte estas operaciones en transacciones.
+
+**Severidad:** alta para integridad de inventario y finanzas. No demuestra pérdida de datos; identifica el riesgo de sincronización parcial.
+
+**Resolución requerida:** funciones transaccionales de servidor con autorización por acción, validación de importes y cantidades, idempotencia y restricciones únicas. La interfaz solo debe confirmar después de la respuesta del servidor. No se implementa una solución parcial en el navegador.
+
+## API-01 — Respuestas de error administrativas exponían detalles internos
+
+`api/admin-users.ts` devolvía `error.message` en errores inesperados. Se cambió a una respuesta genérica y se conserva el detalle únicamente en el registro del servidor. Cambio en commit `d159671fa79af5c3f644b921a33a17276b7e4ffc`.
+
+## API-02 — El catálogo público exponía código y estado HTTP del proveedor
+
+`api/store-catalog.ts` incluía el código y estado HTTP de Supabase en la respuesta pública de error. Se retiraron esos campos; el detalle permanece en el registro del servidor. Cambio en commit `370cbe2ea9345bd722a620e761f8008661b3bfd4`.
+
+**Verificación:** los dos archivos fueron releídos en la rama y muestran las respuestas genéricas esperadas. Aún falta CI/build y prueba HTTP; no se declara validación desplegada.
