@@ -60,3 +60,16 @@ El reporte `cobros` estaba disponible si el usuario tenía cualquiera de los per
 **Límite:** como el snapshot completo sigue estando en el navegador, esto no sustituye la autorización del servidor. Los datos deben separarse o entregarse por endpoints/RPC con permisos por operación.
 
 **Verificación pendiente:** pruebas, compilación y Preview del commit. Sin cambios en Supabase ni producción.
+
+
+## PERM-04 — CRM visible y editable desde Gestión sin permiso Clientes
+
+**Severidad: media.**
+
+La sección de Gestión y análisis se presenta dentro de Finanzas. Su componente `ManagementSuite` renderizaba `CustomerCRM` sin comprobar el permiso `clientes`; el CRM mostraba datos de clientes y permitía agregar registros a través de `setCustomers`. Por ello, una cuenta con Finanzas pero sin Clientes podía consultar y modificar el directorio desde el área gerencial.
+
+**Corrección de interfaz aplicada en esta rama:** `App.tsx` pasa `canSee('clientes')` a `ManagementSuite`; el panel CRM solo se renderiza cuando `canManageCustomers` es verdadero. Las demás herramientas de análisis gerencial permanecen disponibles.
+
+**Límite:** la autorización sigue siendo cliente-side mientras el snapshot completo se sincronice como JSON. La protección definitiva requiere validar permisos en servidor.
+
+**Verificación pendiente:** build, pruebas y Preview. No se modificaron datos ni configuración de Supabase, y no se publicó a producción.
