@@ -13,7 +13,7 @@ export function Dashboard({products,sales,expenses,monthlyGoal,fixedExpenses,can
   const grossProfit=monthSales.reduce((a,s)=>a+s.profit,0);
   const expenseTotal=monthExpenses.reduce((a,e)=>a+e.amount,0);
   const netResult=grossProfit-expenseTotal;
-  const inventoryValue=products.reduce((a,p)=>a+p.cost*p.stock,0);
+  const inventoryValue=products.filter(p=>p.itemType!=='Servicio').reduce((a,p)=>a+p.cost*p.stock,0);
   const lowStock=products.filter(p=>p.itemType!=='Servicio'&&p.stock<=p.minStock);
   const todayKey=localDateKey();
   const salesToday=sales.filter(s=>dateKey(s.date)===todayKey).reduce((a,s)=>a+s.total,0);
