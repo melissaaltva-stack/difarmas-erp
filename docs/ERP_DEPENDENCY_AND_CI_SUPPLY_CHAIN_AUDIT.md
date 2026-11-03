@@ -24,7 +24,7 @@ Los workflows usan referencias como `actions/checkout@v4`, `actions/setup-node@v
 
 ## SUPPLY-03 — Cobertura CI de la rama de auditoría
 
-<badge>Corregido en configuración de rama</badge>
+**Estado: corregido en la configuración de esta rama.**
 
 La versión actual de `.github/workflows/ci.yml` ya incluye `security/erp-state-permission-matrix` en los triggers de `push`, además de `main`, `ci/verify-build` y `refactor/erp-architecture`. Los Pull Requests hacia `main` también disparan el workflow.
 
