@@ -127,3 +127,16 @@ El riesgo confirmado es distinto: la sesión que pierde el conflicto ya modific�
 **Corrección recomendada:** una operación transaccional de servidor que bloquee el expediente, exija estado Enviado al proveedor, compruebe idempotencia, actualice stock/costo, inserte movimientos y cambie el estado a Cambio recibido en la misma transacción. La RPC de nota de crédito ya existente no cubre esta rama de cambio recibido.
 
 **Estado:** documentado; sin cambios funcionales, SQL ni datos.
+
+
+## Hallazgo adicional: importes y costo unitario de factura editada confiados al cliente
+
+En `updateStandardInvoice`, las cantidades de inventario se derivan de las líneas `sold`, pero el total de la factura se deriva directamente de `details.lines`; los valores de precio neto, impuesto, descuento y total de línea se copian a los renglones de venta. Además, el costo unitario utilizado para recalcular costo y utilidad proviene de `item.cost` enviado por el cliente, sin cotejarlo con el costo vigente o el costo histórico original. La función no valida que `details.lines` corresponda exactamente, una a una, con los productos/cantidades de `sold`, ni recalcula los importes a partir de valores autorizados.
+
+Una solicitud manipulada por una sesión con capacidad de edición podría hacer que el total/CxC de la factura no coincida con las líneas que descontaron inventario, o alterar el costo/utilidad histórica de la venta. La interfaz normal construye estos datos de forma coherente, pero esa lógica cliente no constituye una barrera de integridad.
+
+**Severidad: media-alta (integridad de facturación y rentabilidad).** Requiere capacidad de edición y manipulación de la solicitud; no demuestra acceso anónimo.
+
+**Corrección recomendada:** la operación de servidor debe cargar la factura y sus líneas originales, validar el estado editable y las cantidades, recalcular precio/descuento/impuesto conforme a la política autorizada, conservar el costo histórico o aplicar un ajuste de costo expresamente autorizado y derivar el total/CxC de las mismas líneas validadas. Guardar líneas, total, stock, movimientos y CxC en una transacción con control de revisión e idempotencia.
+
+**Estado:** documentado; no se añadieron validaciones cliente que aparenten ser autorización servidor, no se modificaron datos y no se ejecutó SQL.
