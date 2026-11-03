@@ -79,3 +79,13 @@ No es seguro afirmar que todos los roles están protegidos mientras:
 4. Las operaciones de cobro/pago, cierre de caja, recepción de compras, cambio recibido de proveedor y cambios de administrador necesitan transacciones/idempotencia autoritativas en servidor.
 
 La solución completa requiere diseñar y probar endpoints/RPCs con autorización por operación y transacciones, además de un cambio coordinado de RLS/esquema. No se aplicó ninguna migración, policy, grant, cambio de usuario, claim ni dato de Supabase durante esta auditoría.
+
+## PERM-03 — El editor de permisos no mostraba el módulo Cotizaciones
+
+**Severidad: baja; defecto de administración de permisos.**
+
+### Evidencia y corrección
+- api/admin-users.ts incluía 'cotizaciones' en MODULES y los presets Ventas/Supervisor/Solo lectura, pero la lista visible de módulos en Settings.tsx no incluía esa opción.
+- Esto impedía seleccionar o deseleccionar explícitamente Cotizaciones desde el editor de permisos, aunque el permiso pudiera existir en el claim.
+- Se agregó Cotizaciones a la lista visible del editor en Settings.tsx. La corrección no cambia permisos ya guardados de ninguna cuenta.
+
