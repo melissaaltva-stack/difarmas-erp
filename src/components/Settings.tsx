@@ -5,7 +5,7 @@ import { requireSupabase } from '../services/supabaseClient';
 
 const modules:{id:Module;label:string}[]=[
   {id:'dashboard',label:'Panel de control'},{id:'facturacion_estandar',label:'Facturación estándar'},{id:'ventas',label:'Ventas / POS'},{id:'redes_sociales',label:'Redes sociales / Ventas'},{id:'inventario',label:'Inventario'},
-  {id:'clientes',label:'Clientes'},{id:'compras',label:'Compras'},{id:'finanzas',label:'Finanzas'},{id:'cuentas_cobrar',label:'Cuentas por cobrar'},{id:'cuentas_pagar',label:'Cuentas por pagar'},{id:'reportes',label:'Reportes e impresión'},{id:'asistente_ia',label:'Asistente IA'},{id:'proveedores',label:'Proveedores'},{id:'configuracion',label:'Configuración'}
+  {id:'clientes',label:'Clientes'},{id:'cotizaciones',label:'Cotizaciones'},{id:'compras',label:'Compras'},{id:'finanzas',label:'Finanzas'},{id:'cuentas_cobrar',label:'Cuentas por cobrar'},{id:'cuentas_pagar',label:'Cuentas por pagar'},{id:'reportes',label:'Reportes e impresión'},{id:'asistente_ia',label:'Asistente IA'},{id:'proveedores',label:'Proveedores'},{id:'configuracion',label:'Configuración'}
 ];
 const rolePermissions:Record<UserAccess['role'],Module[]> = {
   Administrador:modules.map(m=>m.id),
