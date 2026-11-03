@@ -25,6 +25,11 @@ describe('buildPurchaseRecommendations', () => {
     expect(result[0].estimatedCost).toBe(result[0].suggestedQuantity * 10);
   });
 
+  it('does not recommend purchasing services even when their stock is zero', () => {
+    const service = product({ id: 2, itemType: 'Servicio', stock: 0, minStock: 0, expiry: '' });
+    expect(buildPurchaseRecommendations([service], [], { asOf })).toHaveLength(0);
+  });
+
   it('uses recent product-level sales and marks urgent low coverage', () => {
     const result = buildPurchaseRecommendations(
       [product({ stock: 3, minStock: 2 })],
