@@ -51,8 +51,9 @@ describe('inventoryService', () => {
     expect(() => applySaleToInventory([product], [{ ...cartItem(1), id: 99 }])).toThrow(/No se encontró/);
   });
 
-  it('rejects duplicate product lines in a sale', () => {
-    expect(() => applySaleToInventory([product], [cartItem(2), cartItem(2)])).toThrow(/duplicados/);
+  it('aggregates separate cart lines for the same product before reducing stock', () => {
+    const result = applySaleToInventory([product], [cartItem(2), cartItem(2)]);
+    expect(result[0].stock).toBe(1);
   });
 
   it('rejects invalid sale prices and costs', () => {
