@@ -97,7 +97,12 @@ export default async function handler(req: Req, res: Res) {
       const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage: 100 });
       if (error) throw error;
       all.push(...data.users);
-      if (data.users.length < 100) break;
+      if (data.users.length < 100) return all;
+      // Do not silently use a truncated account inventory for bootstrap or
+      // last-administrator checks. Fail closed if the hard page limit is hit.
+      if (page === 100) {
+        throw new Error('El listado de usuarios superó el límite de seguridad de 10,000 cuentas. No se ejecutó la operación administrativa; solicita una revisión.');
+      }
     }
     return all;
   };
@@ -168,11 +173,22 @@ export default async function handler(req: Req, res: Res) {
         if (error || !data.user) return reply(res, 400, { error: error?.message ?? 'No se pudo crear la cuenta.' });
         newUser = data.user;
       } else {
-        const headerOrigin = req.headers.origin;
-        const origin = (Array.isArray(headerOrigin) ? headerOrigin[0] : headerOrigin) || 'https://difarmas-erp.vercel.app';
+        // Never reflect an arbitrary request Origin into an Auth redirect.
+        // Configure the canonical URL for each deployment environment.
+        const configuredSiteUrl = process.env.FARMI_SITE_URL || 'https://difarmas-erp.vercel.app';
+        let inviteRedirect: string;
+        try {
+          const parsedSiteUrl = new URL(configuredSiteUrl);
+          if (parsedSiteUrl.protocol !== 'https:' && parsedSiteUrl.hostname !== 'localhost') {
+            throw new Error('FARMI_SITE_URL debe usar HTTPS.');
+          }
+          inviteRedirect = parsedSiteUrl.origin;
+        } catch {
+          return reply(res, 503, { error: 'La URL segura de invitaciones no está configurada correctamente en el servidor.' });
+        }
         const { data, error } = await adminClient.auth.admin.inviteUserByEmail(email, {
           data: { full_name: name },
-          redirectTo: origin,
+          redirectTo: inviteRedirect,
         });
         if (error || !data.user) return reply(res, 400, { error: error?.message ?? 'No se pudo enviar la invitación. Comprueba la configuración de correo de Supabase.' });
         const { data: updated, error: updateError } = await adminClient.auth.admin.updateUserById(data.user.id, { app_metadata: metadata });
