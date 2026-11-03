@@ -83,11 +83,11 @@ No cambiarlo sin confirmar la regla de negocio y revisar usuarios existentes.
 3. Confirmar el modelo de permisos personalizados frente a permisos acotados por rol.
 4. Añadir pruebas automatizadas específicas del endpoint, incluyendo casos concurrentes.
 
-### ADMIN-09 — La edición de una cuenta sin claim activo puede activarla por defecto
-**Severidad: media-alta. Pendiente de corrección.**
+### ADMIN-09 — Valor por defecto permisivo al editar una cuenta
+**Estado: corrección aplicada en la rama; pruebas específicas pendientes.**
 
-En `api/admin-users.ts`, la acción `update` calcula el estado cuando el request no incluye explícitamente `body.active` mediante `target.app_metadata?.farmi_active !== false && !target.banned_until`. Si el claim `farmi_active` está ausente, esa expresión lo interpreta como activo. Esto no coincide con el criterio estricto aplicado en `App.tsx` y en `safeUser`, que requieren `farmi_active === true`.
+En `api/admin-users.ts`, la acción `update` ahora calcula el valor por defecto como `target.app_metadata?.farmi_active === true && !target.banned_until`. Si la solicitud envía explícitamente `body.active` como booleano, se conserva ese valor; si omite el campo, una cuenta sin claim activo permanece inactiva.
 
-**Impacto:** una edición administrativa de rol o permisos que omita el campo `active` podría convertir metadata incompleta en una cuenta activa. No es una autorización por sí sola, pero contradice el principio de fallo cerrado y puede reactivar cuentas no aprovisionadas.
+**Verificación estática:** el código actual de la rama contiene la condición estricta y la pantalla de administración envía `active: next.active` al guardar cambios de rol, permisos o estado. La compilación y las pruebas generales del commit `c0f9e7f9976116d6976907efedf441fb093d7d64` finalizaron correctamente. No hay pruebas específicas del endpoint que cubran claim ausente, falso y verdadero.
 
-**Recomendación:** cambiar el valor por defecto a `target.app_metadata?.farmi_active === true && !target.banned_until`, conservando la posibilidad de activar una cuenta solo cuando el administrador envía explícitamente `active: true`. Añadir pruebas para claim ausente, falso y verdadero. Esta corrección aún no se ha aplicado.
+**Pendiente:** añadir pruebas unitarias del endpoint y validar las transiciones de activación/desactivación en un entorno aislado. No se modificaron usuarios reales ni datos de Supabase.
