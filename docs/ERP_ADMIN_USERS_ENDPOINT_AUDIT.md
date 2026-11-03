@@ -19,7 +19,7 @@ La acción `bootstrap` consulta la lista de usuarios, comprueba que no haya admi
 **Recomendación:** trasladar el bootstrap a una operación atómica controlada en servidor/DB, con bloqueo transaccional o mecanismo equivalente de exclusión mutua. La operación debe comprobar y establecer el primer administrador dentro de una sola transacción. No resolverlo con una comprobación adicional en el navegador.
 
 ### ADMIN-04 — Redirección de invitaciones basada en URL del servidor
-<badge>Corregido en rama</badge>
+**Estado: corregido en rama.**
 
 La acción `invite` ya no utiliza `req.headers.origin`. Usa `FARMI_SITE_URL` configurada en el servidor y valida que la URL sea HTTPS (se admite localhost para desarrollo). Si la configuración es inválida, la invitación se detiene con error 503. El fallback es el dominio principal conocido de FARMI.
 
