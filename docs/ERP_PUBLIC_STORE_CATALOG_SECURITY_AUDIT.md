@@ -49,3 +49,18 @@ El código prueba `SUPABASE_SERVICE_ROLE_KEY` y `SUPABASE_SECRET_KEY` en secuenc
 - Revisar límites de respuesta/paginación si el catálogo crece.
 
 **Conclusión:** no cambiar todavía el filtro en producción. El hallazgo debe resolverse con un campo de publicación explícito y un proceso de selección de productos, preservando los datos del ERP y evitando que una migración oculte inesperadamente todo el catálogo.
+
+
+## Verificación de privilegios en Supabase — 2026-11-03
+
+Una consulta de solo lectura al catálogo de privilegios confirmó que `anon` y `authenticated` tienen grants declarados sobre `public.store_products` para INSERT, SELECT y UPDATE; además, aparecen grants DELETE para ambos roles. La policy RLS observada para esos roles es únicamente SELECT con condición `is_published = true`. RLS está habilitado en la tabla.
+
+### STORE-04 — Grants de escritura innecesarios para roles públicos/autenticados
+
+**Severidad: media como endurecimiento de defensa en profundidad; no se confirmó una escritura posible con las policies actuales.**
+
+Los grants de INSERT/UPDATE/DELETE no autorizan por sí solos una operación cuando RLS está habilitado y no existe una policy de escritura aplicable. En el estado consultado, la única policy para `anon` y `authenticated` es SELECT de productos publicados, por lo que no se encontró una policy que habilite las operaciones de escritura.
+
+**Riesgo residual:** los privilegios amplios son innecesarios para el uso público de catálogo y podrían convertirse en una exposición si en el futuro se deshabilita RLS o se añade accidentalmente una policy permisiva. Se recomienda revocar INSERT/UPDATE/DELETE a `anon` y `authenticated`, manteniendo SELECT, después de verificar en staging los flujos administrativos reales y que las escrituras legítimas usen un rol/servicio privilegiado de servidor.
+
+**No se aplicó ningún REVOKE ni se hicieron pruebas de escritura.** RLS y grants se inspeccionaron únicamente mediante SELECT de catálogo.
