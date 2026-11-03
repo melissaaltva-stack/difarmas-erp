@@ -49,6 +49,7 @@ export function buildPurchaseRecommendations(
 
   const recommendations: PurchaseRecommendation[] = [];
   for (const product of products) {
+    if (product.itemType === 'Servicio') continue;
     const soldUnits = soldByProduct.get(product.id) ?? 0;
     const firstSale = firstSaleByProduct.get(product.id);
     const observedDays = firstSale === undefined ? 0 : Math.max(1, Math.ceil((asOf.getTime() - firstSale) / DAY_MS));
