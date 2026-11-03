@@ -562,7 +562,7 @@ export function useErpState(userId: string) {
     return saved;
   };
 
-  const deleteProduct=(id:number)=>{ setProducts(current=>current.filter(product=>product.id!==id)); };
+  const deleteProduct=(id:number)=>{ const product=products.find(item=>item.id===id); if(product&&product.itemType!=='Servicio'&&product.stock>0){setInventoryMovements(current=>[...current,{id:nextInventoryMovementId(),productId:product.id,productName:product.name,type:'Ajuste',quantity:product.stock,stockBefore:product.stock,stockAfter:0,unitCost:product.cost,referenceId:product.id,date:new Date().toISOString(),note:'Salida por eliminación del producto del catálogo'}]);} setProducts(current=>current.filter(product=>product.id!==id)); };
 
   const receivePurchase=(items:PurchaseItem[],paymentMethod:string,dueDate:string,invoiceNumber='',invoiceDate='',notes='',enteredTotal?:number,paymentTerms='Contado - Efectivo'):boolean=>{
     if (purchaseInProgress.current) return false;
