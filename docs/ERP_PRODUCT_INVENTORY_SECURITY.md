@@ -101,3 +101,16 @@ Vincular a venta/compra original, validar unidades previamente devueltas y regis
 - No se modificó `main` ni producción.
 - Tests automatizados y validación Supabase/PostgreSQL pendientes.
 - Antes de migrar, inventariar snapshots existentes y diseñar migración reversible que preserve IDs y referencias. No crear filas vacías ni alterar la inicialización/importación local sin plan de preservación de datos.
+
+
+## Hallazgo adicional: total de recepción aceptado desde el cliente
+
+Se confirmó en la revisión de `src/hooks/useErpState.ts` que `receivePurchase` recibe `enteredTotal` desde la interfaz y lo acepta si es un número finito mayor o igual a cero. No compara ese importe con el total de las líneas recibidas ni deriva el total definitivo en el servidor. Después utiliza ese valor para el registro de compra, la aplicación de crédito del proveedor y el total de la cuenta por pagar. En paralelo, existencias, movimientos e historial de costos se calculan a partir de las cantidades y costos de las líneas.
+
+La interfaz calcula el total de factura incluyendo impuestos y presenta validaciones, pero estas comprobaciones son del lado cliente. Una llamada manipulada puede guardar una obligación financiera que no concuerde con el valor de mercancía/costos recibido; por ejemplo, total cero con líneas de compra de valor positivo, o un total inflado. El efecto exacto depende también de los valores de impuestos/descuentos permitidos por la política comercial.
+
+**Severidad: media (integridad financiera).** Requiere una sesión con capacidad de escritura y manipulación de la solicitud; no demuestra por sí sola acceso anónimo ni exposición de datos. La autorización general de escritura sobre el snapshot agrava el impacto porque no hay validación transaccional por operación.
+
+**Corrección recomendada:** calcular y validar el total final en una operación de servidor usando líneas, descuentos e impuestos autorizados; validar tolerancias y reglas de factura; usar el mismo total validado para compra, aplicación de crédito y CxP; registrar auditoría e idempotencia. No basta con repetir la validación en React.
+
+**Estado:** hallazgo documentado; no se modificó código funcional, no se ejecutó SQL y no se alteraron datos.
