@@ -34,3 +34,16 @@ GitHub Actions ejecutó satisfactoriamente instalación, `npm audit`, compilaci�
 - `src/App.tsx`
 
 No se modificó producción, datos Supabase ni se fusionó la rama.
+
+
+## EXPORT-03 — Costos internos expuestos en reportes de inventario
+
+**Severidad: media-alta.**
+
+La matriz de reportes habilitaba `inventario` y `movimientos` solo con el permiso `inventario`, pero sus columnas incluían costo unitario, valor total al costo y costo unitario de movimientos. El catálogo ya exigía Finanzas o Compras para mostrar precios, pero esa restricción no se aplicaba a estos dos reportes.
+
+**Corrección de defensa en profundidad aplicada en esta rama:** el reporte visual y la exportación CSV ahora omiten las columnas de costo y precios del inventario y el costo unitario de movimientos salvo que el usuario tenga además `finanzas` o `compras`. Se mantiene el resto de las columnas operativas.
+
+**Límite:** la corrección es del lado del cliente y no protege contra inspección/manipulación del snapshot completo `erp_state`. No reemplaza autorización de servidor ni separación de datos por RLS.
+
+**Verificación pendiente:** compilación, pruebas y despliegue Preview del commit de corrección. No se exportaron datos reales ni se modificó Supabase o producción.
