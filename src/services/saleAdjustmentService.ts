@@ -1,11 +1,12 @@
 import type { SaleAdjustmentRecord, SaleLine, SaleRecord } from '../domain/types';
 
-export type SaleLineBalance = { line: SaleLine; remainingQuantity: number; adjustedQuantity: number };
+export type SaleLineBalance = { line: SaleLine; remainingQuantity: number; adjustedQuantity: number; returnedToStockQuantity: number };
 
 /** Tracks returns against the exact original sale line; legacy rows fall back to product order. */
 export function getSaleLineBalances(items: SaleLine[], adjustments: SaleAdjustmentRecord[]): SaleLineBalance[] {
   const sourceItems = items.length > 0 && items.every(line => !line.saleLineId) ? aggregateSaleLinesByProduct(items) : items;
   const remaining = sourceItems.map(line => Math.max(0, Number(line.qty) || 0));
+  const returnedToStock = sourceItems.map(() => 0);
   const indexById = new Map<string, number>();
   sourceItems.forEach((line, index) => { if (line.saleLineId) indexById.set(line.saleLineId, index); });
   for (const adjustment of adjustments) for (const item of adjustment.items ?? []) {
@@ -13,16 +14,27 @@ export function getSaleLineBalances(items: SaleLine[], adjustments: SaleAdjustme
     if (!toAllocate) continue;
     if (item.saleLineId) {
       const index = indexById.get(item.saleLineId);
-      if (index !== undefined && sourceItems[index].productId === item.productId) remaining[index] = Math.max(0, remaining[index] - toAllocate);
+      if (index !== undefined && sourceItems[index].productId === item.productId) {
+        const applied = Math.min(remaining[index], toAllocate);
+        remaining[index] = Math.max(0, remaining[index] - applied);
+        if (item.returnToStock) returnedToStock[index] += applied;
+      }
       continue;
     }
     for (let index = 0; index < sourceItems.length && toAllocate > 0; index++) {
       if (sourceItems[index].productId !== item.productId) continue;
       const applied = Math.min(remaining[index], toAllocate);
-      remaining[index] -= applied; toAllocate -= applied;
+      remaining[index] -= applied;
+      if (item.returnToStock) returnedToStock[index] += applied;
+      toAllocate -= applied;
     }
   }
-  return sourceItems.map((line, index) => ({ line, remainingQuantity: remaining[index], adjustedQuantity: Math.max(0, (Number(line.qty) || 0) - remaining[index]) }));
+  return sourceItems.map((line, index) => ({
+    line,
+    remainingQuantity: remaining[index],
+    adjustedQuantity: Math.max(0, (Number(line.qty) || 0) - remaining[index]),
+    returnedToStockQuantity: Math.min(Math.max(0, Number(line.qty) || 0), returnedToStock[index]),
+  }));
 }
 
 export function canApplySaleAdjustmentItems(saleItems: SaleLine[], existing: SaleAdjustmentRecord[], requested: SaleAdjustmentRecord['items']): boolean {
@@ -84,7 +96,7 @@ export function applySaleAdjustmentsToSales(sales: SaleRecord[], adjustments: Sa
     let taxReductionFromLines = 0;
     for (const adjustment of saleAdjustments) for (const item of adjustment.items ?? []) {
       const qty = Math.max(0, Number(item.quantity) || 0);
-      costReductionFromLines += qty * Math.max(0, Number(item.unitCost) || 0);
+      if (item.returnToStock) costReductionFromLines += qty * Math.max(0, Number(item.unitCost) || 0);
       taxReductionFromLines += qty * Math.max(0, Number(item.unitTaxAmount) || 0);
     }
 
@@ -97,12 +109,12 @@ export function applySaleAdjustmentsToSales(sales: SaleRecord[], adjustments: Sa
       return { ...sale, total, cost, profit: total - cost, taxTotal };
     }
 
-    const items = getSaleLineBalances(sale.items, saleAdjustments).map(({line, remainingQuantity}) => {
+    const items = getSaleLineBalances(sale.items, saleAdjustments).map(({line,remainingQuantity,returnedToStockQuantity}) => {
       const removedQty = Math.max(0, line.qty - remainingQuantity);
       const unitPrice = line.qty > 0 ? line.revenue / line.qty : line.unitPrice;
       const unitCost = line.qty > 0 ? line.cost / line.qty : line.unitCost;
       const revenue = Math.max(0, line.revenue - unitPrice * removedQty);
-      const cost = Math.max(0, line.cost - unitCost * removedQty);
+      const cost = Math.max(0, line.cost - unitCost * returnedToStockQuantity);
       const taxAmount = Math.max(0, (line.taxAmount ?? 0) - ((line.taxAmount ?? 0) / Math.max(1, line.qty)) * removedQty);
       const lineTotal = revenue + taxAmount;
       return { ...line, qty: remainingQuantity, revenue, cost, taxAmount, lineTotal, profit: revenue - cost };
