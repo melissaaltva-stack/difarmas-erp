@@ -62,3 +62,16 @@ Crear dos operaciones servidoras independientes (RPCs o funciones transaccionale
 ## Estado y límites
 
 Este documento registra hallazgos de revisión estática del código en la rama `security/erp-state-permission-matrix`. No se ejecutaron pruebas, no se creó ni aplicó SQL, no se conectó una RPC, no se migraron datos y no se modificó producción. El snapshot local/remoto y el flujo de primera inicialización deben preservarse hasta que exista un plan de migración y pruebas de regresión.
+
+
+## Hallazgo adicional: conciliación no atómica de abonos y pagos
+
+La revisión de las dos implementaciones (Finance.tsx y FinancialModules.tsx) confirma que ambas calculan el saldo disponible desde el estado recibido por el navegador, actualizan la cuenta mediante un setter cliente y agregan por separado una fila a paymentTransactions. Los bloqueos useRef son locales a una instancia del componente y se limpian en efectos cuando cambian las colecciones de cuentas/transacciones. No coordinan otras pestañas, sesiones ni dispositivos.
+
+En dos operaciones concurrentes sobre la misma cuenta, ambas solicitudes pueden validar contra el mismo saldo anterior. El saldo puede quedar limitado por Math.min(total, paid + value), mientras las transacciones registran ambos importes completos. Esto puede dejar el historial de caja/cobros/pagos desalineado del saldo acumulado. El control optimista del snapshot no convierte el conjunto cuenta + transacción en una operación financiera atómica.
+
+**Severidad: media (integridad de saldos e historial).** Es un riesgo de concurrencia; no prueba acceso no autenticado. También se confirma duplicación de lógica: existen dos implementaciones por tipo de operación, lo que aumenta el riesgo de que futuras correcciones se apliquen solo en una ruta.
+
+**Corrección recomendada:** una sola ruta de servicio por operación, con transacción SQL que bloquee la cuenta, vuelva a calcular el saldo dentro de la transacción, rechace importes superiores al saldo y escriba simultáneamente saldo y transacción. Añadir clave de idempotencia única y pruebas concurrentes en PostgreSQL. No confiar en el lock React como control de integridad.
+
+**Estado:** documentado; no se modificó código funcional, SQL, políticas ni datos.
