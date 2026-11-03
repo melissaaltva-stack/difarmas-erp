@@ -198,3 +198,34 @@ La revisión de `src/hooks/useErpState.ts` confirma que ventas, edición de fact
 `api/store-catalog.ts` incluía el código y estado HTTP de Supabase en la respuesta pública de error. Se retiraron esos campos; el detalle permanece en el registro del servidor. Cambio en commit `370cbe2ea9345bd722a620e761f8008661b3bfd4`.
 
 **Verificación:** los dos archivos fueron releídos en la rama y muestran las respuestas genéricas esperadas. Aún falta CI/build y prueba HTTP; no se declara validación desplegada.
+
+
+## ADMIN-14 — Mensajes de error del proveedor en la API de usuarios
+
+La revisión completa de `api/admin-users.ts` encontró varias ramas que devolvían `error.message` directamente para bootstrap, creación, invitación, cambio de contraseña y actualización de usuarios. Se reemplazaron por mensajes genéricos y el detalle se envía a los registros del servidor. El `catch` general ya aplicaba este criterio. Commit: `6f690e892ba24f003c614d57416842a19f93adfa`.
+
+## ADMIN-15 — Bootstrap inicial y último administrador: condición de carrera pendiente
+
+El bootstrap comprueba que no haya administradores y luego actualiza el usuario en una segunda operación. Dos solicitudes concurrentes pueden superar la comprobación antes de que cualquiera actualice sus claims. Del mismo modo, la protección del último administrador cuenta usuarios y luego actualiza la cuenta en llamadas separadas. No existe bloqueo/transacción compartida que haga atómica esa secuencia.
+
+**Severidad:** alta para gobierno de cuentas. La comprobación actual funciona en secuencia normal, pero no elimina carreras concurrentes.
+
+**Resolución requerida:** operación transaccional/serializada del lado servidor con restricción que garantice un único administrador activo y que impida quitar el último. No se intenta simular un bloqueo en memoria de una función serverless.
+
+## SESSION-02 — Caché local de datos empresariales después del cierre de sesión
+
+`AuthGate.signOut` cierra la sesión de Supabase y actualiza el estado React, pero no limpia las claves locales de FARMI. El snapshot contiene información de ventas, clientes, compras, costos y cuentas. Los datos pueden permanecer en el navegador después de cerrar sesión.
+
+**Severidad:** alta en dispositivos compartidos. El almacenamiento local no está cifrado y el cierre de sesión no equivale a borrar los datos locales.
+
+**Resolución requerida:** primero garantizar que no haya sincronizaciones pendientes; después limpiar el conjunto exacto de claves del ERP y el identificador de propietario en el cierre de sesión, y bloquear la hidratación de cachés sin propietario. No se borran claves automáticamente en esta auditoría para evitar pérdida de datos pendientes.
+
+## PLATFORM-04 — Cabeceras HTTP globales no configuradas en el repositorio
+
+No se encontró un `vercel.json` ni una configuración equivalente de cabeceras globales en la raíz revisada. Esto no demuestra que las cabeceras falten en el dominio desplegado: Vercel o una capa externa pueden configurarlas. La verificación requiere inspeccionar la respuesta HTTP del despliegue concreto.
+
+**Estado:** no confirmado en producción/Preview; comprobar CSP, HSTS, frame-ancestors/X-Frame-Options, Referrer-Policy y Permissions-Policy antes de cerrar.
+
+## Estado de pruebas y despliegue
+
+El commit `2690bac011ace3b9131fd084cf3e435311d9a214` pasó `npm run build` y `npm test` en GitHub Actions. No hay despliegue Vercel asociado a ese SHA. Los cambios posteriores requieren una nueva ejecución CI y no se consideran publicados.
