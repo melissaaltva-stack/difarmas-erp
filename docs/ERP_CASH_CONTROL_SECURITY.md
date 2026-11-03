@@ -40,3 +40,16 @@ La función `nextFinanceId` genera IDs usando hora local, IDs ya cargados y un c
 ## Límites y estado
 
 Hallazgos basados en revisión estática de la rama `security/erp-state-permission-matrix`. No se ejecutaron pruebas de concurrencia ni solicitudes de escritura de prueba. No se modificó código funcional, Supabase, filas, políticas, grants, funciones ni variables de entorno. No se promovió nada a producción.
+
+
+## CASH-04 — El estado “reembolso pagado” lo declara el operador y crea directamente una salida
+
+**Severidad: baja-media — trazabilidad del reembolso.**
+
+En POS.tsx el formulario de devolución/anulación permite seleccionar “Reembolso pagado” y un medio de pago. Al registrar, ese estado se envía en el objeto de ajuste. En useErpState.ts, si el estado recibido es Pagado, se agrega directamente un CashMovement de salida por el excedente del reembolso. No se solicita ni conserva una referencia de transferencia, comprobante, autorización o identificador de pago que permita conciliar esa salida con el movimiento bancario/caja. El registro de ajuste y la salida se actualizan mediante setters de estado separados dentro del snapshot.
+
+Esto no prueba que se pueda emitir un reembolso sin una sesión autorizada: es un control operativo débil que permite marcar como pagado un reembolso sin evidencia adjunta ni conciliación independiente, y puede generar diferencias si el pago real se ejecuta después o por otro canal.
+
+**Corrección recomendada:** separar “aprobado/pendiente” de “pagado”; registrar el pago mediante una operación de servidor que exija usuario autorizado, importe, medio, referencia obligatoria para medios electrónicos, fecha y clave de idempotencia. Crear el movimiento de caja/banco y actualizar el estado del reembolso en la misma transacción. Para efectivo, requerir confirmación y registro auditable del responsable.
+
+**Estado:** documentado; sin cambios funcionales ni datos.
