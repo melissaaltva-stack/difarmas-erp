@@ -73,10 +73,11 @@ export default async function handler(req: Req, res: Res) {
   }
 
   const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const userId = process.env.FARMI_STORE_CATALOG_USER_ID;
 
-  if (!url || !serviceKey || !userId) {
+  // Accept either supported server-side key name; the key list below
+  // performs the actual fail-closed check before making a Supabase request.
+  if (!url || !userId) {
     return reply(res, 503, { configured: false, products: [] });
   }
 
