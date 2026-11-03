@@ -49,7 +49,7 @@ export function Inventory({products, search, setSearch, movements, onNew, onEdit
     return days>=0 && days<=Number(expiryFilter);
   });
   const toggle = (id:number, checked:boolean) => setSelected(current => checked ? [...new Set([...current,id])] : current.filter(x => x !== id));
-  const selectVisible = (checked:boolean) => setSelected(current => checked ? [...new Set([...current,...visibleProducts.map(p=>p.id)])] : current.filter(id => !visibleProducts.some(p=>p.id===id)));
+  const selectVisible = (checked:boolean) => setSelected(current => checked ? [...new Set([...current,...visibleProducts.filter(p=>p.itemType!=='Servicio').map(p=>p.id)])] : current.filter(id => !visibleProducts.some(p=>p.id===id)));
   return <div className="content inventory-page">
     <div className="page-head inventory-page-head-compact"><div className="inventory-actions"><button className="secondary" onClick={()=>setLabelsOpen(true)} disabled={selectedProducts.length===0}><Printer size={17}/> Imprimir etiquetas ({selectedProducts.length})</button><button className="primary" onClick={onNew}><Plus size={17}/> Nuevo producto</button></div></div>
     <div className="inventory-toolbar card"><div className="search"><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar por código, producto, categoría..." /></div><span className="count">{products.length} productos</span></div>
