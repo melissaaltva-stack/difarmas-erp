@@ -113,11 +113,11 @@ export function POS({products,customers,cart,setCart,saleType,setSaleType,paymen
   const received=Number(amountReceived);
   const changeDue=isCash&&Number.isFinite(received)?Math.max(0,received-total):0;
   const add=(p:Product)=>{
-    const expiryAlert=getExpiryAlert(p.expiry);
+    const expiryAlert=p.itemType==='Servicio'?null:getExpiryAlert(p.expiry);
     if(expiryAlert&&expiryAlert.daysRemaining<0){setError(`⛔ ${p.name}: producto vencido. No se puede agregar a la venta; revisa y retira el lote según el procedimiento de la farmacia.`);return;}
-    if(p.stock<=0){setError(`“${p.name}” no tiene existencias disponibles.`);return;}
+    if(p.itemType!=='Servicio'&&p.stock<=0){setError(`“${p.name}” no tiene existencias disponibles.`);return;}
     const currentQuantity=cart.filter(i=>i.id===p.id).reduce((sum,i)=>sum+i.qty,0);
-    if(currentQuantity>=p.stock){setError(`Stock máximo alcanzado para “${p.name}” (${p.stock}).`);return;}
+    if(p.itemType!=='Servicio'&&currentQuantity>=p.stock){setError(`Stock máximo alcanzado para “${p.name}” (${p.stock}).`);return;}
     const cartLineId=`${p.id}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
     setCart([...cart,{...p,qty:1,price:salePrice(p),cartLineId}]);setLineDiscounts(current=>({...current,[cartLineId]:0}));
     setSearch('');
@@ -134,8 +134,8 @@ export function POS({products,customers,cart,setCart,saleType,setSaleType,paymen
     const target=cart.find((item,index)=>cartLineKey(item,index)===lineId);
     if(!target)return;
     const otherQuantity=cart.reduce((sum,item,index)=>sum+(item.id===target.id&&cartLineKey(item,index)!==lineId?item.qty:0),0);
-    if(delta>0&&otherQuantity+target.qty+delta>target.stock){setError(`Stock máximo alcanzado para “${target.name}” (${target.stock}).`);return;}
-    setCart(current=>current.map((item,index)=>cartLineKey(item,index)===lineId?{...item,qty:Math.max(1,Math.min(item.qty+delta,item.stock))}:item));
+    if(target.itemType!=='Servicio'&&delta>0&&otherQuantity+target.qty+delta>target.stock){setError(`Stock máximo alcanzado para “${target.name}” (${target.stock}).`);return;}
+    setCart(current=>current.map((item,index)=>cartLineKey(item,index)===lineId?{...item,qty:Math.max(1,item.itemType==='Servicio'?item.qty+delta:Math.min(item.qty+delta,item.stock))}:item));
     setError('');
   };
   const remove=(lineId:string)=>{setCart(current=>current.filter((item,index)=>cartLineKey(item,index)!==lineId));setLineDiscounts(current=>{const next={...current};delete next[lineId];return next;});};
@@ -148,7 +148,7 @@ export function POS({products,customers,cart,setCart,saleType,setSaleType,paymen
     if(isCredit&&(!customer.trim()||customer.trim().toLocaleLowerCase()==='consumidor final')){setError('Indica el cliente para registrar una venta al crédito.');return;}
     if(!isCredit&&(!amountReceived.trim()||!Number.isFinite(received)||received<total)){setError('Ingresa un monto recibido igual o mayor al total de la venta.');return;}
     const requestedByProduct=new Map<number,number>();cart.forEach(item=>requestedByProduct.set(item.id,(requestedByProduct.get(item.id)??0)+item.qty));
-    if([...requestedByProduct.entries()].some(([id,qty])=>qty>(products.find(p=>p.id===id)?.stock??0))){setError('El carrito supera el stock disponible. Actualiza las cantidades.');return;}
+    if([...requestedByProduct.entries()].some(([id,qty])=>{const product=products.find(p=>p.id===id);return !product||(product.itemType!=='Servicio'&&qty>product.stock);})){setError('El carrito supera el stock disponible. Actualiza las cantidades.');return;}
     const numbering=settings.documentNumbering??{factura:{prefix:'FAC-',nextNumber:1},orden_compra:{prefix:'OC-',nextNumber:1},nota_debito:{prefix:'ND-',nextNumber:1},nota_credito:{prefix:'NC-',nextNumber:1},orden_entrega:{prefix:'OE-',nextNumber:1}};
     const invoiceSequence=Math.max(1,numbering.factura?.nextNumber??1);
     const fiscal=settings.billingInfo;
