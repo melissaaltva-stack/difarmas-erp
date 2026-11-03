@@ -77,3 +77,16 @@ La proyección `applySaleAdjustmentsToSales` descontaba el costo de todas las un
 **Prueba añadida:** devolución de una unidad sin reingreso: el ingreso baja, el costo original se conserva y la utilidad refleja la pérdida del producto no recuperado.
 
 **Commits:** `bf0ab1ed65fb913f5e6044c21034266de601d5a4` (corrección) y `a14dde99e9f95df6e6493164464b043e35748c2f` (prueba). Pendiente ejecutar CI y revisar el resultado.
+
+
+## Hallazgo RET-07 — Los valores de la línea devuelta no se cotejan con la venta original
+
+**Severidad: media-alta — integridad de reembolsos y valuación de inventario.**
+
+En `recordSaleAdjustment`, los campos `unitPrice`, `unitTaxAmount` y `unitCost` se validan como números finitos y no negativos, y `amount` se compara con la suma de esos valores. Sin embargo, la función no coteja esos importes con el precio, impuesto y costo guardados en el renglón original de la venta. `canApplySaleAdjustmentItems` verifica producto, identificador de línea y cantidades disponibles, pero no verifica los importes unitarios.
+
+Por tanto, una solicitud manipulada puede devolver una cantidad válida con un precio/impuesto distinto al facturado, siempre que el importe total no exceda el límite restante de la venta. El importe aceptado afecta el saldo por cobrar y el reembolso; el costo unitario enviado también participa en el costo promedio cuando el artículo se reincorpora al inventario.
+
+**Corrección recomendada:** la operación autoritativa debe localizar el renglón original y derivar precio, impuesto y costo desde ese registro; el cliente solo debe enviar identificador de línea y cantidad/destino. La comprobación debe ejecutarse dentro de la misma transacción que actualiza saldo, reembolso, inventario y ajuste. La validación React no es una barrera de seguridad.
+
+**Estado:** documentado; no se modificaron los datos históricos ni se añadió una validación cliente que pudiera confundirse con autorización servidor. Pendiente de operación transaccional de servidor.
