@@ -101,3 +101,15 @@ La navegación de Finanzas mostraba las secciones **Ventas registradas** y **Com
 **Límite:** es control de interfaz, no autorización del servidor. El snapshot completo `erp_state` continúa cargándose en el cliente; se necesita separación de datos y autorización server-side para impedir inspección directa.
 
 **Verificación pendiente:** build, pruebas y Preview del commit. No se modificaron datos, políticas ni configuración de Supabase; no se publicó a producción.
+
+## PERM-07 — Devoluciones a proveedores visibles sin permiso de Compras
+
+**Severidad: media.**
+
+El acceso al directorio de Proveedores también mostraba el panel **Cambios y devoluciones**. Ese panel permite consultar y gestionar devoluciones a proveedores, movimientos asociados, historial de costos y créditos de proveedor. Una cuenta con permiso `proveedores` pero sin `compras` podía abrirlo.
+
+**Corrección de interfaz aplicada en esta rama:** `App.tsx` pasa el permiso `compras` como `canManageSupplierReturns`; `Purchases.tsx` lo transmite a `Suppliers.tsx`; y el botón y el modal de devoluciones solo se renderizan cuando ese permiso está presente. El directorio de proveedores sigue disponible con `proveedores`.
+
+**Límite:** es una restricción de interfaz. Los datos completos de compras y devoluciones siguen formando parte del snapshot del cliente, por lo que la confidencialidad real requiere autorización server-side y separación de datos.
+
+**Verificación pendiente:** build, pruebas y Preview del commit. No se modificaron datos, políticas ni configuración de Supabase; no se publicó a producción.
