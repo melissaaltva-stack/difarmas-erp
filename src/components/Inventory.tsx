@@ -21,9 +21,9 @@ const makeBarcode = (products: Product[]) => {
 };
 
 export function Inventory({products, search, setSearch, movements, onNew, onEdit}:{products:Product[];search:string;setSearch:(v:string)=>void;movements:InventoryMovement[];onNew:()=>void;onEdit:(p:Product)=>void}) {
-  const lowStock = products.filter(p => p.stock <= p.minStock);
-  const expiring = products.filter(p => daysUntil(p.expiry) >= 0 && daysUntil(p.expiry) <= 90);
-  const expired = products.filter(p => daysUntil(p.expiry) < 0);
+  const lowStock = products.filter(p => p.itemType!=='Servicio'&&p.stock <= p.minStock);
+  const expiring = products.filter(p => p.itemType!=='Servicio'&&daysUntil(p.expiry) >= 0 && daysUntil(p.expiry) <= 90);
+  const expired = products.filter(p => p.itemType!=='Servicio'&&daysUntil(p.expiry) < 0);
   const lowMargin = products.filter(p => margin(p.retail, p.cost) < 15);
   const [expiryFilter, setExpiryFilter] = useState<'all'|'expired'|'30'|'60'|'90'|'180'|'missing'>('all');
   const [showExpiryControl, setShowExpiryControl] = useState(false);
@@ -37,14 +37,15 @@ export function Inventory({products, search, setSearch, movements, onNew, onEdit
   const expiryDays = (p:Product) => daysUntil(p.expiry);
   const labelProducts = useMemo(() => products.filter(p => (p.name+' '+p.laboratory+' '+p.code+' '+p.category+' '+p.presentation).toLowerCase().includes(labelSearch.trim().toLowerCase())), [products, labelSearch]);
   const selectLabelVisible = (checked:boolean) => setSelected(current => checked ? [...new Set([...current,...labelProducts.map(p=>p.id)])] : current.filter(id => !labelProducts.some(p=>p.id===id)));
-  const missingExpiry = products.filter(p => !p.expiry || !Number.isFinite(expiryDays(p)));
+  const missingExpiry = products.filter(p => p.itemType!=='Servicio'&&(!p.expiry || !Number.isFinite(expiryDays(p))));
   const expiredValue = expired.reduce((sum,p)=>sum+Math.max(0,p.stock)*Math.max(0,p.cost),0);
-  const upcomingValue = products.filter(p=>expiryDays(p)>=0&&expiryDays(p)<=180).reduce((sum,p)=>sum+Math.max(0,p.stock)*Math.max(0,p.cost),0);
+  const upcomingValue = products.filter(p=>p.itemType!=='Servicio'&&expiryDays(p)>=0&&expiryDays(p)<=180).reduce((sum,p)=>sum+Math.max(0,p.stock)*Math.max(0,p.cost),0);
   const visibleProducts = products.filter(p => {
     const days=expiryDays(p);
-    if(expiryFilter==='expired') return days<0;
-    if(expiryFilter==='missing') return !p.expiry || !Number.isFinite(days);
+    if(expiryFilter==='expired') return p.itemType!=='Servicio'&&days<0;
+    if(expiryFilter==='missing') return p.itemType!=='Servicio'&&(!p.expiry || !Number.isFinite(days));
     if(expiryFilter==='all') return true;
+    if(p.itemType==='Servicio') return false;
     return days>=0 && days<=Number(expiryFilter);
   });
   const toggle = (id:number, checked:boolean) => setSelected(current => checked ? [...new Set([...current,id])] : current.filter(x => x !== id));
