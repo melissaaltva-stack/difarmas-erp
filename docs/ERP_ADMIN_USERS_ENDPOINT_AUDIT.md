@@ -25,12 +25,12 @@ La acción `invite` ya no utiliza `req.headers.origin`. Usa `FARMI_SITE_URL` con
 
 **Pendiente operativo:** configurar `FARMI_SITE_URL` en cada entorno Preview/Production y confirmar que el destino esté permitido en Supabase Auth Redirect URLs.
 
-### ADMIN-05 — Claims ausentes se convierten en rol Ventas y cuenta activa
-**Severidad: media-alta.**
+### ADMIN-05 — Claims ausentes se convierten en rol Ventas en la presentación
+**Severidad: media.**
 
-`safeUser` presenta como Ventas a un usuario sin `farmi_role`, y como activo cuando `farmi_active` no es exactamente false. La acción de actualización conserva una interpretación similar para el estado previo. Esto es una decisión de compatibilidad, no una comprobación de que la cuenta haya sido provisionada correctamente.
+`safeUser` todavía muestra como Ventas a una cuenta sin `farmi_role` y puede presentarla como activa por compatibilidad. Sin embargo, las acciones administrativas distintas de `status` y `bootstrap` ahora exigen `farmi_active === true`; un claim ausente ya no autoriza la gestión de cuentas. El inventario previo de cuentas activas confirmó que las cuentas existentes tenían `farmi_active=true`.
 
-**Recomendación:** distinguir explícitamente cuentas pendientes/no provisionadas de cuentas Ventas activas. Inventariar metadata existente y migrar con control antes de adoptar un comportamiento fail-closed.
+**Pendiente:** representar explícitamente cuentas no provisionadas en la interfaz, sin asignarles visualmente un rol ordinario.
 
 ### ADMIN-06 — Paginación de usuarios con límite explícito
 <badge>Corregido en rama</badge>
@@ -65,7 +65,7 @@ No cambiarlo sin confirmar compatibilidad con los usuarios existentes.
 
 1. Hacer atómico el bootstrap de primer administrador y la protección de última cuenta administradora (requiere coordinación transaccional en servidor/DB).
 2. Configurar `FARMI_SITE_URL` y validar Redirect URLs en Supabase Auth.
-3. Hacer explícitos los estados de metadata incompleta.
+3. Representar explícitamente en la interfaz las cuentas con metadata incompleta.
 4. Confirmar si los permisos son personalizados o están limitados por rol.
 
 **Límites:** la inspección no demuestra que estos riesgos hayan sido explotados. No confirma la configuración de redirect URLs en Supabase, las variables desplegadas ni el número real de usuarios. No se modificó el endpoint ni la configuración del proyecto.
