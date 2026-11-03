@@ -86,3 +86,6 @@ El panel `SmartPurchasing` dentro de Gestión y análisis mostraba niveles de st
 **Límite:** es una barrera de presentación, no autorización de datos en servidor. El snapshot completo sigue disponible en el cliente autenticado; se requiere separación de datos y autorización server-side para garantizar confidencialidad.
 
 **Verificación pendiente:** build, pruebas y Preview del commit. Sin cambios en Supabase ni producción.
+
+
+**Endurecimiento adicional de EXPORT-04:** la clasificación ahora es explícita para `Cobro` y `Pago proveedor`; cualquier tipo desconocido queda excluido (fail-closed). También se normaliza el nombre de contraparte antes de filtrar para evitar fallos si un registro antiguo está incompleto.
