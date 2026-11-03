@@ -15,6 +15,18 @@ Alcance: consultas de solo lectura; no se modificaron tablas, políticas, datos,
 8. El asesor de seguridad de Supabase informa que la protección contra contraseñas filtradas está deshabilitada.
 9. El asesor de rendimiento detectó tres políticas de `erp_state` que reevaluaban funciones Auth por fila. La migración versionada se ajustó usando subconsultas para las funciones Auth.
 
+## Revalidación en vivo — 2026-11-03 (segunda revisión)
+
+Se repitieron las consultas de solo lectura contra el proyecto conectado después de preparar el volcado manual.
+
+1. **Drift confirmado de RLS:** las tres políticas activas de `public.erp_state` todavía contienen `COALESCE((app_metadata.farmi_active)::boolean, true)`. Por tanto, la base conectada aún permite el comportamiento fail-open cuando falta el claim. La migración `202611020001_erp_state_role_write_guard.sql` en esta rama sí utiliza `false` como valor por defecto y envuelve las funciones Auth con subconsultas; no está aplicada.
+2. **Advertencia de rendimiento persistente:** el asesor Supabase volvió a reportar tres advertencias `auth_rls_initplan` para SELECT, INSERT y UPDATE en `erp_state`. Esto coincide con las expresiones de las políticas activas que invocan `auth.jwt()` directamente. La migración preparada usa `(select auth.jwt())` y `(select auth.uid())`; el resultado del asesor solo podrá confirmarse después de aplicarla en un entorno de prueba y volver a ejecutar el asesor.
+3. **Advertencia de autenticación persistente:** `auth_leaked_password_protection` continúa en WARN. No se habilitó la opción ni se cambió configuración de Auth.
+4. **Estado del proyecto:** Supabase reporta `ACTIVE_HEALTHY`, PostgreSQL 17.11.0.003.
+5. **Respaldo manual:** el usuario informó que los comandos de exportación `roles.sql`, `schema.sql`, `data.sql` y la compresión ZIP terminaron sin errores. El contenido, tamaños, integridad y restaurabilidad no fueron verificados por el auditor. Este respaldo no se considera restauración probada ni cubre automáticamente Auth/Storage.
+
+No se modificaron políticas, tablas, registros, funciones, claves ni configuración de Supabase durante esta revalidación.
+
 ## Cambios preparados en esta rama
 
 - `202611020001_erp_state_role_write_guard.sql`: ahora exige `farmi_active=true` explícito y optimiza las lecturas de claims. Conserva el aislamiento por propietario, el filtro de roles y la ausencia de DELETE.
