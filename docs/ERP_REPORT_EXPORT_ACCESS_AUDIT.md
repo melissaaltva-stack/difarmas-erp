@@ -89,3 +89,15 @@ El panel `SmartPurchasing` dentro de Gestión y análisis mostraba niveles de st
 
 
 **Endurecimiento adicional de EXPORT-04:** la clasificación ahora es explícita para `Cobro` y `Pago proveedor`; cualquier tipo desconocido queda excluido (fail-closed). También se normaliza el nombre de contraparte antes de filtrar para evitar fallos si un registro antiguo está incompleto.
+
+## PERM-06 — Detalle de ventas y compras accesible desde Finanzas sin permiso del módulo
+
+**Severidad: media.**
+
+La navegación de Finanzas mostraba las secciones **Ventas registradas** y **Compras recibidas** a cualquier usuario con permiso `finanzas`. La primera presentaba cliente, medio de pago, importe y utilidad por operación; la segunda mostraba proveedor, fecha, forma de pago e importe de compras. Esto permitía consultar detalles de los módulos Ventas y Compras sin contar con sus permisos específicos.
+
+**Corrección de interfaz aplicada en esta rama:** las secciones ahora aparecen únicamente con `ventas` y `compras` respectivamente. También se comprueba el permiso al resolver la sección activa, de modo que una navegación directa o un estado previo no evite el filtro del menú. Los indicadores agregados del resumen financiero permanecen disponibles con `finanzas`.
+
+**Límite:** es control de interfaz, no autorización del servidor. El snapshot completo `erp_state` continúa cargándose en el cliente; se necesita separación de datos y autorización server-side para impedir inspección directa.
+
+**Verificación pendiente:** build, pruebas y Preview del commit. No se modificaron datos, políticas ni configuración de Supabase; no se publicó a producción.
