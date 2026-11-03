@@ -111,3 +111,25 @@ Una persona con una sesión válida, incluso sin permisos administrativos, puede
 
 ### Estado
 Hallazgo de revisión estática. No se cambió el endpoint, no se modificaron cuentas, Auth, datos ni configuración de Supabase. La corrección requiere diseñar un mecanismo autoritativo para detectar el primer administrador sin introducir una condición de carrera en el bootstrap.
+
+
+## ADMIN-12 — Las cuentas bloqueadas podían contarse como administradores activos
+
+**Severidad: baja; consistencia de recuperación y protección del último administrador.**
+
+### Evidencia
+- La función `isAdmin` de `api/admin-users.ts` comprobaba `farmi_active === true` y el rol/claim de administrador, pero no comprobaba `banned_until`.
+- La misma API construye el campo `active` de cada usuario considerando también `!user.banned_until`.
+- Por tanto, una cuenta con claim administrativo activo pero bloqueada en Supabase podía contarse en el total de administradores, aunque la API la presentara como inactiva.
+
+### Impacto
+Una cuenta bloqueada podía impedir innecesariamente el bootstrap de recuperación o afectar las comprobaciones de protección del último administrador. No permitía que esa cuenta bloqueada iniciara sesión ni demuestra elevación de privilegios.
+
+### Corrección aplicada en esta rama
+- `isAdmin` ahora exige `farmi_active === true`, ausencia de `banned_until` y claim/rol de Administrador.
+- La comprobación queda alineada con el criterio de cuenta activa que ya utiliza la respuesta de usuarios.
+- No se modificaron usuarios ni claims existentes.
+
+### Validación pendiente
+- Confirmar el build y deployment Preview del commit de corrección.
+- Probar en un entorno de pruebas cuentas activas y bloqueadas, incluyendo bootstrap y protección del último administrador. No se hicieron cambios en Supabase ni pruebas con cuentas reales.
