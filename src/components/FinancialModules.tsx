@@ -101,8 +101,8 @@ export function ReportsModule({sales,purchases,expenses,receivables,payables,clo
     {kind==='compras'&&<ReportTable headers={['Fecha','Proveedor','Método','Total']} rows={purchases.filter(x=>inRange(x.date)&&x.supplier.toLowerCase().includes(query.toLowerCase())).map(x=>[day(x.date),x.supplier,x.paymentMethod,money(x.total)])}/>}
     {kind==='gastos'&&<ReportTable headers={['Fecha','Descripción','Categoría','Importe']} rows={expenses.filter(x=>inRange(x.date)&&x.description.toLowerCase().includes(query.toLowerCase())).map(x=>[day(x.date),x.description,x.category,money(x.amount)])}/>}
     {kind==='cierres'&&<ReportTable headers={headers.cierres} rows={rows.cierres.map(r=>[r[0],money(Number(r[1])),money(Number(r[2])),money(Number(r[3])),money(Number(r[4])),r[5]])}/>}
-    {kind==='inventario'&&<ReportTable headers={headers.inventario} rows={canViewInventoryCosts?rows.inventario.map(r=>[...r.slice(0,8),money(Number(r[8])),money(Number(r[9])),money(Number(r[10])),money(Number(r[11]))]):rows.inventario}/>
-    {kind==='movimientos'&&<ReportTable headers={headers.movimientos} rows={canViewInventoryCosts?rows.movimientos.map(r=>[...r.slice(0,6),money(Number(r[6])),r[7],r[8]]):rows.movimientos}/>
+    {kind==='inventario'&&<ReportTable headers={headers.inventario} rows={canViewInventoryCosts?rows.inventario.map(r=>[...r.slice(0,8),money(Number(r[8])),money(Number(r[9])),money(Number(r[10])),money(Number(r[11]))]):rows.inventario}/>}
+    {kind==='movimientos'&&<ReportTable headers={headers.movimientos} rows={canViewInventoryCosts?rows.movimientos.map(r=>[...r.slice(0,6),money(Number(r[6])),r[7],r[8]]):rows.movimientos}/>}
     {kind==='caja'&&<ReportTable headers={headers.caja} rows={rows.caja.map(r=>[...r.slice(0,4),money(Number(r[4]))])}/>}
     {kind==='clientes'&&<ReportTable headers={headers.clientes} rows={rows.clientes}/>}
     {kind==='proveedores'&&<ReportTable headers={headers.proveedores} rows={rows.proveedores}/>}
