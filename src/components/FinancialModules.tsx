@@ -46,12 +46,12 @@ export function ReportsModule({sales,purchases,expenses,receivables,payables,clo
   const [kind,setKind]=useState('resumen');const [from,setFrom]=useState('');const [to,setTo]=useState('');const [query,setQuery]=useState('');const [includeCatalogPrice,setIncludeCatalogPrice]=useState(false);
   const reportAccess:Record<string,string[]>={catalogo:['inventario'],resumen:['finanzas'],cobrar:['cuentas_cobrar'],pagar:['cuentas_pagar'],cobros:['finanzas','cuentas_cobrar','cuentas_pagar'],ventas:['ventas'],compras:['compras'],gastos:['finanzas'],cierres:['finanzas'],inventario:['inventario'],movimientos:['inventario'],caja:['finanzas'],clientes:['clientes'],proveedores:['proveedores'],demanda:['compras']};
   const allowedKinds=Object.keys(reportAccess).filter(report=>reportAccess[report].some(permission=>permissions.includes(permission as Module)));
-  const canIncludeCatalogPrices=permissions.includes('finanzas')||permissions.includes('compras');const canViewInventoryCosts=canIncludeCatalogPrices;
+  const canIncludeCatalogPrices=permissions.includes('finanzas')||permissions.includes('compras');const canViewInventoryCosts=canIncludeCatalogPrices;const canViewReceivableTransactions=permissions.includes('finanzas')||permissions.includes('cuentas_cobrar');const canViewPayableTransactions=permissions.includes('finanzas')||permissions.includes('cuentas_pagar');
   useEffect(()=>{if(!allowedKinds.includes(kind))setKind(allowedKinds[0]||'');},[kind,permissions.join('|')]);
   const inRange=(date:string)=>{const d=date.slice(0,10);return (!from||d>=from)&&(!to||d<=to);};
   const ar=receivables.filter(x=>balanceOf(x)>0&&inRange(x.date)&&x.customer.toLowerCase().includes(query.toLowerCase()));
   const ap=payables.filter(x=>balanceOf(x)>0&&inRange(x.date)&&x.supplier.toLowerCase().includes(query.toLowerCase()));
-  const selectedTx=transactions.filter(x=>inRange(x.date)&&x.party.toLowerCase().includes(query.toLowerCase()));
+  const selectedTx=transactions.filter(x=>(x.type==='Cobro'?canViewReceivableTransactions:canViewPayableTransactions)&&inRange(x.date)&&x.party.toLowerCase().includes(query.toLowerCase()));
   const totalSales=sales.filter(x=>inRange(x.date)).reduce((s,x)=>s+x.total,0),totalExpenses=expenses.filter(x=>inRange(x.date)).reduce((s,x)=>s+x.amount,0);
   const totalPurchases=purchases.filter(x=>inRange(x.date)).reduce((s,x)=>s+x.total,0);
   const catalogProducts=products.filter(x=>`${x.name} ${x.category} ${x.laboratory} ${x.presentation} ${(x.activeIngredients||[]).join(' ')}`.toLowerCase().includes(query.toLowerCase()));
