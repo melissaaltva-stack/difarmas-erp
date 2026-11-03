@@ -118,9 +118,9 @@ La interfaz calcula el total de factura incluyendo impuestos y presenta validaci
 
 ## Hallazgo adicional: recepción de cambio de proveedor sin operación atómica
 
-En resolveSupplierReturn, la rama Cambio recibido valida que los productos existan, calcula el nuevo stock/costo promedio y después actualiza productos, movimientos y estado de la devolución mediante tres setters cliente independientes. La protección de repetición usa refs locales del hook y un estado de finalización en memoria; no impide que otra sesión o dispositivo resuelva simultáneamente el mismo expediente. El estado persistido del expediente se mantiene Enviado al proveedor hasta que se guarda el snapshot.
+En resolveSupplierReturn, la rama Cambio recibido calcula el nuevo stock/costo promedio y actualiza productos, movimientos y estado mediante setters del cliente. La protección de repetición usa refs locales del hook. Sin embargo, el guardado remoto no persiste cada colección por separado: `saveErpSnapshot` escribe el snapshot completo en una sola actualización condicional por `updated_at`. Por eso, dos sesiones que parten de la misma revisión no deberían confirmar ambas el mismo snapshot: la primera actualización gana y la segunda debe fallar por conflicto de revisión.
 
-Dos sesiones que lean el mismo expediente antes de que se sincronice el primer cambio pueden calcular ambas el incremento completo y registrar movimientos de reposición duplicados. La misma arquitectura puede dejar estado, stock y movimientos parcialmente sincronizados si falla la persistencia entre actualizaciones.
+El riesgo confirmado es distinto: la sesión que pierde el conflicto ya modificó su estado local y puede mostrar temporalmente el cambio como completado mientras la sincronización queda en error. Si el usuario continúa trabajando sin recargar/sincronizar, la interfaz local puede divergir de la versión confirmada en Supabase. La ref local no sustituye una operación de negocio idempotente y transaccional en servidor, pero el control optimista de revisión sí reduce el riesgo de que ambas escrituras completas sobrescriban la misma fila.
 
 **Severidad: media (duplicación de existencias y trazabilidad).** El riesgo depende de concurrencia entre sesiones o fallos de sincronización; no demuestra ejecución anónima.
 
