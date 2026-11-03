@@ -361,10 +361,10 @@ export function useErpState(userId: string) {
     (original.items??[]).forEach(line=>oldQty.set(line.productId,(oldQty.get(line.productId)??0)+line.qty));
     const newQty=new Map<number,number>();
     sold.forEach(item=>newQty.set(item.id,(newQty.get(item.id)??0)+item.qty));
-    for(const item of sold){const product=products.find(p=>p.id===item.id);if(!product||product.stock+(oldQty.get(item.id)??0)<(newQty.get(item.id)??0))return false;}
-    const updatedProducts=products.map(product=>{const before=oldQty.get(product.id)??0;const after=newQty.get(product.id)??0;return before===after?product:{...product,stock:product.stock+before-after};});
+    for(const item of sold){const product=products.find(p=>p.id===item.id);if(!product||(product.itemType!=='Servicio'&&product.stock+(oldQty.get(item.id)??0)<(newQty.get(item.id)??0)))return false;}
+    const updatedProducts=products.map(product=>{const before=oldQty.get(product.id)??0;const after=newQty.get(product.id)??0;return before===after||product.itemType==='Servicio'?product:{...product,stock:product.stock+before-after};});
     const movements:InventoryMovement[]=[];
-    for(const product of products){const before=oldQty.get(product.id)??0;const after=newQty.get(product.id)??0;if(before===after)continue;movements.push({id:nextInventoryMovementId(),productId:product.id,productName:product.name,type:'Ajuste',quantity:Math.abs(after-before),stockBefore:product.stock,stockAfter:product.stock+before-after,unitCost:product.cost,referenceId:invoiceId,date:new Date().toISOString(),note:'Corrección de detalle de factura estándar '+(original.invoiceNumber??invoiceId)});}
+    for(const product of products){const before=oldQty.get(product.id)??0;const after=newQty.get(product.id)??0;if(before===after||product.itemType==='Servicio')continue;movements.push({id:nextInventoryMovementId(),productId:product.id,productName:product.name,type:'Ajuste',quantity:Math.abs(after-before),stockBefore:product.stock,stockAfter:product.stock+before-after,unitCost:product.cost,referenceId:invoiceId,date:new Date().toISOString(),note:'Corrección de detalle de factura estándar '+(original.invoiceNumber??invoiceId)});}
     const items=sold.map((item,index)=>{
       const d=details?.lines.find(row=>row.productId===item.id);
       const net=d?.netTotal??item.price*item.qty;
