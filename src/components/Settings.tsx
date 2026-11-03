@@ -12,7 +12,7 @@ const rolePermissions:Record<UserAccess['role'],Module[]> = {
   Supervisor:['dashboard','facturacion_estandar','ventas','redes_sociales','clientes','cotizaciones','inventario','compras','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','proveedores'],
   Ventas:['dashboard','facturacion_estandar','ventas','redes_sociales','clientes','cotizaciones'],
   Compras:['dashboard','inventario','compras','proveedores'],
-  Finanzas:['dashboard','facturacion_estandar','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','compras'],
+  Finanzas:['dashboard','facturacion_estandar','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia'],
   'Solo lectura':['dashboard','ventas','redes_sociales','clientes','cotizaciones','inventario','compras','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','proveedores']
 };
 const roleOptions:UserAccess['role'][]=['Administrador','Supervisor','Ventas','Compras','Finanzas','Solo lectura'];
