@@ -140,3 +140,16 @@ Una solicitud manipulada por una sesión con capacidad de edición podría hacer
 **Corrección recomendada:** la operación de servidor debe cargar la factura y sus líneas originales, validar el estado editable y las cantidades, recalcular precio/descuento/impuesto conforme a la política autorizada, conservar el costo histórico o aplicar un ajuste de costo expresamente autorizado y derivar el total/CxC de las mismas líneas validadas. Guardar líneas, total, stock, movimientos y CxC en una transacción con control de revisión e idempotencia.
 
 **Estado:** documentado; no se añadieron validaciones cliente que aparenten ser autorización servidor, no se modificaron datos y no se ejecutó SQL.
+
+
+## Hallazgo adicional: precio y costo de venta confiados al objeto enviado por el cliente
+
+En `recordSale`, el control de inventario agrupa cantidades y comprueba existencia, pero los importes de cada `CartItem` provienen del objeto recibido. `applySaleToInventory` valida que precio y costo sean números finitos y no negativos, pero no los coteja con el producto maestro ni con una regla autorizada de lista de precios/promoción/descuento. `buildSaleRecord` usa esos mismos valores para total, costo y utilidad. En POS el precio base se calcula en la interfaz a partir de minorista/mayorista/promoción y luego se envían los objetos descontados; en factura estándar, `details.lines` aporta además importes de línea, impuestos y descuentos que se copian al registro.
+
+La interfaz normal presenta límites de descuento y calcula importes, pero esos controles no son autorización servidor. Una solicitud manipulada por una sesión con permiso de escritura podría enviar un precio inferior/no autorizado, un costo distinto del costo maestro o valores de impuesto/descuento que alteren total y utilidad, manteniendo cantidades y stock aparentemente válidos. El problema afecta tanto a la venta POS como a la factura estándar; la edición de factura tiene un hallazgo relacionado documentado en esta misma auditoría.
+
+**Severidad: alta para integridad comercial/financiera.** Requiere capacidad de escritura y manipulación de la solicitud; no demuestra acceso anónimo ni acceso a otra cuenta.
+
+**Corrección recomendada:** la operación de servidor debe recibir identificadores de producto/línea, cantidades, lista de precios solicitada y descuentos justificados, pero cargar desde datos autoritativos el tipo/estado del producto, precio vigente, promoción, costo aplicable e impuestos. Debe validar el permiso para descuentos especiales, calcular los totales y utilidad en servidor y escribir venta, stock, movimientos y cuenta por cobrar en una transacción idempotente. No aceptar `Product` o `CartItem` completos como fuente autoritativa de precio/costo. Para facturas estándar, validar que las líneas e importes coincidan exactamente con productos y cantidades aceptados.
+
+**Estado:** documentado; no se cambió la lógica funcional ni se añadió una validación cliente que pudiera confundirse con seguridad servidor. No se ejecutó SQL ni se alteraron datos.
