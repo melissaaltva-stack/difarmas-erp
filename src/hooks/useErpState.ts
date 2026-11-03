@@ -313,7 +313,7 @@ export function useErpState(userId: string) {
     const normalizedInvoiceNumber=invoiceNumber.trim().toLocaleLowerCase();
     if(invoiceDetails&&normalizedInvoiceNumber&&sales.some(sale=>sale.type==='factura_estandar'&&sale.invoiceNumber?.trim().toLocaleLowerCase()===normalizedInvoiceNumber))return false;
     const requestedQuantities=new Map<number,number>();sold.forEach(item=>requestedQuantities.set(item.id,(requestedQuantities.get(item.id)??0)+item.qty));
-    if ([...requestedQuantities.entries()].some(([id,qty])=>!products.some(p=>p.id===id&&p.stock>=qty))) return false;
+    if ([...requestedQuantities.entries()].some(([id,qty])=>{const product=products.find(p=>p.id===id);return !product||(product.itemType!=='Servicio'&&product.stock<qty);})) return false;
     let updated: Product[];
     try { updated = applySaleToInventory(products,sold); } catch { return false; }
     saleInProgress.current=true;
@@ -493,7 +493,7 @@ export function useErpState(userId: string) {
     if(!originalSale.items?.length||!canApplySaleAdjustmentItems(originalSale.items,priorAdjustments,adjustment.items))return false;
     if(adjustment.type==='Anulación'&&saleAdjustments.some(item=>item.saleId===adjustment.saleId&&item.type==='Anulación'))return false;
     const returnedByProduct=new Map<number,SaleAdjustmentRecord['items']>();
-    adjustment.items.filter(line=>line.returnToStock).forEach(line=>{
+    adjustment.items.filter(line=>line.returnToStock&&products.find(product=>product.id===line.productId)?.itemType!=='Servicio').forEach(line=>{
       returnedByProduct.set(line.productId,[...(returnedByProduct.get(line.productId)??[]),line]);
     });
     for(const productId of returnedByProduct.keys()){
