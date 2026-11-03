@@ -31,7 +31,7 @@ export function StandardInvoice({products,customers,sales,settings,payment,setPa
   const sold:CartItem[]=cart.map(p=>({...p}));
   const effectiveTerms=credit?'Crédito':'Contado';
   const details:StandardInvoiceDetails={invoiceDate,maxDate,terms:effectiveTerms,priceList,seller,customerAddress,customerPhone,notes,discountTotal,taxTotal,lines:calculatedLines.map(line=>({productId:line.product.id,unit:line.unit,discountPercent:line.discountPercent,taxPercent:line.taxPercent,discountAmount:line.discountAmount,taxAmount:line.taxAmount,lineTotal:line.lineTotal,netTotal:line.netTotal}))};
-  const number=invoiceNumber.trim()||nextInvoiceNumber(sales.filter(s=>s.type==='factura_estandar').map(s=>s.invoiceNumber??''));
+  const number=editingInvoice?.invoiceNumber?.trim()||invoiceNumber.trim()||nextInvoiceNumber(sales.filter(s=>s.type==='factura_estandar').map(s=>s.invoiceNumber??''));
   if(!editingInvoice&&sales.some(s=>s.type==='factura_estandar'&&(s.invoiceNumber??'').trim().toLocaleLowerCase()===number.toLocaleLowerCase())){setError('Ese número de factura ya está registrado. Verifica el correlativo antes de continuar.');return;}
   const ok=editingInvoice
     ? onUpdateInvoice(editingInvoice.id,sold,customer==='Consumidor Final'?'':customer,rtn,details)
@@ -49,7 +49,7 @@ export function StandardInvoice({products,customers,sales,settings,payment,setPa
  <div className="invoice-layout">
  <section className="card invoice-header-card">
   <div className="invoice-header-grid">
-   <div className="invoice-field inv-span-3"><label className="field-label" htmlFor="standard-invoice-number">N.º de factura</label><input id="standard-invoice-number" value={invoiceNumber} onChange={e=>setInvoiceNumber(e.target.value)} /></div>
+   <div className="invoice-field inv-span-3"><label className="field-label" htmlFor="standard-invoice-number">N.º de factura</label><input id="standard-invoice-number" value={editingInvoice?.invoiceNumber??invoiceNumber} onChange={e=>setInvoiceNumber(e.target.value)} disabled={Boolean(editingInvoice)} readOnly={Boolean(editingInvoice)} /></div>
    <div className="invoice-field inv-span-3"><label className="field-label" htmlFor="standard-invoice-seller">Vendedor</label><select id="standard-invoice-seller" value={seller} onChange={e=>setSeller(e.target.value)}><option>General</option>{(settings.users??[]).filter(u=>u.active).map(u=><option key={u.id} value={u.name}>{u.name}</option>)}</select></div>
    <div className="invoice-field inv-span-3"><label className="field-label" htmlFor="standard-invoice-date">Fecha</label><input id="standard-invoice-date" type="date" value={invoiceDate} onChange={e=>setInvoiceDate(e.target.value)} /></div>
    <div className="invoice-field inv-span-3"><label className="field-label" htmlFor="standard-invoice-max-date">Fecha máxima</label><input id="standard-invoice-max-date" type="date" min={invoiceDate} value={maxDate} onChange={e=>setMaxDate(e.target.value)} /></div>
