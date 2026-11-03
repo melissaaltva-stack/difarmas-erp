@@ -51,7 +51,7 @@ export function ReportsModule({sales,purchases,expenses,receivables,payables,clo
   const inRange=(date:string)=>{const d=date.slice(0,10);return (!from||d>=from)&&(!to||d<=to);};
   const ar=receivables.filter(x=>balanceOf(x)>0&&inRange(x.date)&&x.customer.toLowerCase().includes(query.toLowerCase()));
   const ap=payables.filter(x=>balanceOf(x)>0&&inRange(x.date)&&x.supplier.toLowerCase().includes(query.toLowerCase()));
-  const selectedTx=transactions.filter(x=>(x.type==='Cobro'?canViewReceivableTransactions:canViewPayableTransactions)&&inRange(x.date)&&x.party.toLowerCase().includes(query.toLowerCase()));
+  const selectedTx=transactions.filter(x=>((x.type==='Cobro'&&canViewReceivableTransactions)||(x.type==='Pago proveedor'&&canViewPayableTransactions))&&inRange(x.date)&&String(x.party||'').toLowerCase().includes(query.toLowerCase()));
   const totalSales=sales.filter(x=>inRange(x.date)).reduce((s,x)=>s+x.total,0),totalExpenses=expenses.filter(x=>inRange(x.date)).reduce((s,x)=>s+x.amount,0);
   const totalPurchases=purchases.filter(x=>inRange(x.date)).reduce((s,x)=>s+x.total,0);
   const catalogProducts=products.filter(x=>`${x.name} ${x.category} ${x.laboratory} ${x.presentation} ${(x.activeIngredients||[]).join(' ')}`.toLowerCase().includes(query.toLowerCase()));
