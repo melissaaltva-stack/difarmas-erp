@@ -47,3 +47,16 @@ La matriz de reportes habilitaba `inventario` y `movimientos` solo con el permis
 **Límite:** la corrección es del lado del cliente y no protege contra inspección/manipulación del snapshot completo `erp_state`. No reemplaza autorización de servidor ni separación de datos por RLS.
 
 **Verificación pendiente:** compilación, pruebas y despliegue Preview del commit de corrección. No se exportaron datos reales ni se modificó Supabase o producción.
+
+
+## EXPORT-04 — Historial de cobros y pagos mezcla permisos de cuentas
+
+**Severidad: media-alta.**
+
+El reporte `cobros` estaba disponible si el usuario tenía cualquiera de los permisos `finanzas`, `cuentas_cobrar` o `cuentas_pagar`, pero la colección exportada y mostrada incluía simultáneamente transacciones `Cobro` y `Pago proveedor`. Un usuario con solo Cuentas por cobrar podía consultar pagos a proveedores, y viceversa.
+
+**Corrección de interfaz aplicada en esta rama:** el historial filtra `Cobro` con `finanzas` o `cuentas_cobrar`, y `Pago proveedor` con `finanzas` o `cuentas_pagar`. La misma colección filtrada alimenta la tabla y el CSV.
+
+**Límite:** como el snapshot completo sigue estando en el navegador, esto no sustituye la autorización del servidor. Los datos deben separarse o entregarse por endpoints/RPC con permisos por operación.
+
+**Verificación pendiente:** pruebas, compilación y Preview del commit. Sin cambios en Supabase ni producción.
