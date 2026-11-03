@@ -16,7 +16,7 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
   const [showSuggestedPurchases,setShowSuggestedPurchases]=useState(false);
   const [showPurchaseHistory,setShowPurchaseHistory]=useState(false);
   const [showCostComparison,setShowCostComparison]=useState(false);
-  const results=products.filter(p=>[p.code,p.name].join(' ').toLowerCase().includes(search.toLowerCase())).slice(0,6);
+  const results=products.filter(p=>p.itemType!=='Servicio'&&[p.code,p.name].join(' ').toLowerCase().includes(search.toLowerCase())).slice(0,6);
   const purchaseTaxRate=(item:PurchaseItem)=>{const rate=item.purchaseTaxRate??(item.taxEnabled?Number(item.taxRate??15):0);return Number.isFinite(rate)&&rate>0?rate:0;};
   const linePurchaseTax=(item:PurchaseItem)=>item.unitCost*item.qty*purchaseTaxRate(item)/100;
   const itemsTotal=cart.reduce((sum,i)=>sum+i.unitCost*i.qty,0);
