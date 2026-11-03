@@ -64,3 +64,16 @@ Recomendación: conservar la referencia cruzada y agregar estado de inspección/
 3. Añadir conciliación explícita para la parte ya pagada de ventas a crédito.
 4. Añadir idempotencia transaccional para ajustes.
 5. Añadir control de inspección del producto devuelto antes de reincorporarlo al stock.
+
+
+## Hallazgo RET-06 — El costo de artículos no reincorporados se descontaba de la utilidad
+
+**Severidad: media — exactitud de rentabilidad y reportes.**
+
+La proyección `applySaleAdjustmentsToSales` descontaba el costo de todas las unidades devueltas, sin distinguir el indicador `returnToStock`. Cuando una devolución se registra sin reingresar el producto al inventario (por ejemplo, mercancía no apta para volver a venderse), el costo de esa unidad debe permanecer como costo/pérdida del negocio. Descontarlo elevaba artificialmente la utilidad neta reportada.
+
+**Corrección aplicada en la rama de auditoría:** `getSaleLineBalances` ahora conserva la cantidad efectivamente reincorporada al inventario por renglón. La proyección neta reduce el costo solo por unidades con `returnToStock === true`; el ingreso y el impuesto siguen reduciéndose por todas las unidades devueltas. La venta original no se modifica.
+
+**Prueba añadida:** devolución de una unidad sin reingreso: el ingreso baja, el costo original se conserva y la utilidad refleja la pérdida del producto no recuperado.
+
+**Commits:** `bf0ab1ed65fb913f5e6044c21034266de601d5a4` (corrección) y `a14dde99e9f95df6e6493164464b043e35748c2f` (prueba). Pendiente ejecutar CI y revisar el resultado.
