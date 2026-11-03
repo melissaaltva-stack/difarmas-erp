@@ -83,6 +83,15 @@ No cambiarlo sin confirmar la regla de negocio y revisar usuarios existentes.
 3. Confirmar el modelo de permisos personalizados frente a permisos acotados por rol.
 4. Añadir pruebas automatizadas específicas del endpoint, incluyendo casos concurrentes.
 
+### ADMIN-10 — El token de bootstrap no exige longitud mínima ni limita intentos
+**Severidad: media, condicionada a la entropía del secreto configurado. Pendiente.**
+
+La acción `bootstrap` solo comprueba que `FARMI_ADMIN_BOOTSTRAP_TOKEN` no esté vacío y que coincida con el valor recibido. No exige una longitud mínima y el endpoint no implementa un límite de intentos por usuario/IP. La comparación en tiempo constante reduce diferencias temporales, pero no compensa un secreto débil ni limita intentos repetidos.
+
+**Impacto:** mientras no exista un administrador, una persona con una cuenta autenticada podría intentar adivinar un token corto. El impacto depende de la fortaleza real del secreto y de controles externos de tráfico; no se ha probado ni se conoce aquí el valor configurado.
+
+**Recomendación:** exigir en servidor un secreto aleatorio de alta entropía (mínimo 32 bytes aleatorios codificados) y limitar intentos fallidos con un mecanismo compartido entre instancias, con enfriamiento y registro de eventos sin guardar el token. Verificar también si Vercel Firewall u otro control externo ya limita esta ruta. No cambiar el secreto ni las variables de entorno sin coordinar el proceso de bootstrap para no bloquear la administración inicial.
+
 ### ADMIN-09 — Valor por defecto permisivo al editar una cuenta
 **Estado: corrección aplicada en la rama; pruebas específicas pendientes.**
 
