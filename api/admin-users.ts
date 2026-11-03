@@ -28,7 +28,7 @@ const ROLE_PERMISSIONS: Record<Role, string[]> = {
 };
 const ROLES: Role[] = ['Administrador','Supervisor','Ventas','Compras','Finanzas','Solo lectura'];
 const isRole = (value: unknown): value is Role => typeof value === 'string' && ROLES.includes(value as Role);
-const isAdmin = (user: User) => user.app_metadata?.farmi_active === true && (user.app_metadata?.farmi_admin === true || user.app_metadata?.farmi_role === 'Administrador');
+const isAdmin = (user: User) => user.app_metadata?.farmi_active === true && !user.banned_until && (user.app_metadata?.farmi_admin === true || user.app_metadata?.farmi_role === 'Administrador');
 
 function safePermissions(role: Role, value: unknown): string[] {
   if (role === 'Administrador' && !Array.isArray(value)) return [...MODULES];
