@@ -1,15 +1,20 @@
 -- Farmi: atomically resolve a supplier credit note in the per-user ERP snapshot.
 -- The row lock + status transition make the operation idempotent across devices.
+-- SECURITY INVOKER is intentional: the caller must pass erp_state RLS as well.
+-- The caller must also hold at least one relevant module permission in trusted app_metadata.
+
 create or replace function public.resolve_supplier_credit_note(p_return_id bigint)
 returns jsonb
 language plpgsql
-security definer
-set search_path = public, pg_temp
+security invoker
+set search_path = pg_catalog, public
 as $$
 declare
+  v_jwt jsonb := auth.jwt();
   v_user_id uuid := auth.uid();
-  v_role text := auth.jwt() -> 'app_metadata' ->> 'farmi_role';
-  v_active boolean := coalesce((auth.jwt() -> 'app_metadata' ->> 'farmi_active')::boolean, true);
+  v_role text := v_jwt -> 'app_metadata' ->> 'farmi_role';
+  v_active boolean := coalesce((v_jwt -> 'app_metadata' ->> 'farmi_active')::boolean, false);
+  v_permissions jsonb := v_jwt #> '{app_metadata,farmi_permissions}';
   v_state jsonb;
   v_updated_at timestamptz;
   v_returns jsonb;
@@ -34,8 +39,15 @@ begin
   if v_user_id is null then
     raise exception 'Debes iniciar sesión para registrar la nota de crédito.' using errcode = '42501';
   end if;
-  if not v_active or v_role is null or v_role not in ('Administrador','Supervisor','Compras','Finanzas') then
+  if not v_active
+     or v_role is null
+     or v_role not in ('Administrador','Supervisor','Compras','Finanzas') then
     raise exception 'Tu usuario no tiene permiso para registrar notas de crédito de proveedores.' using errcode = '42501';
+  end if;
+  if v_permissions is null
+     or jsonb_typeof(v_permissions) <> 'array'
+     or not (v_permissions ?| array['proveedores','compras','cuentas_pagar','finanzas']) then
+    raise exception 'Tu cuenta no tiene permisos del módulo necesarios para esta operación.' using errcode = '42501';
   end if;
   if p_return_id is null or p_return_id <= 0 then
     raise exception 'La devolución indicada no es válida.' using errcode = '22023';
