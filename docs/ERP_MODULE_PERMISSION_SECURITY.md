@@ -89,3 +89,25 @@ La solución completa requiere diseñar y probar endpoints/RPCs con autorizació
 - Esto impedía seleccionar o deseleccionar explícitamente Cotizaciones desde el editor de permisos, aunque el permiso pudiera existir en el claim.
 - Se agregó Cotizaciones a la lista visible del editor en Settings.tsx. La corrección no cambia permisos ya guardados de ninguna cuenta.
 
+
+
+## ADMIN-11 — La consulta de estado recorre todo el directorio de usuarios
+
+**Severidad: baja; riesgo condicionado de disponibilidad y consumo de cuota.**
+
+### Evidencia
+- En `api/admin-users.ts`, la acción `status` llama a `listAllUsers()` y filtra los administradores para calcular `canBootstrap`.
+- La autenticación de sesión se valida antes de procesar la acción, pero la acción `status` se atiende antes de exigir `farmi_active === true` y el rol Administrador.
+- `listAllUsers()` consulta páginas de 100 usuarios secuencialmente y puede recorrer hasta 10,000 cuentas. El resultado detallado no se devuelve al solicitante; la respuesta solo incluye el estado administrativo de la propia cuenta, `canBootstrap` y su correo.
+
+### Impacto y límites
+Una persona con una sesión válida, incluso sin permisos administrativos, puede solicitar repetidamente esta consulta y provocar llamadas administrativas paginadas innecesarias. Esto puede elevar latencia y consumo de cuota de Auth. No se observó exposición de la lista de usuarios ni bypass de autenticación. La severidad depende de límites externos, frecuencia de llamadas y tamaño real del directorio.
+
+### Corrección recomendada
+- Evitar enumerar el directorio completo en cada consulta de estado.
+- Resolver el estado de bootstrap mediante un mecanismo de control pequeño, protegido y consistente (por ejemplo, un registro único transaccional de instalación/administrador), o cache compartida con invalidación segura.
+- Aplicar limitación de frecuencia compartida en servidor/WAF para acciones administrativas, sin depender de memoria local de una instancia.
+- Mantener la respuesta mínima y no incluir datos de otros usuarios.
+
+### Estado
+Hallazgo de revisión estática. No se cambió el endpoint, no se modificaron cuentas, Auth, datos ni configuración de Supabase. La corrección requiere diseñar un mecanismo autoritativo para detectar el primer administrador sin introducir una condición de carrera en el bootstrap.
