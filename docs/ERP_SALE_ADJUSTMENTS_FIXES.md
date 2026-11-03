@@ -72,3 +72,14 @@ GitHub Actions para el commit `4e54d0be804a861c18c66be0b3541057ff53e2be` complet
 - No se modificó el comportamiento contable de las notas de crédito. Sigue pendiente el subregistro de crédito a favor para compras de contado, facturas pagadas o importes que exceden una cuenta por pagar; se mantiene el rechazo explícito para no perder valor ni crear saldos incorrectos.
 
 **CI verificada:** ejecución 41544608729, commit 0de35f29cd7375a93a366b47ab99e8b4031daabf. Compilación, auditoría de dependencias y pruebas completadas correctamente.
+
+
+## Corrección RET-06: costo de devoluciones no reincorporadas al inventario
+
+- La proyección neta ahora separa cantidad devuelta de cantidad efectivamente reingresada al inventario.
+- El costo solo se revierte para unidades marcadas `returnToStock: true`. Si el producto no vuelve a existencias, su costo permanece en la rentabilidad como costo/pérdida.
+- Ingreso e impuesto continúan reduciéndose por todas las unidades devueltas.
+- Se añadió una prueba para devolución no reingresada, verificando ingreso neto, costo y utilidad.
+- No se alteran ventas ni ajustes históricos; el cambio afecta únicamente la proyección de reportes.
+- Commits: `bf0ab1ed65fb913f5e6044c21034266de601d5a4` y `a14dde99e9f95df6e6493164464b043e35748c2f`.
+- CI pendiente.
