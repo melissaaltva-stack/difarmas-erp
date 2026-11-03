@@ -94,6 +94,18 @@ describe('applySaleAdjustmentsToSales', () => {
     expect(result.items).toHaveLength(0);
   });
 
+  it('keeps the cost of returned items that are not re-entered into inventory', () => {
+    const notRestocked: SaleAdjustmentRecord = {
+      ...adjustment,
+      items: [{ ...adjustment.items[0], quantity: 1, returnToStock: false }],
+    };
+    const result = applySaleAdjustmentsToSales([sale], [notRestocked])[0];
+    expect(result.total).toBe(200);
+    expect(result.cost).toBe(180);
+    expect(result.profit).toBe(20);
+    expect(result.items?.find(item => item.productId === 10)?.cost).toBe(120);
+  });
+
   it('keeps sales without adjustments unchanged', () => {
     expect(applySaleAdjustmentsToSales([sale], [])[0]).toBe(sale);
   });
