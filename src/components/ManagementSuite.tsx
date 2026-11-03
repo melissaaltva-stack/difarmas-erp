@@ -531,11 +531,11 @@ function ManagementReports({sales,expenses}:{sales:SaleRecord[];expenses:Expense
 }
 
 
-export function ManagementSuite({sales,expenses,receivables,payables,products,customers,setCustomers,canManageCustomers}:{sales:SaleRecord[];expenses:Expense[];receivables:Receivable[];payables:Payable[];products:Product[];customers:Customer[];setCustomers:React.Dispatch<React.SetStateAction<Customer[]>>;canManageCustomers:boolean}) {
+export function ManagementSuite({sales,expenses,receivables,payables,products,customers,setCustomers,canManageCustomers,canViewPurchasing}:{sales:SaleRecord[];expenses:Expense[];receivables:Receivable[];payables:Payable[];products:Product[];customers:Customer[];setCustomers:React.Dispatch<React.SetStateAction<Customer[]>>;canManageCustomers:boolean;canViewPurchasing:boolean}) {
   return <div className="content">
     <div className="page-head"><div><span className="pill">MÓDULO GERENCIAL</span><h2>Gestión y análisis</h2><p>Herramientas de rentabilidad, compras, riesgo y planificación.</p></div></div>
     <ProductProfitability sales={sales}/>
-    <SmartPurchasing products={products} sales={sales}/>
+    {canViewPurchasing&&<SmartPurchasing products={products} sales={sales}/>}
     <FinancialRiskControl sales={sales} expenses={expenses} receivables={receivables} payables={payables} products={products}/>
     <DynamicBreakEven sales={sales} expenses={expenses}/>
     <ManagementReports sales={sales} expenses={expenses}/>
