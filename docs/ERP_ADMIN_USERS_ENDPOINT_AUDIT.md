@@ -1,7 +1,7 @@
 # FARMI / DIFARMAS ERP — revisión del endpoint de administración de usuarios
 
 **Tipo:** inspección estática de `api/admin-users.ts` en la rama `security/erp-state-permission-matrix`.  
-**Estado:** hallazgos verificados en el código; no se ejecutó el endpoint ni se probaron cuentas reales.
+**Estado:** revisión estática actualizada; los controles de paginación y redirección indicados abajo ya fueron corregidos en la rama. No se ejecutó el endpoint ni se probaron cuentas reales.
 
 ## Resumen
 
@@ -18,12 +18,12 @@ La acción `bootstrap` consulta la lista de usuarios, comprueba que no haya admi
 
 **Recomendación:** trasladar el bootstrap a una operación atómica controlada en servidor/DB, con bloqueo transaccional o mecanismo equivalente de exclusión mutua. La operación debe comprobar y establecer el primer administrador dentro de una sola transacción. No resolverlo con una comprobación adicional en el navegador.
 
-### ADMIN-04 — La invitación confía en el encabezado Origin para redirectTo
-**Severidad: media.**
+### ADMIN-04 — Redirección de invitaciones basada en URL del servidor
+<badge>Corregido en rama</badge>
 
-En la acción `invite`, el valor `req.headers.origin` se utiliza como `redirectTo` y solo tiene un fallback fijo. El proyecto puede tener una allowlist de redirecciones en Supabase, pero el código no limita explícitamente el origen a los dominios propios esperados.
+La acción `invite` ya no utiliza `req.headers.origin`. Usa `FARMI_SITE_URL` configurada en el servidor y valida que la URL sea HTTPS (se admite localhost para desarrollo). Si la configuración es inválida, la invitación se detiene con error 503. El fallback es el dominio principal conocido de FARMI.
 
-**Recomendación:** definir una URL canónica del sitio en una variable de entorno de servidor y utilizarla para invitaciones. Si se necesita admitir varios entornos, validar contra una allowlist estricta de orígenes exactos. No reflejar cualquier Origin recibido.
+**Pendiente operativo:** configurar `FARMI_SITE_URL` en cada entorno Preview/Production y confirmar que el destino esté permitido en Supabase Auth Redirect URLs.
 
 ### ADMIN-05 — Claims ausentes se convierten en rol Ventas y cuenta activa
 **Severidad: media-alta.**
@@ -32,12 +32,10 @@ En la acción `invite`, el valor `req.headers.origin` se utiliza como `redirectT
 
 **Recomendación:** distinguir explícitamente cuentas pendientes/no provisionadas de cuentas Ventas activas. Inventariar metadata existente y migrar con control antes de adoptar un comportamiento fail-closed.
 
-### ADMIN-06 — La paginación de usuarios tiene un límite silencioso
-**Severidad: media.**
+### ADMIN-06 — Paginación de usuarios con límite explícito
+<badge>Corregido en rama</badge>
 
-`listAllUsers` recorre hasta 100 páginas de 100 usuarios y luego devuelve lo acumulado sin informar si alcanzó el límite. Para el uso actual puede ser suficiente, pero una cuenta con más de 10,000 usuarios podría provocar un inventario incompleto. Esto afecta la comprobación de administrador existente y el conteo de administradores.
-
-**Recomendación:** detectar explícitamente si se alcanzó el máximo de páginas y fallar de forma segura, o implementar paginación completa con un límite operativo documentado.
+`listAllUsers` ahora falla de forma segura si la página 100 devuelve 100 registros. No devuelve un inventario posiblemente truncado para bootstrap ni para el control de última cuenta administradora. El mensaje indica que se requiere revisión manual.
 
 ### ADMIN-07 — La validación de permisos permite cualquier combinación de módulos conocidos
 **Severidad: media; depende del diseño esperado.**
@@ -65,10 +63,9 @@ No cambiarlo sin confirmar compatibilidad con los usuarios existentes.
 
 ## Prioridad sugerida
 
-1. Hacer atómico el bootstrap de primer administrador.
-2. Fijar/validar el origen de redirección de invitaciones.
+1. Hacer atómico el bootstrap de primer administrador y la protección de última cuenta administradora (requiere coordinación transaccional en servidor/DB).
+2. Configurar `FARMI_SITE_URL` y validar Redirect URLs en Supabase Auth.
 3. Hacer explícitos los estados de metadata incompleta.
-4. Detectar inventarios de usuarios truncados.
-5. Confirmar si los permisos son personalizados o están limitados por rol.
+4. Confirmar si los permisos son personalizados o están limitados por rol.
 
 **Límites:** la inspección no demuestra que estos riesgos hayan sido explotados. No confirma la configuración de redirect URLs en Supabase, las variables desplegadas ni el número real de usuarios. No se modificó el endpoint ni la configuración del proyecto.
