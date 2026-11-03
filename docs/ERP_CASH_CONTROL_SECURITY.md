@@ -229,3 +229,17 @@ No se encontró un `vercel.json` ni una configuración equivalente de cabeceras 
 ## Estado de pruebas y despliegue
 
 El commit `2690bac011ace3b9131fd084cf3e435311d9a214` pasó `npm run build` y `npm test` en GitHub Actions. No hay despliegue Vercel asociado a ese SHA. Los cambios posteriores requieren una nueva ejecución CI y no se consideran publicados.
+
+## ADMIN-16 — El bootstrap no tiene limitación persistente de intentos
+
+La acción `bootstrap` compara el código enviado con `FARMI_ADMIN_BOOTSTRAP_TOKEN` usando comparación de tiempo constante, lo cual evita una comparación ingenua carácter por carácter. Sin embargo, la ruta no implementa límite de intentos, espera progresiva ni bloqueo persistente por cuenta/IP. Un atacante que obtenga una sesión válida de una cuenta todavía no administradora podría repetir intentos contra el código de activación.
+
+**Severidad:** media; requiere una sesión válida y que el secreto de bootstrap siga configurado. No demuestra que el secreto haya sido adivinado ni que exista acceso administrativo no autorizado.
+
+**Resolución requerida:** limitar intentos con un mecanismo compartido y persistente entre instancias serverless, alertar sobre intentos fallidos y retirar/deshabilitar el secreto de bootstrap una vez activado el primer administrador. No se añade un contador en memoria porque no sería fiable entre instancias y podría dar una falsa sensación de protección. La configuración actual del secreto no se inspeccionó ni modificó.
+
+## Verificación Vercel de la rama de auditoría
+
+Se inspeccionaron los despliegues Preview de la rama. El despliegue del commit `370cbe2ea9345bd722a620e761f8008661b3bfd4` terminó en error de compilación por dos errores TS1005 en `src/components/FinancialModules.tsx` (líneas 105 y 106). Esos errores corresponden a un commit anterior a la corrección JSX incorporada después en la rama; no se deben atribuir al HEAD actual.
+
+El HEAD actual `04382480bdd197a6b7d8920d80be7171d9cf600c` tiene GitHub Actions aprobada (instalación, auditoría npm, build y pruebas), pero Vercel no devuelve un despliegue asociado a ese SHA. Por tanto, no hay Preview actual verificado y no se ha comprobado por HTTP el conjunto de cabeceras de seguridad del despliegue vigente.
