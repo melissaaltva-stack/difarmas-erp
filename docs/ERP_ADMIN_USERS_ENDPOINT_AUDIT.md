@@ -100,3 +100,18 @@ En `api/admin-users.ts`, la acción `update` ahora calcula el valor por defecto 
 **Verificación estática:** el código actual de la rama contiene la condición estricta y la pantalla de administración envía `active: next.active` al guardar cambios de rol, permisos o estado. La compilación y las pruebas generales del commit `c0f9e7f9976116d6976907efedf441fb093d7d64` finalizaron correctamente. No hay pruebas específicas del endpoint que cubran claim ausente, falso y verdadero.
 
 **Pendiente:** añadir pruebas unitarias del endpoint y validar las transiciones de activación/desactivación en un entorno aislado. No se modificaron usuarios reales ni datos de Supabase.
+
+
+### ADMIN-13 — Revocación de permisos diferida por JWT existentes
+
+**Severidad: media-alta. Pendiente de diseño.**
+
+La acción `update` modifica `app_metadata` mediante `auth.admin.updateUserById`, mientras que las políticas RLS consultan los permisos desde `auth.jwt()`. Supabase documenta que los cambios de `app_metadata` no se reflejan en JWT ya emitidos hasta que el token se renueva. Los access tokens suelen durar entre 5 minutos y 1 hora.
+
+**Impacto:** después de retirar un permiso o degradar un rol, una sesión ya abierta podría conservar temporalmente los claims anteriores y seguir pasando las policies que dependen de ellos hasta renovar o expirar el token. No demuestra acceso a otra cuenta ni elevación de privilegios; es una ventana de revocación diferida.
+
+**Recomendación:** las operaciones sensibles deben comprobar permisos actuales en servidor/DB, no depender exclusivamente de claims posiblemente antiguos. La duración corta del JWT reduce la ventana, pero no ofrece revocación inmediata. No cambiar sesiones, hooks ni configuración de Supabase sin plan probado y autorización.
+
+Referencias oficiales: https://supabase.com/docs/guides/database/postgres/row-level-security y https://supabase.com/docs/guides/auth/sessions.
+
+**Estado:** hallazgo estático documentado. No se modificaron usuarios, sesiones, claims, configuración ni datos de Supabase.
