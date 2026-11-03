@@ -31,6 +31,18 @@ describe('inventoryService', () => {
     expect(() => applySaleToInventory([product, { ...product, id: 2 }], [first, second])).toThrow(/total o costo de la venta está fuera de rango/);
   });
 
+  it('allows service sales without stock and leaves inventory unchanged', () => {
+    const service: Product = { ...product, id: 2, itemType: 'Servicio', code: '', stock: 0, minStock: 0, expiry: '', lot: '', supplier: '' };
+    const result = applySaleToInventory([product, service], [{ ...cartItem(2), id: 2, itemType: 'Servicio', stock: 0 }]);
+    expect(result.find(item => item.id === 2)?.stock).toBe(0);
+    expect(result.find(item => item.id === 1)?.stock).toBe(5);
+  });
+
+  it('rejects receiving a service as a purchase item', () => {
+    const service: Product = { ...product, id: 2, itemType: 'Servicio', code: '', stock: 0, minStock: 0, expiry: '', lot: '', supplier: '' };
+    expect(() => applyPurchaseToInventory([service], [{ ...purchaseItem(1, 10), id: 2, itemType: 'Servicio', stock: 0 }], 'Proveedor')).toThrow(/Los servicios no se pueden recibir/);
+  });
+
   it('rejects sales that exceed stock', () => {
     expect(() => applySaleToInventory([product], [cartItem(6)])).toThrow(/Stock insuficiente/);
   });
