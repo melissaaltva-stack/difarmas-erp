@@ -160,3 +160,20 @@ Se ejecutaron consultas SQL de solo lectura en el proyecto Supabase vinculado. L
 **Riesgo confirmado:** la condición permisiva de estado activo en `erp_state` está presente en la base activa y no es solo una posibilidad inferida del repositorio. WRITE-01/WRITE-09 continúan abiertos porque la autorización por módulo requiere una frontera de servidor/DB, no un filtro de interfaz.
 
 **Alcance:** únicamente consultas SELECT al catálogo del sistema. No se modificaron filas, policies, grants, funciones, usuarios, migraciones ni configuración de Supabase. La revisión no incluyó pruebas de escritura con JWT ni validación de restauración.
+
+
+## Revisión de RPC y autorización efectiva — 2026-11-03
+
+### RPC-01 — La nota de crédito de proveedor acepta permisos más amplios que la interfaz
+
+**Severidad: alta si la migración está aplicada; estado de aplicación no verificado.**
+
+La migración `supabase/migrations/202611020002_supplier_credit_note_atomic.sql` define `resolve_supplier_credit_note(bigint)` como `SECURITY INVOKER`, concede EXECUTE a `authenticated` y valida identidad, cuenta activa, rol y metadata firmada. Sin embargo, su predicado de permisos acepta cualquiera de estos módulos: `proveedores`, `compras`, `cuentas_pagar` o `finanzas`.
+
+En contraste, `src/App.tsx` pasa `canManageSupplierReturns={canSee('compras')}` a Compras/Proveedores. Por tanto, la interfaz solo habilita la gestión de devoluciones para quien tiene `compras`, mientras que la RPC permite ejecutar la resolución de una nota de crédito a usuarios con cualquiera de los otros tres permisos si pueden invocarla directamente.
+
+La operación actualiza en una transacción las claves `supplierReturns`, `payables` y `supplierCredits`. La condición amplia puede permitir a un usuario con solo `proveedores`, `cuentas_pagar` o `finanzas` cambiar el estado de una devolución y aplicar el crédito, aunque la interfaz no le conceda esa acción.
+
+**Recomendación:** definir con el negocio qué permisos deben poder resolver notas de crédito. Alinear el predicado SQL y la interfaz con esa misma regla; no basta con ocultar el botón. Añadir pruebas negativas para cada permiso aislado y pruebas positivas para las combinaciones autorizadas. No aplicar esta migración ni modificar Supabase durante esta auditoría.
+
+**Límite de verificación:** se inspeccionó el archivo SQL de la rama y el punto de llamada en el cliente. No se confirmó que la función exista o esté actualizada en la base activa, ni se hicieron invocaciones de prueba.
