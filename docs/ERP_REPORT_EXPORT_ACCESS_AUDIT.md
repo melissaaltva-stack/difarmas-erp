@@ -73,3 +73,16 @@ La sección de Gestión y análisis se presenta dentro de Finanzas. Su component
 **Límite:** la autorización sigue siendo cliente-side mientras el snapshot completo se sincronice como JSON. La protección definitiva requiere validar permisos en servidor.
 
 **Verificación pendiente:** build, pruebas y Preview. No se modificaron datos ni configuración de Supabase, y no se publicó a producción.
+
+
+## PERM-05 — Sugerencias de compra visibles sin permisos de Compras/Inventario
+
+**Severidad: media.**
+
+El panel `SmartPurchasing` dentro de Gestión y análisis mostraba niveles de stock, demanda estimada, cantidades sugeridas y costo de reposición. Se renderizaba a cualquier usuario con acceso a Finanzas, aunque no tuviera los permisos de Compras e Inventario.
+
+**Corrección de interfaz aplicada en esta rama:** el componente recibe `canViewPurchasing` y solo se renderiza cuando el usuario tiene simultáneamente `compras` e `inventario`. El resto de las herramientas financieras y gerenciales no se altera.
+
+**Límite:** es una barrera de presentación, no autorización de datos en servidor. El snapshot completo sigue disponible en el cliente autenticado; se requiere separación de datos y autorización server-side para garantizar confidencialidad.
+
+**Verificación pendiente:** build, pruebas y Preview del commit. Sin cambios en Supabase ni producción.
