@@ -408,7 +408,7 @@ export function useErpState(userId: string) {
     if(!current.items.length||current.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!Number.isFinite(item.unitCost)||item.unitCost<0))return false;
     const quantitiesByProduct=new Map<number,number>();
     current.items.forEach(item=>quantitiesByProduct.set(item.productId,(quantitiesByProduct.get(item.productId)??0)+item.quantity));
-    if([...quantitiesByProduct].some(([productId,quantity])=>!products.some(product=>product.id===productId&&product.stock>=quantity)))return false;
+    if([...quantitiesByProduct].some(([productId,quantity])=>!products.some(product=>product.id===productId&&product.itemType!=='Servicio'&&Number.isFinite(product.stock)&&product.stock>=quantity)))return false;
     const updated=products.map(product=>{
       const quantity=quantitiesByProduct.get(product.id)??0;
       return quantity?{...product,stock:product.stock-quantity}:product;
@@ -452,7 +452,7 @@ export function useErpState(userId: string) {
     }
     if(status==='Cambio recibido') {
       const quantities=new Map<number,number>();source.items.forEach(item=>quantities.set(item.productId,(quantities.get(item.productId)??0)+item.quantity));
-      if([...quantities.keys()].some(id=>!products.some(product=>product.id===id)))return false;
+      if([...quantities.keys()].some(id=>!products.some(product=>product.id===id&&product.itemType!=='Servicio')))return false;
       const date=new Date().toISOString();
       let updatedProducts:Product[];
       try {
