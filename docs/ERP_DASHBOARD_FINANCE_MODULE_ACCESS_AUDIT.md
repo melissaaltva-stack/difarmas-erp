@@ -41,6 +41,6 @@ La solución definitiva requiere migrar de snapshot único a tablas por dominio 
 
 ## Verificación
 
-Los cambios FIN-UI-03/04 están en `src/components/Dashboard.tsx` y el alcance se deriva de claims de permisos en `src/App.tsx`. La compilación y las pruebas de CI del commit que contiene estos cambios deben confirmarse antes de considerar la corrección verificada.
+Los cambios FIN-UI-03/04 están en `src/components/Dashboard.tsx` y el alcance se deriva de claims de permisos en `src/App.tsx`. GitHub Actions run `41709639705` para el commit `48b6923234fa5ed434227408951230df74d102e1` terminó con conclusión `success`; completó instalación, auditoría de dependencias, build y pruebas.
 
 No se modificó Supabase, no se ejecutaron migraciones, no se cambiaron datos reales ni se fusionó a producción.
