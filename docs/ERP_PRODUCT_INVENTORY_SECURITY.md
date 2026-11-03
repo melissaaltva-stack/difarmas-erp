@@ -114,3 +114,16 @@ La interfaz calcula el total de factura incluyendo impuestos y presenta validaci
 **Corrección recomendada:** calcular y validar el total final en una operación de servidor usando líneas, descuentos e impuestos autorizados; validar tolerancias y reglas de factura; usar el mismo total validado para compra, aplicación de crédito y CxP; registrar auditoría e idempotencia. No basta con repetir la validación en React.
 
 **Estado:** hallazgo documentado; no se modificó código funcional, no se ejecutó SQL y no se alteraron datos.
+
+
+## Hallazgo adicional: recepción de cambio de proveedor sin operación atómica
+
+En resolveSupplierReturn, la rama Cambio recibido valida que los productos existan, calcula el nuevo stock/costo promedio y después actualiza productos, movimientos y estado de la devolución mediante tres setters cliente independientes. La protección de repetición usa refs locales del hook y un estado de finalización en memoria; no impide que otra sesión o dispositivo resuelva simultáneamente el mismo expediente. El estado persistido del expediente se mantiene Enviado al proveedor hasta que se guarda el snapshot.
+
+Dos sesiones que lean el mismo expediente antes de que se sincronice el primer cambio pueden calcular ambas el incremento completo y registrar movimientos de reposición duplicados. La misma arquitectura puede dejar estado, stock y movimientos parcialmente sincronizados si falla la persistencia entre actualizaciones.
+
+**Severidad: media (duplicación de existencias y trazabilidad).** El riesgo depende de concurrencia entre sesiones o fallos de sincronización; no demuestra ejecución anónima.
+
+**Corrección recomendada:** una operación transaccional de servidor que bloquee el expediente, exija estado Enviado al proveedor, compruebe idempotencia, actualice stock/costo, inserte movimientos y cambie el estado a Cambio recibido en la misma transacción. La RPC de nota de crédito ya existente no cubre esta rama de cambio recibido.
+
+**Estado:** documentado; sin cambios funcionales, SQL ni datos.
