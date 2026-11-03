@@ -29,8 +29,8 @@ export function AiAssistant({products,sales,purchases,expenses,receivables,payab
   const [question,setQuestion]=useState('');
   const [answer,setAnswer]=useState('');
   const [active,setActive]=useState('resumen');
-  const stockAlerts=useMemo(()=>safeProducts.filter(p=>p.stock<=p.minStock),[products]);
-  const expiryAlerts=useMemo(()=>safeProducts.filter(p=>daysTo(p.expiry)<=90).sort((a,b)=>daysTo(a.expiry)-daysTo(b.expiry)),[products]);
+  const stockAlerts=useMemo(()=>safeProducts.filter(p=>p.stock<=p.minStock),[safeProducts]);
+  const expiryAlerts=useMemo(()=>safeProducts.filter(p=>daysTo(p.expiry)<=90).sort((a,b)=>daysTo(a.expiry)-daysTo(b.expiry)),[safeProducts]);
   const overdueAR=safeReceivables.filter(x=>x.total>x.paid&&x.dueDate&&x.dueDate<dayKey());
   const overdueAP=safePayables.filter(x=>x.total>x.paid&&x.dueDate&&x.dueDate<dayKey());
   const ar=safeReceivables.reduce((n,x)=>n+Math.max(0,x.total-x.paid),0);
