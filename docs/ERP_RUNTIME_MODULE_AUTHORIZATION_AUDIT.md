@@ -140,3 +140,24 @@ Corrección requerida antes de aplicar: para cada producto devuelto, validar que
 ### Alcance de esta ronda
 
 Las consultas adicionales fueron exclusivamente de catálogo (pg_class, pg_roles, pg_auth_members, pg_policies, pg_proc e información de privilegios). No se leyeron filas de negocio ni se ejecutó DDL/DML. No se modificaron políticas, grants, funciones, usuarios ni configuración de Auth.
+
+
+### SUPRET-11 — Despacho de devolución también modifica existencias desde el cliente
+
+La inspección de `recordSupplierDispatch` en `src/hooks/useErpState.ts` confirma que el despacho descuenta stock, crea movimientos de inventario y depende de un bloqueo `useRef` local. No valida en servidor que la devolución siga Pendiente ni que otra sesión no haya despachado ya las mismas unidades. Además, el cambio de existencias y el movimiento se guardan como partes del snapshot completo, no como una única transacción de negocio.
+
+**Severidad: crítica para integridad de existencias.** Dos sesiones pueden despachar la misma devolución o una escritura posterior del snapshot puede reemplazar el estado de otra sesión. El arreglo debe ser una única RPC transaccional e idempotente que bloquee la fila `erp_state`, vuelva a leer la devolución y productos actuales, valide cantidades y estado Pendiente, descuente stock y agregue movimientos antes de confirmar.
+
+### SUPRET-12 — La RPC de nota de crédito es invoker, pero aún confía en datos del snapshot
+
+Se inspeccionó el SQL completo de `resolve_supplier_credit_note(bigint)`. La función está declarada `SECURITY INVOKER`, fija `search_path` y revoca ejecución a `PUBLIC` y `anon`, concediéndola a `authenticated`; el row lock y la transición de estado reducen duplicados concurrentes para esa operación concreta. La validación de rol y permiso `compras` también se realiza dentro de la función.
+
+Sin embargo, `v_note` se obtiene directamente de `supplierReturns[].totalCost`. La función localiza la compra por proveedor y referencia, pero no consulta `purchaseCostHistory` ni valida que las cantidades devueltas acumuladas no excedan las cantidades recibidas. Por tanto, la atomicidad no garantiza que el importe ni las cantidades sean correctos. No aplicar esta migración todavía.
+
+### SUPRET-13 — La transición de rechazo no persiste evidencia verificable
+
+La función cliente `resolveSupplierReturn` cambia el estado a Rechazado mediante `setSupplierReturns` y no exige motivo ni actor. Esta transición requiere una operación de servidor con validación de estado, actor autenticado y motivo obligatorio, con evento auditable.
+
+### Estado de implementación
+
+No se cambió código funcional ni se aplicó ninguna migración. Las correcciones anteriores requieren diseñar las RPC para despacho, cambio recibido y rechazo, y fortalecer la RPC de nota de crédito usando los datos originales de compra y el historial de devoluciones. Evitar desplegar estas operaciones hasta contar con pruebas de concurrencia, reintentos, doble envío y rollback.
