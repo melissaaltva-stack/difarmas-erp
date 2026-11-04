@@ -666,3 +666,16 @@ En `recordSale` de `src/hooks/useErpState.ts`, el inventario se actualiza usando
 **Corrección requerida:** el servidor debe aceptar identificadores de línea y cantidades, reconstruir la relación entre cada línea de factura y su producto, comprobar que cada producto y cantidad coincidan con la operación de inventario, validar lista de precio, descuentos, ISV y total, y calcular todos los importes. Debe guardar factura, stock, movimientos y CxC en una transacción con idempotencia y auditoría. El cliente no debe poder aportar una lista independiente de totales fiscales como fuente autoritativa.
 
 **Alcance:** se revisó el camino de creación `recordSale(..., invoiceDetails)`; el hallazgo complementa los riesgos ya documentados para `updateStandardInvoice`. No se ejecutaron solicitudes manipuladas, no se emitieron facturas, no se modificó código funcional ni se alteró Supabase.
+
+
+## CASH-07 — El cierre diario puede atribuir diferencias históricas al último día de pago
+
+**Severidad: media-alta para la exactitud del arqueo diario. Estado: confirmado por revisión estática; no se ejecutaron pagos ni cierres reales.**
+
+En `src/components/Finance.tsx`, los cálculos `dayCollections` y `daySupplierPayments` comparan el acumulado de `receivables[].paid` o `payables[].paid` con la suma de las transacciones guardadas en `paymentTransactions`. Cuando existe al menos una transacción para la cuenta, el código calcula `legacyUnrecorded = Math.max(0, paid - recorded)` y, si `lastPaymentDate` corresponde al día actual, incorpora toda esa diferencia al cierre de hoy. Además, la parte no conciliada se trata como efectivo por defecto cuando no existe un método individual que permita clasificarla.
+
+**Impacto:** si el historial de transacciones está incompleto y se registra hoy un nuevo abono, `lastPaymentDate` pasa a ser hoy, pero la diferencia acumulada puede incluir abonos anteriores sin detalle. El cierre puede atribuir ese saldo histórico completo al efectivo del día, sobrestimando entradas o salidas y alterando el efectivo esperado. El mismo supuesto afecta cobros de clientes y pagos a proveedores. Si las transacciones acumuladas exceden el campo `paid`, el cálculo tampoco genera una alerta de conciliación: simplemente limita la diferencia no registrada a cero.
+
+**Corrección requerida:** no inferir fecha ni medio de pago de una diferencia acumulada. Marcar la cuenta como pendiente de conciliación cuando `paid` y la suma de transacciones no coincidan; conservar los movimientos históricos sin fecha/método como saldo no conciliado, fuera del arqueo diario hasta revisión documentada. En el nuevo modelo, cada pago debe guardar su fecha, medio, referencia y cuenta relacionada en un ledger inmutable, y los saldos deben derivarse de ese ledger en una operación servidor transaccional. Añadir pruebas para historial parcial, transacciones mayores al saldo abonado, abonos de días distintos y pagos de hoy con legado sin conciliar.
+
+**Alcance:** revisados `src/components/Finance.tsx`, `src/components/FinancialModules.tsx`, `src/services/financeService.ts` y `src/services/financeService.test.ts`. La revisión también confirmó que pagos parciales actualizan saldo e historial mediante setters separados del navegador, ya cubierto por CASH-06. No se modificó código funcional, Supabase ni datos comerciales.
