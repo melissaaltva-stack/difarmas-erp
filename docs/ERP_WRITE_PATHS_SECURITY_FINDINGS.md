@@ -395,10 +395,26 @@ La acción `bootstrap` mantiene la comprobación global autoritativa: vuelve a l
 
 ### ADMIN-19 — Unicidad concurrente de nombres de usuario
 
-**Estado: corregido en código — commit `4021f8880ba5c4d494970b90bd5a1763b6bf162a`; validación de CI/Preview pendiente.**
+**Estado: corregido en código y cubierto por pruebas — commit `4021f8880ba5c4d494970b90bd5a1763b6bf162a`; pruebas adicionales en `7d4b7ff2b52a53f376b49557095fb5846a33071d`.**
 
 La creación de cuentas `create-username` ya no enumera todas las cuentas Auth para comprobar previamente el nombre. El nombre se convierte de forma determinista en un correo sintético `<username>@users.farmi.invalid`, y la creación delega la unicidad atómica en la restricción única de correo de Supabase Auth. La respuesta traduce los códigos `email_exists` y `user_already_exists` a HTTP 409.
 
 Esto elimina la carrera de la comprobación `listUsers()` seguida de `createUser()` para las cuentas creadas por este flujo. La unicidad del correo Auth es la garantía autoritativa; no se afirma una restricción SQL independiente sobre el campo metadata `username`.
 
 **Límite:** ADMIN-17 (rate limit persistente de bootstrap) y ADMIN-18 (último administrador bajo concurrencia) siguen abiertos y requieren almacenamiento/operación atómica compartida; no se sustituyen con bloqueos en memoria de una función serverless.
+
+
+
+## Verificación adicional — ADMIN-19 / ADMIN-20 — 2026-11-04
+
+El commit `9506edbfe9f0f0157b2170844fbbcc02fcb80387` añadió pruebas automatizadas de la API administrativa para confirmar que:
+- La acción `status` responde solo con información del usuario autenticado y no llama a `listUsers()`.
+- Una sesión ausente o inválida recibe HTTP 401 sin enumerar cuentas.
+
+El commit `7d4b7ff2b52a53f376b49557095fb5846a33071d` añadió dos pruebas adicionales para ADMIN-19:
+- La creación de un nombre de usuario utiliza la operación Auth de creación con el correo sintético determinista, sin consulta previa al directorio.
+- Un error Auth `email_exists` se traduce a HTTP 409, también sin enumeración previa.
+
+**Verificación:** GitHub Actions run `41848236570` (commit `9506edb...`) y run `41848521738` (commit `7d4b7ff...`) terminaron en `SUCCESS`; ambos ejecutaron `npm run build` y `npm test`. El Preview Vercel del último commit, deployment `dpl_wDaZbmJzXoFaoVwB9PWQAcdJ6Hx4`, está en estado `READY` y corresponde a la rama `security/erp-state-permission-matrix`.
+
+**Alcance:** solo se añadieron pruebas automatizadas y documentación en la rama aislada. No se cambió `main`, no se promovió el Preview a producción y no se modificó Supabase, Auth ni datos comerciales. ADMIN-17 y ADMIN-18 permanecen abiertos; PERM-08 a PERM-10 y WRITE-01 a WRITE-10 siguen requiriendo una frontera de autorización en servidor/base de datos.
