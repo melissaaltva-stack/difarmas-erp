@@ -721,3 +721,21 @@ En `src/components/Finance.tsx`, un efecto selecciona el cierre con la fecha má
 **Corrección requerida:** derivar la apertura del último cierre confirmado en el servidor para la caja correspondiente; no aceptar un importe libre del navegador como fuente autoritativa. Si se requiere fondo inicial distinto, registrarlo como movimiento de ajuste/apertura separado, con actor autenticado, motivo, evidencia y aprobación según política. La operación debe validar secuencia temporal, caja/turno y cierre previo en una transacción, conservar el valor de apertura y su procedencia en el historial inmutable, y aplicar idempotencia/unicidad por caja y fecha.
 
 **Alcance:** revisados `src/components/Finance.tsx` (inicialización de `opening`, cálculo `expected`, campo editable y `closeCash`), `src/services/financeService.ts` (`calculateExpectedCash` y `createCashClosure`) y `src/domain/types.ts` (`CashClosure`). Este hallazgo es distinto de CASH-08: CASH-08 cubre el desglose de movimientos omitido en el registro histórico; CASH-09 cubre la ausencia de validación de continuidad del saldo inicial. No se modificó código funcional, Supabase, RLS, Auth ni datos financieros; no se ejecutaron cierres reales.
+
+
+
+## SUPABASE-LIVE-01 — La protección propuesta en migraciones no está activa en la base consultada
+
+**Severidad: alta. Estado: confirmado mediante consultas SQL de solo lectura el 2026-11-04.**
+
+Se consultó el proyecto Supabase activo configurado para FARMI, sin leer filas de negocio ni modificar datos. La función `public.resolve_supplier_credit_note(bigint)` no existe en el catálogo de funciones de `public`; por tanto, el RPC que invoca `resolveSupplierCreditNoteAtomically` no puede considerarse operativo en esa base. Las pruebas Vitest agregadas para el cliente simulan `client.rpc` y no sustituyen una prueba PostgreSQL real.
+
+La tabla `public.erp_state` tiene RLS habilitado y una clave primaria única por `user_id`. Los permisos de tabla observados para `authenticated` incluyen SELECT, INSERT y UPDATE. Las políticas activas consultadas permiten SELECT por propietario con `farmi_active` ausente interpretado como verdadero; INSERT/UPDATE requieren propietario, actividad (también con valor predeterminado verdadero) y uno de los roles Administrador, Supervisor, Ventas, Compras o Finanzas. No se observó una política de DELETE. Estas políticas no comprueban `farmi_permissions` ni permisos granulares por módulo.
+
+La migración del repositorio `202611020001_erp_state_role_write_guard.sql` propone cambiar el valor predeterminado de `farmi_active` a falso, pero no coincide con las políticas actualmente activas. La migración `202611020002_supplier_credit_note_atomic.sql` tampoco está instalada, como confirma la ausencia de la función. No se debe inferir que los archivos SQL del repositorio ya fueron aplicados.
+
+**Impacto:** la rama contiene controles y pruebas que aún no están desplegados en la base activa. El acceso directo de INSERT/UPDATE del snapshot continúa vigente para los roles indicados y no aplica autorización por permiso de módulo. El flujo de nota de crédito depende de un RPC inexistente en esa base.
+
+**Acción segura:** mantener ambas migraciones sin aplicar en la base activa hasta disponer de un entorno aislado sin coste adicional o un procedimiento de staging aprobado, validar compatibilidad y ejecutar pruebas de integración PostgreSQL. Después, planificar el despliegue de forma coordinada con la aplicación. No revocar INSERT/UPDATE ni activar el trigger de matriz de permisos mientras el cliente de producción siga dependiendo de escrituras directas del snapshot.
+
+**Alcance de la verificación:** consultas de catálogo sobre existencia de función, políticas RLS, privilegios de tabla e índices; no se consultaron filas de `erp_state`, usuarios ni datos comerciales. No se ejecutó DDL, DML, migración ni cambio de configuración.
