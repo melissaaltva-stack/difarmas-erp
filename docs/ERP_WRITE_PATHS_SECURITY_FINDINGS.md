@@ -782,3 +782,46 @@ En `src/hooks/useErpState.ts`, `receivePurchase` valida cantidades y costos no n
 **Acción necesaria:** RPC de recepción que valide proveedor, factura única por proveedor, líneas, cantidades, costos, impuestos/descuentos y total conciliado; aplique créditos disponibles y genere inventario, movimientos, costo histórico y cuenta por pagar en una única transacción con clave idempotente. Antes de imponer conciliación exacta, documentar y modelar impuestos, fletes, descuentos y otros cargos legítimos que puedan explicar diferencias.
 
 **Límite de la revisión:** estos cuatro hallazgos proceden de lectura de código y no de una prueba de explotación ni de concurrencia real. No se modificó el código operativo ni se cambiaron datos de Supabase.
+
+
+## REFUND-05 — El importe y costo de la devolución no se reconcilian contra la línea original
+
+**Severidad: alta. Estado: confirmado por inspección estática el 2026-11-04.**
+
+`recordSaleAdjustment` comprueba que la cantidad no exceda la cantidad pendiente de devolver y que el importe coincida con los valores enviados en `adjustment.items`. Sin embargo, `canApplySaleAdjustmentItems` valida producto/cantidad/línea, no que `unitPrice`, `unitTaxAmount` y `unitCost` sean los valores históricos de la línea original. El costo proporcionado por el cliente se usa después para recalcular el costo promedio del inventario devuelto. La operación actualiza inventario, movimientos, cuentas por cobrar, movimientos de caja y ajustes mediante setters independientes.
+
+**Impacto:** una sesión cliente manipulada puede proponer importes/costos diferentes a los de la factura original; el máximo agregado del reembolso limita parte del importe, pero no valida la valoración por línea. El reembolso pagado también puede generar un movimiento de caja desde el cliente. No hay transacción/actor/clave idempotente de base de datos para la devolución.
+
+**Acción necesaria:** RPC transaccional que lea y bloquee la venta original y sus líneas, derive precio/impuesto/costo de la factura, valide cantidad pendiente, aplique una sola devolución por clave idempotente, registre aprobación y medio real de reembolso, y actualice stock/cartera/caja/auditoría en la misma transacción. No confiar en importes ni costos suministrados por el navegador.
+
+## SUPRET-08 — Despacho y recepción de cambios de proveedor no son atómicos
+
+**Severidad: alta. Estado: confirmado por inspección estática el 2026-11-04.**
+
+`recordSupplierDispatch` valida el estado y stock en memoria, y luego actualiza productos y movimientos por separado. El componente `SupplierReturns` cambia el estado a “Enviado al proveedor” en otra actualización. Para “Cambio recibido”, `resolveSupplierReturn` actualiza productos, movimientos y estado mediante setters independientes. Los bloqueos `useRef` y sets locales solo coordinan esa instancia de la aplicación.
+
+**Impacto:** dos dispositivos pueden despachar la misma devolución o confirmar un cambio simultáneamente, produciendo diferencias entre estado, inventario y movimientos. Las cantidades y costos proceden del snapshot local; no hay restricción única o control de versión en PostgreSQL para estas transiciones.
+
+**Acción necesaria:** una operación de base de datos por transición, con bloqueo de devolución y productos, validación de estado previo, stock/cantidad, actor y fecha del servidor, movimientos inmutables y clave idempotente. La nota de crédito ya tiene cliente preparado para RPC, pero la función no está instalada en la base activa; despacho y cambio recibido aún no tienen RPC.
+
+## INV-04 — Ajustes manuales y eliminación de productos permiten alterar stock sin flujo de aprobación
+
+**Severidad: alta. Estado: confirmado por inspección estática el 2026-11-04.**
+
+`saveProduct` acepta el stock enviado al editar un producto y registra la diferencia como movimiento genérico de ajuste. No exige motivo estructurado, actor, evidencia o aprobación. `deleteProduct` elimina el producto del catálogo y, si tiene stock, crea primero un movimiento de salida; los movimientos históricos quedan referenciando un producto que ya no existe. Estas operaciones modifican productos y movimientos en setters separados.
+
+**Impacto:** el historial no constituye un libro de inventario inmutable y auditable. El valor de stock puede ser reemplazado desde el cliente y la eliminación puede romper referencias de movimientos y documentos históricos.
+
+**Acción necesaria:** RPC de ajuste con cantidad delta, motivo obligatorio, usuario/fecha del servidor, autorización por rol y aprobación separada para ajustes sensibles; preservar productos con referencias históricas mediante archivado lógico, no borrado físico. Restricciones para stock no negativo y transacción que registre saldo anterior/nuevo junto con el movimiento.
+
+## ADMIN-21 — La protección de “último administrador” es susceptible a concurrencia
+
+**Severidad: alta. Estado: confirmado por inspección estática el 2026-11-04.**
+
+En `api/admin-users.ts`, bootstrap consulta la lista de usuarios y después promueve al usuario actual si no encuentra administradores. La actualización de usuarios también enumera usuarios, calcula el número de administradores y después cambia rol/estado de la cuenta. La comprobación y la mutación no son una operación atómica; dos solicitudes concurrentes pueden observar el mismo recuento y ambas continuar.
+
+**Impacto:** el bootstrap concurrente puede crear más de un administrador inicial, o dos cambios administrativos simultáneos pueden dejar el sistema sin una cuenta administradora activa. Las pruebas actuales verifican casos secuenciales y mocks, no concurrencia real.
+
+**Acción necesaria:** serializar cambios de privilegios mediante una función transaccional o mecanismo de exclusión mutua persistente en servidor, volver a contar administradores dentro de la sección crítica y aplicar la modificación en la misma transacción. Registrar actor, objetivo y cambio de privilegios. Probar dos solicitudes concurrentes contra PostgreSQL/Auth de prueba.
+
+**Límite de esta etapa:** hallazgos derivados de inspección estática; no se ejecutaron devoluciones, ajustes, despachos ni cambios de cuentas contra datos reales. No se modificó código operativo ni Supabase.
