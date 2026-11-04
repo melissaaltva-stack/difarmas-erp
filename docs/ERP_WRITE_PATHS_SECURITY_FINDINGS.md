@@ -281,3 +281,14 @@ Estos controles reducen exposición, pero no sustituyen autorización transaccio
 ### Límite de la revisión
 
 No se ejecutaron solicitudes de mutación, pruebas de fuerza bruta, cambios de contraseña, invitaciones, cambios de roles ni pruebas con JWT manipulados. No se alteraron sesiones, usuarios, configuración de Auth, variables de entorno ni datos de Supabase. Los hallazgos de concurrencia y rate limiting requieren una implementación backend persistente y pruebas controladas antes de cerrarse.
+
+
+### LOCAL-02 — Lectura segura de colecciones locales de campañas e historial de precios
+
+**Estado: corregido en código — commit `f80936618266932ee4f20230946ba78e411c01dc`.**
+
+En `src/components/ManagementSuite.tsx`, las lecturas iniciales de `difarmas_campaigns` y `difarmas_price_history`, así como el análisis de campañas, ahora pasan por `loadLocalArray`. El helper captura errores de JSON y valida que el valor leído sea un arreglo. Ante datos ausentes, JSON inválido o una estructura inesperada, devuelve una colección vacía sin eliminar ni reescribir la entrada almacenada.
+
+**Impacto:** evita que una entrada local corrupta interrumpa el renderizado de análisis de campañas o historial de precios. No convierte esos datos locales en un registro de auditoría confiable ni resuelve el aislamiento entre cuentas del navegador.
+
+**Verificación:** cambio confirmado en la rama aislada y blob actualizado. La compilación, pruebas y Preview del commit nuevo aún deben verificarse. No se modificó Supabase ni se desplegó a producción.
