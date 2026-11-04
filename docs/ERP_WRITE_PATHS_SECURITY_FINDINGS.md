@@ -978,3 +978,54 @@ La revisión del código de la rama confirma que `useErpState` construye un úni
 **Decisión de seguridad:** no se añade un chequeo solo en React ni se cambia la policy activa para simular autorización por módulo. Eso sería insuficiente y podría bloquear usuarios o flujos válidos sin detener peticiones directas. La solución requiere una transición coordinada: inventario de permisos por operación, RPC transaccionales para operaciones críticas y una ruta de escritura del snapshot que compare/valide cada dominio modificado con claims confiables; probarla en entorno aislado antes de aplicar cualquier migración.
 
 **Estado:** abierto, severidad alta. No se modificaron datos ni políticas activas de Supabase.
+
+
+## Matriz preliminar de dominios y rutas de escritura — 2026-11-04
+
+**Propósito:** establecer el contrato funcional que debe respetar la futura autorización del servidor. Esta matriz se deriva de las claves de `ErpSnapshot`, de los permisos de módulo y de las rutas de escritura observadas. No es todavía un mecanismo de autorización y no debe interpretarse como una corrección aplicada.
+
+### Correspondencia inicial entre datos y permisos
+
+| Dominio del snapshot | Permiso funcional mínimo propuesto | Observaciones de integridad |
+|---|---|---|
+| `customers` | `clientes` | La creación de cliente desde POS/facturación es un efecto auxiliar de la operación; requiere una regla explícita de operación compuesta. |
+| `quotes` | `cotizaciones` | Tiene una ruta de persistencia propia además del snapshot general. |
+| `suppliers` | `proveedores` | La administración del proveedor debe distinguirse de recibir compras o gestionar devoluciones. |
+| `products` | `inventario` | Compra recibida también actualiza productos; no debe rechazarse un cambio legítimo de inventario cuando forma parte de una recepción autorizada. |
+| `inventoryMovements` | `inventario` | También se generan movimientos desde ventas, compras y devoluciones. Validar el origen y la operación, no solo el módulo de destino. |
+| `sales` | `ventas` o `facturacion_estandar` según canal | El permiso debe corresponder al canal que origina la venta; no asumir que un usuario con uno de ellos puede usar el otro. |
+| `purchases`, `purchaseCostHistory` | `compras` | La recepción afecta también inventario y, si es a crédito, cuentas por pagar. |
+| `expenses`, `monthlyGoal`, `fixedExpenses`, `cashClosures`, `cashMovements`, `paymentTransactions` | `finanzas` | Cierres y movimientos de caja necesitan además validaciones transaccionales, secuencia y actor; el permiso de módulo por sí solo no basta. |
+| `receivables` | `cuentas_cobrar` | Cobros vinculados a ventas requieren una operación atómica que actualice saldo y transacción de pago. |
+| `payables` | `cuentas_pagar` | Pagos y aplicación de créditos de proveedor requieren consistencia con compras y notas de crédito. |
+| `supplierReturns`, `supplierCredits` | `compras` | La resolución de nota de crédito ya tiene una ruta RPC específica; despacho, recepción y otros cambios aún necesitan transición atómica. |
+| `saleAdjustments` | `ventas` más autorización específica para ajuste/reembolso | Requiere verificar factura y líneas originales, cantidades pendientes, valores calculados por servidor y aprobación cuando corresponda. |
+| `missingProductRequests` | `inventario` como permiso propietario; origen permitido desde ventas debe definirse | Es una solicitud auxiliar, no debe habilitar cambios directos de catálogo o stock. |
+| `settings` | `configuracion` | Los campos fiscales, de facturación y métodos de pago pueden requerir privilegios separados; no confiar en el objeto enviado por navegador. |
+
+### Rutas de escritura que deben quedar cubiertas
+
+1. **Autosave y flush de salida:** `saveErpSnapshot()` → INSERT inicial o UPDATE completo de `erp_state.state`. El flush de cierre usa esta misma ruta. La revisión `updated_at` protege frente a sobrescritura concurrente, no frente a cambios no autorizados dentro del JSON.
+2. **Cotizaciones:** `saveQuotesForUser()` → lectura y UPDATE condicional del JSON completo, mezclando la propiedad `quotes` con el resto del estado remoto. Esta ruta debe tener autorización de cotizaciones en el servidor y preservar las demás claves sin aceptar cambios del snapshot alternativo.
+3. **Nota de crédito de proveedor:** `resolve_supplier_credit_note` → RPC existente, con resultado estructurado que actualiza devoluciones, cuentas por pagar y créditos. Debe verificarse la definición SQL instalada y su autorización efectiva; la existencia de la llamada desde el cliente no prueba que la función esté correctamente protegida.
+4. **Administración de cuentas:** `api/admin-users.ts` usa el cliente administrativo del servidor y debe mantenerse separada de la autorización de datos operativos. La verificación de rol/estado en este endpoint no protege las escrituras directas a `erp_state`.
+
+### Operaciones compuestas: no autorizar solo por clave modificada
+
+- **Venta / facturación:** venta + descuento/ISV calculado + decremento de stock + movimientos de inventario + posible cuenta por cobrar + transacción/caja. La autorización debe validar el canal de origen y confirmar todo en una transacción.
+- **Recepción de compra:** compra + incremento de stock/costo promedio + historial de costos + movimientos + cuenta por pagar + aplicación de crédito de proveedor. El total debe calcularse y conciliarse en servidor, no aceptarse como importe independiente del navegador.
+- **Cobro / pago:** saldo de cuenta + transacción de pago + movimiento de caja o banco + vínculo al documento original. Debe existir idempotencia para evitar doble aplicación entre dispositivos.
+- **Devolución o ajuste de venta:** documento original + cantidades ya ajustadas + valores fiscales/costo + inventario + saldo + reembolso. No confiar en precio, costo, impuestos ni importe de reembolso enviados por cliente.
+- **Devolución a proveedor:** documento de compra + cantidades despachadas/recibidas + inventario + nota de crédito/cuenta por pagar. Cada transición debe comprobar el estado previo bajo bloqueo transaccional.
+
+### Criterios de implementación antes de tocar la base activa
+
+- Rechazar claves desconocidas y tipos inválidos; validar estructura y límites del snapshot.
+- No aceptar claims de permisos enviados en el cuerpo de la petición. Leer claims firmados y/o estado de autorización confiable en servidor.
+- Una actualización parcial debe comparar contra el estado remoto dentro de la misma transacción; no confiar en un diff calculado únicamente en el navegador.
+- El camino de primer INSERT debe estar separado y protegido por bootstrap/provisionamiento verificable.
+- Las operaciones compuestas sensibles deben migrarse a RPC transaccionales e idempotentes antes de restringir el snapshot general; de otro modo, los efectos secundarios legítimos podrían quedar bloqueados o seguir siendo falsificables.
+- Probar matriz de roles y permisos, cuentas sin claims, claims caducados, dos sesiones concurrentes, reintentos de red, datos históricos y migración/rollback en una base aislada.
+- Mantener sin cambios las políticas, grants, filas y snapshots del proyecto Supabase activo hasta aprobar esas pruebas.
+
+**Estado:** análisis y contrato preliminar documentados; ninguna barrera nueva de autorización se ha desplegado. AUTHZ-03 / WRITE-01 continúa abierto y de severidad alta.
