@@ -369,3 +369,22 @@ La consulta a `pg_views` no devolvió vistas en `public` ni `storage`. Por tanto
 La herramienta de migraciones devolvió cero entradas, mientras que el repositorio contiene migraciones SQL preparadas, incluida `202611020002_supplier_credit_note_atomic.sql`. La inspección de funciones confirma que `public.resolve_supplier_credit_note(bigint)` no existe en la base activa. La migración no está aplicada. No debe inferirse que el estado completo de producción coincide con los archivos SQL del repositorio; hay que reconciliar el esquema real mediante un diff controlado antes de planificar cambios.
 
 **Alcance de esta ronda:** consultas SELECT de catálogos, policies, grants y roles; lectura de archivos de auditoría y migración en la rama de seguridad. No se leyeron filas ERP, objetos de Storage ni datos personales. No se ejecutó DDL/DML ni se cambió configuración.
+
+
+### API-01 — El endpoint administrativo no limita intentos ni operaciones
+
+La revisión de `api/admin-users.ts` (SHA `6f4a603324c170d2b7b2113b50096b9b732aa870`) confirma validación del access token mediante `auth.getUser`, autorización de administrador en servidor para las acciones de gestión y respuestas que no exponen detalles internos del proveedor. Sin embargo, no se observa limitación persistente por usuario/IP ni cuotas para bootstrap, creación/invitación, restablecimiento de contraseña o cambios de cuenta. El uso de `timingSafeEqual` para el token de bootstrap reduce filtraciones por comparación temporal, pero no detiene intentos repetidos ni abuso de una cuenta administradora comprometida.
+
+**Severidad: alta para bootstrap; media para otras acciones.** Incorporar limitación persistente compartida entre instancias, enfriamiento para acciones sensibles y auditoría de actor/acción/resultado. No usar contadores en memoria serverless. Probar límites y respuestas antes del despliegue. No se modificó el endpoint ni los secretos.
+
+### API-02 — La publicación del catálogo permite productos sin marca explícita de publicación
+
+La revisión de `api/store-catalog.ts` (SHA `b3f776147de3de0dd3a1625fd89bcc0297b9516e`) confirma que el filtro excluye únicamente productos cuyo campo `active` es exactamente `false`. Un producto con `active` ausente o con otro valor puede incluirse si supera las demás validaciones. La ruta proyecta una allowlist de campos de cara al cliente y mantiene las claves privilegiadas en variables de servidor, controles positivos importantes.
+
+**Severidad: media (exposición no intencional de catálogo).** Definir una marca de publicación explícita y publicar solo registros cuyo valor sea exactamente `true`; validar además que el campo exista en los datos actuales antes de implementar el filtro para evitar ocultar todo el catálogo. No se cambió el comportamiento ni se consultaron filas de productos.
+
+### Inventario de rutas API y alcance de esta ronda
+
+El directorio `api/` de la rama contiene dos endpoints desplegables (`admin-users.ts` y `store-catalog.ts`) y una suite de pruebas (`admin-users.test.ts`). Se inspeccionaron los archivos completos y sus SHA actuales. La suite no cubre rate limiting, límites de tamaño de petición ni las carreras administrativas ya descritas en AUTHZ-15/16. No se ejecutaron pruebas dinámicas contra producción ni solicitudes de escritura.
+
+No se modificó código funcional, configuración, secretos, cuentas, sesiones ni datos de Supabase. No se aplicaron migraciones ni se inició un despliegue.
