@@ -274,3 +274,26 @@ Las listas `ROLE_PERMISSIONS` en `api/admin-users.ts` y `rolePermissions` en `sr
 ### Alcance de la revisión de roles
 
 Se compararon las matrices de permisos del endpoint administrativo, la configuración de usuarios y el guard de navegación. La revisión es estática: no se crearon cuentas de prueba, no se ejecutaron acciones de negocio con cada rol y no se hicieron solicitudes directas de mutación. No se cambiaron roles, claims, código funcional ni datos de Supabase. La principal corrección pendiente es diseñar y probar capacidades de lectura/escritura en servidor, no cambiar únicamente las listas de navegación.
+
+
+### AUTHZ-15 — El bootstrap y la protección del último administrador tienen condiciones de carrera
+
+Se revisó el único endpoint administrativo adicional, `api/admin-users.ts` (SHA `6f4a603324c170d2b7b2113b50096b9b732aa870`). El endpoint valida correctamente el access token mediante `auth.getUser(accessToken)`, exige `farmi_active === true` para las acciones privilegiadas y comprueba el rol administrador en servidor. La creación de nombres de usuario también delega la unicidad a `auth.admin.createUser`, que evita la carrera de una comprobación previa.
+
+No obstante, el bootstrap ejecuta `listUsers()`, comprueba que no exista administrador y después actualiza al usuario en una llamada separada. Dos solicitudes simultáneas con el mismo token de bootstrap podrían observar cero administradores y promover cuentas distintas. El control de “último administrador” en `update` tiene el mismo patrón: cuenta administradores y luego actualiza el usuario en otra operación; dos administradores concurrentes podrían desactivar o degradar ambos.
+
+**Severidad: alta (disponibilidad y gobierno de acceso).** La comprobación debe ser atómica en el servidor: una función transaccional con bloqueo/constraint de singleton para el administrador activo, que serialice bootstrap, degradación y desactivación. No se debe intentar resolver solo con un bloqueo en memoria de la función serverless. No se cambió el endpoint ni se alteraron cuentas.
+
+### AUTHZ-16 — Las acciones de administración y el bootstrap no tienen limitación de intentos persistente
+
+En el código completo del endpoint no se observa rate limit, cuota por usuario/IP ni enfriamiento persistente para intentos de bootstrap, creación/invitación, restablecimiento de contraseña o cambios de cuenta. La comparación del token de bootstrap usa `timingSafeEqual`, lo cual es positivo, pero no evita intentos repetidos distribuidos ni el abuso de operaciones administrativas por una cuenta administradora comprometida.
+
+**Severidad: alta para el bootstrap; media para el resto de acciones.** Aplicar límites persistentes en infraestructura compartida, con umbrales diferenciados por acción, registro de intentos fallidos y alertas. No implementar un contador local en memoria porque no coordina instancias serverless. Confirmar además que el secreto de bootstrap tenga alta entropía, esté configurado solo en variables de servidor y se rote/elimine después de la activación inicial. No se expusieron ni modificaron secretos.
+
+### Revisión del inventario de endpoints y cobertura de pruebas
+
+Se enumeró el directorio `api/` de la rama `security/erp-state-permission-matrix`: contiene dos endpoints desplegables (`admin-users.ts` y `store-catalog.ts`) y una suite (`admin-users.test.ts`). No se encontraron otras rutas en ese directorio. `admin-users.ts` verifica la identidad con Supabase Auth y aplica autorización administrativa en backend; no confía en un rol enviado por el cliente. `store-catalog.ts` es GET de solo lectura, fija `no-store`, mantiene las claves privilegiadas en variables de servidor y proyecta una allowlist de campos públicos. Permanece el riesgo de publicación por defecto documentado como STORE-01.
+
+La suite de `admin-users.test.ts` cubre estado propio, ausencia/token inválido, unicidad de nombre y denegación de algunas acciones a no administradores o cuentas sin claim activo. No cubre bootstrap concurrente, carrera del último administrador, rate limiting, reset-password/update, límites de tamaño de petición, ni escenarios de permisos personalizados. La inspección fue estática y de tests existentes; no se ejecutó una batería dinámica contra despliegue ni se hicieron llamadas de escritura a Supabase.
+
+No se modificó código funcional, configuración, secretos, cuentas ni datos de Supabase. No se aplicó ninguna migración. Los riesgos AUTHZ-15 y AUTHZ-16 requieren una solución coordinada del lado servidor y pruebas de concurrencia/abuso antes de desplegar.
