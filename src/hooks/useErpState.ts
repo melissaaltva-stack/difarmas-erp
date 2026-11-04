@@ -274,6 +274,7 @@ export function useErpState(userId: string) {
   const filtered=useMemo(()=>products.filter(p=>[p.code,p.name,p.category,p.laboratory].join(' ').toLowerCase().includes(search.toLowerCase())),[products,search]);
 
   const recordMissingProduct=(request:Omit<MissingProductRequest,'id'|'requestedAt'|'status'>):boolean=>{
+    if (!remoteReady) return false;
     const name=request.name.trim();
     if(!name||!Number.isFinite(request.quantity)||request.quantity<1)return false;
     setMissingProductRequests(current=>[{...request,name,id:nextMissingProductRequestId(),requestedAt:new Date().toISOString(),status:'Pendiente'},...current]);
@@ -281,7 +282,7 @@ export function useErpState(userId: string) {
   };
 
   const recordSale=(sold:CartItem[],customer='',dueDate='',customerRtn='',invoiceNumber='',invoiceDetails?:StandardInvoiceDetails):boolean=>{
-    if (saleInProgress.current) return false;
+    if (!remoteReady || saleInProgress.current) return false;
     if (!sold.length || sold.some(item => !Number.isFinite(item.qty) || item.qty <= 0)) return false;
     if (((settings.paymentMethods??[]).find(method=>method.name===payment)?.kind==='credit'||payment==='Crédito') && (!customer.trim() || !dueDate.trim())) return false;
     const normalizedInvoiceNumber=invoiceNumber.trim().toLocaleLowerCase();
@@ -374,6 +375,7 @@ export function useErpState(userId: string) {
   };
 
   const recordSupplierDispatch=(record:SupplierReturnRecord):boolean=>{
+    if(!remoteReady)return false;
     const dispatchNote='Devolución enviada al proveedor: ';
     if(supplierDispatchInProgress.current.has(record.id)||inventoryMovements.some(movement=>movement.referenceId===record.id&&movement.note?.startsWith(dispatchNote)))return false;
     if(!record.items.length||record.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!Number.isFinite(item.unitCost)||item.unitCost<0))return false;
@@ -400,6 +402,7 @@ export function useErpState(userId: string) {
   };
 
   const resolveSupplierReturn=(record:SupplierReturnRecord,status:SupplierReturnRecord['status']):boolean=>{
+    if(!remoteReady)return false;
     if(supplierReturnResolutionInProgress.current.has(record.id))return false;
     supplierReturnResolutionInProgress.current.add(record.id);
     try {
@@ -445,6 +448,7 @@ export function useErpState(userId: string) {
   };
 
   const recordSaleAdjustment=(adjustment:SaleAdjustmentRecord):boolean=>{
+    if(!remoteReady)return false;
     if(saleAdjustments.some(item=>item.id===adjustment.id)||!sales.some(sale=>sale.id===adjustment.saleId)||!adjustment.items.length||!Number.isFinite(adjustment.amount)||adjustment.amount<=0)return false;
     if(adjustment.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!Number.isFinite(item.unitPrice)||item.unitPrice<0||!Number.isFinite(item.unitCost)||item.unitCost<0))return false;
     const originalSale=sales.find(sale=>sale.id===adjustment.saleId);
@@ -506,6 +510,7 @@ export function useErpState(userId: string) {
   };
 
   const saveProduct=(product:Product):Product|null=>{
+    if (!remoteReady) return null;
     if (!product.name.trim() || [product.cost,product.retail,product.wholesale,product.stock,product.minStock].some(v=>!Number.isFinite(v)||v<0)) return null;
     let saved:Product;
     if (editing) {
@@ -524,10 +529,10 @@ export function useErpState(userId: string) {
     return saved;
   };
 
-  const deleteProduct=(id:number)=>{ setProducts(current=>current.filter(product=>product.id!==id)); };
+  const deleteProduct=(id:number)=>{ if (!remoteReady) return; setProducts(current=>current.filter(product=>product.id!==id)); };
 
   const receivePurchase=(items:PurchaseItem[],paymentMethod:string,dueDate:string,invoiceNumber='',invoiceDate='',notes='',enteredTotal?:number,paymentTerms='Contado - Efectivo'):boolean=>{
-    if (purchaseInProgress.current) return false;
+    if (!remoteReady || purchaseInProgress.current) return false;
     if (!items.length || items.some(item => !Number.isFinite(item.qty) || item.qty <= 0 || !Number.isFinite(item.unitCost) || item.unitCost < 0)) return false;
     const supplierKey=purchaseSupplier.trim().toLocaleLowerCase();
     const invoiceKey=invoiceNumber.trim().toLocaleLowerCase();
