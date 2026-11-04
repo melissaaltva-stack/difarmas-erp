@@ -940,9 +940,9 @@ Si la persona cierra sesión antes de que venza el debounce, el temporizador pue
 
 **Impacto:** pérdida de cambios recientes al cerrar sesión rápidamente, especialmente en equipos con conexión lenta o cuando se realizan varias modificaciones seguidas. No se observó una escritura cruzada entre cuentas: cada guardado conserva el userId capturado y RLS sigue siendo la barrera de propiedad.
 
-**Acción necesaria:** implementar un flujo explícito de salida que distinga entre guardado pendiente, guardado confirmado y error. Antes de cerrar sesión debe cancelar el debounce y ejecutar/esperar el guardado del snapshot más reciente; si falla, informar claramente y permitir elegir entre permanecer en la sesión o salir asumiendo que los cambios pendientes no están sincronizados. El flujo debe impedir que un snapshot antiguo se guarde después del más reciente y probarse con red lenta, desconexión, guardado en curso y cierre inmediato después de editar.
+**Acción necesaria (al detectar el hallazgo):** implementar un flujo explícito de salida que distinga entre guardado pendiente, guardado confirmado y error. Esta acción fue implementada posteriormente en el commit `9765f32ae4df56b56549c53786de4b3f467a31c0`; véase la sección de mitigación al final de este informe.
 
-**Límite:** no se modificó el comportamiento de cierre de sesión ni se realizaron pruebas con cuentas reales. El hallazgo está confirmado por la secuencia de cleanup del efecto y el manejador actual del botón; la corrección requiere pruebas de integración para evitar pérdida de datos o bloquear el cierre de sesión.
+**Límite:** el hallazgo original se confirmó por inspección estática. La implementación reduce el riesgo, pero no se considera cerrada hasta ejecutar las pruebas funcionales enumeradas en la sección de mitigación.
 
 
 ## Cierre de sesión y sincronización — 2026-11-04
@@ -961,3 +961,20 @@ Si la persona cierra sesión antes de que venza el debounce, el temporizador pue
 **Pendiente antes de cerrar el hallazgo:** pruebas funcionales con usuarios de prueba para (1) edición y salida inmediata antes de vencer el debounce, (2) guardado anterior todavía en curso, (3) error de red con sesión retenida, (4) salida explícita sin sincronizar y (5) cambio de cuenta en el mismo navegador. El estado READY demuestra que el build/despliegue terminó, no que estos escenarios se hayan ejecutado.
 
 **Alcance:** no se aplicaron cambios a Supabase, no se alteraron datos ni esquema, y no se promovió la rama a producción.
+
+
+## Revisión de estado — 2026-11-04 (continuación)
+
+### LOGOUT-02 — Corrección de consistencia documental
+
+Se actualizó el texto histórico del hallazgo para que no contradiga la mitigación posterior. El comportamiento de cierre de sesión sí fue modificado en el commit `9765f32ae4df56b56549c53786de4b3f467a31c0`; la mitigación está desplegada en Preview. Las pruebas de integración continúan pendientes, por lo que el hallazgo permanece abierto hasta verificarlas.
+
+### AUTHZ-03 / WRITE-01 — Confirmación adicional del límite de autorización
+
+La revisión del código de la rama confirma que `useErpState` construye un único `ErpSnapshot` con colecciones de inventario, ventas, compras, finanzas, clientes, configuración y otros dominios. Los efectos de persistencia guardan el snapshot completo; el servicio usa UPDATE sobre `erp_state.state` completo condicionado por propietario y revisión `updated_at`. Los setters y operaciones que `App.tsx` entrega a los componentes siguen siendo funciones del cliente.
+
+**Conclusión:** no existe todavía una frontera de autorización por módulo en el servidor. El control de revisión evita ciertas sobrescrituras concurrentes, pero no evita que una petición autenticada altere campos JSONB de otros módulos. La UI que oculta menús no resuelve este riesgo.
+
+**Decisión de seguridad:** no se añade un chequeo solo en React ni se cambia la policy activa para simular autorización por módulo. Eso sería insuficiente y podría bloquear usuarios o flujos válidos sin detener peticiones directas. La solución requiere una transición coordinada: inventario de permisos por operación, RPC transaccionales para operaciones críticas y una ruta de escritura del snapshot que compare/valide cada dominio modificado con claims confiables; probarla en entorno aislado antes de aplicar cualquier migración.
+
+**Estado:** abierto, severidad alta. No se modificaron datos ni políticas activas de Supabase.
