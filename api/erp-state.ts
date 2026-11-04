@@ -78,7 +78,7 @@ function roleOf(user: User): Role | null {
 }
 function permissionsOf(user: User): Set<string> {
   const role = roleOf(user);
-  if (!role || user.app_metadata?.farmi_active !== true) return new Set();
+  if (!role || user.app_metadata?.farmi_active !== true || role === 'Solo lectura') return new Set();
   if (role === 'Administrador' || user.app_metadata?.farmi_admin === true) return new Set(ROLE_MODULES.Administrador);
   const raw = user.app_metadata?.farmi_permissions;
   if (!Array.isArray(raw)) return new Set();
