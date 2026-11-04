@@ -873,3 +873,18 @@ La migración `202611020001_erp_state_role_write_guard.sql` limita INSERT/UPDATE
 **Acción necesaria:** no presentar esta migración como solución completa de permisos. Diseñar y probar una ruta de inicialización controlada, autorización de claves realmente modificadas con lista de permisos confiables, rechazo de claves desconocidas y operaciones transaccionales para dependencias sensibles. Probar en un Postgres aislado antes de aplicar cualquier cambio al proyecto activo.
 
 **Verificación limitada:** la consulta de metadatos de políticas/grants mediante SQL fue bloqueada por controles de la herramienta en esta sesión. No se obtuvo una lectura nueva de las políticas activas; se evita inferir su estado actual a partir del SQL del repositorio.
+
+
+## AUTHZ-06 — AuthGate permite entrar al ERP cuando falta la marca de cuenta activa
+
+**Severidad: media. Estado: confirmado por inspección estática el 2026-11-04.**
+
+En `src/components/AuthGate.tsx`, la pantalla de bloqueo se activa únicamente cuando `user.app_metadata.farmi_active === false`. Si la marca no existe, tiene un tipo inesperado o no ha sido provisionada, el componente entrega igualmente el usuario a la aplicación. En `src/App.tsx`, una cuenta sin rol reconocido cae a permisos de navegación predeterminados `dashboard` y `configuracion`.
+
+El endpoint `api/admin-users.ts` sí exige `farmi_active === true` para las acciones administrativas normales, pero conserva deliberadamente el camino `status/bootstrap` para la primera configuración. La navegación del cliente no constituye una barrera de autorización y no demuestra que las escrituras de Supabase estén protegidas.
+
+**Impacto:** cuentas autenticadas pero no provisionadas pueden abrir partes de la interfaz de FARMI en lugar de recibir un estado explícito de cuenta pendiente. Esto crea una diferencia entre el criterio de acceso visual y el criterio de autorización del servidor/base de datos. No se ha demostrado que una cuenta sin marca activa pueda escribir datos en la base activa.
+
+**Acción necesaria:** separar el alta inicial en una pantalla de bootstrap aislada y exigir `farmi_active === true` antes de montar el ERP ordinario. Mantener el bootstrap protegido por el token de activación, una sola cuenta administradora y protección persistente contra intentos repetidos. Antes de cambiar AuthGate, probar el primer administrador, invitaciones pendientes, recuperación de contraseña y cuentas existentes; no bloquear el único camino legítimo de inicialización.
+
+**Límite:** no se alteró AuthGate ni se probó una cuenta real sin metadatos; el hallazgo es estático y requiere pruebas aisladas.
