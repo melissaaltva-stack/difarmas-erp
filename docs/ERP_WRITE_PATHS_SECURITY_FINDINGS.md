@@ -205,3 +205,51 @@ La consulta de asesores de seguridad devolvió un aviso: **Leaked Password Prote
 Estos puntos permanecen abiertos porque cerrarlos exige cambios de backend/DB, decisiones de permisos, configuración Auth o pruebas de operación controladas. No se han realizado esas acciones en este trabajo.
 
 **Alcance de verificación:** CI y Preview se verificaron para el commit anterior `6b187a2b1d5dd3d762da89198787f4ead91c05ba`; el nuevo commit que contiene el ajuste SQL requiere su propia CI y Preview. No se modificó `main`, no se aplicaron migraciones, no se escribieron datos ni se alteraron usuarios, políticas, grants o configuración de Supabase.
+
+
+## Revisión ampliada de escrituras financieras y operativas — 2026-11-03
+
+### CASH-06 — Cobros y pagos modifican saldos e historial desde el cliente
+
+**Severidad: alta por integridad financiera; requiere backend.**
+
+Revisión de `src/components/Finance.tsx` y `src/components/FinancialModules.tsx`:
+- `collect` incrementa `receivables[].paid` y añade una fila `paymentTransactions` en dos actualizaciones de estado cliente.
+- `paySupplier` / `pay` hacen lo mismo con `payables[].paid` y el historial de pagos.
+- Los importes, el método de pago, las fechas y el ID de transacción se originan en el navegador.
+- Los bloqueos `useRef(Set)` evitan algunos dobles clics en esa instancia, pero no son una garantía entre pestañas, dispositivos o solicitudes manipuladas.
+- El saldo y el historial se guardan dentro del snapshot `erp_state`; no existe en el flujo revisado una operación servidor dedicada que valide saldo, permiso funcional, idempotencia y registro contable en una transacción.
+
+**Impacto:** un cliente que tenga permiso general de UPDATE sobre su fila puede intentar alterar saldos o historial en el JSONB sin pasar por el flujo visual de cobro/pago. Una modificación parcial o concurrente puede dejar importes y transacciones inconsistentes.
+
+**Corrección necesaria:** RPC/endpoint transaccional por operación, que derive la identidad del JWT, compruebe `cuentas_cobrar` o `cuentas_pagar`, valide el saldo vigente bajo bloqueo, acepte una clave de idempotencia única y actualice saldo e historial en la misma transacción. El navegador debe mostrar éxito solo tras confirmación del servidor.
+
+### CASH-07 — Gastos, movimientos de caja y cierres son mutaciones locales del snapshot
+
+**Severidad: alta por integridad y trazabilidad; requiere backend.**
+
+En `Finance.tsx`, `addExpense`, el registro de movimientos de caja y `closeCash` llaman directamente a `setExpenses`, `setMovements` y `setClosures`. El cierre diario usa `closingRef` y comprueba cierres existentes en el estado descargado, pero no hay restricción única ni serialización compartida entre dispositivos.
+
+**Impacto:** los controles de duplicado y cierre diario son locales a la instancia. No impiden que dos dispositivos registren cierres para la misma fecha o que un cliente altere gastos/movimientos del snapshot sin una autorización específica de servidor.
+
+**Corrección necesaria:** operaciones servidor separadas para registrar gasto, movimiento y cierre; autorización `finanzas`, idempotencia y restricción única por usuario/fecha de cierre, con cálculo de caja basado en movimientos persistidos y validados.
+
+### WRITE-10 — Las operaciones principales no tienen una frontera de escritura servidor
+
+La revisión de `src/App.tsx`, `src/hooks/useErpState.ts`, `src/services/remoteErpState.ts` y los módulos POS, Compras, Inventario y Finanzas confirma que:
+- POS llama `recordSale` y `recordSaleAdjustment` en el hook; ambos modifican colecciones de snapshot desde el cliente.
+- Compras llama `receivePurchase`; inventario usa `saveProduct` y `deleteProduct`; devoluciones usan `recordSupplierDispatch` y `resolveSupplierReturn`.
+- Cuentas por cobrar/pagar, gastos, caja y cierres actualizan setters locales.
+- La única RPC operativa identificada para nota de crédito no está instalada en la base activa.
+- Las rutas API del repositorio no proporcionan endpoints transaccionales para ventas, compras, inventario o finanzas; `api/admin-users.ts` gestiona cuentas y `api/store-catalog.ts` es lectura pública del catálogo.
+
+La interfaz restringe navegación mediante `canSee` y `activeAllowed`, pero estas comprobaciones no se ejecutan en PostgreSQL ni dentro de una operación de escritura servidor. En combinación con las policies activas de `erp_state`, un usuario con rol general autorizado puede modificar el JSONB de módulos que no tiene asignados.
+
+**Conclusión:** no se considera suficiente añadir más comprobaciones de interfaz. Debe diseñarse una frontera de comandos servidor con autorización por módulo y transacciones; luego restringir la escritura directa del snapshot para roles funcionales, manteniendo una ruta de aprovisionamiento/migración controlada. No se aplicó ninguna modificación a la base.
+
+### Estado de las comprobaciones
+
+- Revisión estática de las rutas y componentes citados: completada.
+- Pruebas de abuso con JWT o escrituras reales: no ejecutadas, por la restricción de no alterar Supabase.
+- Cambios de ejecución: ninguno.
+- Cambios de Supabase/Auth/datos: ninguno.
