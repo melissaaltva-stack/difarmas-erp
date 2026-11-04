@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   getUser: vi.fn(),
   listUsers: vi.fn(),
+  createUser: vi.fn(),
   createClient: vi.fn(),
 }));
 
@@ -44,10 +45,11 @@ describe('admin-users status authorization', () => {
       error: null,
     });
     mocks.listUsers.mockResolvedValue({ data: { users: [] }, error: null });
+    mocks.createUser.mockResolvedValue({ data: { user: { id: 'new-user', email: 'newuser@users.farmi.invalid', app_metadata: {}, user_metadata: { username: 'newuser' } } }, error: null });
     mocks.createClient.mockReturnValue({
       auth: {
         getUser: mocks.getUser,
-        admin: { listUsers: mocks.listUsers },
+        admin: { listUsers: mocks.listUsers, createUser: mocks.createUser },
       },
     });
   });
@@ -93,6 +95,70 @@ describe('admin-users status authorization', () => {
 
     expect(value.statusCode).toBe(401);
     expect(value.body).toEqual({ error: 'La sesión no es válida o ha caducado. Inicia sesión de nuevo.' });
+    expect(mocks.listUsers).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('admin-users username creation uniqueness', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.env.SUPABASE_URL = 'https://example.supabase.co';
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
+    mocks.getUser.mockResolvedValue({
+      data: {
+        user: {
+          id: 'admin-123',
+          email: 'admin@example.com',
+          app_metadata: { farmi_active: true, farmi_admin: true, farmi_role: 'Administrador' },
+          user_metadata: {},
+        },
+      },
+      error: null,
+    });
+    mocks.createUser.mockResolvedValue({
+      data: { user: { id: 'new-user', email: 'newuser@users.farmi.invalid', app_metadata: {}, user_metadata: { username: 'newuser' } } },
+      error: null,
+    });
+    mocks.createClient.mockReturnValue({
+      auth: { getUser: mocks.getUser, admin: { listUsers: mocks.listUsers, createUser: mocks.createUser } },
+    });
+  });
+
+  it('delegates username uniqueness to the atomic Auth create operation', async () => {
+    const { value, res } = response();
+    await handler(
+      {
+        method: 'POST',
+        headers: { authorization: 'Bearer valid-admin-token' },
+        body: { action: 'create-username', username: 'NewUser', name: 'Nuevo usuario', password: 'long-test-password-123', role: 'Ventas' },
+      } as never,
+      res as never,
+    );
+
+    expect(value.statusCode).toBe(201);
+    expect(mocks.createUser).toHaveBeenCalledWith(expect.objectContaining({
+      email: 'newuser@users.farmi.invalid',
+      email_confirm: true,
+      user_metadata: { full_name: 'Nuevo usuario', username: 'newuser' },
+    }));
+    expect(mocks.listUsers).not.toHaveBeenCalled();
+  });
+
+  it('returns conflict when Auth atomically rejects a duplicate username email', async () => {
+    mocks.createUser.mockResolvedValueOnce({ data: { user: null }, error: { code: 'email_exists' } });
+    const { value, res } = response();
+    await handler(
+      {
+        method: 'POST',
+        headers: { authorization: 'Bearer valid-admin-token' },
+        body: { action: 'create-username', username: 'NewUser', name: 'Nuevo usuario', password: 'long-test-password-123', role: 'Ventas' },
+      } as never,
+      res as never,
+    );
+
+    expect(value.statusCode).toBe(409);
+    expect(value.body).toEqual({ error: 'Ese nombre de usuario ya está ocupado. Elige otro.' });
     expect(mocks.listUsers).not.toHaveBeenCalled();
   });
 });
