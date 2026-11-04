@@ -1171,3 +1171,31 @@ En el código revisado de `api/admin-users.ts` no aparece un contador persistent
 **Corrección requerida:** añadir limitación persistente compartida entre instancias y separar cuotas para bootstrap y acciones administrativas; responder sin revelar si el token está configurado o qué parte de la credencial falló. No incorporar un servicio de pago ni asumir que un límite en memoria funciona en serverless.
 
 **Estado:** los hallazgos se documentan para orientar la implementación. No se modificó `api/admin-users.ts`, no se alteró Auth ni se aplicaron cambios en Supabase.
+
+
+## Revisión de la frontera HTTP y autenticación de administración — 2026-11-04
+
+### Controles positivos verificados en `api/admin-users.ts`
+
+La inspección de la versión actual confirma varias defensas que deben conservarse:
+
+- La función rechaza métodos distintos de POST (con respuesta separada para OPTIONS).
+- No refleja el encabezado Origin ni habilita CORS de forma dinámica.
+- Establece `Cache-Control: no-store` y `Vary: Authorization` para evitar almacenamiento compartido de respuestas autenticadas.
+- Exige un bearer token y valida la sesión mediante `adminClient.auth.getUser(accessToken)`; no confía en un `userId` enviado por el navegador para identificar al solicitante.
+- Las acciones ordinarias requieren cuenta activa y administrador reconocido en metadata de Auth.
+- Los detalles del proveedor se registran en logs del servidor y las respuestas públicas usan mensajes genéricos.
+- El listado de usuarios falla cerrado si alcanza el límite de 10,000 cuentas, en vez de tomar una lista truncada para bootstrap o control del último administrador.
+- La comparación del secreto de bootstrap utiliza `timingSafeEqual` después de verificar longitudes iguales.
+
+**Alcance de estos controles:** reducen exposición por transporte, caché y suplantación simple del solicitante, pero no solucionan la concurrencia de bootstrap/último administrador ni sustituyen un rate limit persistente. La validación de bearer tampoco protege el snapshot operativo `erp_state`, que usa otra ruta de autorización.
+
+### ADMIN-25 — La sesión de administrador se valida en servidor, pero faltan pruebas de revocación inmediata
+
+**Severidad: media; requiere prueba de comportamiento, no afirmar vulnerabilidad confirmada.**
+
+La API vuelve a consultar al usuario con `auth.getUser(accessToken)` en cada solicitud, lo cual es una defensa positiva frente a confiar únicamente en datos enviados por el cliente. Sin embargo, todavía no se han ejecutado pruebas que midan qué ocurre si otra sesión desactiva al administrador, cambia su rol o reduce sus permisos mientras conserva una sesión abierta.
+
+**Pruebas requeridas:** mantener dos sesiones simultáneas; desde la primera, desactivar o degradar al usuario de la segunda; comprobar inmediatamente llamadas a `list`, `create`, `invite`, `reset-password` y `update`; repetir con tokens previos y tras renovar sesión. Registrar la latencia real de revocación y verificar también RLS/RPC, no solo la interfaz.
+
+**Estado:** controles HTTP positivos documentados; ADMIN-25 permanece pendiente de prueba de integración. No se modificó código operativo, Auth, Supabase ni producción.
