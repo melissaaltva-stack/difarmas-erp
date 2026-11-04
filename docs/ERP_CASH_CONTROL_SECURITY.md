@@ -256,3 +256,36 @@ La revisión cruzada de `Finance.tsx`, `financeService.ts` y `domain/types.ts` c
 **Corrección requerida:** al cerrar, congelar en el registro del cierre los totales de entradas y salidas manuales y las referencias/IDs de movimientos incluidos, además de los demás componentes. La operación debe capturar esos datos desde la fuente autoritativa en la misma transacción que registra el cierre. No basta con ampliar el objeto en el navegador: debe ser parte del contrato transaccional del servidor y tener pruebas de conciliación y compatibilidad con cierres históricos.
 
 **Estado:** hallazgo documentado tras revisión estática; no se modificó código funcional, tipos, Supabase, datos ni producción.
+
+
+## CASH-12 — Movimientos manuales de caja carecen de actor, evidencia y autorización
+
+**Severidad:** alta para trazabilidad de efectivo. **Estado:** confirmado por revisión estática el 2026-11-04.
+
+En `src/components/Finance.tsx`, la pantalla `section === 'movimientos'` toma tipo, descripción, importe y categoría directamente del DOM, valida que descripción no esté vacía y que el importe sea finito y mayor que cero, y luego ejecuta `setMovements` con `addCashMovement`. El modelo `CashMovement` solo guarda ID, tipo, descripción, importe, categoría y fecha. No contiene usuario/actor, sucursal/caja, motivo estructurado, documento adjunto, aprobador ni referencia de origen. El identificador y la fecha se generan en el navegador. El movimiento queda dentro del snapshot general del usuario, sin operación de servidor ni idempotencia.
+
+**Impacto:** no hay evidencia incorporada para atribuir un movimiento a una persona ni demostrar el motivo o soporte. La validación del importe evita cero/negativos en esta pantalla, pero no protege frente a escrituras directas al snapshot, concurrencia entre sesiones o reintentos.
+
+**Corrección requerida:** registrar cada entrada/salida mediante operación de servidor que derive actor, caja y fecha; exija motivo y referencia/evidencia según categoría; aplique permisos y aprobación separada para retiros/aportes sensibles; asigne ID único e idempotency key; y preserve un ledger inmutable con reversos, no edición/borrado. Las categorías bancarias/no efectivo deben conciliarse con movimientos bancarios, no mezclarse con efectivo físico.
+
+## CASH-13 — El saldo inicial de caja es editable por el operador y no se reconcilia con la apertura anterior
+
+**Severidad:** alta para integridad del cierre. **Estado:** confirmado por revisión estática el 2026-11-04.
+
+En `Finance.tsx`, el campo `Saldo inicial de caja` está enlazado a `opening` con `onChange` directo a `setOpening`. La función `closeCash` solo valida que apertura y efectivo contado sean números finitos y no negativos. El valor de apertura se utiliza directamente en `calculateExpectedCash` y se guarda en el cierre; no se deriva ni verifica en servidor contra el cierre anterior, fondo autorizado o movimientos entre turnos. Tras cerrar, el navegador establece la apertura siguiente con el efectivo contado, pero el operador puede volver a editarla antes de confirmar el próximo cierre.
+
+**Impacto:** se puede alterar manualmente la base de cálculo y producir un efectivo esperado/diferencia que no corresponda al saldo realmente entregado o al cierre previo. El guardado de una sola clausura diaria y el bloqueo local no constituyen control compartido entre sesiones.
+
+**Corrección requerida:** calcular apertura en servidor desde el último cierre confirmado y movimientos posteriores; admitir cambios solo como ajuste formal con motivo, actor, evidencia y aprobación; bloquear cierres duplicados por caja/fecha mediante restricción transaccional; y registrar apertura original y ajustes en el historial inmutable. No se debe simplemente ocultar o deshabilitar el input como solución de seguridad.
+
+## CASH-14 — Registro de gastos sin referencia documental ni actor y con escritura local directa
+
+**Severidad:** media-alta para auditoría de egresos. **Estado:** confirmado por revisión estática el 2026-11-04.
+
+El formulario de gastos crea un objeto `Expense` con ID generado en el navegador, descripción, importe, categoría, fecha y forma de pago, y lo agrega con `setExpenses`. El tipo `Expense` no conserva actor, proveedor/beneficiario, número de factura/recibo, referencia bancaria, aprobación ni documento de soporte. El importe se valida como finito y positivo en el manejador, pero el gasto no se registra en una operación de caja/ledger autoritativa ni hay clave de idempotencia. Los gastos en efectivo se descuentan del cálculo del cierre por fecha y forma de pago; los de transferencia se excluyen del efectivo físico, pero no hay referencia que permita conciliarlos con el banco.
+
+**Impacto:** el egreso queda registrado como dato de snapshot, pero no hay evidencia estructurada suficiente para verificar quién lo registró, a quién se pagó ni qué documento respalda el pago. Reintentos o ediciones concurrentes pueden causar pérdida/duplicación de datos.
+
+**Corrección requerida:** crear gasto mediante operación transaccional de servidor, con actor, beneficiario/proveedor, categoría, forma de pago, fecha autoritativa, referencia documental y evidencia; integrar los gastos en efectivo al ledger de caja y los pagos bancarios a conciliación bancaria; usar idempotencia y reversos auditables. Mantener lectura compatible de gastos históricos sin fabricar datos faltantes.
+
+**Alcance:** se revisaron `Finance.tsx`, `domain/types.ts` y `financeService.ts`. No se modificó código funcional, tipos, datos, políticas ni configuración de Supabase.
