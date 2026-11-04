@@ -292,3 +292,16 @@ En `src/components/ManagementSuite.tsx`, las lecturas iniciales de `difarmas_cam
 **Impacto:** evita que una entrada local corrupta interrumpa el renderizado de análisis de campañas o historial de precios. No convierte esos datos locales en un registro de auditoría confiable ni resuelve el aislamiento entre cuentas del navegador.
 
 **Verificación:** el cambio de código del commit `f80936618266932ee4f20230946ba78e411c01dc` quedó incluido en el commit de documentación `5db0bfe02e330776ee7845364b4780450970dff4`. GitHub Actions run `41745950055` terminó en `SUCCESS`, con `npm run build` y `npm test` aprobados. Vercel no muestra todavía un Preview para el nuevo HEAD; el último Preview READY corresponde al commit anterior `58bd65565ec6b39e31809740953d2c2827ff3df9`. No se desplegó a producción.
+
+
+### SESSION-03 / LOCAL-04 — Rechazo de caché ERP heredada sin propietario verificable
+
+**Estado: corregido en código — commit `c914a19f72ee4b9ed4973342d1e452bf6cda0164`.**
+
+En `src/hooks/useErpState.ts`, las claves locales compartidas del ERP ahora solo se hidratan cuando `difarmas_owner_user_id` coincide exactamente con el usuario autenticado. Un marcador ausente ya no se interpreta como propiedad del usuario actual.
+
+Si no existe snapshot remoto y quedan claves ERP locales sin marcador de propietario, la aplicación conserva esas claves intactas y bloquea la sincronización automática con un error explícito. Así evita tanto importar datos de una cuenta desconocida como guardar valores predeterminados encima de la información heredada. Si existe snapshot remoto, este prevalece y se marca al usuario como propietario antes de habilitar escrituras.
+
+**Alcance:** no se borran ni se renombran datos locales. No se implementó una migración automática de registros antiguos porque no hay evidencia confiable para asignarles propietario. La recuperación de una caché sin propietario debe hacerse de forma deliberada y con verificación de identidad.
+
+**Verificación pendiente:** CI/build/tests y Preview para el commit nuevo. No se modificó Supabase ni producción.
