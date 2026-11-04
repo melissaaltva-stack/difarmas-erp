@@ -1029,3 +1029,38 @@ La revisión del código de la rama confirma que `useErpState` construye un úni
 - Mantener sin cambios las políticas, grants, filas y snapshots del proyecto Supabase activo hasta aprobar esas pruebas.
 
 **Estado:** análisis y contrato preliminar documentados; ninguna barrera nueva de autorización se ha desplegado. AUTHZ-03 / WRITE-01 continúa abierto y de severidad alta.
+
+
+## Revisión de aprovisionamiento y bloqueo de cuentas incompletas — 2026-11-04
+
+### AUTHZ-06 — AuthGate admite sesiones sin claim activo, pero la aplicación bloquea módulos después de inicializar el estado
+
+**Severidad: media; discrepancia de flujo y superficie de lectura.**
+
+Se verificaron las versiones actuales de `src/components/AuthGate.tsx`, `src/App.tsx`, `src/hooks/useErpState.ts`, `src/components/Settings.tsx` y `api/admin-users.ts`.
+
+- `AuthGate` solo muestra la pantalla de acceso desactivado cuando `farmi_active === false`. Si el claim falta, permite montar el componente raíz.
+- `App` ya calcula el estado activo de forma estricta (`farmi_active === true`) y no renderiza módulos operativos si no hay rol válido y claim activo.
+- Sin embargo, `useErpState(userId)` se ejecuta al inicio de `App`, antes de la condición que bloquea la vista. Por ello, la sesión incompleta puede iniciar la carga del snapshot local/remoto aunque luego no se muestre ningún módulo.
+- La API administrativa también distingue entre estado explícitamente falso y claim ausente en la comprobación inicial, pero exige `farmi_active === true` para operaciones administrativas ordinarias. El endpoint `status` permite consultar si hay bootstrap disponible.
+
+**Riesgo y limitación:** el bloqueo de módulos reduce la exposición en la interfaz, pero no sustituye RLS. La base activa ya fue observada con una condición permisiva para claims ausentes; una sesión autenticada sin claim podría consultar su propia fila mientras esa policy siga vigente. Esto no implica acceso a filas de otros usuarios.
+
+### BOOTSTRAP-01 — El flujo de primera administración puede quedar inaccesible desde la interfaz
+
+**Severidad: media-alta para recuperación/provisionamiento; no es una escalada de privilegios confirmada.**
+
+`api/admin-users.ts` implementa una acción `bootstrap` protegida por un token configurado en servidor y una comprobación global de que no exista ya un administrador. `Settings.tsx` contiene la interfaz para solicitar el estado y mostrar el formulario de activación. Sin embargo, `App.tsx` exige un rol válido, `farmi_active === true` y permiso `configuracion` para renderizar Configuración.
+
+**Consecuencia:** una cuenta sin metadata, con claim activo ausente/falso o sin permiso de configuración puede no alcanzar la pantalla que contiene el bootstrap, aunque la API contemple esa acción. La recuperación puede requerir un administrador existente o intervención operativa fuera de la interfaz.
+
+**Corrección propuesta:** crear una pantalla de aprovisionamiento separada del ERP normal, visible únicamente para una sesión autenticada cuando el endpoint `status` confirma `canBootstrap`. El servidor debe seguir validando token, usuario actual, ausencia de administrador y límite de intentos; nunca exponer el token ni permitir bootstrap si ya existe administrador. Tras completar, refrescar sesión y exigir nuevos claims. No abrir Configuración ni datos operativos a cuentas sin aprovisionar.
+
+### Acciones de verificación pendientes
+
+1. Probar con usuarios de staging: claims completos, claim activo ausente, claim falso, rol ausente y permisos sin `configuracion`.
+2. Confirmar que una cuenta no aprovisionada no puede leer `erp_state` una vez endurecida RLS, pero sí puede completar el bootstrap seguro cuando no exista administrador.
+3. Probar bootstrap simultáneo desde dos sesiones; el control de “no existe administrador” debe ser atómico para evitar dos primeros administradores concurrentes.
+4. Verificar la ruta de recuperación si el token de bootstrap no está configurado o ya existe administrador.
+
+**Estado:** hallazgo documentado; no se modificó AuthGate, App, Settings, API ni metadata de usuarios. No se alteraron policies, grants o datos de Supabase. AUTHZ-06 y BOOTSTRAP-01 permanecen abiertos hasta una solución y pruebas de staging.
