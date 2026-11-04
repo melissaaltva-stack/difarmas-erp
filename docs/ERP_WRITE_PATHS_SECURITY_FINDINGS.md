@@ -505,3 +505,38 @@ El paso `Nota de crédito recibida` intenta una ruta distinta mediante `resolveS
 - No se ejecutaron pagos, cobros, cierres ni devoluciones de prueba sobre datos reales.
 - No se modificaron código funcional, Supabase, políticas, grants, Auth, sesiones ni datos comerciales.
 - No se tocó `main` ni se promovió el Preview a producción.
+
+
+## RET-03 / REFUND-03 — Ajustes de venta no recalculan valores desde la factura y el pago se confirma por selección del operador
+
+**Severidad: alta para integridad de devoluciones y conciliación de reembolsos; revisión estática, sin explotación confirmada.**
+
+### REFUND-03 — Valores de devolución confiados al cliente
+
+En `src/hooks/useErpState.ts`, `recordSaleAdjustment` valida que cantidades, precio unitario, impuesto y costo sean finitos/no negativos; comprueba que el importe coincida con los valores enviados y que no supere el total restante de la venta. También valida el identificador de línea, producto y cantidad disponible mediante `canApplySaleAdjustmentItems`.
+
+Sin embargo, la función no compara `unitPrice`, `unitTaxAmount` ni `unitCost` con los valores de la línea original almacenada en `sales[].items`. Por tanto, un cliente con acceso de escritura al snapshot puede enviar una devolución con precio/impuesto/costo distintos a los de la factura, siempre que cumpla las validaciones aritméticas y límites restantes. El precio afecta el importe del ajuste/saldo por cobrar/reembolso y el costo afecta la valuación al reingresar inventario.
+
+**Corrección requerida:** la operación autoritativa debe aceptar identificador de venta, identificador de línea, cantidad y destino de inventario; recuperar precio, impuesto y costo de la venta original en servidor y derivar el importe sin confiar en valores financieros enviados por el navegador. Validar y registrar todo dentro de la misma transacción.
+
+### REFUND-04 — Estado “Pagado” no requiere comprobante ni confirmación independiente
+
+En `src/components/POS.tsx`, el operador puede seleccionar `refundStatus='Pagado'` al crear el ajuste. En `useErpState.ts`, `recordSaleAdjustment` agrega inmediatamente un movimiento de salida cuando el estado es Pagado y el medio seleccionado es efectivo, banco u otro. No se exige referencia bancaria, comprobante, usuario aprobador ni una confirmación independiente de la ejecución del pago. El ajuste y el movimiento se agregan mediante setters al snapshot del navegador.
+
+Esto permite que el registro interno afirme que el reembolso fue liquidado aunque la transferencia/pago real no se haya ejecutado o no se pueda conciliar. No se afirma que se haya producido un pago indebido en datos reales.
+
+**Corrección requerida:** separar aprobación del ajuste y liquidación del reembolso. El reembolso debe permanecer pendiente hasta que una acción autorizada registre importe, medio, fecha, responsable y referencia obligatoria para medios electrónicos; para efectivo, exigir confirmación auditable. Actualizar el estado y crear el movimiento de caja/banco en una sola operación servidor idempotente. El excedente de ventas a crédito necesita un pasivo/saldo a favor del cliente explícito y conciliable.
+
+### RET-03 — Bloqueo de ajustes de venta solo local
+
+`recordSaleAdjustment` usa `saleAdjustmentInProgress` (Set en memoria) y valida los ajustes existentes desde el snapshot cargado. El bloqueo se limpia cuando cambia `saleAdjustments`. POS tiene además `adjustmentSubmissionLocks`, también local y limpiado al cambiar el arreglo. No existe reserva única/operación transaccional por venta o clave de idempotencia compartida entre dispositivos. Dos sesiones con la misma revisión pueden validar cantidades pendientes de una misma línea antes de que una conozca el ajuste de la otra.
+
+**Corrección requerida:** clave de idempotencia y transición transaccional por venta/línea; bloquear y recalcular cantidades disponibles en servidor antes de actualizar inventario, saldo, ajuste y movimientos.
+
+### Alcance y estado
+
+- Revisión estática de `POS.tsx`, `useErpState.ts`, `saleAdjustmentService.ts` y pruebas unitarias de proyección.
+- Las pruebas existentes cubren proyección neta, cantidades por línea y límites en funciones puras; no prueban una escritura transaccional concurrente ni la validación de precios frente a la factura original.
+- No se ejecutaron devoluciones ni pagos sobre datos reales.
+- No se modificó código funcional, Supabase, políticas, grants, Auth ni datos.
+- La corrección requiere una operación servidor transaccional y un modelo explícito de conciliación; no se implementó una mitigación parcial de interfaz.
