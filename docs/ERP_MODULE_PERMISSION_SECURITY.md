@@ -133,3 +133,36 @@ Una cuenta bloqueada podía impedir innecesariamente el bootstrap de recuperaci�
 ### Validación pendiente
 - Confirmar el build y deployment Preview del commit de corrección.
 - Probar en un entorno de pruebas cuentas activas y bloqueadas, incluyendo bootstrap y protección del último administrador. No se hicieron cambios en Supabase ni pruebas con cuentas reales.
+
+## PERM-08 / PERM-09 / PERM-10 — Acciones de escritura accesibles desde módulos asignados a Solo lectura
+
+**Severidad: alta para integridad; hallazgo de autorización en cliente, no una prueba de bypass de RLS.**
+
+### Evidencia directa revisada en el código actual
+
+- `api/admin-users.ts` conserva para `Solo lectura` un preset que incluye `ventas`, `clientes`, `cotizaciones`, `inventario`, `compras`, `finanzas`, `cuentas_cobrar` y `cuentas_pagar`. La función `safePermissions` acepta esos módulos como permisos normales; no existe un atributo separado de lectura y escritura.
+- `src/App.tsx` usa `canSee(module)` para decidir navegación y `activeAllowed` para montar la pantalla. Esos controles no clasifican acciones ni restringen callbacks de mutación.
+- En Clientes se pasa `setCustomers` y `Customers.tsx` permite crear, editar y activar/desactivar registros mediante ese setter.
+- En Cotizaciones se pasa `setQuotes` y `Quotes.tsx` persiste cambios por ese callback.
+- En Inventario se permite abrir el modal de alta/edición y `App.tsx` conecta su guardado con `saveProduct`; el componente también ofrece eliminación cuando recibe el callback correspondiente.
+- En Compras, `Purchases` recibe setters de proveedores/carrito/devoluciones y callbacks `onReceive`, `onDispatch` y `onResolve`. El flag `canManageSupplierReturns` se deriva de `canSee('compras')`, por lo que Solo lectura también lo satisface.
+- En Finanzas, `Finance.tsx` ejecuta escrituras a gastos, CxC, CxP, transacciones, cierres y movimientos de caja mediante setters que `App.tsx` entrega al componente. La cuenta Solo lectura tiene el permiso `finanzas` y los permisos de CxC/CxP.
+- En Dashboard, cuando existe `canSee('finanzas')`, `App.tsx` monta `GoalsSettings` con setters de meta y gastos fijos.
+
+### Impacto
+
+Una cuenta configurada como Solo lectura puede abrir pantallas que presentan operaciones de escritura y cuyos componentes reciben callbacks para cambiar el snapshot local. Esto contradice la expectativa del rol. No significa que el usuario pueda alterar directamente Supabase sin superar RLS; la frontera de persistencia actual sigue siendo el problema separado documentado en AUTHZ-01/AUTHZ-02.
+
+### Alcance y límites de esta revisión
+
+Revisión estática de los archivos y SHA actuales de esta rama. No se inició sesión con una cuenta Solo lectura, no se ejecutaron mutaciones contra datos reales y no se intentó modificar Supabase. La evidencia demuestra disponibilidad de controles de escritura en el cliente, no confirma por sí sola que cada cambio sea persistido con éxito bajo la policy real.
+
+### Corrección requerida
+
+1. Definir capacidades explícitas de lectura y escritura por acción, no inferir escritura a partir del acceso al módulo.
+2. Mantener la visibilidad de los módulos para Solo lectura, pero renderizar variantes de consulta sin formularios, botones de mutación ni callbacks de escritura.
+3. Validar cada mutación en servidor/RPC con sesión, rol, permiso específico, propiedad, reglas de negocio e idempotencia.
+4. No considerar el bloqueo visual como autorización. Mientras `erp_state` acepte snapshot completo del cliente bajo una policy general, el aislamiento por acción no queda garantizado.
+5. Probar las rutas con cuentas reales de cada rol en staging antes de aplicar cambios de permisos o RLS.
+
+**Estado:** hallazgo documentado; no se modificó código funcional, usuarios, claims, Supabase ni datos comerciales.
