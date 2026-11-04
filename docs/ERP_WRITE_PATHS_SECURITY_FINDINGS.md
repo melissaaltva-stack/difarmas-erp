@@ -291,4 +291,4 @@ En `src/components/ManagementSuite.tsx`, las lecturas iniciales de `difarmas_cam
 
 **Impacto:** evita que una entrada local corrupta interrumpa el renderizado de análisis de campañas o historial de precios. No convierte esos datos locales en un registro de auditoría confiable ni resuelve el aislamiento entre cuentas del navegador.
 
-**Verificación:** cambio confirmado en la rama aislada y blob actualizado. La compilación, pruebas y Preview del commit nuevo aún deben verificarse. No se modificó Supabase ni se desplegó a producción.
+**Verificación:** el cambio de código del commit `f80936618266932ee4f20230946ba78e411c01dc` quedó incluido en el commit de documentación `5db0bfe02e330776ee7845364b4780450970dff4`. GitHub Actions run `41745950055` terminó en `SUCCESS`, con `npm run build` y `npm test` aprobados. Vercel no muestra todavía un Preview para el nuevo HEAD; el último Preview READY corresponde al commit anterior `58bd65565ec6b39e31809740953d2c2827ff3df9`. No se desplegó a producción.
