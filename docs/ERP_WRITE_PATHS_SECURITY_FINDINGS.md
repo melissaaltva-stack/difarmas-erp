@@ -620,3 +620,36 @@ El mensaje de interfaz aclara que una anulación interna no sustituye el procedi
 **Impacto:** una revisión posterior no puede atribuir de forma fiable quién registró o autorizó una anulación, distinguir solicitante de aprobador, ni conciliar la operación con la nota de crédito o el comprobante real de devolución. La visibilidad del módulo `ventas` no equivale a permiso de anular o liquidar reembolsos.
 
 **Corrección requerida:** separar solicitud, aprobación y liquidación; guardar actor autenticado, rol/permisos evaluados, actor aprobador distinto cuando la política lo requiera, fecha, motivo, documento relacionado y referencia de pago. La autorización debe comprobarse en servidor dentro de la operación transaccional, no confiar en campos enviados por el navegador. Mantener historial inmutable y auditable. No añadir campos al snapshot como sustituto de un registro servidor protegido.
+
+
+## INV-01 / INV-02 — Precio/costo de venta y movimientos de inventario confiados al snapshot del navegador
+
+**Severidad: alta para integridad de ventas, costo de ventas e inventario. Estado: confirmado por revisión estática; no se ejecutaron ventas ni escrituras reales.**
+
+### INV-01 — El registro de venta no contrasta precio ni costo del carrito con el maestro de productos
+
+En `src/hooks/useErpState.ts`, `recordSale(sold, ...)` valida cantidades, existencia disponible y que los valores pasen las comprobaciones de `applySaleToInventory`. En `src/services/inventoryService.ts`, esa función valida que precio y costo del elemento del carrito sean finitos/no negativos, y que la cantidad no supere el stock; sin embargo, no compara `sold[].price` ni `sold[].cost` con los precios/costos del producto correspondiente en `products`. Después, `buildSaleRecord` en `src/services/salesService.ts` construye el total, costo, utilidad y líneas históricas directamente con los valores del carrito.
+
+**Impacto:** una solicitud cliente alterada podría registrar una venta con precio inferior al autorizado o costo manipulado, manteniendo una reducción de existencias válida. Esto puede distorsionar ingresos, utilidad, costo de ventas, cuentas por cobrar y reportes. La validación de stock evita vender unidades inexistentes en el snapshot actual, pero no convierte el precio/costo del carrito en datos confiables.
+
+**Corrección requerida:** la operación de venta debe recibir solo identificadores de producto/línea, cantidades, lista de precio y descuentos autorizados. El servidor debe recuperar precio, costo, impuesto, promociones y existencia vigentes, validar límites y calcular importes; los cambios de stock, venta, cuenta por cobrar, caja e historial de movimientos deben confirmarse en una sola transacción idempotente. Registrar explícitamente descuentos autorizados y actor.
+
+### INV-02 — Recepción de compra y ajustes manuales también actualizan el ledger desde el cliente
+
+En `receivePurchase`, `useErpState.ts` acepta `PurchaseItem[]` recibidos del componente, aplica `applyPurchaseToInventory` con `item.qty` y `item.unitCost`, y acepta `enteredTotal` como total de la compra cuando es finito y no negativo, sin conciliarlo con el total calculado de las líneas. El mismo flujo agrega movimientos de inventario, compra, historial de costos y cuenta por pagar mediante setters del estado. En `saveProduct`, un usuario que edita un producto puede cambiar directamente `stock`; el hook crea un movimiento de ajuste, pero no exige motivo estructurado, documento de respaldo o aprobación. `deleteProduct` puede eliminar un producto que aún tiene existencias, registrando una salida genérica y quitándolo del catálogo.
+
+**Impacto:** cantidad/costo recibido y total financiero pueden divergir; una edición manual puede alterar existencias sin un flujo de conteo/ajuste con aprobación; la eliminación de un artículo con stock deja el historial referenciado a un producto que ya no aparece en el catálogo. Son cambios contables y de trazabilidad originados en el cliente, no operaciones de inventario autoritativas.
+
+**Corrección requerida:** recibir la compra desde un documento validado en servidor, conciliar suma de líneas, descuentos, impuestos y total de factura, y escribir compra + stock + costo promedio + cuenta por pagar + movimientos atómicamente. Separar ajuste de inventario de edición del producto: requerir motivo, cantidad delta, actor y aprobación según umbral; conservar productos con movimientos históricos mediante baja lógica, no borrado físico del registro maestro.
+
+### Verificación de permisos efectivos
+
+En `src/App.tsx`, `canSee(module)` se utiliza para decidir navegación y montaje del módulo; `activeAllowed` exige cuenta activa y permiso del módulo, pero no comprueba permisos separados de lectura/escritura. El módulo Inventario recibe `onNew` y `onEdit` sin un indicador de capacidad de escritura; el modal recibe `onSave` y `onDelete`. El hook `useErpState` no recibe el rol ni permisos del usuario para proteger `saveProduct`, `deleteProduct`, `recordSale` o `receivePurchase`. Esto confirma que el control de módulo no es autorización por acción. La posibilidad de persistir una modificación depende además de las políticas RLS activas descritas en AUTHZ-03; ocultar botones o bloquear la interfaz no sustituye la validación servidor.
+
+**Corrección requerida:** definir permisos separados de lectura y escritura por dominio/acción y hacer que cada operación servidor los evalúe contra la identidad autenticada. No basta con añadir deshabilitados en React ni con restringir solo el menú.
+
+### Alcance
+
+- Revisados `src/App.tsx`, `src/components/Inventory.tsx`, `src/hooks/useErpState.ts`, `src/services/inventoryService.ts`, `src/services/inventoryMovementService.ts` y `src/services/salesService.ts`.
+- Se revisaron los puntos de validación de venta, compra, ajuste manual y eliminación; no se ejecutaron solicitudes manipuladas ni operaciones sobre datos reales.
+- No se modificó código funcional, Supabase, RLS, grants, Auth ni datos comerciales. No se aplicaron migraciones ni se promovió el Preview a producción.
