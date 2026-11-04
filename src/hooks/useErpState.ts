@@ -37,17 +37,31 @@ paymentMethods:[
 billingInfo:{cai:'',authorizedRangeStart:'',authorizedRangeEnd:'',authorizationExpiry:'',establishmentCode:'',emissionPoint:'',documentTypeCode:'01',isvRate:15,fiscalLegend:'Documento interno. Configure la autorización fiscal vigente del SAR antes de emitir comprobantes fiscales.'}
 };
 
+const USER_OWNED_ERP_CACHE_KEYS = [
+  'difarmas_customers', 'difarmas_quotes', 'difarmas_suppliers', 'difarmas_products',
+  'difarmas_monthly_goal', 'difarmas_fixed_expenses', 'difarmas_sales', 'difarmas_purchases',
+  'difarmas_purchase_cost_history', 'difarmas_settings', 'difarmas_expenses',
+  'difarmas_receivables', 'difarmas_payables', 'difarmas_inventory_movements',
+  'difarmas_cash_closures', 'difarmas_cash_movements', 'difarmas_payment_transactions',
+  'difarmas_missing_product_requests', 'difarmas_supplier_returns', 'difarmas_supplier_credits',
+  'difarmas_sale_adjustments',
+];
+
+function hasUnownedErpCache(): boolean {
+  return USER_OWNED_ERP_CACHE_KEYS.some(key => localStorage.getItem(key) !== null);
+}
+
 function loadUserJson<T>(userId: string, key: string, fallback: T): T {
-  // Do not hydrate a new account with another account's browser cache, even
-  // for the first render before the account-change effect has run.
+  // Shared legacy keys are trusted only when their owner marker matches exactly.
+  // Missing ownership is not proof that the current account owns the data.
   const owner = localStorage.getItem('difarmas_owner_user_id');
-  if (owner && owner !== userId) return fallback;
+  if (owner !== userId) return fallback;
   return loadJson<T>(key, fallback);
 }
 
 function loadUserNumber(userId: string, key: string, fallback: number): number {
   const owner = localStorage.getItem('difarmas_owner_user_id');
-  if (owner && owner !== userId) return fallback;
+  if (owner !== userId) return fallback;
   return loadNumber(key, fallback);
 }
 
@@ -217,6 +231,14 @@ export function useErpState(userId: string) {
 
     loadErpSnapshot(userId).then(remote => {
       if (!activeRequest) return;
+      // If old browser cache exists without an owner marker and the cloud has
+      // no snapshot, do not guess which account owns it or seed another account.
+      // Keep the original keys untouched and require a deliberate recovery.
+      if (!remote && !previousOwner && hasUnownedErpCache()) {
+        setSyncStatus('error');
+        setSyncError('Se encontraron datos locales antiguos sin identificar a qué cuenta pertenecen. Se conservaron intactos y se bloqueó la sincronización para evitar mezclarlos o sobrescribirlos. Solicita una recuperación controlada al administrador.');
+        return;
+      }
       if (remote) {
         setCustomers(remote.customers);
         setQuotes(remote.quotes ?? []);
