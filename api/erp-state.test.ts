@@ -41,18 +41,16 @@ describe('ERP server-side write authorization', () => {
     vi.clearAllMocks();
     process.env.SUPABASE_URL = 'https://example.supabase.co';
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
+    const query: Record<string, unknown> = {};
+    for (const method of ['select', 'eq', 'maybeSingle', 'insert', 'update']) {
+      query[method] = mocks[method as keyof typeof mocks];
+      mocks[method as keyof typeof mocks].mockReturnValue(query);
+    }
     mocks.createClient.mockReturnValue({
       auth: { getUser: mocks.getUser },
       from: mocks.from,
     });
-    mocks.from.mockReturnValue({
-      select: mocks.select,
-      eq: mocks.eq,
-      insert: mocks.insert,
-      update: mocks.update,
-    });
-    mocks.select.mockReturnValue({ eq: mocks.eq, maybeSingle: mocks.maybeSingle });
-    mocks.eq.mockReturnValue({ maybeSingle: mocks.maybeSingle, eq: mocks.eq, select: mocks.select });
+    mocks.from.mockReturnValue(query);
   });
 
   it('rejects read-only accounts even when they can view the module', async () => {
