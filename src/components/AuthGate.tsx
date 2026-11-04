@@ -44,6 +44,12 @@ export function AuthGate({ children }: Props) {
       const initialLinkType=new URLSearchParams(window.location.hash.replace(/^#/,'')).get('type');
       if(initialLinkType==='invite'||initialLinkType==='recovery')setRecoveryMode(true);
       setChecking(false);
+    }).catch(() => {
+      if (!mounted) return;
+      // A failed session lookup must never grant access or leave the gate loading forever.
+      setUser(null);
+      setError('No se pudo comprobar la sesión. Verifica tu conexión y vuelve a intentarlo.');
+      setChecking(false);
     });
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
