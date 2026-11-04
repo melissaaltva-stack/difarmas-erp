@@ -87,3 +87,16 @@ El Security Advisor devuelve `auth_leaked_password_protection`: la protección c
 - No se aplicó la migración de nota de crédito ni la migración restrictiva de permisos.
 - La revisión no certifica la seguridad de roles privilegiados, propietarios, backups ni configuración de red; requiere una fase específica de validación en staging.
 
+
+### CREDIT-RPC-01 — Desajuste de rol y permiso en la migración preparada
+
+La revisión de `src/domain/types.ts`, `src/components/SupplierReturns.tsx` y `supabase/migrations/202611020002_supplier_credit_note_atomic.sql` encontró que el RPC permite el rol Finanzas, pero exige el permiso `compras`. La matriz de permisos de `api/admin-users.ts` no concede `compras` al rol Finanzas. En consecuencia, ese rol no podrá completar la operación aunque aparezca en la lista de roles permitidos. La migración requiere corregir esa discrepancia antes de aplicarse.
+
+### CREDIT-RPC-02 — El importe del crédito todavía procede de datos editables por cliente
+
+El RPC usa `totalCost` y los detalles de devolución almacenados en el snapshot como base del crédito. Esos valores proceden de un estado editable por cliente y no se recalculan dentro de la función contra las líneas originales de `purchaseCostHistory`. Antes de aplicar el RPC debe recalcular el importe usando el historial de costo de la compra, validar productos y cantidades devueltas, y comprobar que no excedan las cantidades compradas netas de devoluciones previas. Hasta entonces, la transacción evita duplicados/concurrencia, pero no garantiza por sí sola la integridad del importe.
+
+### MIGRATION-01 — Inventario de cuentas no acreditado
+
+El comentario de la migración `202611020001_erp_state_role_write_guard.sql` afirma que todas las cuentas existentes fueron inventariadas y tienen `farmi_active=true`. Esta auditoría aún no obtuvo esa evidencia completa. La condición fail-closed está preparada, pero debe probarse con cuentas y sesiones reales antes de aplicarse.
+
