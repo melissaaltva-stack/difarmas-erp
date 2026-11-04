@@ -28,6 +28,7 @@ const ROLE_PERMISSIONS: Record<Role, string[]> = {
 };
 const ROLES: Role[] = ['Administrador','Supervisor','Ventas','Compras','Finanzas','Solo lectura'];
 const isRole = (value: unknown): value is Role => typeof value === 'string' && ROLES.includes(value as Role);
+export const safeRole = (value: unknown): Role => isRole(value) ? value : 'Solo lectura';
 const isAdmin = (user: User) => user.app_metadata?.farmi_admin === true || user.app_metadata?.farmi_role === 'Administrador';
 
 export function safePermissions(role: Role, value: unknown): string[] {
@@ -64,8 +65,8 @@ function safeUser(user: User) {
     createdAt: user.created_at,
     lastSignInAt: user.last_sign_in_at ?? null,
     emailConfirmed: Boolean(user.email_confirmed_at),
-    role: isRole(metadata.farmi_role) ? metadata.farmi_role : 'Ventas',
-    permissions: safePermissions(isRole(metadata.farmi_role) ? metadata.farmi_role : 'Ventas', metadata.farmi_permissions),
+    role: safeRole(metadata.farmi_role),
+    permissions: safePermissions(safeRole(metadata.farmi_role), metadata.farmi_permissions),
     active: metadata.farmi_active !== false && !user.banned_until,
     isAdmin: isAdmin(user),
   };
@@ -204,7 +205,7 @@ export default async function handler(req: Req, res: Res) {
       const { data: targetData, error: targetError } = await adminClient.auth.admin.getUserById(targetId);
       if (targetError || !targetData.user) return reply(res, 404, { error: 'No se encontró ese usuario.' });
       const target = targetData.user;
-      const oldRole = isRole(target.app_metadata?.farmi_role) ? target.app_metadata.farmi_role : 'Ventas';
+      const oldRole = safeRole(target.app_metadata?.farmi_role);
       const role = isRole(body.role) ? body.role : oldRole;
       const active = typeof body.active === 'boolean' ? body.active : (target.app_metadata?.farmi_active !== false && !target.banned_until);
       const permissions = safePermissions(role, body.permissions ?? target.app_metadata?.farmi_permissions);
