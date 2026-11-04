@@ -915,3 +915,16 @@ La consulta agregada de auth.users mostró tres cuentas y todas tenían farmi_ac
 **Acción necesaria:** planificar la transición a coalesce(..., false) solo después de validar el flujo de bootstrap y todas las cuentas existentes. La migración preparada 202611020001_erp_state_role_write_guard.sql usa el criterio estricto, pero no se aplicó en esta auditoría. No modificar grants ni políticas activas hasta tener pruebas de regresión y un plan de reversión.
 
 **Límite:** se consultaron exclusivamente metadatos de políticas, grants y conteos agregados de metadata; no se leyeron ni alteraron snapshots o datos operativos.
+
+
+## PRIVACY-01 — La caché local de FARMI permanece en el dispositivo después de cerrar sesión
+
+**Severidad: media. Estado: confirmado por inspección estática el 2026-11-04.**
+
+Los snapshots locales se guardan en localStorage bajo claves por usuario (farmi:user:<userId>:...). El cierre de sesión en AuthGate ejecuta supabase.auth.signOut() y limpia el usuario React, pero no elimina ni bloquea las claves locales asociadas a esa cuenta. La separación por userId evita que otra cuenta autenticada cargue esas claves por el flujo normal, pero cualquier persona con acceso al mismo perfil del navegador puede inspeccionar localStorage desde las herramientas del navegador.
+
+**Impacto:** en equipos compartidos o no bloqueados, datos comerciales y personales almacenados en la caché pueden seguir accesibles después de cerrar sesión. Esto es un riesgo de privacidad del dispositivo, distinto de la autorización RLS del servidor.
+
+**Acción necesaria:** definir política para dispositivos compartidos. Preferir no persistir en localStorage información sensible que no sea necesaria; evaluar una caché protegida por sesión con mecanismo de claves adecuado, expiración y bloqueo al cerrar sesión. No borrar automáticamente la caché actual hasta garantizar que todos los cambios estén sincronizados y que no se pierdan datos pendientes. Añadir pruebas de cierre de sesión, cambio de usuario y restauración de conectividad.
+
+**Límite:** no se inspeccionó contenido de cachés de usuarios reales ni se modificó almacenamiento del navegador o datos de Supabase.
