@@ -568,3 +568,42 @@ En `src/services/financeService.ts`, `cashSales` clasifica como efectivo únicam
 - Las pruebas existentes de `saleAdjustmentService` cubren la proyección pura, pero no su integración en reportes/cierres ni conciliación con transacciones reales.
 - No se ejecutaron cierres, pagos, devoluciones ni escrituras sobre datos reales.
 - No se modificó código funcional ni Supabase; no se aplicaron migraciones ni se promovió producción.
+
+
+## SUPPLIER-CREDIT-04 / SUPPLIER-CREDIT-05 — Importe de nota no verificado y aplicaciones repetibles
+
+**Severidad: alta para integridad de cuentas por pagar y saldos a favor. Estado: confirmado por revisión estática; migración propuesta no aplicada en Supabase activa.**
+
+### SUPPLIER-CREDIT-04 — La nota de crédito se calcula desde el costo de devolución, no desde el documento recibido
+
+En `supabase/migrations/202611020002_supplier_credit_note_atomic.sql`, la RPC asigna `v_note := (v_return ->> 'totalCost')::numeric` y utiliza ese valor para reducir la cuenta por pagar o crear un saldo a favor. La función local `resolveSupplierReturn` invoca la RPC al marcar «Nota de crédito recibida». El tipo `SupplierReturnRecord` no contiene importe del documento de crédito recibido, número/serie de esa nota, fecha de emisión ni evidencia de conciliación.
+
+La RPC sí bloquea la fila `erp_state`, verifica que la devolución esté «Enviado al proveedor», busca una compra del mismo proveedor y evita crear un segundo crédito para el mismo `sourceReturnId`. Esos son controles positivos, pero no acreditan que el importe aceptado coincida con el documento emitido por el proveedor. Tampoco se cotejan las cantidades/costos de cada línea devuelta contra los artículos de la compra original.
+
+**Impacto:** un `totalCost` erróneo o manipulado en el snapshot podría disminuir el saldo del proveedor o crear crédito futuro por una cantidad distinta de la reconocida por el proveedor. La transacción atómica protege la concurrencia, pero no convierte el importe de origen en un dato verificado.
+
+**Corrección requerida:** capturar número, fecha e importe del documento de crédito recibido y su evidencia; conciliarlo con las líneas/cantidades de la devolución y compra original; exigir aprobación de diferencias. El servidor debe calcular el máximo conciliable y guardar importe reconocido, importe reclamado y diferencia por separado. No asumir que el costo contable de los artículos equivale automáticamente al importe fiscal/comercial de la nota.
+
+### SUPPLIER-CREDIT-05 — La aplicación de crédito a una compra carece de clave de idempotencia por compra
+
+En `src/services/supplierCreditService.ts`, `applySupplierCreditsToPurchase` consume el saldo disponible y agrega un elemento a `applications` con `purchaseId`, pero no comprueba si ese `purchaseId` ya está aplicado en el historial de créditos. La función es determinista para una entrada, pero dos llamadas con el mismo snapshot pueden producir la misma aplicación. `receivePurchase` evita algunas facturas repetidas comparando proveedor y número de factura en el estado local; no es una restricción compartida ni cubre compras sin número de factura.
+
+**Impacto:** una repetición desde otra sesión o un reintento con estado anterior puede volver a aplicar un crédito y duplicar el efecto contable si se acepta la segunda compra. Los bloqueos locales y la comparación de facturas no constituyen idempotencia transaccional entre dispositivos.
+
+**Corrección requerida:** la operación servidor debe aceptar una clave idempotente estable para la compra, reservarla de forma única y devolver el resultado ya confirmado en reintentos. En la misma transacción debe validar saldo disponible, proveedor, compra, cuenta por pagar y aplicación previa. Añadir pruebas de doble envío, dos sesiones y timeout después de confirmar.
+
+### SUPPLIER-CREDIT-06 — El validador del ledger no reconcilia el saldo con el importe y las aplicaciones
+
+`isValidCredit` comprueba proveedor, saldo restante no negativo y que `applications` sea un arreglo, pero no valida que `amount` sea finito/positivo, que los importes de cada aplicación sean válidos, que la suma de aplicaciones coincida con `amount - remainingBalance`, ni que no existan `purchaseId` duplicados. `applySupplierCreditsToPurchase` confía en ese estado al consumir saldos.
+
+**Impacto:** un registro persistido inconsistente puede seguir siendo aceptado por el servicio local y contaminar el saldo disponible o el historial de aplicaciones. Al tratarse de snapshot editable desde el cliente, la validación local no es una barrera de integridad.
+
+**Corrección requerida:** validar el ledger completo y rechazar inconsistencias antes de calcular; reconstruir saldos desde movimientos de crédito/aplicación inmutables en una operación servidor transaccional. No reparar automáticamente registros históricos sin conciliación.
+
+### Estado de despliegue y base activa
+
+La migración `202611020002_supplier_credit_note_atomic.sql` existe en la rama, y el cliente llama a `resolve_supplier_credit_note`; sin embargo, la comprobación previa de Supabase activa indicó que la función no existe y que la migración no estaba aplicada. Por ello, el control atómico documentado en el código no está disponible en la base activa. No se intentó aplicar la migración ni se modificó Supabase en esta auditoría.
+
+### Pruebas existentes y brechas
+
+Las pruebas actuales de `supplierCreditService` cubren división de nota, consumo parcial/total, proveedores distintos, precisión en centavos y prevención de crear dos créditos para un mismo `sourceReturnId`. No cubren importes de nota no conciliados, aplicaciones duplicadas para un `purchaseId`, ledger inconsistente ni concurrencia entre sesiones.
