@@ -31,9 +31,6 @@ function setupUser(role: string, permissions: string[]) {
 }
 function setupDatabase(state: Record<string, unknown>, updatedAt = '2026-11-04T10:00:00.000Z') {
   mocks.maybeSingle.mockResolvedValue({ data: { state, updated_at: updatedAt }, error: null });
-  mocks.update.mockReturnValue({ eq: mocks.eq });
-  mocks.eq.mockReturnValue({ eq: mocks.eq, select: mocks.select });
-  mocks.select.mockReturnValue({ maybeSingle: mocks.maybeSingle });
 }
 
 describe('ERP server-side write authorization', () => {
