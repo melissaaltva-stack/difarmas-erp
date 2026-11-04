@@ -107,3 +107,36 @@ El comentario de la migración `202611020001_erp_state_role_write_guard.sql` afi
 - La migración `202611020001_erp_state_role_write_guard.sql` ya no afirma que el inventario de cuentas y sesiones fue completado; exige completar esa verificación antes de aplicarse.
 - Estas correcciones están en la rama de seguridad, no en la base activa.
 - El RPC de nota de crédito sigue pendiente de una corrección de integridad: recalcular importes y cantidades contra `purchaseCostHistory` y devoluciones anteriores.
+
+
+### AUTHZ-LIVE-04 — Propiedad, roles privilegiados y funciones SECURITY DEFINER
+
+La consulta de catálogos confirma que public.erp_state y public.store_products pertenecen a postgres; RLS está habilitado, pero no forzado. Los roles anon y authenticated no tienen atributos BYPASSRLS ni superusuario. service_role tiene BYPASSRLS, como corresponde al rol privilegiado de Supabase; supabase_admin es superusuario. Por tanto, las policies no deben considerarse protección frente a claves privilegiadas comprometidas.
+
+La inspección de pg_proc no encontró funciones SECURITY DEFINER en el esquema public en el momento de la consulta. Esto reduce la superficie de funciones privilegiadas públicas, pero no sustituye la auditoría de otros esquemas ni de funciones Edge/API.
+
+La membresía observada confirma que authenticator puede asumir los roles de API anon, authenticated y service_role; esto es parte del modelo de conexión de Supabase y no significa que un usuario final pueda elegir libremente service_role. La clave de servicio debe permanecer exclusivamente en el servidor.
+
+### STORE-LIVE-02 — Grants de escritura redundantes confirmados
+
+La nueva consulta confirmó que anon y authenticated conservan INSERT, UPDATE y DELETE sobre store_products, mientras que la única policy observada para esos roles es SELECT de productos publicados. RLS bloquea esas escrituras mientras permanezca activa la configuración actual, pero los grants no son necesarios para el acceso público de lectura. La revocación debe prepararse como migración separada y validar primero que el administrador de catálogo escribe exclusivamente desde la API con service role. No se modificaron grants activos.
+
+### SUPRET-09 — Cambio recibido se registra desde el cliente y no es atómico
+
+La revisión de useErpState.ts confirma que el flujo Cambio recibido calcula nuevas existencias y costo promedio en el navegador y después actualiza productos, movimientos de inventario y estado de devolución mediante setters separados. No hay transacción de base de datos ni bloqueo compartido entre dispositivos para esta transición. El control supplierReturnResolutionInProgress es local a la sesión.
+
+Severidad: alta para integridad de inventario. Una interrupción o dos sesiones concurrentes pueden dejar el cambio recibido aplicado parcialmente o duplicar la reposición. Debe trasladarse a una operación transaccional que valide estado, cantidades enviadas, productos y costos contra el registro original antes de modificar inventario y movimiento.
+
+### SUPRET-10 — Rechazo también se confirma únicamente en el cliente
+
+El estado Rechazado se actualiza con setSupplierReturns sin operación transaccional en servidor ni evidencia de quién rechazó, cuándo o por qué. Aunque no altera inventario ni cuentas por pagar, no ofrece trazabilidad resistente a modificaciones ni una transición consistente entre dispositivos. Debe registrarse como evento server-side con actor, fecha, motivo y transición de estado validada.
+
+### CREDIT-RPC-03 — La función transaccional aún no valida cantidades contra historial de compra
+
+La UI obtiene el costo unitario desde purchaseCostHistory, pero el RPC preparado vuelve a tomar totalCost y items desde el snapshot. El tipo PurchaseRecord solo contiene cabecera, mientras que PurchaseCostHistoryEntry contiene purchaseId, productId, unitCost y quantity. Por ello, existe una fuente de detalle apta para validación, pero la función todavía no la utiliza para recalcular el crédito ni para sumar devoluciones previas por producto.
+
+Corrección requerida antes de aplicar: para cada producto devuelto, validar que exista en el historial de la compra, sumar cantidades previamente devueltas no rechazadas, impedir que la suma supere la cantidad comprada, recalcular el costo desde historial y derivar el importe del servidor. Rechazar cantidades negativas, costos ausentes, duplicados y estados distintos de Enviado al proveedor. No se debe confiar en el importe enviado por el navegador.
+
+### Alcance de esta ronda
+
+Las consultas adicionales fueron exclusivamente de catálogo (pg_class, pg_roles, pg_auth_members, pg_policies, pg_proc e información de privilegios). No se leyeron filas de negocio ni se ejecutó DDL/DML. No se modificaron políticas, grants, funciones, usuarios ni configuración de Auth.
