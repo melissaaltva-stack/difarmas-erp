@@ -51,8 +51,14 @@ function hasUnownedErpCache(): boolean {
   return USER_OWNED_ERP_CACHE_KEYS.some(key => localStorage.getItem(key) !== null);
 }
 
+function userCacheKey(userId: string, key: string): string {
+  return `farmi:user:${encodeURIComponent(userId)}:${key}`;
+}
+
 function loadUserJson<T>(userId: string, key: string, fallback: T): T {
-  // Shared legacy keys are trusted only when their owner marker matches exactly.
+  const scopedKey = userCacheKey(userId, key);
+  if (localStorage.getItem(scopedKey) !== null) return loadJson<T>(scopedKey, fallback);
+  // Legacy shared keys are trusted only when their owner marker matches exactly.
   // Missing ownership is not proof that the current account owns the data.
   const owner = localStorage.getItem('difarmas_owner_user_id');
   if (owner !== userId) return fallback;
@@ -60,9 +66,30 @@ function loadUserJson<T>(userId: string, key: string, fallback: T): T {
 }
 
 function loadUserNumber(userId: string, key: string, fallback: number): number {
+  const scopedKey = userCacheKey(userId, key);
+  if (localStorage.getItem(scopedKey) !== null) return loadNumber(scopedKey, fallback);
   const owner = localStorage.getItem('difarmas_owner_user_id');
   if (owner !== userId) return fallback;
   return loadNumber(key, fallback);
+}
+
+function saveUserJson<T>(userId: string, key: string, value: T): void {
+  saveJson(userCacheKey(userId, key), value);
+}
+
+function saveUserNumber(userId: string, key: string, value: number): void {
+  saveNumber(userCacheKey(userId, key), value);
+}
+
+function preserveLegacyCacheForOwner(ownerId: string): void {
+  USER_OWNED_ERP_CACHE_KEYS.forEach(key => {
+    const legacyValue = localStorage.getItem(key);
+    const scopedKey = userCacheKey(ownerId, key);
+    if (legacyValue !== null && localStorage.getItem(scopedKey) === null) {
+      // Copy, never move/delete: retain the original as a recovery backup.
+      localStorage.setItem(scopedKey, legacyValue);
+    }
+  });
 }
 
 export function useErpState(userId: string) {
@@ -166,27 +193,27 @@ export function useErpState(userId: string) {
   useEffect(()=>{supplierReturnResolutionCompleted.current.clear()},[supplierReturns]);
   useEffect(()=>{purchaseInProgress.current=false},[purchases]);
 
-  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_customers',customers)},[remoteReady,customers]);
-  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_quotes',quotes)},[remoteReady,quotes]);
-  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_suppliers',suppliers)},[remoteReady,suppliers]);
-  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_products',products)},[remoteReady,products]);
-  useEffect(()=>{if(!remoteReady)return;saveNumber('difarmas_monthly_goal',monthlyGoal)},[remoteReady,monthlyGoal]);
-  useEffect(()=>{if(!remoteReady)return;saveNumber('difarmas_fixed_expenses',fixedExpenses)},[remoteReady,fixedExpenses]);
-  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_sales',sales)},[remoteReady,sales]);
-  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_purchases',purchases)},[remoteReady,purchases]);
-  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_purchase_cost_history',purchaseCostHistory)},[remoteReady,purchaseCostHistory]);
-  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_settings',settings)},[remoteReady,settings]);
-  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_expenses',expenses)},[remoteReady,expenses]);
-  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_receivables',receivables)},[remoteReady,receivables]);
-  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_payables',payables)},[remoteReady,payables]);
-  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_inventory_movements',inventoryMovements)},[remoteReady,inventoryMovements]);
-  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_cash_closures',cashClosures)},[remoteReady,cashClosures]);
-  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_cash_movements',cashMovements)},[remoteReady,cashMovements]);
-  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_payment_transactions',paymentTransactions)},[remoteReady,paymentTransactions]);
-  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_missing_product_requests',missingProductRequests)},[remoteReady,missingProductRequests]);
-  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_supplier_returns',supplierReturns)},[remoteReady,supplierReturns]);
-  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_supplier_credits',supplierCredits)},[remoteReady,supplierCredits]);
-  useEffect(()=>{if(!remoteReady)return;saveJson('difarmas_sale_adjustments',saleAdjustments)},[remoteReady,saleAdjustments]);
+  useEffect(()=>{if(!remoteReady)return;saveUserJson(userId,'difarmas_customers',customers)},[remoteReady,userId,customers]);
+  useEffect(()=>{if(!remoteReady)return;saveUserJson(userId,'difarmas_quotes',quotes)},[remoteReady,userId,quotes]);
+  useEffect(()=>{if(!remoteReady)return;saveUserJson(userId,'difarmas_suppliers',suppliers)},[remoteReady,userId,suppliers]);
+  useEffect(()=>{if(!remoteReady)return;saveUserJson(userId,'difarmas_products',products)},[remoteReady,userId,products]);
+  useEffect(()=>{if(!remoteReady)return;saveUserNumber(userId,'difarmas_monthly_goal',monthlyGoal)},[remoteReady,userId,monthlyGoal]);
+  useEffect(()=>{if(!remoteReady)return;saveUserNumber(userId,'difarmas_fixed_expenses',fixedExpenses)},[remoteReady,userId,fixedExpenses]);
+  useEffect(()=>{if(!remoteReady)return;saveUserJson(userId,'difarmas_sales',sales)},[remoteReady,userId,sales]);
+  useEffect(()=>{if(!remoteReady)return;saveUserJson(userId,'difarmas_purchases',purchases)},[remoteReady,userId,purchases]);
+  useEffect(()=>{if(!remoteReady)return;saveUserJson(userId,'difarmas_purchase_cost_history',purchaseCostHistory)},[remoteReady,userId,purchaseCostHistory]);
+  useEffect(()=>{if(!remoteReady)return;saveUserJson(userId,'difarmas_settings',settings)},[remoteReady,userId,settings]);
+  useEffect(()=>{if(!remoteReady)return;saveUserJson(userId,'difarmas_expenses',expenses)},[remoteReady,userId,expenses]);
+  useEffect(()=>{if(!remoteReady)return;saveUserJson(userId,'difarmas_receivables',receivables)},[remoteReady,userId,receivables]);
+  useEffect(()=>{if(!remoteReady)return;saveUserJson(userId,'difarmas_payables',payables)},[remoteReady,userId,payables]);
+  useEffect(()=>{if(!remoteReady)return;saveUserJson(userId,'difarmas_inventory_movements',inventoryMovements)},[remoteReady,userId,inventoryMovements]);
+  useEffect(()=>{if(!remoteReady)return;saveUserJson(userId,'difarmas_cash_closures',cashClosures)},[remoteReady,userId,cashClosures]);
+  useEffect(()=>{if(!remoteReady)return;saveUserJson(userId,'difarmas_cash_movements',cashMovements)},[remoteReady,userId,cashMovements]);
+  useEffect(()=>{if(!remoteReady)return;saveUserJson(userId,'difarmas_payment_transactions',paymentTransactions)},[remoteReady,userId,paymentTransactions]);
+  useEffect(()=>{if(!remoteReady)return;saveUserJson(userId,'difarmas_missing_product_requests',missingProductRequests)},[remoteReady,userId,missingProductRequests]);
+  useEffect(()=>{if(!remoteReady)return;saveUserJson(userId,'difarmas_supplier_returns',supplierReturns)},[remoteReady,userId,supplierReturns]);
+  useEffect(()=>{if(!remoteReady)return;saveUserJson(userId,'difarmas_supplier_credits',supplierCredits)},[remoteReady,userId,supplierCredits]);
+  useEffect(()=>{if(!remoteReady)return;saveUserJson(userId,'difarmas_sale_adjustments',saleAdjustments)},[remoteReady,userId,saleAdjustments]);
 
   const snapshot = useMemo<ErpSnapshot>(() => ({
     customers, quotes, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables,
@@ -205,6 +232,7 @@ export function useErpState(userId: string) {
     // account from another account's local cache.
     const previousOwner = localStorage.getItem('difarmas_owner_user_id');
     const accountChanged = Boolean(previousOwner && previousOwner !== userId);
+    if (previousOwner && previousOwner !== userId) preserveLegacyCacheForOwner(previousOwner);
     if (accountChanged) {
       setCustomers([]);
       setQuotes([]);
