@@ -339,3 +339,16 @@ La revisión del repositorio no encontró un `vercel.json` en la raíz ni una co
 ### Estado de deployment y trazabilidad de la rama de auditoría
 
 La consulta de Vercel confirmó un deployment `READY` asociado a `abd1b04c59377cc931eb4942c19de578c9ca9383`, no al commit documental más reciente `2177e7f1aa1e406814df2167965a6dd6022c894b`. Por tanto, ese deployment READY no contiene los hallazgos SUPPLY-01/02 ni DEPLOY-01/02/03. El estado de GitHub para el commit `2177e7f1...` informó `failure` en el check Vercel con destino de build-rate-limit. No se realizó un nuevo despliegue ni se modificó el proyecto. No debe presentarse el deployment READY anterior como validación del commit actual.
+
+
+### LOCAL-04 — La caché del ERP persiste en el navegador después de cerrar sesión
+
+La revisión de `src/hooks/useErpState.ts` (SHA `e87833ca750cf1f1e2bfa6415560d5f1b77662dd`) muestra que el estado de clientes, productos, ventas, compras, costos, finanzas, movimientos y otros módulos se guarda en claves `farmi:user:<userId>:<clave>` de `localStorage`. El aislamiento por identificador evita que la aplicación cargue normalmente la caché de otra cuenta, pero `AuthGate.signOut()` solo ejecuta `supabase.auth.signOut()`; no elimina ni cifra la caché local de esa cuenta. El navegador mantiene esos datos después del cierre de sesión.
+
+**Severidad: media (confidencialidad en equipos compartidos).** Un siguiente usuario con acceso al mismo perfil del navegador puede inspeccionar el almacenamiento local mediante herramientas del navegador o extensiones, aunque la interfaz no le cargue esos datos. Definir política de equipo compartido: evitar persistir datos sensibles localmente, cifrar con claves no persistentes cuando sea viable, limitar la caché a lo indispensable y limpiar el estado en memoria al salir. Antes de limpiar claves históricas, preservar y validar un procedimiento de respaldo/recuperación; no borrar datos existentes automáticamente.
+
+### Controles positivos observados en sesión y caché
+
+`src/services/supabaseClient.ts` configura persistencia y renovación automática de sesión con el cliente oficial de Supabase y utiliza únicamente la publishable key en el navegador; no se observó una service-role key en el cliente revisado. `useErpState.ts` separa claves de caché por ID de usuario y solo importa claves antiguas si el marcador de propietario coincide exactamente. `remoteErpState.ts` valida la identidad del propietario al leer el snapshot y usa una revisión `updated_at` condicional para evitar sobrescrituras obsoletas entre sesiones/dispositivos. Estos controles reducen riesgos, pero no convierten localStorage en almacenamiento confidencial ni sustituyen la autorización por operación en el backend.
+
+La revisión de autenticación fue estática. No se inspeccionó el perfil real del navegador, no se extrajeron tokens, no se consultaron datos privados de usuarios y no se ejecutaron pruebas con cuentas reales. No se modificaron código, almacenamiento local, sesiones ni datos de Supabase.
