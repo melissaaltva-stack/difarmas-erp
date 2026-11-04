@@ -418,3 +418,15 @@ El commit `7d4b7ff2b52a53f376b49557095fb5846a33071d` añadió dos pruebas adicio
 **Verificación:** GitHub Actions run `41848236570` (commit `9506edb...`) y run `41848521738` (commit `7d4b7ff...`) terminaron en `SUCCESS`; ambos ejecutaron `npm run build` y `npm test`. El Preview Vercel del último commit, deployment `dpl_wDaZbmJzXoFaoVwB9PWQAcdJ6Hx4`, está en estado `READY` y corresponde a la rama `security/erp-state-permission-matrix`.
 
 **Alcance:** solo se añadieron pruebas automatizadas y documentación en la rama aislada. No se cambió `main`, no se promovió el Preview a producción y no se modificó Supabase, Auth ni datos comerciales. ADMIN-17 y ADMIN-18 permanecen abiertos; PERM-08 a PERM-10 y WRITE-01 a WRITE-10 siguen requiriendo una frontera de autorización en servidor/base de datos.
+
+
+
+### Pruebas negativas adicionales de autorización administrativa — 2026-11-04
+
+El commit `162feadff17ed53d45e4264a237d658657ce16a0` amplía `api/admin-users.test.ts` con dos pruebas negativas:
+- Un usuario autenticado y activo con rol Ventas no puede enumerar cuentas mediante la acción `list`; la API responde HTTP 403 y no llama a `listUsers()`.
+- Una cuenta cuyo metadata indica rol Administrador pero carece del claim explícito `farmi_active: true` tampoco puede ejecutar la acción privilegiada; responde HTTP 403 sin enumerar cuentas.
+
+**Verificación:** GitHub Actions run `41849687970` terminó en `SUCCESS`; completó instalación, auditoría de dependencias, `npm run build` y `npm test`. Vercel Preview deployment `dpl_PaSySyDgBk7DdnKuVuKB5T4bgQya` está `READY`, ligado al mismo commit y rama aislada.
+
+**Límite:** estas pruebas verifican el control de acceso de la ruta administrativa. No prueban el rate limit persistente de bootstrap ni la atomicidad del último administrador; ADMIN-17 y ADMIN-18 continúan abiertos.
