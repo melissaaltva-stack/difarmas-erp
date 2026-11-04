@@ -454,3 +454,17 @@ La comparación GitHub entre `main` y `security/erp-state-permission-matrix` ind
 **Severidad: alta para el proceso de liberación.** Los hallazgos y correcciones que solo existen en la rama de auditoría no deben considerarse aplicados en producción. No hacer merge de los 406 commits como una sola unidad: revisar el diff por grupos, separar correcciones de seguridad verificadas de cambios funcionales/documentales y promover únicamente una secuencia pequeña, probada y aprobada. Verificar el SHA exacto y el estado READY de cada despliegue tras la liberación.
 
 No se hizo merge, push, despliegue ni cambio en producción. La comparación identifica una diferencia de historial/árbol; no certifica por sí sola que cada uno de los 406 commits contenga una corrección de seguridad.
+
+
+
+### AUTHZ-18 — El rol Solo lectura depende de RLS para bloquear escrituras, no de una interfaz realmente de solo lectura
+
+La revisión de `src/App.tsx` (SHA `1a26c9a65fae23495c84188c6c132923cd68fc98`) y `src/hooks/useErpState.ts` (SHA `e87833ca750cf1f1e2bfa6415560d5f1b77662dd`) confirma que la interfaz calcula acceso por módulo mediante `activeAllowed`, pero no pasa una capacidad de solo lectura a los componentes ni deshabilita de forma general las acciones de edición, cobro, pago, compra, ajuste o eliminación. La migración `202611020001_erp_state_role_write_guard.sql` (SHA `c771a6d7f37577dc7757955a5e108d0b18d2cba1`) excluye el rol Solo lectura de INSERT/UPDATE en RLS, por lo que el bloqueo efectivo depende de que la política esté desplegada y de que todas las escrituras pasen por esa tabla.
+
+**Severidad: alta (integridad y experiencia de usuario).** Mantener el rechazo de escritura en servidor/RLS, pero añadir capacidades de lectura por acción y hacer que la interfaz no ofrezca controles de mutación a Solo lectura. Los servicios deben rechazar la operación antes de cambiar el estado local, no esperar a que falle el autosave. Probar intentos directos contra la API/tabla y flujos UI con una cuenta Solo lectura. La migración no se ha aplicado ni verificado en producción; no se debe asumir que el bloqueo de RLS está activo.
+
+### Revisión de aptitud para liberar cambios de autorización
+
+Se compararon los archivos actuales de la rama de auditoría con `main`. En la rama hay mejoras relevantes (gating de módulos en `App.tsx`, escritura condicional por revisión en `remoteErpState.ts`, y política RLS que falla cerrada para claims/roles ausentes). Sin embargo, la misma rama contiene cambios amplios en el hook de estado, componentes, servicios financieros/comerciales, tests y migraciones. El helper `src/security/erpStateDiff.ts` declara expresamente que solo calcula diferencias JSON y **no** aplica autorización ni protege escrituras. La migración RLS advierte que el snapshot sigue siendo monolítico y que no resuelve autorización por módulo/operación.
+
+**Decisión de esta ronda: no hay un paquete de liberación aislado que pueda aprobarse con la evidencia estática disponible.** Antes de promover cambios se necesitan build/tests reproducibles, pruebas de roles con cuentas de prueba, confirmación de compatibilidad del claim `farmi_active` para todas las cuentas y despliegue controlado de la migración en un entorno no productivo. No se hizo cherry-pick, merge ni despliegue.
