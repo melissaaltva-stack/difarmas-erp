@@ -66,6 +66,24 @@ describe('ERP server-side write authorization', () => {
     expect(mocks.from).not.toHaveBeenCalled();
   });
 
+  it('allows a sales operator to append a sale when no protected module is changed', async () => {
+    setupUser('Ventas', ['dashboard', 'ventas']);
+    setupDatabase({ sales: [], products: [] });
+    const { value, res } = response();
+    await handler({
+      method: 'POST',
+      headers: { authorization: 'Bearer valid-token' },
+      body: {
+        action: 'snapshot',
+        expectedUpdatedAt: '2026-11-04T10:00:00.000Z',
+        snapshot: { sales: [{ id: 1 }], products: [] },
+      },
+    } as never, res as never);
+
+    expect(value.statusCode).toBe(200);
+    expect(mocks.update).toHaveBeenCalled();
+  });
+
   it('allows a sales operator to change sales but rejects an inventory change in the same snapshot', async () => {
     setupUser('Ventas', ['dashboard', 'ventas', 'clientes']);
     setupDatabase({ sales: [], products: [] });
