@@ -428,3 +428,19 @@ El workflow CI genera un informe mediante `npm audit --json` y luego ejecuta `np
 ### Alcance de la revisión de cadena de suministro
 
 Se leyeron los manifiestos y workflows completos en la rama de auditoría. Se buscaron archivos lockfile npm/yarn/pnpm y configuración `.npmrc`; las rutas consultadas devolvieron NOT_FOUND. La búsqueda de texto del repositorio no devolvió coincidencias para las cadenas consultadas de entorno/secretos, pero esta búsqueda no equivale a un escaneo exhaustivo de secretos ni demuestra que no existan secretos en historial, artefactos o configuración de proveedores. No se inspeccionaron valores de secretos. No se ejecutaron builds, instalación, auditoría de paquetes, ni acciones remotas. No se cambió código funcional ni configuración de producción.
+
+
+
+### DEPLOY-03 — Cabeceras HTTP de seguridad ausentes en respuestas públicas observadas
+
+Se consultó mediante el acceso autenticado de Vercel el dominio `https://difarmas-erp.vercel.app/` y los recursos estáticos referenciados por el HTML, todos con respuesta HTTP 200. En las tres respuestas se observó `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`. En las cabeceras devueltas no aparecen `Content-Security-Policy`, `X-Content-Type-Options`, `Referrer-Policy` ni `Permissions-Policy`. Tampoco se observó `X-Frame-Options`; para protección contra framing se recomienda definir `frame-ancestors` dentro de CSP, tras verificar que no haya integración legítima en iframes.
+
+**Severidad: media (defensa en profundidad).** Configurar cabeceras en una sola capa de Vercel, con CSP inicialmente en modo Report-Only y una lista de orígenes compatible con Supabase Auth, APIs y recursos realmente utilizados; luego pasar a enforcement tras pruebas. Añadir `X-Content-Type-Options: nosniff`, una `Referrer-Policy` restrictiva y una `Permissions-Policy` que deshabilite capacidades no utilizadas. No copiar una CSP genérica sin inventariar conexiones y scripts. No se modificó configuración ni se desplegó.
+
+### DEPLOY-04 — La página raíz responde 200 y publica el shell de inicio de FARMI
+
+La respuesta HTML de la raíz contiene el título DIFARMÁS ERP, un mensaje inicial de carga y referencias a los bundles JS/CSS. Los recursos referenciados respondieron 200. Esto confirma que el dominio sirve el shell y assets en la fecha de consulta, pero no acredita que React termine de iniciar, que el login funcione ni que los flujos de negocio sean operativos; esas verificaciones requieren pruebas funcionales con cuentas de prueba en un entorno controlado. No se enviaron credenciales ni se realizaron acciones autenticadas de negocio.
+
+### Alcance de la verificación HTTP
+
+Las observaciones corresponden al dominio `difarmas-erp.vercel.app` y a los tres recursos consultados el 4 de noviembre de 2026. No se comprobó un dominio personalizado ni cada deployment Preview; sus cabeceras pueden diferir. La comprobación de ausencia se limita a las cabeceras devueltas por estas respuestas. No se inspeccionaron valores de secretos, no se ejecutaron mutaciones y no se cambió la configuración de Vercel.
