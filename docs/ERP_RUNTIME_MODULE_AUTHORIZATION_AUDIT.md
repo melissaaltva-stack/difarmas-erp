@@ -388,3 +388,19 @@ La revisión de `api/store-catalog.ts` (SHA `b3f776147de3de0dd3a1625fd89bcc0297b
 El directorio `api/` de la rama contiene dos endpoints desplegables (`admin-users.ts` y `store-catalog.ts`) y una suite de pruebas (`admin-users.test.ts`). Se inspeccionaron los archivos completos y sus SHA actuales. La suite no cubre rate limiting, límites de tamaño de petición ni las carreras administrativas ya descritas en AUTHZ-15/16. No se ejecutaron pruebas dinámicas contra producción ni solicitudes de escritura.
 
 No se modificó código funcional, configuración, secretos, cuentas, sesiones ni datos de Supabase. No se aplicaron migraciones ni se inició un despliegue.
+
+
+
+### API-03 — Validación de entrada no está centralizada ni tiene límites de tamaño explícitos
+
+La lectura de `api/admin-users.ts` muestra que `getBody` acepta cualquier objeto y, si recibe una cadena JSON, convierte errores de parseo en un objeto vacío. Los campos se validan por acción, pero no hay un esquema central que rechace propiedades inesperadas ni límites explícitos para el tamaño del cuerpo, longitud máxima de contraseña/correo/identificador o cantidad de campos. El nombre sí se limita a 160 caracteres y los nombres de usuario tienen una expresión regular restrictiva; son controles positivos parciales.
+
+**Severidad: media (robustez y superficie de abuso).** Incorporar validación de esquema por acción, rechazar tipos y campos inesperados, fijar límites de longitud y tamaño de petición, y probar cuerpos malformados y excesivos. No aceptar que la validación del proveedor sustituya la validación del contrato HTTP. No se modificó el endpoint.
+
+### Cobertura de pruebas de la API administrativa
+
+Se leyó completa la suite `api/admin-users.test.ts` (SHA `c76f784ba4bf2c2993dfd217c866724beae24b78`). Los tests verifican el estado propio sin enumerar usuarios, ausencia y rechazo de token, unicidad atómica del nombre de usuario, denegación de listado a no administradores y rechazo cuando falta el claim activo. No cubren límites/rate limiting, bootstrap concurrente, carrera del último administrador, invitación y compensación, reset-password, actualización/desactivación, validación de payload ni tamaños extremos. No se ejecutó la suite en este entorno; esta sección describe únicamente los casos presentes en el archivo.
+
+La búsqueda de `vercel.json` en la rama devolvió NOT_FOUND y `vite.config.ts` solo configura la base de assets para Vercel/Pages. Esto no acredita ausencia de cabeceras HTTP efectivas: DEPLOY-03 sigue pendiente de una petición HTTP real a los dominios desplegados.
+
+No se modificó código, tests, configuración, secretos, usuarios ni datos de producción. No se inició un despliegue.
