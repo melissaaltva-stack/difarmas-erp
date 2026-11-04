@@ -1,8 +1,8 @@
 -- Farmi: enforce account status and read-only roles at the database boundary.
 -- Roles are read from trusted Supabase app_metadata, matching App.tsx.
 -- Existing account ownership and snapshot data are preserved.
--- Missing farmi_active claims fail closed. Current accounts were inventoried before
--- this tightening and all existing accounts explicitly carry farmi_active=true.
+-- Missing farmi_active claims fail closed. A complete account/session inventory
+-- is still required before applying this migration to the active project.
 
 drop policy if exists "erp_state_select_own" on public.erp_state;
 create policy "erp_state_select_own"
