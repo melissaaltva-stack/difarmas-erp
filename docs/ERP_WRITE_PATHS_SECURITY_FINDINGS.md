@@ -336,3 +336,47 @@ Se volvió a consultar el proyecto Supabase `nreumomoqiwgqbtnhbdy` mediante cons
 
 **Acción:** no se aplicaron migraciones, grants, cambios Auth ni escrituras. La corrección de RLS requiere una intervención autorizada en Supabase y verificación posterior de las cuentas existentes. La protección contra contraseñas filtradas debe activarse desde la configuración Auth del proyecto y validarse con el flujo de inicio de sesión.
 
+
+
+## Matriz efectiva de permisos de interfaz — revisión 2026-11-04
+
+### PERM-08 — Los permisos de módulo no distinguen lectura de escritura
+
+**Severidad: crítica para el rol Solo lectura; alta para roles funcionales. Estado: confirmado, no corregido.**
+
+En `src/App.tsx` la función `canSee(module)` comprueba únicamente la presencia del módulo en el arreglo de permisos. La misma condición controla la navegación y el montaje del módulo; no existe un permiso independiente de escritura.
+
+El rol `Solo lectura` en `api/admin-users.ts` recibe permisos para ventas, clientes, cotizaciones, inventario, compras, finanzas, cuentas por cobrar/pagar y reportes. Al montar esos módulos, `App.tsx` entrega callbacks/setters mutables, entre ellos:
+- POS/facturación: `onComplete={recordSale}`, `onUpdateInvoice={updateStandardInvoice}`, `onCreateCustomer`.
+- Clientes/cotizaciones: `setCustomers`, `setQuotes`/guardado de cotizaciones.
+- Inventario: apertura de `ProductModal` y `saveProduct`.
+- Compras: `setSuppliers`, `setRecords`, `onDispatch`, `onResolve`, `onReceive`.
+- Cuentas y finanzas: setters de saldos, transacciones, gastos, movimientos y cierres.
+
+Aunque algunos módulos tengan controles visuales particulares, la capa común no garantiza que un rol de solo lectura no reciba ni invoque callbacks de escritura. Esto se suma a WRITE-10: el snapshot remoto no aplica autorización por módulo en el servidor.
+
+**Corrección requerida:** introducir permisos explícitos `readModules` y `writeModules` (o un mapa de acciones) con validación autoritativa en endpoints/RPC/SQL para cada comando. La UI debe usar esos permisos para ocultar/deshabilitar controles, pero nunca como frontera de seguridad. Antes de migrar roles existentes, definir una matriz aprobada y preservar el acceso de lectura actual sin conceder escritura implícita.
+
+**No se cambió la matriz ni se restringió el rol automáticamente:** el modelo actual no contiene la distinción lectura/escritura y modificarlo sin una migración coordinada podría bloquear tareas legítimas o dejar rutas de escritura sin protección.
+
+### PERM-09 — Los módulos financieros reciben setters sin permiso de acción específico
+
+**Severidad: alta. Estado: confirmado, no corregido.**
+
+La comprobación `activeAllowed` valida la visibilidad de la sección financiera (por ejemplo `finanzas`, `cuentas_cobrar`, `cuentas_pagar`), pero los módulos montados reciben setters para colecciones financieras completas. No hay validación por operación en el servidor ni en el hook de persistencia. La separación visual de secciones no evita que el cliente altere el snapshot JSON completo.
+
+**Corrección requerida:** endpoints transaccionales por acción (gasto, cobro, pago, movimiento, cierre) que validen el claim y el permiso correspondiente, saldo vigente, idempotencia y concurrencia; después retirar a roles funcionales la escritura directa del snapshot completo.
+
+### PERM-10 — Inventario y compras comparten callbacks de edición
+
+**Severidad: alta. Estado: confirmado, no corregido.**
+
+El modal global `ProductModal` se abre desde inventario y desde compras. La autorización para abrirlo depende del estado global `showForm`, y el guardado usa `saveProduct`; no se comprueba un permiso de escritura específico de inventario/compras en el callback común. Los permisos `canSee('inventario')` y `canSee('compras')` no expresan autorización para editar producto o recibir compra.
+
+**Corrección requerida:** validar permisos de acción en el handler común y en el backend; distinguir edición de catálogo, recepción de compra y actualización de costo.
+
+### Límites de esta revisión
+
+- Revisión estática de `App.tsx`, `api/admin-users.ts` y la matriz de roles; no se ejecutaron pruebas con sesiones reales ni escrituras de prueba.
+- No se modificaron cuentas, datos, Auth, RLS, grants, políticas ni configuración de Supabase.
+- No se alteró `main` ni se desplegó a producción.
