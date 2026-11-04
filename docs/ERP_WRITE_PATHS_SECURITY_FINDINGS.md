@@ -304,7 +304,7 @@ Si no existe snapshot remoto y quedan claves ERP locales sin marcador de propiet
 
 **Alcance:** no se borran ni se renombran datos locales. No se implementó una migración automática de registros antiguos porque no hay evidencia confiable para asignarles propietario. La recuperación de una caché sin propietario debe hacerse de forma deliberada y con verificación de identidad.
 
-**Verificación pendiente:** CI/build/tests y Preview para el commit nuevo. No se modificó Supabase ni producción.
+**Verificación:** GitHub Actions run `41746322203` para el commit de código `f44cc38ad1f1a3dd62db63d035f7b88f42d91529` completó `npm run build` y `npm test` correctamente. No se ha confirmado un Preview Vercel para este commit; el Preview READY más reciente continúa ligado al commit anterior `58bd65565ec6b39e31809740953d2c2827ff3df9`. No se modificó Supabase ni producción.
 
 
 ### LOCAL-05 — Caché del ERP separada por cuenta
