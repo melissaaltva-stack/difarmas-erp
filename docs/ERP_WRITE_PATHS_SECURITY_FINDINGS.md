@@ -838,3 +838,38 @@ La aplicación obtiene `farmi_role`, `farmi_permissions` y `farmi_active` de `us
 **Acción necesaria:** definir y medir la ventana máxima aceptable de revocación; forzar refresh de sesión al recibir cambios de auth y limpiar estado local al detectar cuenta inactiva; para operaciones sensibles, consultar autorización vigente en servidor/base de datos o usar RPC que valide un estado revocable y no dependa exclusivamente de claims antiguos. Probar desactivación y reducción de permisos mientras hay otra sesión abierta, tanto antes como después del refresh.
 
 **Límite:** no se intentó mantener acceso tras una desactivación real y no se modificó la configuración de expiración de tokens ni la base activa.
+
+
+## SUPABASE-LIVE-02 — El control de contraseña filtrada de Supabase Auth está desactivado
+
+**Severidad: media. Estado: confirmado por Security Advisor del proyecto activo el 2026-11-04.**
+
+El Security Advisor de Supabase reporta `auth_leaked_password_protection` como WARN: la protección que compara contraseñas nuevas contra credenciales comprometidas (Have I Been Pwned) está deshabilitada.
+
+**Impacto:** usuarios podrían establecer contraseñas que ya aparecen en conjuntos conocidos de credenciales comprometidas. La política de longitud mínima aplicada por la aplicación no detecta por sí sola contraseñas reutilizadas o filtradas.
+
+**Acción necesaria:** activar *Leaked Password Protection* en la configuración de Authentication/Password Security del proyecto Supabase y validar el flujo de alta, invitación, cambio y recuperación de contraseña. No cambiar esta configuración desde el código del ERP: es una opción de Auth del proyecto y debe verificarse después de activarla.
+
+Referencia de remediación: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
+
+## SUPABASE-LIVE-03 — No hay historial de migraciones registrado para el proyecto activo
+
+**Severidad: alta para gobernanza de cambios. Estado: confirmado por consulta de metadatos el 2026-11-04.**
+
+La herramienta de migraciones de Supabase devolvió una lista vacía para el proyecto activo, aunque el repositorio contiene scripts SQL de seguridad. Por tanto, no existe evidencia en el historial administrado de migraciones de que las políticas y funciones versionadas en Git se hayan aplicado mediante ese mecanismo.
+
+**Impacto:** el esquema real puede divergir del repositorio; una revisión basada solo en archivos SQL no demuestra qué políticas o funciones están efectivamente instaladas. También complica reproducir, auditar y revertir cambios.
+
+**Acción necesaria:** inventariar el esquema y las políticas actuales mediante metadatos de solo lectura y reconciliarlos con migraciones versionadas. No ejecutar una migración de baseline ni marcar migraciones históricas como aplicadas sin comparar el SQL real y acordar una estrategia de recuperación. Mantener sin cambios los datos de negocio.
+
+## AUTHZ-05 — La política propuesta por rol no equivale a autorización por permiso de módulo
+
+**Severidad: crítica. Estado: confirmado por revisión del SQL versionado el 2026-11-04; no se afirma que ese SQL esté aplicado.**
+
+La migración `202611020001_erp_state_role_write_guard.sql` limita INSERT/UPDATE a cuentas activas con roles reconocidos, pero no compara las claves JSONB modificadas con `app_metadata.farmi_permissions`. Su propio comentario indica que no implementa autorización por módulo. Además, un INSERT inicial no tiene OLD.state para comparar y la política propuesta no valida que el snapshot inicial sea una plantilla canónica.
+
+**Impacto:** incluso después de aplicar esa migración, cualquier rol incluido en la lista de escritura podría, sujeto a los grants y políticas efectivos, escribir un snapshot con cambios en módulos ajenos a sus permisos. El primer INSERT requiere un flujo de inicialización separado para no aceptar datos arbitrarios.
+
+**Acción necesaria:** no presentar esta migración como solución completa de permisos. Diseñar y probar una ruta de inicialización controlada, autorización de claves realmente modificadas con lista de permisos confiables, rechazo de claves desconocidas y operaciones transaccionales para dependencias sensibles. Probar en un Postgres aislado antes de aplicar cualquier cambio al proyecto activo.
+
+**Verificación limitada:** la consulta de metadatos de políticas/grants mediante SQL fue bloqueada por controles de la herramienta en esta sesión. No se obtuvo una lectura nueva de las políticas activas; se evita inferir su estado actual a partir del SQL del repositorio.
