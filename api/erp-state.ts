@@ -94,6 +94,75 @@ function canWriteKey(key: string, permissions: Set<string>): boolean {
   if (!required) return false;
   return required.some(permission => permissions.has(permission));
 }
+function rowMap(value: unknown): Map<string, unknown> {
+  if (!Array.isArray(value)) return new Map();
+  return new Map(value.filter(isRecord).map(row => [String(row.id), row]));
+}
+function changedRows(previous: unknown, next: unknown): Array<{ before?: unknown; after?: unknown }> {
+  const before = rowMap(previous);
+  const after = rowMap(next);
+  return [...new Set([...before.keys(), ...after.keys()])]
+    .filter(id => !jsonEqual(before.get(id), after.get(id)))
+    .map(id => ({ before: before.get(id), after: after.get(id) }));
+}
+function canWriteChange(key: string, previous: unknown, next: unknown, permissions: Set<string>): boolean {
+  if (key === 'products') {
+    for (const change of changedRows(previous, next)) {
+      if (!change.before || !change.after) {
+        if (!permissions.has('inventario') && !permissions.has('compras')) return false;
+        continue;
+      }
+      const before = change.before as Record<string, unknown>;
+      const after = change.after as Record<string, unknown>;
+      const fields = [...new Set([...Object.keys(before), ...Object.keys(after)])]
+        .filter(field => !jsonEqual(before[field], after[field]));
+      const allowedFields = new Set(['stock', 'cost', 'lot', 'expiry', 'supplier']);
+      if (fields.every(field => field === 'stock') && permissions.has('ventas')) continue;
+      if (fields.every(field => allowedFields.has(field)) && permissions.has('compras')) continue;
+      if (!permissions.has('inventario')) return false;
+    }
+    return true;
+  }
+  if (key === 'receivables' || key === 'payables') {
+    for (const change of changedRows(previous, next)) {
+      if (!change.before) {
+        const allowed = key === 'receivables'
+          ? permissions.has('ventas') || permissions.has('cuentas_cobrar') || permissions.has('finanzas')
+          : permissions.has('compras') || permissions.has('cuentas_pagar') || permissions.has('finanzas');
+        if (!allowed) return false;
+      } else if (!permissions.has(key === 'receivables' ? 'cuentas_cobrar' : 'cuentas_pagar') && !permissions.has('finanzas')) {
+        return false;
+      }
+    }
+    return true;
+  }
+  if (key === 'paymentTransactions') {
+    for (const change of changedRows(previous, next)) {
+      if (change.before || !change.after || !isRecord(change.after)) return false;
+      const type = change.after.type;
+      const allowed = type === 'Cobro'
+        ? permissions.has('cuentas_cobrar') || permissions.has('finanzas')
+        : type === 'Pago proveedor'
+          ? permissions.has('cuentas_pagar') || permissions.has('finanzas')
+          : permissions.has('finanzas');
+      if (!allowed) return false;
+    }
+    return true;
+  }
+  if (key === 'sales' || key === 'cashClosures' || key === 'cashMovements' ||
+      key === 'expenses' || key === 'inventoryMovements' || key === 'purchaseCostHistory' ||
+      key === 'missingProductRequests' || key === 'saleAdjustments') {
+    const changes = changedRows(previous, next);
+    if (changes.some(change => Boolean(change.before))) return false;
+    if (key === 'inventoryMovements') {
+      return permissions.has('inventario') || permissions.has('ventas') || permissions.has('compras');
+    }
+    if (key === 'purchaseCostHistory' || key === 'missingProductRequests') return permissions.has('compras');
+    if (key === 'saleAdjustments' || key === 'sales') return permissions.has('ventas');
+    return canWriteKey(key, permissions);
+  }
+  return canWriteKey(key, permissions);
+}
 function validSnapshot(value: unknown): value is State {
   if (!isRecord(value)) return false;
   return Object.keys(value).every(key => Object.prototype.hasOwnProperty.call(KEY_MODULES, key));
@@ -185,7 +254,7 @@ export default async function handler(req: Req, res: Res) {
     return reply(res, 409, { error: 'Los datos cambiaron desde otra sesión. Recarga el ERP antes de guardar.' });
   }
   const changed = changedKeys(current.state, nextState);
-  const unauthorized = changed.filter(key => !canWriteKey(key, permissions));
+  const unauthorized = changed.filter(key => !canWriteChange(key, current.state[key], nextState[key], permissions));
   if (unauthorized.length) {
     return reply(res, 403, { error: 'Tu cuenta no tiene permisos para modificar uno o más módulos incluidos en este guardado.' });
   }
