@@ -170,20 +170,21 @@ export default async function handler(req: Req, res: Res) {
       const metadata = claimForRole(role, permissions, true);
       let newUser: User | null = null;
       if (action === 'create' || action === 'create-username') {
-        if (action === 'create-username') {
-          const users = await listAllUsers();
-          const usernameTaken = users.some(user =>
-            String(user.user_metadata?.username ?? '').toLowerCase() === username ||
-            (user.email ?? '').toLowerCase() === email
-          );
-          if (usernameTaken) return reply(res, 409, { error: 'Ese nombre de usuario ya está ocupado. Elige otro.' });
-        }
+        // Username accounts map deterministically to a synthetic Auth email.
+        // Supabase Auth enforces uniqueness for that email atomically; a
+        // listUsers() pre-check would race under concurrent account creation.
         const { data, error } = await adminClient.auth.admin.createUser({
           email, password, email_confirm: true,
           user_metadata: action === 'create-username' ? { full_name: name, username } : { full_name: name },
           app_metadata: metadata,
         });
-        if (error || !data.user) { console.error('[admin-users] Account creation failed', error); return reply(res, 400, { error: 'No se pudo crear la cuenta. Verifica los datos y la configuración del servidor.' }); }
+        if (error || !data.user) {
+          if (action === 'create-username' && error && ['email_exists', 'user_already_exists'].includes(String((error as { code?: string }).code ?? ''))) {
+            return reply(res, 409, { error: 'Ese nombre de usuario ya está ocupado. Elige otro.' });
+          }
+          console.error('[admin-users] Account creation failed', error);
+          return reply(res, 400, { error: 'No se pudo crear la cuenta. Verifica los datos y la configuración del servidor.' });
+        }
         newUser = data.user;
       } else {
         // Never reflect an arbitrary request Origin into an Auth redirect.
