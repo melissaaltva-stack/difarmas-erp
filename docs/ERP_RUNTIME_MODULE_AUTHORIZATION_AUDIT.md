@@ -404,3 +404,27 @@ Se leyó completa la suite `api/admin-users.test.ts` (SHA `c76f784ba4bf2c2993dfd
 La búsqueda de `vercel.json` en la rama devolvió NOT_FOUND y `vite.config.ts` solo configura la base de assets para Vercel/Pages. Esto no acredita ausencia de cabeceras HTTP efectivas: DEPLOY-03 sigue pendiente de una petición HTTP real a los dominios desplegados.
 
 No se modificó código, tests, configuración, secretos, usuarios ni datos de producción. No se inició un despliegue.
+
+
+
+### SUPPLY-03 — No lockfile is versionado en la raíz del repositorio
+
+Se consultó la rama `security/erp-state-permission-matrix` y se buscaron `package-lock.json`, `npm-shrinkwrap.json`, `pnpm-lock.yaml` y `yarn.lock`; ninguno existe en la raíz. Tampoco se encontró `.npmrc`. El workflow de CI ejecuta `npm install` y el manifiesto `package.json` declara `latest` para Vite, React, TypeScript, plugin React, Lucide y tipos React. El resultado es una instalación no reproducible y una superficie de dependencia que puede cambiar sin un commit del proyecto.
+
+**Severidad: alta (cadena de suministro y reproducibilidad).** Fijar versiones compatibles, generar y versionar un único lockfile npm, revisar el diff de dependencias y migrar ambos workflows a `npm ci`. Hacerlo en un cambio aislado con build y tests; no actualizar masivamente paquetes durante esta auditoría.
+
+### SUPPLY-04 — GitHub Actions se referencia mediante etiquetas mutables
+
+Los workflows `.github/workflows/ci.yml` (SHA `6026e790c0587d17b207aa718a95d84d0bcaf452`) y `.github/workflows/deploy-pages.yml` (SHA `9aad1c6bc7b183f26b7e061b50b54ed1adc7d563`) utilizan `actions/checkout@v4`, `actions/setup-node@v4`, `actions/upload-pages-artifact@v3` y `actions/deploy-pages@v4`, no SHA completos. CI tampoco declara permisos mínimos explícitos a nivel de job/workflow; Pages sí declara `contents: read`, `pages: write` e `id-token: write`. Una etiqueta puede moverse a otra revisión y los permisos predeterminados dependen de la configuración del repositorio.
+
+**Severidad: media.** Fijar cada acción a un SHA completo oficial verificado, conservar comentario de versión legible y declarar permisos mínimos para cada job. No se alteraron los workflows ni se ejecutó ningún despliegue.
+
+### SUPPLY-05 — La auditoría npm no se puede reproducir localmente desde el estado versionado
+
+El workflow CI genera un informe mediante `npm audit --json` y luego ejecuta `npm audit --audit-level=moderate`, lo cual es un control positivo de detección. Sin embargo, al no existir lockfile, el conjunto auditado depende de las versiones resueltas en esa ejecución; además, el informe JSON se genera como archivo de trabajo y no se publica como artefacto en el YAML inspeccionado. No se puede concluir a partir del archivo del workflow que el árbol actual esté libre de vulnerabilidades: hace falta una ejecución CI exitosa con dependencias fijadas y revisar sus resultados.
+
+**Severidad: alta junto con SUPPLY-01/03.** Tras fijar dependencias, conservar el resumen de auditoría como artefacto de CI o salida accesible y establecer un proceso de revisión/remediación. No se ejecutó `npm install`, `npm audit` ni se modificaron dependencias en esta ronda.
+
+### Alcance de la revisión de cadena de suministro
+
+Se leyeron los manifiestos y workflows completos en la rama de auditoría. Se buscaron archivos lockfile npm/yarn/pnpm y configuración `.npmrc`; las rutas consultadas devolvieron NOT_FOUND. La búsqueda de texto del repositorio no devolvió coincidencias para las cadenas consultadas de entorno/secretos, pero esta búsqueda no equivale a un escaneo exhaustivo de secretos ni demuestra que no existan secretos en historial, artefactos o configuración de proveedores. No se inspeccionaron valores de secretos. No se ejecutaron builds, instalación, auditoría de paquetes, ni acciones remotas. No se cambió código funcional ni configuración de producción.
