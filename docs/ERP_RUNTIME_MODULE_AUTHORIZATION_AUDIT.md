@@ -161,3 +161,38 @@ La función cliente `resolveSupplierReturn` cambia el estado a Rechazado mediant
 ### Estado de implementación
 
 No se cambió código funcional ni se aplicó ninguna migración. Las correcciones anteriores requieren diseñar las RPC para despacho, cambio recibido y rechazo, y fortalecer la RPC de nota de crédito usando los datos originales de compra y el historial de devoluciones. Evitar desplegar estas operaciones hasta contar con pruebas de concurrencia, reintentos, doble envío y rollback.
+
+
+### SALES-12 — Registro de venta, inventario y cuentas por cobrar no es transaccional
+
+La revisión de `recordSale` en `src/hooks/useErpState.ts` confirma que la venta se valida y construye en el navegador, y luego se actualizan por separado productos, movimientos de inventario, ventas y cuentas por cobrar. `saleInProgress` y la comprobación de número de factura duplicado son locales a la sesión; no existe una reserva ni restricción única compartida entre dispositivos. Los importes, impuestos, descuentos, costo y cantidades de `CartItem`/`StandardInvoiceDetails` llegan desde el cliente y no se recalculan en un servidor de confianza.
+
+**Severidad: crítica para integridad contable y de inventario.** Una carrera entre dispositivos puede vender las mismas existencias, duplicar una factura o dejar una venta sin su movimiento/cuenta por cobrar. La solución requiere una operación transaccional de servidor con idempotency key, bloqueo de fila, validación de existencias y precios/costos contra el catálogo actual, cálculo fiscal en servidor y escritura conjunta de venta, movimientos, stock y cuenta por cobrar. La numeración fiscal también debe validarse con los parámetros de autorización configurados antes de emitir.
+
+### REFUND-09 — Ajustes de venta dependen de importes y costos suministrados por el cliente
+
+`recordSaleAdjustment` comprueba consistencia aritmética básica y cantidades pendientes usando el historial del snapshot, pero toma `unitPrice`, `unitTaxAmount` y `unitCost` del objeto de ajuste recibido del cliente. Luego actualiza por separado inventario, movimientos, cuentas por cobrar, movimientos de caja y ajustes de venta. `saleAdjustmentInProgress` solo impide concurrencia dentro de una instancia.
+
+**Severidad: crítica.** Un usuario o cliente modificado puede alterar los importes reembolsados, el costo usado para valorar el inventario o las cantidades devueltas; dos sesiones pueden procesar ajustes concurrentes sobre la misma venta. Debe sustituirse por una RPC transaccional que obtenga líneas originales de la venta, derive precios/impuestos/costos desde esos registros, valide cantidades devueltas acumuladas por `saleLineId`, impida superar cantidades vendidas, aplique reglas de devolución de stock por línea y actualice simultáneamente saldo, reembolso, caja e inventario.
+
+### INV-09 — Edición manual de existencias y eliminación física sin autorización de servidor
+
+`saveProduct` permite cambiar directamente `stock` y crea un movimiento descriptivo desde el cliente; `deleteProduct` elimina físicamente el producto del snapshot y registra un ajuste de salida si tenía stock. No existe evidencia de actor, motivo obligatorio, aprobador ni protección contra referencias históricas. La edición no está respaldada por una transacción de inventario.
+
+**Severidad: alta.** Se recomienda reemplazar cambios manuales de stock por ajustes transaccionales con motivo, actor y aprobación según umbral; los productos referenciados por ventas/compras/movimientos deben archivarse, no borrarse físicamente. Mantener la compatibilidad de lectura de registros históricos.
+
+### PUR-08 — Recepción de compra aplica varios efectos separados
+
+`receivePurchase` modifica stock y movimientos, crea la cabecera de compra, aplica créditos de proveedor, añade historial de costo y puede crear cuenta por pagar mediante setters separados. La clave de factura duplicada y `purchaseInProgress` se validan localmente. El total ingresado puede sustituir el total calculado de líneas sin reconciliación en esta función.
+
+**Severidad: crítica para integridad de compras.** Se confirma que el proceso no es atómico ni idempotente entre dispositivos. La RPC de recepción debe verificar proveedor/factura, detalle de líneas, cantidades, costos, impuestos, total y crédito disponible; crear compra, historial de costos, movimientos, existencias y cuenta por pagar en una única transacción con clave de idempotencia.
+
+### Prioridad de remediación consolidada
+
+1. Operaciones de servidor transaccionales para venta, recepción de compra, devolución/ajuste de venta y devolución a proveedor.
+2. Idempotencia y unicidad de documento/factura en base de datos, no en `useRef`.
+3. Recalcular importes, impuestos, costos y cantidades desde registros originales; nunca confiar en importes del cliente.
+4. Auditoría inmutable de actor, fecha, motivo, aprobador y referencias de movimientos.
+5. Migrar gradualmente sin cambiar el formato del snapshot hasta contar con pruebas de compatibilidad, concurrencia, rollback y recuperación.
+
+No se modificó código funcional ni se ejecutaron migraciones. Los hallazgos se basan en lectura de código y no constituyen una prueba dinámica de explotación.
