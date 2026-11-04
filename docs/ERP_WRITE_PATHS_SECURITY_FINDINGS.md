@@ -318,3 +318,21 @@ Al cambiar de cuenta, si existe un propietario anterior identificado, el sistema
 **Alcance y límite:** esto reduce la mezcla accidental entre cuentas dentro de la aplicación. No cifra los datos del navegador ni sustituye la autorización del servidor; un usuario con acceso al mismo perfil del navegador o herramientas de desarrollo aún puede inspeccionar el almacenamiento local. Los datos remotos y las reglas RLS siguen siendo la frontera de seguridad principal.
 
 **Verificación pendiente:** CI/build/tests y Preview para el commit nuevo. No se modificó Supabase ni producción.
+
+
+### DB-04 — Revalidación del estado activo de Supabase (2026-11-04)
+
+**Estado: riesgo confirmado en la base activa; corrección preparada, no aplicada.**
+
+Se volvió a consultar el proyecto Supabase `nreumomoqiwgqbtnhbdy` mediante consultas de catálogo de solo lectura y Security Advisor:
+
+- `public.erp_state` tiene RLS habilitado, con una fila por usuario (3 filas observadas) y políticas SELECT/INSERT/UPDATE.
+- Las tres políticas activas todavía usan `coalesce(farmi_active, true)`; un JWT autenticado sin el claim se trata como activo. INSERT/UPDATE también permiten los roles Administrador, Supervisor, Ventas, Compras y Finanzas.
+- La migración versionada `202611020001_erp_state_role_write_guard.sql`, que cambia el valor por defecto a falso y aplica autorización estricta, **no está aplicada**. El inventario de migraciones de Supabase devolvió una lista vacía.
+- `public.resolve_supplier_credit_note(bigint)` no existe en la base activa; la migración correspondiente sigue siendo solo código preparado.
+- `public.store_products` tiene RLS habilitado y una única política de lectura de productos publicados. Los grants INSERT/UPDATE/DELETE existentes para `anon` y `authenticated` no permiten por sí solos escribir porque no existen políticas RLS de escritura. Se recomienda retirar esos grants innecesarios, pero no se modificaron.
+- Security Advisor sigue reportando `auth_leaked_password_protection` desactivado.
+- Performance Advisor reporta tres políticas de `erp_state` con evaluación de funciones Auth por fila. Es una optimización, no una vulnerabilidad de acceso.
+
+**Acción:** no se aplicaron migraciones, grants, cambios Auth ni escrituras. La corrección de RLS requiere una intervención autorizada en Supabase y verificación posterior de las cuentas existentes. La protección contra contraseñas filtradas debe activarse desde la configuración Auth del proyecto y validarse con el flujo de inicio de sesión.
+
