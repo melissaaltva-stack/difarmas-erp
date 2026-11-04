@@ -739,3 +739,46 @@ La migración del repositorio `202611020001_erp_state_role_write_guard.sql` prop
 **Acción segura:** mantener ambas migraciones sin aplicar en la base activa hasta disponer de un entorno aislado sin coste adicional o un procedimiento de staging aprobado, validar compatibilidad y ejecutar pruebas de integración PostgreSQL. Después, planificar el despliegue de forma coordinada con la aplicación. No revocar INSERT/UPDATE ni activar el trigger de matriz de permisos mientras el cliente de producción siga dependiendo de escrituras directas del snapshot.
 
 **Alcance de la verificación:** consultas de catálogo sobre existencia de función, políticas RLS, privilegios de tabla e índices; no se consultaron filas de `erp_state`, usuarios ni datos comerciales. No se ejecutó DDL, DML, migración ni cambio de configuración.
+
+
+## FIN-03 — Cobros y pagos actualizan saldos e historial en dos escrituras de estado cliente
+
+**Severidad: crítica para integridad financiera. Estado: confirmado por inspección estática el 2026-11-04.**
+
+En `src/components/Finance.tsx`, `collect` actualiza `receivables[].paid` y por separado antepone un registro a `paymentTransactions`. `paySupplier` hace lo mismo con `payables[].paid` y el historial de pagos. El bloqueo `paymentLocks` vive en un `useRef` del componente y se limpia cuando cambian las colecciones. Los IDs se generan en el navegador.
+
+**Impacto:** las dos mutaciones no son una transacción indivisible ni una operación idempotente en base de datos. Dos sesiones/dispositivos pueden leer el mismo saldo y registrar cobros/pagos concurrentes; también puede persistirse un saldo sin su movimiento correspondiente si el estado se guarda entre cambios o falla parte de la sincronización. El bloqueo local no coordina dispositivos y no impide peticiones directas.
+
+**Acción necesaria:** RPC transaccionales separados para cobrar una cuenta y pagar una cuenta por pagar; bloquear la fila de cuenta, comprobar saldo vigente, monto positivo y método/referencia, registrar movimiento inmutable con actor/fecha generados en servidor, y usar una clave de idempotencia única. El saldo debe derivarse/actualizarse dentro de la misma transacción. No activar hasta migrar el cliente y probar en staging.
+
+## CASH-10 — El cierre diario depende de datos y bloqueos del navegador
+
+**Severidad: crítica para integridad de caja. Estado: confirmado por inspección estática el 2026-11-04.**
+
+En `src/components/Finance.tsx`, `closeCash` calcula el cierre con valores ya agregados en el cliente (`daySales`, `dayCollections`, `dayExpenses`, `daySupplierPayments`, compras en efectivo y movimientos). La apertura se mantiene en estado React (`opening`) y se inicializa desde el último cierre visible; el control de duplicado consulta `closures` cargados en esa sesión. `closingRef` solo bloquea doble clic en el componente y se reinicia al cambiar `closures`. Finalmente, el cierre se añade mediante `setClosures`, sin confirmación transaccional de servidor.
+
+**Impacto:** dos sesiones pueden intentar cerrar el mismo día; una sesión desactualizada puede calcular cifras incompletas; el navegador puede alterar la apertura, conteo o datos fuente antes de guardar. La comprobación `alreadyClosedToday` no es una restricción única en PostgreSQL y no protege contra concurrencia.
+
+**Acción necesaria:** cierre mediante RPC transaccional con una restricción única por cuenta/fecha/turno; calcular totales desde operaciones verificadas en base de datos, usar saldo de apertura derivado del cierre anterior, validar conteo y diferencia, registrar actor y fecha de servidor, y conservar ajustes con motivo/evidencia. Rechazar cierres repetidos de forma idempotente. Mantener la pantalla actual como captura de conteo, no como autoridad del cálculo.
+
+## SALES-11 — Validaciones de venta e inventario son exclusivamente cliente
+
+**Severidad: alta. Estado: confirmado por inspección estática el 2026-11-04.**
+
+En `src/hooks/useErpState.ts`, `recordSale` comprueba cantidades, existencia disponible, duplicidad de número de factura y aplica `applySaleToInventory` en memoria; después actualiza por separado productos, movimientos, ventas y cuentas por cobrar mediante setters. El precio y los datos de líneas llegan desde objetos del cliente. No se encontró en esta ruta una transacción de base de datos que vuelva a validar precio, stock, total, número de factura e idempotencia.
+
+**Impacto:** esas comprobaciones mejoran la experiencia normal, pero no resisten un cliente manipulado ni evitan ventas concurrentes desde dos dispositivos que consuman el mismo stock. Las escrituras del snapshot completo no hacen atómica la venta y su movimiento de inventario.
+
+**Acción necesaria:** RPC de registro de venta que reciba líneas y una clave idempotente, valide permisos y precios autorizados, bloquee/actualice stock en transacción, calcule importes en servidor, genere la venta y sus movimientos y, si corresponde, la cuenta por cobrar. Rechazar stock insuficiente y número fiscal duplicado con índices/constraints de base de datos.
+
+## PURCHASE-07 — Recepción de compra y efectos derivados se construyen en el cliente
+
+**Severidad: alta. Estado: confirmado por inspección estática el 2026-11-04.**
+
+En `src/hooks/useErpState.ts`, `receivePurchase` valida cantidades y costos no negativos, comprueba duplicidad de factura contra el arreglo local `purchases`, calcula el total a partir de líneas pero acepta `enteredTotal` como total final si es un número finito no negativo. Después actualiza en memoria inventario, movimientos, compras, créditos aplicados, historial de costos y cuentas por pagar mediante setters separados.
+
+**Impacto:** la comprobación de factura duplicada es local; el total aceptado puede diferir de la suma de líneas y no se valida en servidor; la recepción y sus efectos contables/inventario no son atómicos. Un error o concurrencia puede dejar colecciones incoherentes.
+
+**Acción necesaria:** RPC de recepción que valide proveedor, factura única por proveedor, líneas, cantidades, costos, impuestos/descuentos y total conciliado; aplique créditos disponibles y genere inventario, movimientos, costo histórico y cuenta por pagar en una única transacción con clave idempotente. Antes de imponer conciliación exacta, documentar y modelar impuestos, fletes, descuentos y otros cargos legítimos que puedan explicar diferencias.
+
+**Límite de la revisión:** estos cuatro hallazgos proceden de lectura de código y no de una prueba de explotación ni de concurrencia real. No se modificó el código operativo ni se cambiaron datos de Supabase.
