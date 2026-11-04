@@ -536,3 +536,15 @@ Se inspeccionaron el hook de estado, `inventoryService.ts`, `saleAdjustmentServi
 ### Evidencia y límites de la revisión financiera complementaria
 
 Se inspeccionó `src/components/Finance.tsx` y se contrastó con los hallazgos previos FIN-06 a FIN-10. La interfaz valida montos positivos, saldo disponible, evita doble clic local y calcula el efectivo esperado a partir de ventas, cobros, gastos, compras, pagos y movimientos del día. Esos controles no proporcionan bloqueo multiusuario, unicidad persistente ni autorización de servidor. No se ejecutaron pruebas dinámicas, no se crearon cobros/pagos/cierres, no se aplicaron migraciones y no se modificaron datos de Supabase ni producción.
+
+### AUTH-21 — La comprobación inicial de sesión no gestionaba rechazos inesperados
+
+**Evidencia:** `src/components/AuthGate.tsx`. La inicialización ejecutaba `supabase.auth.getSession().then(...)` sin manejar el rechazo de la promesa. Un fallo inesperado podía dejar el estado `checking` activo indefinidamente. Se corrigió en el commit `5d0a4db9298cb6e1e3fae44995ddad66cfcf8250`: el rechazo ahora mantiene `user` en `null`, muestra un mensaje genérico y finaliza el estado de comprobación. La ruta de error no concede acceso.
+
+**Severidad: media (disponibilidad del acceso). Estado: corrección de código aplicada en la rama de auditoría; pendiente de build y prueba automatizada/dinámica.** No se modificaron sesiones, cuentas ni datos de Supabase y no se desplegó a producción.
+
+### Alcance y límites de la revisión de autenticación
+
+El cliente Supabase configura persistencia, renovación automática y detección de enlaces; `AuthGate` escucha cambios de autenticación y desuscribe el listener al desmontarse. `App.tsx` exige `farmi_active === true` para habilitar módulos. El guard visual de `AuthGate`, en cambio, muestra «Acceso desactivado» cuando el claim es explícitamente `false`; la denegación de un claim ausente depende de las capas posteriores y de RLS. La caché de datos permanece en `localStorage` tras cerrar sesión (LOCAL-04).
+
+La revisión fue estática y la corrección AUTH-21 aún no cuenta con pruebas dinámicas. No se inspeccionaron tokens ni datos personales, no se usaron cuentas reales, no se ejecutaron operaciones de negocio ni se modificaron datos o configuración de producción.
