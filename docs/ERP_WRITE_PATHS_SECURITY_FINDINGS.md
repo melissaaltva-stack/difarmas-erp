@@ -943,3 +943,21 @@ Si la persona cierra sesión antes de que venza el debounce, el temporizador pue
 **Acción necesaria:** implementar un flujo explícito de salida que distinga entre guardado pendiente, guardado confirmado y error. Antes de cerrar sesión debe cancelar el debounce y ejecutar/esperar el guardado del snapshot más reciente; si falla, informar claramente y permitir elegir entre permanecer en la sesión o salir asumiendo que los cambios pendientes no están sincronizados. El flujo debe impedir que un snapshot antiguo se guarde después del más reciente y probarse con red lenta, desconexión, guardado en curso y cierre inmediato después de editar.
 
 **Límite:** no se modificó el comportamiento de cierre de sesión ni se realizaron pruebas con cuentas reales. El hallazgo está confirmado por la secuencia de cleanup del efecto y el manejador actual del botón; la corrección requiere pruebas de integración para evitar pérdida de datos o bloquear el cierre de sesión.
+
+
+## Cierre de sesión y sincronización — 2026-11-04
+
+### LOGOUT-02 — Mitigación implementada; pruebas funcionales pendientes
+
+**Estado de código:** corregido en el commit `9765f32ae4df56b56549c53786de4b3f467a31c0`.
+
+- `src/hooks/useErpState.ts` expone `flushPendingSave()`: cancela el debounce pendiente, envía el snapshot actual y solo resuelve cuando termina la promesa de guardado.
+- `src/services/remoteErpState.ts` serializa `saveErpSnapshot` por usuario mediante `saveQueues`. Por ello, el flush se encola después de cualquier guardado que ya esté en curso en esta pestaña.
+- `src/App.tsx` espera el flush antes de llamar a `signOut()`. Si falla, mantiene la sesión y ofrece una salida explícita sin sincronizar.
+- El guardado conserva el control optimista de revisión `updated_at`; si otra sesión modificó la fila, el flush falla en vez de sobrescribir silenciosamente la versión más reciente.
+
+**Verificación de despliegue:** el Preview de Vercel asociado al commit está en estado `READY`; el chequeo combinado de GitHub para ese commit reporta `success`. URL de Preview: https://difarmas-bijahjz70-melissaaltva-2389.vercel.app
+
+**Pendiente antes de cerrar el hallazgo:** pruebas funcionales con usuarios de prueba para (1) edición y salida inmediata antes de vencer el debounce, (2) guardado anterior todavía en curso, (3) error de red con sesión retenida, (4) salida explícita sin sincronizar y (5) cambio de cuenta en el mismo navegador. El estado READY demuestra que el build/despliegue terminó, no que estos escenarios se hayan ejecutado.
+
+**Alcance:** no se aplicaron cambios a Supabase, no se alteraron datos ni esquema, y no se promovió la rama a producción.
