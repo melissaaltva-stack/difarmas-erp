@@ -430,3 +430,42 @@ El commit `162feadff17ed53d45e4264a237d658657ce16a0` amplía `api/admin-users.te
 **Verificación:** GitHub Actions run `41849687970` terminó en `SUCCESS`; completó instalación, auditoría de dependencias, `npm run build` y `npm test`. Vercel Preview deployment `dpl_PaSySyDgBk7DdnKuVuKB5T4bgQya` está `READY`, ligado al mismo commit y rama aislada.
 
 **Límite:** estas pruebas verifican el control de acceso de la ruta administrativa. No prueban el rate limit persistente de bootstrap ni la atomicidad del último administrador; ADMIN-17 y ADMIN-18 continúan abiertos.
+
+
+## IDEMP-01 — Las comprobaciones de duplicados de ventas y compras dependen del snapshot cargado en cada navegador
+
+**Severidad: alta para integridad comercial y conciliación; riesgo de concurrencia, no explotación confirmada.**
+
+### Evidencia directa
+
+En `src/hooks/useErpState.ts`:
+
+- `recordSale` comprueba si ya existe una factura estándar con el mismo número recorriendo el arreglo local `sales`. Si no la encuentra, registra la venta mediante setters React.
+- `receivePurchase` comprueba la combinación proveedor + número de factura recorriendo el arreglo local `purchases`. Si no la encuentra, actualiza productos, movimientos, compras, histórico de costos y, si aplica, cuentas por pagar.
+- Los identificadores nuevos de ventas y compras se calculan en el cliente con `Date.now()`, el máximo ID presente en el snapshot local y contadores `useRef`.
+- Estas comprobaciones no crean una restricción UNIQUE en PostgreSQL ni una operación servidor que reserve el número de factura/procese la compra con idempotencia.
+- El autosave persiste el snapshot completo por usuario con control optimista `updated_at`. Ese control evita que una sesión sobrescriba silenciosamente una revisión obsoleta, pero no convierte la comprobación previa de duplicados en una reserva única por número de documento.
+
+### Escenario de riesgo
+
+Dos sesiones del mismo usuario pueden cargar el mismo snapshot, comprobar simultáneamente que un número de factura no existe y aceptar localmente dos operaciones distintas antes de que una sesión reciba los cambios de la otra. El compare-and-swap puede rechazar una de las escrituras si ambas compiten por la misma revisión; no debe considerarse una garantía de idempotencia de negocio ni una restricción única persistente. Tras recargar y reintentar, el resultado depende del flujo de sincronización y no existe una clave de idempotencia de venta/compra validada por servidor.
+
+### Impacto potencial
+
+- Facturas o compras duplicadas si una operación equivalente vuelve a enviarse después de una respuesta incierta o desde otra sesión.
+- Duplicación de movimientos de inventario, costos, cuentas por cobrar/pagar y totales asociados.
+- Dificultad para conciliar documentos de proveedor o correlativos de facturación.
+
+No se generaron operaciones duplicadas ni se ejecutaron pruebas de concurrencia sobre datos reales. El hallazgo se deriva de la ubicación cliente de la comprobación y de la ausencia de una restricción/operación autoritativa identificada en el flujo revisado.
+
+### Corrección requerida
+
+1. Definir claves de idempotencia estables para cada operación de negocio y persistirlas en servidor.
+2. Validar unicidad de documentos con una restricción transaccional apropiada (por ejemplo, ámbito de empresa/usuario + tipo de documento + proveedor/establecimiento + número, según reglas reales del negocio).
+3. Mover el registro de venta y recepción de compra a operaciones transaccionales que validen stock, documento, cuenta asociada y movimientos dentro de la misma transacción.
+4. Devolver el resultado ya confirmado cuando se reintente la misma clave de idempotencia; rechazar una clave repetida con contenido diferente.
+5. Probar dos sesiones concurrentes, reintento tras timeout, doble clic y repetición deliberada de la misma solicitud, verificando que solo exista una operación y un conjunto de movimientos.
+
+### Alcance
+
+Revisión estática de `useErpState.ts` y `remoteErpState.ts` en la rama `security/erp-state-permission-matrix`. No se modificó código funcional, Supabase, RLS, grants, Auth ni datos. No se aplicaron migraciones y no se probó concurrencia contra producción.
