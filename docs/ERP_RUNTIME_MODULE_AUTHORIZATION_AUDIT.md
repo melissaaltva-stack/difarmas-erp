@@ -316,3 +316,26 @@ Los workflows revisados utilizan acciones de terceros/Marketplace mediante etiqu
 `.env.example` solo documenta URL y publishable key de Supabase; no contiene secretos privilegiados, lo cual es correcto. `vite.config.ts` usa base `/` en Vercel y `/difarmas-erp/` en GitHub Pages para rutas de assets. El workflow de Pages valida la presencia de las dos variables públicas antes del build. La inspección del directorio raíz no mostró `vercel.json` ni un archivo equivalente de cabeceras; no se debe asumir que faltan cabeceras en producción sin comprobar la configuración efectiva de Vercel. La siguiente revisión debe verificar CSP, HSTS, nosniff, referrer-policy, frame-ancestors y permisos de navegador desde la configuración real del deployment.
 
 No se ejecutaron workflows ni despliegues. La auditoría de dependencias en CI puede detectar vulnerabilidades, pero su resultado debe revisarse en la ejecución correspondiente; no se infiere el estado de paquetes a partir de este análisis estático.
+
+
+### DEPLOY-01 — No se pudo verificar la protección de la rama principal con los permisos disponibles
+
+La consulta de reglasets del repositorio devolvió una lista vacía (`[]`). La consulta de protección de `main` respondió HTTP 403 `Resource not accessible by integration`; por tanto, esta integración no puede confirmar si existen reglas de protección clásicas, revisiones obligatorias, restricciones de push o checks requeridos. No se debe interpretar el 403 como ausencia de protección. Se requiere revisión por un propietario del repositorio en Settings → Branches / Rulesets, verificando protección de `main`, restricción de force-push/deletion, PR obligatorio, revisiones, CODEOWNERS y checks de CI.
+
+**Severidad: pendiente de verificación.** No se modificaron reglas ni permisos del repositorio.
+
+### DEPLOY-02 — La configuración de protección de Vercel no equivale a autenticación del ERP
+
+La lectura del proyecto Vercel `difarmas-erp` identificó SSO Protection habilitado con `all_except_custom_domains`, Password Protection deshabilitado y Trusted IPs deshabilitado. El proyecto lista como dominio asociado `difarmas-erp.vercel.app` (verificado). Esta protección de deployment no reemplaza el login de FARMI ni los controles de autorización en Supabase/API. Además, la excepción de dominios personalizados debe revisarse si en el futuro se agregan dominios propios; la consulta actual no mostró ninguno.
+
+**Severidad: media (configuración de acceso y riesgo de interpretación).** Mantener la autenticación de aplicación obligatoria y probarla en cada dominio; evaluar una política de protección explícita para previews. No se cambió la configuración de Vercel.
+
+### DEPLOY-03 — Los headers de seguridad efectivos siguen sin verificarse
+
+La revisión del repositorio no encontró un `vercel.json` en la raíz ni una configuración de cabeceras equivalente en los workflows inspeccionados. La API de lectura de proyecto consultada no expone las cabeceras HTTP efectivas de la respuesta desplegada. Por ello no se puede confirmar presencia o ausencia de CSP, HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `frame-ancestors` ni `Permissions-Policy`. Deben verificarse con una petición HTTP real al dominio de producción y a previews, y luego definirlas en una única capa de configuración evitando duplicados o políticas CSP que rompan Supabase/Auth.
+
+**Severidad: pendiente de verificación.** No se añadieron headers sin conocer antes los orígenes y recursos que necesita la aplicación.
+
+### Estado de deployment y trazabilidad de la rama de auditoría
+
+La consulta de Vercel confirmó un deployment `READY` asociado a `abd1b04c59377cc931eb4942c19de578c9ca9383`, no al commit documental más reciente `2177e7f1aa1e406814df2167965a6dd6022c894b`. Por tanto, ese deployment READY no contiene los hallazgos SUPPLY-01/02 ni DEPLOY-01/02/03. El estado de GitHub para el commit `2177e7f1...` informó `failure` en el check Vercel con destino de build-rate-limit. No se realizó un nuevo despliegue ni se modificó el proyecto. No debe presentarse el deployment READY anterior como validación del commit actual.
