@@ -253,3 +253,31 @@ La interfaz restringe navegación mediante `canSee` y `activeAllowed`, pero esta
 - Pruebas de abuso con JWT o escrituras reales: no ejecutadas, por la restricción de no alterar Supabase.
 - Cambios de ejecución: ninguno.
 - Cambios de Supabase/Auth/datos: ninguno.
+
+
+## Revisión adicional de rutas API y autenticación — 2026-11-03
+
+### API-03 — Estado de bootstrap disponible para cualquier sesión autenticada
+
+**Severidad: baja / informativa; no se confirma escalada de privilegios.**
+
+La ruta `api/admin-users.ts` valida el bearer token con `auth.getUser(accessToken)`. La acción `status` no exige que `farmi_active === true` ni que el usuario sea administrador; devuelve el estado de administrador del propio usuario, si el bootstrap está disponible y el correo de la propia cuenta. La acción `bootstrap` sí exige el secreto de activación comparado en tiempo constante y comprueba que no exista ya un administrador. Todas las demás acciones requieren `farmi_active === true` y rol Administrador.
+
+**Conclusión:** no se encontró una vía directa para administrar usuarios usando únicamente la acción `status`. Se recomienda limitar la respuesta de estado a los campos estrictamente necesarios para el flujo de inicio y mantener la validación estricta de las demás acciones. El control anti-fuerza-bruta persistente del bootstrap sigue abierto como ADMIN-16.
+
+### API-04 — Controles positivos observados en las rutas existentes
+
+La revisión de `api/admin-users.ts`, `api/store-catalog.ts`, `src/components/AuthGate.tsx` y `src/services/supabaseClient.ts` confirma:
+- Las operaciones administrativas requieren método POST y token Bearer validado por Supabase Auth.
+- Las acciones de gestión exigen claim activo explícito y rol Administrador.
+- La respuesta administrativa usa `Cache-Control: no-store` y `Vary: Authorization`.
+- La URL de redirección de invitación procede de configuración del servidor y no del encabezado Origin recibido.
+- Los errores de proveedores se registran del lado servidor y se sustituyen por mensajes genéricos en las respuestas.
+- El cliente utiliza únicamente la clave publicable de Supabase; no se encontró una clave service-role en el módulo cliente revisado.
+- La ruta pública de catálogo es GET-only, usa la clave de servidor exclusivamente del lado API y proyecta los campos comerciales permitidos.
+
+Estos controles reducen exposición, pero no sustituyen autorización transaccional de las escrituras ERP ni resuelven las carreras de bootstrap/último administrador documentadas en ADMIN-03, ADMIN-07 y ADMIN-15.
+
+### Límite de la revisión
+
+No se ejecutaron solicitudes de mutación, pruebas de fuerza bruta, cambios de contraseña, invitaciones, cambios de roles ni pruebas con JWT manipulados. No se alteraron sesiones, usuarios, configuración de Auth, variables de entorno ni datos de Supabase. Los hallazgos de concurrencia y rate limiting requieren una implementación backend persistente y pruebas controladas antes de cerrarse.
