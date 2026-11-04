@@ -390,4 +390,15 @@ La acción `status` ya no ejecuta `listAllUsers()` ni enumera el directorio Auth
 
 La acción `bootstrap` mantiene la comprobación global autoritativa: vuelve a listar las cuentas y rechaza el cambio si ya existe un administrador. Por tanto, mostrar el formulario no concede privilegios ni sustituye el control de bootstrap. Esta corrección elimina una consulta global innecesaria en cada carga de configuración.
 
-**Verificación:** cambio acotado en `api/admin-users.ts`; CI y Preview del commit `78e2b2ff84318ca6ebeb0040d65d38d919029c92` pendientes de completar al momento de esta anotación.
+**Verificación:** CI del commit `78e2b2ff84318ca6ebeb0040d65d38d919029c92` completó build y tests con `SUCCESS`; Vercel Preview de ese commit está `READY`. El commit documental posterior `aaacb5e5dd0158fbc8ff9e3945be8f56b3d022f6` también tiene CI `SUCCESS` y Preview `READY`.
+
+
+### ADMIN-19 — Unicidad concurrente de nombres de usuario
+
+**Estado: corregido en código — commit `4021f8880ba5c4d494970b90bd5a1763b6bf162a`; validación de CI/Preview pendiente.**
+
+La creación de cuentas `create-username` ya no enumera todas las cuentas Auth para comprobar previamente el nombre. El nombre se convierte de forma determinista en un correo sintético `<username>@users.farmi.invalid`, y la creación delega la unicidad atómica en la restricción única de correo de Supabase Auth. La respuesta traduce los códigos `email_exists` y `user_already_exists` a HTTP 409.
+
+Esto elimina la carrera de la comprobación `listUsers()` seguida de `createUser()` para las cuentas creadas por este flujo. La unicidad del correo Auth es la garantía autoritativa; no se afirma una restricción SQL independiente sobre el campo metadata `username`.
+
+**Límite:** ADMIN-17 (rate limit persistente de bootstrap) y ADMIN-18 (último administrador bajo concurrencia) siguen abiertos y requieren almacenamiento/operación atómica compartida; no se sustituyen con bloqueos en memoria de una función serverless.
