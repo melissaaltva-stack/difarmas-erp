@@ -222,3 +222,38 @@ La consulta de políticas RLS de `erp_state` realizada en la auditoría previa m
 ### Conclusión de autorización
 
 El control de roles en `admin-users.ts` y el ocultamiento de navegación son controles útiles, pero no resuelven la autorización de mutaciones del ERP. La principal brecha es la combinación de permisos de módulo en cliente con escritura directa de un snapshot JSON completo. Esta arquitectura no permite certificar aislamiento entre módulos ni integridad de las operaciones de negocio. La remediación debe priorizar endpoints/RPCs con autorización y transacciones en servidor, después de pruebas con cuentas de cada rol.
+
+
+### FIN-06 — Cobros de clientes y pagos a proveedores no son transacciones atómicas
+
+La revisión de `src/components/Finance.tsx` (SHA `556a4e667e1c336f0055a8a7de96a5240ba3d363`) confirma que `collect` actualiza el saldo de `receivables` y añade por separado una fila a `paymentTransactions`; `paySupplier` hace lo mismo con `payables`. El importe se valida en el cliente contra el saldo visible y el bloqueo `paymentLocks` es un `useRef` local que además se limpia al cambiar los arreglos de estado. No hay idempotencia, bloqueo compartido ni transacción de servidor.
+
+**Severidad: crítica para saldos y trazabilidad.** Dos sesiones pueden registrar abonos concurrentes contra el mismo saldo o guardar solo una parte de la operación. Reemplazar por RPC transaccional que bloquee la cuenta, vuelva a calcular saldo, valide importe y medio de pago, registre el movimiento con actor y referencia, y aplique una clave de idempotencia única.
+
+### FIN-07 — Los gastos se registran sin evidencia suficiente ni control de aprobación
+
+La función `addExpense` crea un gasto desde el navegador con descripción, monto, categoría, fecha y método de pago, y luego llama `setExpenses`. No exige beneficiario, comprobante, referencia, actor autenticado persistido ni aprobación; tampoco registra el gasto y su efecto de caja como una única operación.
+
+**Severidad: alta.** Definir campos obligatorios según tipo de gasto y umbrales de aprobación; persistir actor, fecha del servidor, motivo, beneficiario y evidencia/referencia. Si el gasto afecta efectivo, crear el gasto y el movimiento de caja en la misma transacción.
+
+### FIN-08 — El cierre diario depende de cálculos y controles del navegador
+
+La función `closeCash` usa los totales calculados en el componente, el saldo inicial y el efectivo contado ingresado por el operador. La prevención de doble cierre (`closingRef` y `alreadyClosedToday`) es local y la fila se añade con `setClosures`; no existe unicidad diaria ni validación transaccional compartida. La cifra esperada se deriva de ventas, cobros, gastos, compras y movimientos que también proceden del snapshot.
+
+**Severidad: alta.** El servidor debe recalcular el corte desde operaciones persistidas, bloquear el periodo/caja, imponer unicidad por caja y fecha, registrar apertura, conteo, diferencia, usuario y confirmación. El cierre debe ser inmutable; las correcciones posteriores deben ser ajustes auditados, no edición del cierre original.
+
+### FIN-09 — Los movimientos manuales de caja carecen de autoría y evidencia
+
+El formulario de movimientos manuales crea entradas/salidas con tipo, descripción, monto, categoría y fecha local mediante `addCashMovement`, y actualiza el arreglo completo desde el cliente. No requiere motivo estructurado, tercero, comprobante, actor, aprobador ni referencia externa; tampoco existe validación de servidor ni idempotencia.
+
+**Severidad: alta.** Crear un endpoint/RPC para movimientos con autorización por rol, validación de categorías y montos, actor y timestamp del servidor, motivo obligatorio, referencia/evidencia y registro inmutable. No aceptar movimientos arbitrarios como sustituto de cobros, pagos o gastos documentados.
+
+### FIN-10 — Los métodos financieros no validan autorización en el servidor
+
+El componente `Finance` recibe setters para gastos, cuentas por cobrar/pagar, cierres, movimientos y transacciones. En el código revisado, las funciones `addExpense`, `collect`, `paySupplier`, `closeCash` y el registro de movimientos no invocan un servicio que autorice la acción en backend; la escritura termina formando parte del snapshot completo señalado en AUTHZ-11. Ocultar una subsección o botón por permisos de módulo no impide que un cliente autenticado intente modificar esos campos directamente.
+
+**Severidad: crítica (autorización e integridad).** La solución debe verificar permisos y estado activo en cada operación del servidor, no confiar en el rol enviado por el cliente, y registrar actor/acción/recurso. Mantener temporalmente la compatibilidad del snapshot para lectura, pero migrar las mutaciones financieras a operaciones de servidor antes de restringir el autosave.
+
+### Alcance de la revisión financiera
+
+Se inspeccionaron las implementaciones de `Finance.tsx` y el estado compartido de `useErpState.ts`. Los hallazgos son de revisión estática del código; no se realizaron pruebas con sesiones simultáneas ni escrituras de negocio. No se modificó código funcional, datos de Supabase, políticas ni migraciones. La corrección completa requiere RPCs transaccionales, pruebas de concurrencia/idempotencia y un plan de compatibilidad del snapshot; no es seguro aplicar un arreglo parcial solo en React.
