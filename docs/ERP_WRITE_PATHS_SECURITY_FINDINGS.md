@@ -825,3 +825,16 @@ En `api/admin-users.ts`, bootstrap consulta la lista de usuarios y después prom
 **Acción necesaria:** serializar cambios de privilegios mediante una función transaccional o mecanismo de exclusión mutua persistente en servidor, volver a contar administradores dentro de la sección crítica y aplicar la modificación en la misma transacción. Registrar actor, objetivo y cambio de privilegios. Probar dos solicitudes concurrentes contra PostgreSQL/Auth de prueba.
 
 **Límite de esta etapa:** hallazgos derivados de inspección estática; no se ejecutaron devoluciones, ajustes, despachos ni cambios de cuentas contra datos reales. No se modificó código operativo ni Supabase.
+
+
+## AUTHZ-04 — Los cambios de rol y desactivación pueden no reflejarse inmediatamente en sesiones con JWT vigente
+
+**Severidad: alta. Estado: riesgo arquitectónico confirmado por inspección estática el 2026-11-04; latencia efectiva pendiente de medir en entorno aislado.**
+
+La aplicación obtiene `farmi_role`, `farmi_permissions` y `farmi_active` de `user.app_metadata` en el estado de sesión y los usa para decidir la navegación y el módulo visible. Las políticas RLS existentes también consultan los claims del JWT. El cliente Supabase tiene `autoRefreshToken: true`, pero eso no fuerza por sí solo la invalidación inmediata de un access token ya emitido cuando un administrador cambia `app_metadata` o banea/desactiva la cuenta.
+
+**Impacto:** una sesión abierta puede conservar temporalmente permisos anteriores hasta que se renueve el token o se invalide la sesión. El endpoint administrativo comprueba el usuario actual con Auth, pero los guardados directos en `erp_state` se autorizan con el JWT presentado a Postgres. La ventana real depende de la expiración y comportamiento de refresh configurados en Supabase, que no se midieron en esta revisión.
+
+**Acción necesaria:** definir y medir la ventana máxima aceptable de revocación; forzar refresh de sesión al recibir cambios de auth y limpiar estado local al detectar cuenta inactiva; para operaciones sensibles, consultar autorización vigente en servidor/base de datos o usar RPC que valide un estado revocable y no dependa exclusivamente de claims antiguos. Probar desactivación y reducción de permisos mientras hay otra sesión abierta, tanto antes como después del refresh.
+
+**Límite:** no se intentó mantener acceso tras una desactivación real y no se modificó la configuración de expiración de tokens ni la base activa.
