@@ -9,7 +9,7 @@ create policy "erp_state_select_own"
   to authenticated
   using (
     (select auth.uid()) = user_id
-    and coalesce((auth.jwt() -> 'app_metadata' ->> 'farmi_active')::boolean, true) = true
+    and coalesce(((select auth.jwt()) -> 'app_metadata' ->> 'farmi_active')::boolean, true) = true
   );
 
 drop policy if exists "erp_state_insert_own" on public.erp_state;
@@ -19,8 +19,8 @@ create policy "erp_state_insert_own"
   to authenticated
   with check (
     (select auth.uid()) = user_id
-    and coalesce((auth.jwt() -> 'app_metadata' ->> 'farmi_active')::boolean, true) = true
-    and (auth.jwt() -> 'app_metadata' ->> 'farmi_role') in
+    and coalesce(((select auth.jwt()) -> 'app_metadata' ->> 'farmi_active')::boolean, true) = true
+    and ((select auth.jwt()) -> 'app_metadata' ->> 'farmi_role') in
       ('Administrador', 'Supervisor', 'Ventas', 'Compras', 'Finanzas')
   );
 
@@ -31,14 +31,14 @@ create policy "erp_state_update_own"
   to authenticated
   using (
     (select auth.uid()) = user_id
-    and coalesce((auth.jwt() -> 'app_metadata' ->> 'farmi_active')::boolean, true) = true
-    and (auth.jwt() -> 'app_metadata' ->> 'farmi_role') in
+    and coalesce(((select auth.jwt()) -> 'app_metadata' ->> 'farmi_active')::boolean, true) = true
+    and ((select auth.jwt()) -> 'app_metadata' ->> 'farmi_role') in
       ('Administrador', 'Supervisor', 'Ventas', 'Compras', 'Finanzas')
   )
   with check (
     (select auth.uid()) = user_id
-    and coalesce((auth.jwt() -> 'app_metadata' ->> 'farmi_active')::boolean, true) = true
-    and (auth.jwt() -> 'app_metadata' ->> 'farmi_role') in
+    and coalesce(((select auth.jwt()) -> 'app_metadata' ->> 'farmi_active')::boolean, true) = true
+    and ((select auth.jwt()) -> 'app_metadata' ->> 'farmi_role') in
       ('Administrador', 'Supervisor', 'Ventas', 'Compras', 'Finanzas')
   );
 
