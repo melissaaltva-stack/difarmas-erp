@@ -242,3 +242,21 @@ Se consultó el catálogo de PostgreSQL mediante consultas de solo lectura al pr
 ### Conclusión actualizada
 
 El riesgo principal confirmado sigue siendo la autorización por módulo ausente en `erp_state` y el valor por defecto permisivo de `farmi_active`. Se añade un hallazgo de privilegio excesivo latente en `store_products`: grants DML de cliente sin policies DML. No equivale a una escritura pública actualmente permitida, pero conviene reducir esos grants en una ventana de cambio separada y después de verificar la ruta de administración de catálogo.
+
+
+## 9. Asesores automáticos de Supabase — 2026-11-03
+
+Consulta de solo lectura a los asesores del proyecto:
+
+### Seguridad
+
+- `auth_leaked_password_protection` — WARN: la protección contra contraseñas comprometidas está deshabilitada.
+- Recomendación: revisar y habilitar la protección desde Auth cuando el responsable autorice el cambio, y probar flujos de registro/cambio de contraseña. No se modificó Auth.
+
+### Rendimiento
+
+- `auth_rls_initplan` — WARN en las tres políticas de `public.erp_state` (SELECT, INSERT y UPDATE).
+- El asesor indica que `auth.uid()` se vuelve a evaluar por fila. Recomienda encapsularlo como `(select auth.uid())` para que PostgreSQL pueda tratar el resultado como initPlan.
+- El asesor clasifica el punto como rendimiento, no como bypass de seguridad. No se cambiaron las policies.
+
+No se ejecutaron migraciones ni se alteró configuración del proyecto.
