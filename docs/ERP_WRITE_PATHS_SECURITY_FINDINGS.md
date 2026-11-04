@@ -540,3 +540,31 @@ Esto permite que el registro interno afirme que el reembolso fue liquidado aunqu
 - No se ejecutaron devoluciones ni pagos sobre datos reales.
 - No se modificó código funcional, Supabase, políticas, grants, Auth ni datos.
 - La corrección requiere una operación servidor transaccional y un modelo explícito de conciliación; no se implementó una mitigación parcial de interfaz.
+
+
+## REPORT-04 / CASH-06 — Reportes y cierres siguen usando importes brutos y nombres visibles de métodos
+
+**Severidad: alta para exactitud de reportes; media para conciliación de efectivo. Estado: revisión estática.**
+
+### REPORT-04 — Resumen financiero y reporte de ventas no aplican los ajustes registrados
+
+En `src/components/FinancialModules.tsx`, `ReportsModule` no recibe `saleAdjustments` en sus props. Calcula `totalSales` sumando directamente `sales[].total`, y el reporte `ventas` lista `sales[].total` original. En `src/components/Finance.tsx`, el resumen usa `sumSales(sales)` y `sumProfit(sales)`, que suman valores brutos de `SaleRecord`. La proyección neta `applySaleAdjustmentsToSales` existe en `saleAdjustmentService.ts`, pero estos dos módulos no la consumen.
+
+**Impacto:** una devolución parcial o anulación puede dejar ventas, utilidad y reportes de período mostrando importes originales, aunque el ajuste esté registrado. Esto produce diferencias entre reportes, saldos por cobrar, inventario y caja. La venta original debe preservarse como documento histórico, pero el resumen necesita mostrar bruto, ajustes y neto de forma separada.
+
+**Corrección requerida:** integrar una proyección neta común para métricas y reportes, con fecha del documento original y fecha del ajuste claramente diferenciadas. Mostrar bruto, devoluciones/anulaciones y neto; no alterar documentos históricos. Añadir pruebas de reporte para devolución parcial, anulación, devolución sin reingreso y períodos que cruzan fechas.
+
+### CASH-06 — Clasificación de ventas en efectivo usa el nombre visible y no el tipo estable del método
+
+En `src/services/financeService.ts`, `cashSales` clasifica como efectivo únicamente `paymentKind === 'cash'` o, para registros legacy, `payment === 'Efectivo'`. En `src/components/Finance.tsx`, `daySales` aplica la misma excepción legacy basada en texto exacto. El POS permite métodos configurables y conserva `paymentKind`, pero los registros legacy sin ese campo dependen del nombre mostrado.
+
+**Impacto:** las ventas históricas con un método renombrado o un nombre alternativo configurado como efectivo pueden quedar fuera del flujo y cierre de caja; el nombre visible no es una categoría contable estable. La misma clase de inconsistencia puede aparecer si los módulos financieros mantienen listas de métodos limitadas a «Efectivo» y «Transferencia».
+
+**Corrección requerida:** conservar un tipo estable del método en cada transacción y utilizarlo de forma uniforme en flujo, cierre y reportes. Definir una estrategia de compatibilidad para datos legacy sin reclasificar automáticamente movimientos históricos. Añadir pruebas con método de efectivo personalizado, método bancario personalizado y ventas legacy.
+
+### Verificación del alcance
+
+- Revisados `ReportsModule`, `Finance.tsx`, `financeService.ts`, `saleAdjustmentService.ts` y pruebas de proyección.
+- Las pruebas existentes de `saleAdjustmentService` cubren la proyección pura, pero no su integración en reportes/cierres ni conciliación con transacciones reales.
+- No se ejecutaron cierres, pagos, devoluciones ni escrituras sobre datos reales.
+- No se modificó código funcional ni Supabase; no se aplicaron migraciones ni se promovió producción.
