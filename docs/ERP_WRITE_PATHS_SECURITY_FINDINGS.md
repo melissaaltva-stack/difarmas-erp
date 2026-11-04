@@ -177,3 +177,31 @@ La operación actualiza en una transacción las claves `supplierReturns`, `payab
 **Recomendación:** definir con el negocio qué permisos deben poder resolver notas de crédito. Alinear el predicado SQL y la interfaz con esa misma regla; no basta con ocultar el botón. Añadir pruebas negativas para cada permiso aislado y pruebas positivas para las combinaciones autorizadas. No aplicar esta migración ni modificar Supabase durante esta auditoría.
 
 **Límite de verificación:** se inspeccionó el archivo SQL de la rama y el punto de llamada en el cliente. No se confirmó que la función exista o esté actualizada en la base activa, ni se hicieron invocaciones de prueba.
+
+
+## Revalidación de RPC y base activa — 2026-11-03 (cierre de RPC-01)
+
+La consulta de solo lectura al catálogo `pg_proc` del proyecto Supabase activo no encontró ninguna función `public.resolve_supplier_credit_note(bigint)`. La consulta de historial de migraciones también devolvió una lista vacía. Por tanto, **RPC-01 no es una función activa vulnerable en la base consultada**: el hallazgo previo aplicaba únicamente al SQL preparado en la rama y su estado de despliegue no estaba confirmado.
+
+Se corrigió el archivo `supabase/migrations/202611020002_supplier_credit_note_atomic.sql` para exigir el permiso `compras`, que coincide con `canManageSupplierReturns={canSee('compras')}` en `src/App.tsx`. Los permisos `proveedores`, `cuentas_pagar` o `finanzas` por sí solos ya no satisfacen el control de la futura RPC.
+
+**Estado:** corregido en código/migración de la rama; no aplicado a Supabase. La base activa no contiene la función, así que la resolución atómica de notas de crédito tampoco está disponible allí mediante esta RPC. No se debe considerar habilitada hasta que se apruebe y aplique la migración en un proceso separado y se prueben los permisos con cuentas de prueba.
+
+## Aviso del asesor de seguridad de Supabase
+
+La consulta de asesores de seguridad devolvió un aviso: **Leaked Password Protection Disabled**. La protección contra contraseñas comprometidas está deshabilitada en Auth. No se cambió la configuración de Auth, conforme al alcance de esta auditoría. Requiere que el administrador valore habilitarla desde la configuración de autenticación y verificar el comportamiento de registro/cambio de contraseña.
+
+## Límites que siguen abiertos y no pueden cerrarse solo con cambios de interfaz
+
+- **WRITE-01 / PLATFORM-02:** el snapshot `erp_state` sigue siendo un JSON completo por usuario; las políticas activas no aplican permisos por módulo o por clave. Un usuario autorizado a actualizar su fila puede intentar alterar claves ajenas a su módulo.
+- **WRITE-09:** el guardado de cotizaciones sigue necesitando autorización de servidor para `cotizaciones`.
+- **CASH-01 a CASH-05:** cierres, caja, pagos, ventas, ajustes y recepción de compras necesitan operaciones transaccionales, validación del lado servidor e idempotencia.
+- **ADMIN-03 / ADMIN-07 / ADMIN-15:** bootstrap y protección del último administrador requieren serialización transaccional.
+- **ADMIN-16:** limitación persistente de intentos del bootstrap requiere almacenamiento compartido; no se sustituyó por un límite en memoria.
+- **SESSION-02 / LOCAL-01 a LOCAL-03:** los datos locales gerenciales y el historial no son auditoría inmutable ni están completamente separados por usuario; cualquier migración/borrado necesita plan de respaldo y recuperación.
+- **PLATFORM-03 / PLATFORM-04:** faltan verificaciones HTTP del dominio de producción para confirmar cabeceras de seguridad; el Preview de rama no sustituye esa comprobación.
+- **AUTH-01:** protección de contraseñas comprometidas deshabilitada según asesor de Supabase.
+
+Estos puntos permanecen abiertos porque cerrarlos exige cambios de backend/DB, decisiones de permisos, configuración Auth o pruebas de operación controladas. No se han realizado esas acciones en este trabajo.
+
+**Alcance de verificación:** CI y Preview se verificaron para el commit anterior `6b187a2b1d5dd3d762da89198787f4ead91c05ba`; el nuevo commit que contiene el ajuste SQL requiere su propia CI y Preview. No se modificó `main`, no se aplicaron migraciones, no se escribieron datos ni se alteraron usuarios, políticas, grants o configuración de Supabase.
