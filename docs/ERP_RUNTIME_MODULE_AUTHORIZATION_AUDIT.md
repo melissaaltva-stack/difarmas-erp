@@ -444,3 +444,13 @@ La respuesta HTML de la raíz contiene el título DIFARMÁS ERP, un mensaje inic
 ### Alcance de la verificación HTTP
 
 Las observaciones corresponden al dominio `difarmas-erp.vercel.app` y a los tres recursos consultados el 4 de noviembre de 2026. No se comprobó un dominio personalizado ni cada deployment Preview; sus cabeceras pueden diferir. La comprobación de ausencia se limita a las cabeceras devueltas por estas respuestas. No se inspeccionaron valores de secretos, no se ejecutaron mutaciones y no se cambió la configuración de Vercel.
+
+
+
+### AUDIT-STATE-01 — La rama de auditoría no corresponde al código desplegado en producción
+
+La comparación GitHub entre `main` y `security/erp-state-permission-matrix` indica que la rama de auditoría está 406 commits por delante y 0 por detrás; contiene modificaciones de aplicación, migraciones, tests y documentos que no forman parte del árbol actual de `main`. La inspección autenticada del alias de producción `difarmas-erp.vercel.app` devuelve un deployment `READY` asociado a `main`, commit `f785087c0cccc8602f0dca537987b7f05086b1bf` (“Fix finance section initialization build error”).
+
+**Severidad: alta para el proceso de liberación.** Los hallazgos y correcciones que solo existen en la rama de auditoría no deben considerarse aplicados en producción. No hacer merge de los 406 commits como una sola unidad: revisar el diff por grupos, separar correcciones de seguridad verificadas de cambios funcionales/documentales y promover únicamente una secuencia pequeña, probada y aprobada. Verificar el SHA exacto y el estado READY de cada despliegue tras la liberación.
+
+No se hizo merge, push, despliegue ni cambio en producción. La comparación identifica una diferencia de historial/árbol; no certifica por sí sola que cada uno de los 406 commits contenga una corrección de seguridad.
