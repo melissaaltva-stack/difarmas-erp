@@ -1137,3 +1137,37 @@ La consulta de catálogo confirmó SELECT/INSERT/UPDATE concedidos a `authentica
 **Límite de la comprobación:** la búsqueda de funciones se restringió a nombres relacionados en los esquemas `public` y `private`; no constituye una auditoría de todas las funciones ni de todos los objetos del proyecto.
 
 **Estado general:** SUPABASE-LIVE-04 y SUPABASE-LIVE-05 continúan abiertos. No se alteraron filas, snapshots, tablas, policies, grants, funciones, Auth ni producción.
+
+
+## Revisión adicional del endpoint administrativo — 2026-11-04
+
+### ADMIN-22 — Invariante de administrador único no transaccional en bootstrap y actualización
+**Severidad: crítica para disponibilidad administrativa; requiere corrección antes de habilitar bootstrap.**
+
+La ruta `bootstrap` ejecuta `listAllUsers()`, comprueba que no exista un administrador y después llama a `auth.admin.updateUserById()`. La ruta `update` vuelve a enumerar usuarios, calcula `adminCount` y posteriormente actualiza el usuario objetivo. La comprobación y la mutación son operaciones separadas y no comparten una transacción ni un bloqueo persistente.
+
+**Impacto:** dos solicitudes concurrentes pueden observar el mismo estado previo. En bootstrap, dos cuentas podrían recibir rol de administrador; al modificar o desactivar administradores, dos solicitudes podrían invalidar simultáneamente el control de última cuenta. La verificación secuencial del código no protege frente a concurrencia entre instancias serverless.
+
+**Corrección requerida:** trasladar el invariante a una primitiva transaccional persistente con bloqueo/serialización por organización y ejecutar dentro de ella la decisión y el cambio autorizado. Si la modificación de Auth no puede formar parte de la transacción, usar un estado de aprovisionamiento reservado y recuperable, con expiración y reconciliación segura. No sustituirlo por variables en memoria ni por un bloqueo de navegador.
+
+**Pruebas obligatorias:** dos bootstraps simultáneos con sesiones distintas; dos actualizaciones simultáneas que intenten desactivar/demover administradores; fallo entre reserva y actualización Auth; reintento tras timeout; recuperación de una reserva abandonada.
+
+### ADMIN-23 — Invitación y asignación de metadata son dos operaciones con compensación
+**Severidad: media-alta.**
+
+La acción `invite` primero crea/envía la invitación mediante `inviteUserByEmail()` y luego asigna `app_metadata` mediante `updateUserById()`. Si la segunda operación falla, el endpoint intenta borrar el usuario como compensación. Si también falla el borrado, devuelve un error que informa que quedó una cuenta que requiere revisión.
+
+**Impacto:** no existe atomicidad entre la invitación y la asignación de rol/permisos. Un fallo parcial puede dejar una cuenta invitada en un estado incompleto; la compensación puede fallar y requiere intervención administrativa. El código sí intenta limpiar el usuario y evita ocultar el caso de limpieza fallida, por lo que esto no debe describirse como una omisión total de manejo de errores.
+
+**Corrección requerida:** diseñar un flujo de invitación pendiente sin permisos operativos, asignar metadata de menor privilegio antes de habilitar el acceso y activar explícitamente después de confirmar el estado final. Mantener registro auditable de invitaciones pendientes, fallidas y compensadas. Probar fallos inducidos entre ambas llamadas y en la limpieza.
+
+### ADMIN-24 — No se observó limitación persistente de intentos en el endpoint administrativo
+**Severidad: media-alta; confirmar también controles perimetrales de Vercel.**
+
+En el código revisado de `api/admin-users.ts` no aparece un contador persistente, ventana de enfriamiento ni límite por usuario/IP para acciones administrativas o intentos de bootstrap. La comparación del token usa `timingSafeEqual`, lo cual protege la comparación frente a diferencias simples de tiempo, pero no limita la cantidad de intentos.
+
+**Impacto:** si el endpoint queda accesible repetidamente, el token puede recibir intentos ilimitados desde múltiples solicitudes. No se verificó en esta inspección si existen controles equivalentes en la configuración perimetral de Vercel; por tanto, la ausencia confirmada se limita al código de la función.
+
+**Corrección requerida:** añadir limitación persistente compartida entre instancias y separar cuotas para bootstrap y acciones administrativas; responder sin revelar si el token está configurado o qué parte de la credencial falló. No incorporar un servicio de pago ni asumir que un límite en memoria funciona en serverless.
+
+**Estado:** los hallazgos se documentan para orientar la implementación. No se modificó `api/admin-users.ts`, no se alteró Auth ni se aplicaron cambios en Supabase.
