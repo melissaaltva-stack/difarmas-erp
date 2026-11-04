@@ -289,3 +289,24 @@ El formulario de gastos crea un objeto `Expense` con ID generado en el navegador
 **Corrección requerida:** crear gasto mediante operación transaccional de servidor, con actor, beneficiario/proveedor, categoría, forma de pago, fecha autoritativa, referencia documental y evidencia; integrar los gastos en efectivo al ledger de caja y los pagos bancarios a conciliación bancaria; usar idempotencia y reversos auditables. Mantener lectura compatible de gastos históricos sin fabricar datos faltantes.
 
 **Alcance:** se revisaron `Finance.tsx`, `domain/types.ts` y `financeService.ts`. No se modificó código funcional, tipos, datos, políticas ni configuración de Supabase.
+
+
+## REPORT-05 — Los filtros de fecha de reportes usan día UTC, no día calendario local
+
+**Severidad:** media para conciliación y reportes diarios. **Estado:** confirmado por revisión estática el 2026-11-04.
+
+En `src/components/FinancialModules.tsx`, `ReportsModule` define `inRange(date)` mediante `date.slice(0,10)`. Sin embargo, el resto de la aplicación utiliza `dateKey` de `src/utils/dates.ts`, que conserva los valores date-only y convierte timestamps a la fecha calendario local del usuario. Las ventas, cobros, pagos, gastos, compras, cierres y movimientos se guardan normalmente con timestamps ISO UTC. En Honduras (UTC-6), las operaciones realizadas entre las 18:00 y las 23:59 locales pueden llevar fecha UTC del día siguiente y, por tanto, aparecer en un día distinto en los reportes filtrados.
+
+**Impacto:** el filtro Desde/Hasta de reportes puede no coincidir con el día que muestra Finanzas/cierre de caja, causando diferencias aparentes al conciliar ventas, gastos, pagos y movimientos por fecha. No modifica los importes almacenados, pero puede excluirlos del periodo que el usuario espera consultar.
+
+**Corrección requerida:** usar la misma función compartida `dateKey` para los filtros de reportes y aplicar una política consistente de zona horaria para los periodos. Añadir pruebas con timestamps cercanos a medianoche UTC que correspondan al día anterior en Honduras, además de valores date-only históricos. No reinterpretar ni reescribir fechas históricas.
+
+## REPORT-06 — El resumen financiero del reporte no presenta conciliación entre ventas netas, reembolsos y efectivo
+
+**Severidad:** media para interpretación financiera. **Estado:** brecha funcional confirmada por revisión estática el 2026-11-04.
+
+El resumen de `ReportsModule` muestra ventas, compras, gastos, cuentas por cobrar y cuentas por pagar como indicadores independientes. La lista de ventas recibida desde `App.tsx` sí es una proyección con ajustes de venta aplicados, pero el resumen no presenta el puente entre venta original, devoluciones/anulaciones, importe neto y reembolso efectivamente pagado. Tampoco separa reembolsos pendientes, pagados en efectivo, transferidos o aplicados a cuenta; los movimientos de caja aparecen en un reporte separado y el cierre histórico no conserva el desglose completo (CASH-11).
+
+**Impacto:** el resumen no permite explicar por sí solo cómo se pasa de ventas originales a ventas netas ni reconciliar el importe devuelto con el movimiento efectivo/bancario. Un lector puede interpretar las ventas netas como dinero cobrado o reembolsado, aunque son conceptos distintos.
+
+**Corrección requerida:** diseñar un estado de conciliación que distinga ventas originales, ajustes autorizados, neto de ventas, importe aplicado a cuentas, reembolsos pendientes y reembolsos liquidados por medio; enlazar cada liquidación con su movimiento financiero y cierre. Mantener separados los indicadores de devengo y flujo de efectivo, sin duplicar importes ni alterar el historial original.
