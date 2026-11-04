@@ -257,3 +257,20 @@ El componente `Finance` recibe setters para gastos, cuentas por cobrar/pagar, ci
 ### Alcance de la revisión financiera
 
 Se inspeccionaron las implementaciones de `Finance.tsx` y el estado compartido de `useErpState.ts`. Los hallazgos son de revisión estática del código; no se realizaron pruebas con sesiones simultáneas ni escrituras de negocio. No se modificó código funcional, datos de Supabase, políticas ni migraciones. La corrección completa requiere RPCs transaccionales, pruebas de concurrencia/idempotencia y un plan de compatibilidad del snapshot; no es seguro aplicar un arreglo parcial solo en React.
+
+
+### AUTHZ-13 — El rol «Solo lectura» hereda acceso a módulos con operaciones de escritura
+
+La revisión cruzada de `api/admin-users.ts` (SHA `6f4a603324c170d2b7b2113b50096b9b732aa870`), `src/components/Settings.tsx` (SHA `41a2801cecb7a9f535ee6bb284a9d049bed0ae26`) y `src/App.tsx` (SHA `1a26c9a65fae23495c84188c6c132923cd68fc98`) confirma que el rol `Solo lectura` recibe permisos de módulos como ventas, inventario, compras, finanzas, cuentas por cobrar y cuentas por pagar. La matriz del servidor y la matriz visual de configuración coinciden en esos permisos. Sin embargo, la autorización de navegación solo verifica que el módulo esté incluido en `permissions`; no existe un indicador de solo lectura ni una política de capacidades de escritura por acción. Las vistas que se montan para esos módulos incluyen controles para registrar ventas, editar productos, recibir compras, registrar cobros/pagos y cambiar datos.
+
+**Severidad: crítica (privilegios excesivos por rol).** El nombre del rol promete una restricción que la aplicación no aplica. No basta con quitar módulos de la navegación: se requiere un modo de capacidades separado (lectura/creación/edición/aprobación) y que tanto UI como servidor lo apliquen. Hasta que exista, no asignar este rol a usuarios que deban tener prohibidas las mutaciones. La corrección completa debe incluir pruebas negativas por cada módulo y llamadas directas a backend; el bloqueo visual no sustituye autorización server-side.
+
+### AUTHZ-14 — La matriz de roles está duplicada entre servidor y cliente
+
+Las listas `ROLE_PERMISSIONS` en `api/admin-users.ts` y `rolePermissions` en `src/components/Settings.tsx` son definiciones independientes. Actualmente las listas observadas para los roles coinciden, pero una modificación futura en una sola capa puede mostrar una matriz distinta a la que realmente emite el servidor. Además, el endpoint `admin-users` valida que los permisos pertenezcan al catálogo global de módulos, pero para roles no administradores permite cualquier subconjunto de ese catálogo; no impone límites máximos por rol. Esto puede ser intencional si se permiten permisos personalizados, pero debe ser explícito y probado, especialmente para «Solo lectura».
+
+**Severidad: media (deriva de configuración y exceso de permisos).** Centralizar el catálogo de roles en un contrato compartido validado por servidor o hacer que el cliente consuma la matriz devuelta por la API. Si se permiten excepciones personalizadas, documentar esa política y distinguir permisos de lectura de capacidades de mutación; no tratar un permiso de módulo como autorización para escribir.
+
+### Alcance de la revisión de roles
+
+Se compararon las matrices de permisos del endpoint administrativo, la configuración de usuarios y el guard de navegación. La revisión es estática: no se crearon cuentas de prueba, no se ejecutaron acciones de negocio con cada rol y no se hicieron solicitudes directas de mutación. No se cambiaron roles, claims, código funcional ni datos de Supabase. La principal corrección pendiente es diseñar y probar capacidades de lectura/escritura en servidor, no cambiar únicamente las listas de navegación.
