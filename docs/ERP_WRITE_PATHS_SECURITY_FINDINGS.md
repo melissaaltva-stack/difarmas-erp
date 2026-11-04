@@ -653,3 +653,16 @@ En `src/App.tsx`, `canSee(module)` se utiliza para decidir navegación y montaje
 - Revisados `src/App.tsx`, `src/components/Inventory.tsx`, `src/hooks/useErpState.ts`, `src/services/inventoryService.ts`, `src/services/inventoryMovementService.ts` y `src/services/salesService.ts`.
 - Se revisaron los puntos de validación de venta, compra, ajuste manual y eliminación; no se ejecutaron solicitudes manipuladas ni operaciones sobre datos reales.
 - No se modificó código funcional, Supabase, RLS, grants, Auth ni datos comerciales. No se aplicaron migraciones ni se promovió el Preview a producción.
+
+
+## INV-03 — Las líneas fiscales de una factura estándar no se concilian con las líneas que descuentan inventario
+
+**Severidad: alta para integridad de facturación, inventario y cuentas por cobrar. Estado: confirmado por revisión estática; sin operaciones reales.**
+
+En `recordSale` de `src/hooks/useErpState.ts`, el inventario se actualiza usando `sold` mediante `applySaleToInventory(products, sold)`. Sin embargo, cuando se recibe `invoiceDetails`, el total de la venta se calcula sumando `invoiceDetails.lines[].lineTotal`; las líneas históricas se construyen a partir de `sold` y se enriquecen buscando la primera fila de `invoiceDetails.lines` cuyo `productId` coincida. No se valida que las dos listas tengan el mismo número de renglones, los mismos productos, cantidades iguales, ni que no existan filas fiscales adicionales o repetidas. Tampoco se recalculan/validan en esta operación los importes de neto, descuento, impuesto y total de línea a partir de datos autorizados.
+
+**Impacto:** una solicitud alterada puede incluir una línea fiscal adicional que incremente el total y la cuenta por cobrar sin descontar ese producto del inventario; también puede omitir una línea fiscal, duplicar un producto o presentar cantidades e importes que no correspondan al carrito. Si hay varios renglones del mismo producto, la búsqueda por `productId` no distingue la identidad de cada línea y puede asociar repetidamente los mismos importes fiscales.
+
+**Corrección requerida:** el servidor debe aceptar identificadores de línea y cantidades, reconstruir la relación entre cada línea de factura y su producto, comprobar que cada producto y cantidad coincidan con la operación de inventario, validar lista de precio, descuentos, ISV y total, y calcular todos los importes. Debe guardar factura, stock, movimientos y CxC en una transacción con idempotencia y auditoría. El cliente no debe poder aportar una lista independiente de totales fiscales como fuente autoritativa.
+
+**Alcance:** se revisó el camino de creación `recordSale(..., invoiceDetails)`; el hallazgo complementa los riesgos ya documentados para `updateStandardInvoice`. No se ejecutaron solicitudes manipuladas, no se emitieron facturas, no se modificó código funcional ni se alteró Supabase.
