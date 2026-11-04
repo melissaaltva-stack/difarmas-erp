@@ -100,3 +100,10 @@ El RPC usa `totalCost` y los detalles de devolución almacenados en el snapshot 
 
 El comentario de la migración `202611020001_erp_state_role_write_guard.sql` afirma que todas las cuentas existentes fueron inventariadas y tienen `farmi_active=true`. Esta auditoría aún no obtuvo esa evidencia completa. La condición fail-closed está preparada, pero debe probarse con cuentas y sesiones reales antes de aplicarse.
 
+
+### Correcciones de revisión incorporadas a la rama
+
+- La migración `202611020002_supplier_credit_note_atomic.sql` ya no incluye Finanzas como rol autorizado para esta operación: la función exige el permiso `compras`, que la matriz de Finanzas no concede.
+- La migración `202611020001_erp_state_role_write_guard.sql` ya no afirma que el inventario de cuentas y sesiones fue completado; exige completar esa verificación antes de aplicarse.
+- Estas correcciones están en la rama de seguridad, no en la base activa.
+- El RPC de nota de crédito sigue pendiente de una corrección de integridad: recalcular importes y cantidades contra `purchaseCostHistory` y devoluciones anteriores.
