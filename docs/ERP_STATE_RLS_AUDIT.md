@@ -122,3 +122,16 @@ Ejecutar únicamente en una base de pruebas desechable, con usuarios y datos fic
 6. Solo después preparar una migración de transición con respaldo, compatibilidad y plan de reversión.
 
 **No aplicar esta auditoría como migración.** Este documento no cambia políticas, datos ni comportamiento del ERP.
+
+
+## Revalidación del catálogo activo — 2026-11-03
+
+Consultas SELECT al catálogo del proyecto Supabase conectado confirman que las tres policies de `public.erp_state` siguen usando `COALESCE(farmi_active::boolean, true)`; INSERT/UPDATE siguen limitados a roles generales, sin comprobar `farmi_permissions` ni qué claves del JSONB se modifican. El hallazgo RLS-01/RLS-02 queda confirmado en la base consultada, no solo en el SQL versionado.
+
+El inventario adicional confirma que `store_products` tiene RLS y una policy de lectura pública para productos publicados. No hay policies de escritura para `anon` o `authenticated`, aunque ambos roles tienen grants SQL INSERT/UPDATE/DELETE. RLS bloquea esas operaciones actualmente; los grants son innecesarios y se recomienda revocarlos en un cambio independiente, tras comprobar la ruta de administración de catálogo.
+
+No se encontraron funciones en `public`, triggers para estas dos tablas ni vistas en `public`. `anon` y `authenticated` no tienen atributo `BYPASSRLS`; `service_role` y `postgres` sí. Las tablas son propiedad de `postgres` y no tienen FORCE RLS.
+
+**Acciones ejecutadas:** únicamente consultas de lectura. No se modificaron políticas, grants, tablas, filas, usuarios, funciones, Auth ni configuración. No se realizaron pruebas de escritura.
+
+**Estado:** RLS-01 y RLS-02 confirmados en la base activa; nuevo hallazgo RLS-03 de grants DML innecesarios en `store_products`; no se ha aplicado corrección en Supabase.
