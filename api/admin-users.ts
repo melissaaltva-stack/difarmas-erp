@@ -30,12 +30,16 @@ const ROLES: Role[] = ['Administrador','Supervisor','Ventas','Compras','Finanzas
 const isRole = (value: unknown): value is Role => typeof value === 'string' && ROLES.includes(value as Role);
 const isAdmin = (user: User) => user.app_metadata?.farmi_admin === true || user.app_metadata?.farmi_role === 'Administrador';
 
-function safePermissions(role: Role, value: unknown): string[] {
-  if (role === 'Administrador' && !Array.isArray(value)) return [...MODULES];
+export function safePermissions(role: Role, value: unknown): string[] {
+  if (role === 'Administrador') return [...MODULES];
   if (!Array.isArray(value)) return [...ROLE_PERMISSIONS[role]];
-  const allowed = new Set<string>(MODULES);
-  const permissions = [...new Set(value.filter((item): item is string => typeof item === 'string' && allowed.has(item)))];
-  return role === 'Administrador' ? [...MODULES] : permissions;
+
+  // A custom permission list may reduce a role's access, never expand it.
+  // This keeps the server's role matrix as the upper authorization boundary.
+  const roleAllowed = new Set<string>(ROLE_PERMISSIONS[role]);
+  return [...new Set(value.filter(
+    (item): item is string => typeof item === 'string' && roleAllowed.has(item),
+  ))];
 }
 function constantTimeMatch(a: string, b: string): boolean {
   const left = Buffer.from(a);
