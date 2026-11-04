@@ -305,3 +305,16 @@ Si no existe snapshot remoto y quedan claves ERP locales sin marcador de propiet
 **Alcance:** no se borran ni se renombran datos locales. No se implementó una migración automática de registros antiguos porque no hay evidencia confiable para asignarles propietario. La recuperación de una caché sin propietario debe hacerse de forma deliberada y con verificación de identidad.
 
 **Verificación pendiente:** CI/build/tests y Preview para el commit nuevo. No se modificó Supabase ni producción.
+
+
+### LOCAL-05 — Caché del ERP separada por cuenta
+
+**Estado: corregido en código — commit `f44cc38ad1f1a3dd62db63d035f7b88f42d91529`.**
+
+Las escrituras locales de los datos operativos del ERP ahora usan claves namespaced por usuario autenticado (`farmi:user:<userId>:<clave>`). La lectura prioriza esa clave separada. Las claves globales antiguas solo se leen si el marcador `difarmas_owner_user_id` coincide exactamente con el usuario.
+
+Al cambiar de cuenta, si existe un propietario anterior identificado, el sistema copia las claves heredadas a su espacio individual antes de cambiar de usuario. La copia no elimina ni modifica las claves originales. Si el marcador no existe, se mantiene el bloqueo de recuperación descrito en SESSION-03 / LOCAL-04; no se asignan datos heredados por suposición.
+
+**Alcance y límite:** esto reduce la mezcla accidental entre cuentas dentro de la aplicación. No cifra los datos del navegador ni sustituye la autorización del servidor; un usuario con acceso al mismo perfil del navegador o herramientas de desarrollo aún puede inspeccionar el almacenamiento local. Los datos remotos y las reglas RLS siguen siendo la frontera de seguridad principal.
+
+**Verificación pendiente:** CI/build/tests y Preview para el commit nuevo. No se modificó Supabase ni producción.
