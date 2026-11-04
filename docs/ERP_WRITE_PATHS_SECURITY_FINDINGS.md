@@ -607,3 +607,16 @@ La migración `202611020002_supplier_credit_note_atomic.sql` existe en la rama, 
 ### Pruebas existentes y brechas
 
 Las pruebas actuales de `supplierCreditService` cubren división de nota, consumo parcial/total, proveedores distintos, precisión en centavos y prevención de crear dos créditos para un mismo `sourceReturnId`. No cubren importes de nota no conciliados, aplicaciones duplicadas para un `purchaseId`, ledger inconsistente ni concurrencia entre sesiones.
+
+
+## VOID-04 — Anulaciones internas sin identidad del actor ni aprobación independiente
+
+**Severidad: alta para trazabilidad y control de anulaciones. Estado: confirmado por revisión estática.**
+
+El tipo `SaleAdjustmentRecord` contiene ID, venta, factura, tipo, fecha, motivo, líneas, importe, medio/estado del reembolso y notas; no contiene identidad del usuario que solicitó/registró el ajuste, aprobador, fecha de aprobación, motivo codificado, referencia al documento fiscal de crédito ni evidencia de liquidación. En `POS.tsx`, el operador selecciona «Anulación» y puede seleccionar directamente «Reembolso pagado»; `recordSaleAdjustment` aplica los cambios mediante setters del estado. La función del dominio no recibe un actor ni un contexto de autorización por acción.
+
+El mensaje de interfaz aclara que una anulación interna no sustituye el procedimiento fiscal oficial, pero esa advertencia no crea un control auditable.
+
+**Impacto:** una revisión posterior no puede atribuir de forma fiable quién registró o autorizó una anulación, distinguir solicitante de aprobador, ni conciliar la operación con la nota de crédito o el comprobante real de devolución. La visibilidad del módulo `ventas` no equivale a permiso de anular o liquidar reembolsos.
+
+**Corrección requerida:** separar solicitud, aprobación y liquidación; guardar actor autenticado, rol/permisos evaluados, actor aprobador distinto cuando la política lo requiera, fecha, motivo, documento relacionado y referencia de pago. La autorización debe comprobarse en servidor dentro de la operación transaccional, no confiar en campos enviados por el navegador. Mantener historial inmutable y auditable. No añadir campos al snapshot como sustituto de un registro servidor protegido.
