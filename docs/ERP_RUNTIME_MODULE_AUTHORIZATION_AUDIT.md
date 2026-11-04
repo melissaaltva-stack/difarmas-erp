@@ -196,3 +196,12 @@ La revisión de `recordSale` en `src/hooks/useErpState.ts` confirma que la venta
 5. Migrar gradualmente sin cambiar el formato del snapshot hasta contar con pruebas de compatibilidad, concurrencia, rollback y recuperación.
 
 No se modificó código funcional ni se ejecutaron migraciones. Los hallazgos se basan en lectura de código y no constituyen una prueba dinámica de explotación.
+
+
+### STORE-01 — El catálogo público usa `active` como único filtro de publicación
+
+Revisión de `api/store-catalog.ts` (SHA `b3f776147de3de0dd3a1625fd89bcc0297b9516e`): el endpoint es solo GET, responde `no-store`, usa clave de servidor, consulta una fila concreta por `FARMI_STORE_CATALOG_USER_ID` y devuelve una lista explícita de campos públicos; no expone el snapshot completo ni costo, existencia, lote, vencimiento o proveedor. Estos son controles positivos.
+
+Sin embargo, `publicProduct` excluye únicamente cuando `product.active === false`. Por tanto, los registros con `active: true` y también aquellos sin la propiedad `active` quedan incluidos automáticamente. No hay una condición de publicación explícita ni allowlist de productos autorizados para la tienda. Si `active` representa que el producto está activo en el ERP y no que fue aprobado para venta pública, el catálogo puede mostrar productos que no se han autorizado para la tienda.
+
+**Severidad: media (confidencialidad comercial/publicación).** Antes de corregir, confirmar el contrato funcional del catálogo. Recomendación: introducir un estado explícito `storePublished === true` o una lista de publicación administrada, con denegación por defecto; preservar el catálogo actual solo si el negocio confirma que todo producto activo debe publicarse. Probar también registros antiguos sin el nuevo campo. La clave privilegiada permanece del lado servidor en el código revisado; verificar en despliegue que no exista prefijo `VITE_` para secretos y que `FARMI_STORE_CATALOG_USER_ID` apunte a la cuenta correcta.
