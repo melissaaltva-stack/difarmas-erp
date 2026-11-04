@@ -46,7 +46,7 @@ begin
   end if;
   if v_permissions is null
      or jsonb_typeof(v_permissions) <> 'array'
-     or not (v_permissions ?| array['proveedores','compras','cuentas_pagar','finanzas']) then
+     or not (v_permissions ? 'compras') then
     raise exception 'Tu cuenta no tiene permisos del módulo necesarios para esta operación.' using errcode = '42501';
   end if;
   if p_return_id is null or p_return_id <= 0 then
