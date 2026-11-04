@@ -482,3 +482,33 @@ Se compararon los archivos actuales de la rama de auditoría con `main`. En la r
 **Evidencia:** `src/hooks/useErpState.ts` (SHA `e87833ca750cf1f1e2bfa6415560d5f1b77662dd`), funciones `recordSale` y `receivePurchase`. `recordSale` acepta `CartItem[]` y `StandardInvoiceDetails` del navegador, construye precio, costo, descuentos, impuestos, utilidad y total en cliente, y luego actualiza por separado productos, movimientos, ventas y cuentas por cobrar. La validación de factura duplicada consulta el snapshot local. La recepción de compra también actualiza varias partes del snapshot por setters y usa una protección local contra doble envío.
 
 **Severidad: crítica para integridad financiera e inventario.** El guardado condicional de `updated_at` evita que una revisión vieja reemplace una nueva, pero no convierte las acciones de negocio en transacciones ni evita que dos dispositivos ejecuten la misma venta/recepción a partir de la misma revisión. No liberar esto como corrección de seguridad completa. El diseño objetivo es RPC por operación con idempotency key, bloqueo transaccional, validación de rol + permiso de módulo + capacidad de acción, y recálculo de precios, impuestos, costos, existencia y saldos usando datos guardados en servidor. Mantener el snapshot actual compatible hasta contar con migración y pruebas de reconciliación.
+
+
+
+### INV-10 — El alta/edición/eliminación de productos modifica existencias sin una operación de inventario autorizada
+
+**Evidencia:** `src/hooks/useErpState.ts` (SHA `e87833ca750cf1f1e2bfa6415560d5f1b77662dd`), funciones `saveProduct` y `deleteProduct`. La edición permite cambiar directamente `stock`; si cambia, crea un movimiento de ajuste, pero el movimiento no exige motivo estructurado, actor, aprobación ni evidencia. La eliminación retira físicamente el producto del catálogo y, si tenía existencias, registra una salida generada automáticamente. Ambas operaciones actualizan el snapshot desde el cliente.
+
+**Severidad: alta (trazabilidad e integridad de existencias).** Separar datos maestros de ajustes de inventario: una edición normal no debe cambiar existencias; todo ajuste debe ser una operación explícita con cantidad, motivo obligatorio, usuario/fecha y, según umbral, aprobación. Sustituir eliminación física por archivado/baja lógica que preserve referencias históricas. La validación debe ejecutarse en servidor/transacción, no solo en el formulario. No se modificó código funcional ni datos.
+
+### INV-11 — Despacho de devolución a proveedor no es atómico ni tiene idempotencia compartida
+
+**Evidencia:** `recordSupplierDispatch` en `src/hooks/useErpState.ts` valida el estado pendiente, cantidades enteras y existencia disponible; agrupa cantidades por producto y genera movimientos. Sin embargo, `supplierDispatchInProgress` es un `Set` en memoria del navegador. La reducción de existencias y el registro de movimientos se realizan mediante setters independientes. La comprobación de movimientos existentes en el snapshot no protege dos sesiones/dispositivos que procesen simultáneamente la misma devolución.
+
+**Severidad: crítica (riesgo de doble salida o stock inconsistente).** Implementar una operación transaccional de despacho con bloqueo de la devolución y productos, idempotency key persistente, validación de cantidades contra el detalle original y registro inseparable de movimiento/estado. Rechazar la repetición aun cuando provenga de otra sesión. No desplegar una RPC que solo replique las validaciones del cliente.
+
+### RET-10 — La resolución de devoluciones de venta y los cambios de proveedor tienen rutas de escritura distintas y parcialmente locales
+
+**Evidencia:** `resolveSupplierReturn` registra el rechazo cambiando solo el estado del snapshot; al recibir cambio actualiza productos, movimientos y devolución mediante setters separados. Solo la nota de crédito invoca la RPC atómica existente, que mantiene el riesgo de importe descrito en AUTHZ-19. `recordSaleAdjustment` calcula importes y cantidades en cliente, verifica contra líneas originales usando `canApplySaleAdjustmentItems`, y luego actualiza productos, movimientos, cuentas por cobrar, caja y ajustes mediante setters separados. El bloqueo de repetición está en memoria local.
+
+**Severidad: crítica para devoluciones de venta; alta para rechazo/cambio de proveedor.** Unificar cada resultado de devolución en una transacción de servidor: validar documento original, líneas y cantidades acumuladas; recalcular importe/impuesto/costo; validar saldo y método de reembolso; actualizar inventario/caja/cuenta/estado y registrar actor, fecha y motivo. El rechazo también debe dejar evidencia inmutable y actor. La validación del helper de frontend es útil para UX, pero no constituye autorización ni control de integridad.
+
+### INV-12 — La recepción de compra permite que el total introducido sustituya al total calculado sin conciliación
+
+**Evidencia:** `receivePurchase` calcula `calculatedTotal` como suma de cantidad por costo, pero si `enteredTotal` es un número finito no negativo, lo acepta como `total` sin verificar que coincida con el detalle ni representar explícitamente descuentos, impuestos, flete u otros cargos. Ese total alimenta compra, crédito de proveedor y cuenta por pagar; el inventario y el historial de costos siguen calculándose desde las líneas.
+
+**Severidad: alta (descuadre de inventario y cuentas por pagar).** Definir componentes explícitos de conciliación (descuentos, impuestos, cargos) y validar que el total de documento sea igual al total calculado más/menos esos componentes, con tolerancia monetaria documentada. El servidor debe recalcular y rechazar diferencias no justificadas dentro de la transacción. No basta con aceptar un total alternativo del navegador.
+
+### Evidencia y límites de esta revisión de inventario/devoluciones
+
+Se inspeccionaron el hook de estado, `inventoryService.ts`, `saleAdjustmentService.ts` y los tipos de dominio. El servicio de inventario sí comprueba productos existentes, cantidades positivas, servicios, existencias, costos y vencimiento mínimo para recepciones; el helper de devoluciones de venta controla cantidades acumuladas por línea en la interfaz. Esos controles reducen errores accidentales, pero están en código cliente y no sustituyen validación autoritativa. No se ejecutaron pruebas dinámicas, no se enviaron operaciones de negocio, no se aplicaron migraciones y no se modificaron datos de Supabase ni producción.
