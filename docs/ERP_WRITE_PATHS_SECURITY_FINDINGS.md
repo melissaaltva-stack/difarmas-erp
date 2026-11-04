@@ -380,3 +380,14 @@ El modal global `ProductModal` se abre desde inventario y desde compras. La auto
 - Revisión estática de `App.tsx`, `api/admin-users.ts` y la matriz de roles; no se ejecutaron pruebas con sesiones reales ni escrituras de prueba.
 - No se modificaron cuentas, datos, Auth, RLS, grants, políticas ni configuración de Supabase.
 - No se alteró `main` ni se desplegó a producción.
+
+
+### ADMIN-20 — Consulta global de usuarios desde la acción status
+
+**Estado: corregido en código — commit `78e2b2ff84318ca6ebeb0040d65d38d919029c92`.**
+
+La acción `status` ya no ejecuta `listAllUsers()` ni enumera el directorio Auth para decidir si presenta el formulario de bootstrap. Devuelve únicamente el estado de administrador del usuario autenticado y habilita la presentación del formulario cuando no es administrador y existe el secreto configurado.
+
+La acción `bootstrap` mantiene la comprobación global autoritativa: vuelve a listar las cuentas y rechaza el cambio si ya existe un administrador. Por tanto, mostrar el formulario no concede privilegios ni sustituye el control de bootstrap. Esta corrección elimina una consulta global innecesaria en cada carga de configuración.
+
+**Verificación:** cambio acotado en `api/admin-users.ts`; CI y Preview del commit `78e2b2ff84318ca6ebeb0040d65d38d919029c92` pendientes de completar al momento de esta anotación.
