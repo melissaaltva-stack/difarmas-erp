@@ -888,3 +888,30 @@ El endpoint `api/admin-users.ts` sí exige `farmi_active === true` para las acci
 **Acción necesaria:** separar el alta inicial en una pantalla de bootstrap aislada y exigir `farmi_active === true` antes de montar el ERP ordinario. Mantener el bootstrap protegido por el token de activación, una sola cuenta administradora y protección persistente contra intentos repetidos. Antes de cambiar AuthGate, probar el primer administrador, invitaciones pendientes, recuperación de contraseña y cuentas existentes; no bloquear el único camino legítimo de inicialización.
 
 **Límite:** no se alteró AuthGate ni se probó una cuenta real sin metadatos; el hallazgo es estático y requiere pruebas aisladas.
+
+
+## AUTHZ-07 — Estado React de una cuenta puede sobrevivir al cambio de sesión hasta ejecutar el efecto de carga
+
+**Severidad: alta. Estado: confirmado por inspección estática; mitigación de montaje aplicada el 2026-11-04.**
+
+useErpState(userId) inicializa sus colecciones mediante useState y, cuando cambia userId sin desmontar el componente, el estado React existente no se reinicializa. El efecto que detecta accountChanged limpia esas colecciones posteriormente, pero es un useEffect y ocurre después del render que recibe la nueva sesión. src/main.tsx montaba App sin una key asociada al usuario.
+
+**Impacto:** al cambiar de una cuenta autenticada a otra dentro de la misma instancia de la aplicación, podía existir un render transitorio en el que la nueva sesión recibiera componentes con el estado en memoria de la cuenta anterior. El guardado remoto está deshabilitado hasta remoteReady, lo que reduce el riesgo de mezclar escrituras, pero no evita que datos anteriores se presenten brevemente en pantalla.
+
+**Corrección aplicada:** src/main.tsx ahora asigna key={user.id} a App. Un cambio de usuario desmonta la instancia anterior y crea una nueva, reiniciando el estado React y ejecutando las inicializaciones locales bajo el identificador de la nueva cuenta. No cambia datos ni políticas de Supabase.
+
+**Pruebas pendientes:** cambio entre dos cuentas en el mismo navegador; confirmar que la segunda cuenta nunca muestra los datos de la primera, que los datos locales se cargan solo bajo su clave farmi:user:<id>, y que la sincronización espera a cargar el snapshot remoto. La corrección de montaje debe considerarse mitigación hasta completar esa prueba de integración.
+
+## SUPABASE-LIVE-04 — Las políticas RLS activas tratan la marca farmi_active ausente como activa
+
+**Severidad: alta. Estado: confirmado por consulta de solo lectura al catálogo de PostgreSQL el 2026-11-04.**
+
+Las políticas activas erp_state_select_own, erp_state_insert_own y erp_state_update_own aplican coalesce(farmi_active::boolean, true). Por tanto, un claim ausente se interpreta como activo. INSERT y UPDATE también exigen que el rol pertenezca a la lista permitida; SELECT solo comprueba propietario y estado. Los grants actuales para authenticated incluyen SELECT, INSERT y UPDATE; no se observó grant DELETE en el resultado consultado. No se observó una política DELETE para erp_state.
+
+La consulta agregada de auth.users mostró tres cuentas y todas tenían farmi_active=true (dos Administrador y una Ventas) en el momento de la consulta. No se expusieron correos ni identificadores. Este resultado reduce el riesgo inmediato para las cuentas existentes, pero no corrige el valor por defecto inseguro para cuentas futuras o metadata incompleta.
+
+**Impacto:** una cuenta nueva o mal provisionada que tenga un rol de escritura válido pero carezca de farmi_active puede superar la condición de estado en las políticas activas. Esto coincide con la discrepancia identificada en AUTHZ-06 y demuestra que el SQL de la migración propuesta no representa el comportamiento actualmente instalado.
+
+**Acción necesaria:** planificar la transición a coalesce(..., false) solo después de validar el flujo de bootstrap y todas las cuentas existentes. La migración preparada 202611020001_erp_state_role_write_guard.sql usa el criterio estricto, pero no se aplicó en esta auditoría. No modificar grants ni políticas activas hasta tener pruebas de regresión y un plan de reversión.
+
+**Límite:** se consultaron exclusivamente metadatos de políticas, grants y conteos agregados de metadata; no se leyeron ni alteraron snapshots o datos operativos.
