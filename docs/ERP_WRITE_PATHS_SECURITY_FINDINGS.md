@@ -928,3 +928,18 @@ Los snapshots locales se guardan en localStorage bajo claves por usuario (farmi:
 **Acción necesaria:** definir política para dispositivos compartidos. Preferir no persistir en localStorage información sensible que no sea necesaria; evaluar una caché protegida por sesión con mecanismo de claves adecuado, expiración y bloqueo al cerrar sesión. No borrar automáticamente la caché actual hasta garantizar que todos los cambios estén sincronizados y que no se pierdan datos pendientes. Añadir pruebas de cierre de sesión, cambio de usuario y restauración de conectividad.
 
 **Límite:** no se inspeccionó contenido de cachés de usuarios reales ni se modificó almacenamiento del navegador o datos de Supabase.
+
+
+## LOGOUT-02 — Cerrar sesión durante el debounce puede descartar cambios aún no sincronizados
+
+**Severidad: alta para integridad de datos. Estado: confirmado por inspección estática el 2026-11-04.**
+
+En `src/hooks/useErpState.ts`, el autosave del snapshot se programa con un retardo de 500 ms. El cleanup del efecto cancela ese temporizador cuando el componente se desmonta. En `src/App.tsx`, el botón «Cerrar sesión» puede ejecutarse mientras el estado de sincronización está en «Sincronizando…» y no espera a que termine un guardado ni comprueba que el último snapshot haya sido confirmado.
+
+Si la persona cierra sesión antes de que venza el debounce, el temporizador puede cancelarse y el snapshot reciente no llega a Supabase. Aunque los efectos de caché local pueden haber persistido partes del estado, al volver a iniciar sesión el hook carga el snapshot remoto y lo aplica sobre el estado inicial; por tanto, la caché local no garantiza recuperar esos cambios pendientes.
+
+**Impacto:** pérdida de cambios recientes al cerrar sesión rápidamente, especialmente en equipos con conexión lenta o cuando se realizan varias modificaciones seguidas. No se observó una escritura cruzada entre cuentas: cada guardado conserva el userId capturado y RLS sigue siendo la barrera de propiedad.
+
+**Acción necesaria:** implementar un flujo explícito de salida que distinga entre guardado pendiente, guardado confirmado y error. Antes de cerrar sesión debe cancelar el debounce y ejecutar/esperar el guardado del snapshot más reciente; si falla, informar claramente y permitir elegir entre permanecer en la sesión o salir asumiendo que los cambios pendientes no están sincronizados. El flujo debe impedir que un snapshot antiguo se guarde después del más reciente y probarse con red lenta, desconexión, guardado en curso y cierre inmediato después de editar.
+
+**Límite:** no se modificó el comportamiento de cierre de sesión ni se realizaron pruebas con cuentas reales. El hallazgo está confirmado por la secuencia de cleanup del efecto y el manejador actual del botón; la corrección requiere pruebas de integración para evitar pérdida de datos o bloquear el cierre de sesión.
