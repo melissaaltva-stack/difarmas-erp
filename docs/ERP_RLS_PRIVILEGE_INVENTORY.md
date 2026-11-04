@@ -205,3 +205,40 @@ Las pruebas deben usar JWT de prueba y filas ficticias. No ejecutar con credenci
 - Migraciones aplicadas: ninguna por esta auditoría.
 - Cambios de datos: ninguno.
 - Despliegues: ninguno.
+
+
+## 8. Inventario efectivo del proyecto Supabase conectado — 2026-11-03
+
+Se consultó el catálogo de PostgreSQL mediante consultas de solo lectura al proyecto conectado. Este inventario reemplaza como evidencia actual la nota anterior que indicaba que no se disponía de salida SQL del proyecto.
+
+### `public.erp_state`
+
+- RLS habilitado; `FORCE ROW LEVEL SECURITY` deshabilitado; propietario `postgres`.
+- Columnas observadas: `user_id uuid NOT NULL`, `state jsonb NOT NULL`, `updated_at timestamptz NOT NULL`.
+- Tres políticas efectivas, todas PERMISSIVE y dirigidas a `authenticated`: SELECT propio; INSERT propio; UPDATE propio.
+- SELECT y UPDATE exigen `auth.uid() = user_id`; UPDATE también conserva el mismo `user_id` mediante `WITH CHECK`.
+- INSERT y UPDATE exigen rol general entre Administrador, Supervisor, Ventas, Compras y Finanzas.
+- SELECT/INSERT/UPDATE usan `COALESCE(farmi_active::boolean, true)`; claim ausente se interpreta como activo.
+- No se observó policy DELETE.
+- Grants efectivos para `authenticated`: SELECT, INSERT y UPDATE. No se observó DELETE para roles de cliente.
+- El JSONB no se valida por módulo: el permiso de rol general habilita escritura de toda la fila.
+
+### `public.store_products`
+
+- RLS habilitado; `FORCE ROW LEVEL SECURITY` deshabilitado; propietario `postgres`.
+- Política observada: SELECT público solo cuando `is_published = true`.
+- No se observaron políticas INSERT, UPDATE o DELETE para `anon` ni `authenticated`.
+- Sin embargo, `anon` y `authenticated` tienen grants SQL de SELECT, INSERT, UPDATE y DELETE. En el estado actual, la falta de políticas de escritura hace que RLS bloquee las escrituras de esos roles; los grants DML son innecesarios y amplían el riesgo de cambios futuros si alguien añade una policy permisiva.
+- Recomendación para un cambio futuro revisado: conservar SELECT y revocar INSERT/UPDATE/DELETE a `anon` y `authenticated`, dejando escrituras únicamente a una ruta administrativa de servidor autenticada. No se modificaron grants.
+
+### Catálogo de objetos y roles
+
+- No se encontraron funciones en esquema `public` en la consulta al catálogo; tampoco funciones `SECURITY DEFINER` públicas.
+- No se encontraron triggers asociados a `erp_state` o `store_products`.
+- No se encontraron vistas en esquema `public`.
+- Roles: `anon` y `authenticated` no tienen `BYPASSRLS`; `service_role` sí tiene `BYPASSRLS` (comportamiento esperado para la clave de servidor); `postgres` también tiene `BYPASSRLS` y es propietario de ambas tablas.
+- No se intentaron escrituras, pruebas de explotación ni cambios de configuración.
+
+### Conclusión actualizada
+
+El riesgo principal confirmado sigue siendo la autorización por módulo ausente en `erp_state` y el valor por defecto permisivo de `farmi_active`. Se añade un hallazgo de privilegio excesivo latente en `store_products`: grants DML de cliente sin policies DML. No equivale a una escritura pública actualmente permitida, pero conviene reducir esos grants en una ventana de cambio separada y después de verificar la ruta de administración de catálogo.
