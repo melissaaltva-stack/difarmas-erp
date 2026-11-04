@@ -10,6 +10,20 @@ const localDateKey = (d = new Date()) => { const y=d.getFullYear(); const m=Stri
 const currentMonthKey = (d = new Date()) => localDateKey(d).slice(0,7);
 const isCurrentMonth = (date:string) => dateKey(date).slice(0,7) === currentMonthKey();
 
+// Local analytics data is browser-managed and may be absent or malformed.
+// Treat invalid JSON or an unexpected shape as an empty collection without
+// deleting or rewriting the stored value, so valid user data remains untouched.
+function loadLocalArray<T>(key: string): T[] {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed as T[] : [];
+  } catch {
+    return [];
+  }
+}
+
 function ProductProfitability({sales}:{sales:SaleRecord[]}) {
   const [search,setSearch]=useState('');
   const [group,setGroup]=useState<'Producto'|'Categoría'|'Laboratorio'>('Producto');
@@ -340,14 +354,14 @@ function CommercialActionCenter({products,sales,receivables}:{products:Product[]
 }
 
 function CampaignAnalytics({products,sales}:{products:Product[];sales:SaleRecord[]}) {
- const campaigns=JSON.parse(localStorage.getItem('difarmas_campaigns')||'[]');
+ const campaigns=loadLocalArray<any>('difarmas_campaigns');
  const rows=campaigns.map((x:any)=>{const product=products.find(p=>p.id===x.productId);const during=sales.filter(s=>s.items?.some(i=>i.productId===x.productId&&s.date>=x.start&&s.date<=x.end));const units=during.reduce((n,s)=>n+(s.items||[]).filter(i=>i.productId===x.productId).reduce((a,i)=>a+i.qty,0),0);const revenue=units*x.promo;const cost=units*(product?.cost||0);const profit=revenue-cost;const regularProfit=units*((product?.retail||x.regular)-(product?.cost||0));const impact=profit-regularProfit;const roi=cost>0?(profit/cost)*100:0;return {...x,units,revenue,profit,impact,roi}}).sort((a:any,b:any)=>b.profit-a.profit);
  const profitable=rows.filter((x:any)=>x.impact>=0).length;
  return <section className="card"><div className="card-title"><div><h3>Análisis de efectividad de campañas</h3><p>Mide utilidad e impacto de las promociones registradas.</p></div><LineChart size={20}/></div><div className="metrics-grid"><div className="metric"><span>Campañas analizadas</span><strong>{rows.length}</strong></div><div className="metric"><span>Con impacto positivo</span><strong>{profitable}</strong></div><div className="metric"><span>Utilidad promocional</span><strong>{money(rows.reduce((s:any,x:any)=>s+x.profit,0))}</strong></div></div><div className="table-wrap"><table><thead><tr><th>Campaña</th><th>Unidades</th><th>Ingresos</th><th>Utilidad</th><th>Impacto vs. precio normal</th><th>ROI</th></tr></thead><tbody>{rows.slice(0,10).map((x:any)=><tr key={x.id}><td><strong>{x.name}</strong></td><td>{x.units}</td><td>{money(x.revenue)}</td><td>{money(x.profit)}</td><td>{money(x.impact)}</td><td>{x.roi.toFixed(1)}%</td></tr>)}</tbody></table></div></section>;
 }
 
 function CampaignTracking({products,sales}:{products:Product[];sales:SaleRecord[]}) {
- const [campaigns,setCampaigns]=useState<{id:number;productId:number;name:string;regular:number;promo:number;start:string;end:string;baselineUnits:number}[]>(()=>JSON.parse(localStorage.getItem('difarmas_campaigns')||'[]'));
+ const [campaigns,setCampaigns]=useState<{id:number;productId:number;name:string;regular:number;promo:number;start:string;end:string;baselineUnits:number}[]>(()=>loadLocalArray('difarmas_campaigns'));
  const [selected,setSelected]=useState(products[0]?.id??0); const p=products.find(x=>x.id===selected);
  const [days,setDays]=useState(7);
  const create=()=>{if(!p)return;const item={id:uniqueLocalId(campaigns),productId:p.id,name:p.name,regular:p.retail,promo:p.retail*.9,start:new Date().toISOString(),end:new Date(Date.now()+days*86400000).toISOString(),baselineUnits:0};const next=[item,...campaigns];setCampaigns(next);localStorage.setItem('difarmas_campaigns',JSON.stringify(next));};
@@ -413,7 +427,7 @@ function CostImpactAlerts({products}:{products:Product[]}) {
 }
 
 function PriceHistory({products}:{products:Product[]}) {
- const [changes,setChanges]=useState<{id:number;productId:number;productName:string;oldPrice:number;newPrice:number;oldMargin:number;newMargin:number;date:string}[]>(()=>JSON.parse(localStorage.getItem('difarmas_price_history')||'[]'));
+ const [changes,setChanges]=useState<{id:number;productId:number;productName:string;oldPrice:number;newPrice:number;oldMargin:number;newMargin:number;date:string}[]>(()=>loadLocalArray('difarmas_price_history'));
  const [selected,setSelected]=useState(products[0]?.id??0);
  const p=products.find(x=>x.id===selected);
  const [newPrice,setNewPrice]=useState(p?.retail??0);
