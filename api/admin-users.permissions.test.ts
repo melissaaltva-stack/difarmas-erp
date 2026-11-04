@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { safePermissions } from './admin-users';
+import { safePermissions, safeRole } from './admin-users';
 
 describe('safePermissions', () => {
   it('never lets Ventas gain inventory, finance, or configuration access', () => {
@@ -29,5 +29,18 @@ describe('safePermissions', () => {
   it('removes duplicates and non-string or unknown modules', () => {
     expect(safePermissions('Ventas', ['ventas', 'ventas', 'unknown', 42]))
       .toEqual(['ventas']);
+  });
+});
+
+describe('safeRole', () => {
+  it('defaults missing or unknown roles to least privilege', () => {
+    expect(safeRole(undefined)).toBe('Solo lectura');
+    expect(safeRole('Owner')).toBe('Solo lectura');
+    expect(safeRole(null)).toBe('Solo lectura');
+  });
+
+  it('preserves explicitly recognized roles', () => {
+    expect(safeRole('Ventas')).toBe('Ventas');
+    expect(safeRole('Administrador')).toBe('Administrador');
   });
 });
