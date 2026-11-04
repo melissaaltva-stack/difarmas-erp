@@ -55,3 +55,26 @@ Esta es una auditoría estática del código de la rama indicada. No prueba conc
 ## Próximo paso
 
 Diseñar y probar el modelo de reembolso con medio de devolución independiente, y persistir el tipo estable del método de pago. Después reforzar idempotencia de ajustes y devoluciones de proveedor. Mantener los cambios aislados y no ejecutar migraciones ni despliegues productivos sin autorización.
+
+
+### 5. El estado «Pagado» del reembolso lo declara el operador y no exige evidencia ni conciliación
+
+Severidad: alta para control financiero. Confirmado por revisión estática del flujo vigente el 2026-11-04.
+
+En `src/components/POS.tsx`, el formulario permite seleccionar `refundStatus` como `Pendiente`, `Pagado` o `Aplicado a cuenta`. El objeto `SaleAdjustmentRecord` se construye en el navegador con ese estado y el método elegido. En `src/hooks/useErpState.ts`, `recordSaleAdjustment` confía en el estado recibido: si es `Pagado` y hay importe excedente tras reducir el saldo de la cuenta por cobrar, registra una salida en `cashMovements`. No solicita referencia bancaria, número de comprobante, confirmación de caja ni aprobación distinta de quien registra la devolución. Para transferencia, crea una salida clasificada como `Banco` dentro de la lista genérica de movimientos de caja, no un asiento conciliable contra una cuenta bancaria.
+
+**Impacto:** una devolución puede quedar marcada como pagada sin evidencia verificable; el reporte puede mostrar una salida bancaria que no está conciliada con el estado de cuenta. El estado declarado no prueba que el cliente recibió el dinero.
+
+**Corrección requerida:** separar solicitud, aprobación y liquidación. La solicitud crea el saldo pendiente por devolver; la liquidación requiere actor, fecha de servidor, método real y referencia documental. Efectivo debe producir movimiento en caja; transferencia debe enlazarse con cuenta y referencia bancaria conciliable; otros medios deben usar su propio flujo. El estado Pagado debe derivarse de la liquidación confirmada, no de una selección libre del formulario.
+
+### 6. Los reembolsos pendientes no tienen un auxiliar de obligaciones por devolver al cliente
+
+Severidad: alta para integridad de cuentas y conciliación. Confirmado por revisión estática el 2026-11-04.
+
+El modelo `SaleAdjustmentRecord` conserva `refundAmount` y `refundStatus`, pero no existe una colección o auxiliar financiero separado de saldos por devolver con vencimiento, beneficiario, liquidaciones parciales, saldo restante y estado conciliado. Al registrar un ajuste de una venta a crédito, `recordSaleAdjustment` reduce el saldo pendiente de la cuenta por cobrar primero y calcula el excedente como `refundAmount`. Si ese excedente queda `Pendiente`, se conserva como atributo del ajuste, pero no aparece en el auxiliar de cuentas por pagar ni en un flujo independiente de pagos al cliente.
+
+**Impacto:** no hay un listado fiable de obligaciones pendientes de reembolso, ni se puede controlar liquidación parcial, antigüedad o conciliación de ese saldo mediante el módulo financiero existente. El campo de estado no sustituye un auxiliar con saldo y movimientos.
+
+**Corrección requerida:** crear un subledger de reembolsos por pagar al cliente enlazado al ajuste original. Debe soportar liquidaciones parciales idempotentes, saldo calculado, fechas, beneficiario, método y evidencia; impedir liquidar más que el saldo y conciliar cada salida con caja o banco. Antes de migrar, clasificar los ajustes históricos sin inventar pagos ni saldos ya liquidados.
+
+**Nota de actualización:** este análisis describe el código vigente inspeccionado. La referencia histórica del hallazgo 1 sobre uso del método de pago original debe leerse junto con el campo actual `refundPaymentMethod`: el flujo actual ya distingue ese método en el registro del ajuste, pero todavía no valida ni concilia la liquidación real.
