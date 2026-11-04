@@ -1064,3 +1064,42 @@ Se verificaron las versiones actuales de `src/components/AuthGate.tsx`, `src/App
 4. Verificar la ruta de recuperación si el token de bootstrap no está configurado o ya existe administrador.
 
 **Estado:** hallazgo documentado; no se modificó AuthGate, App, Settings, API ni metadata de usuarios. No se alteraron policies, grants o datos de Supabase. AUTHZ-06 y BOOTSTRAP-01 permanecen abiertos hasta una solución y pruebas de staging.
+
+
+## Revisión de concurrencia del bootstrap y controles de intentos — 2026-11-04
+
+### BOOTSTRAP-02 — La exclusión del primer administrador no es atómica
+
+**Severidad: alta para la integridad del aprovisionamiento; no se ha demostrado explotación.**
+
+La inspección de `api/admin-users.ts` confirma que la acción `bootstrap` ejecuta estos pasos separados:
+
+1. Comprueba que el solicitante no sea ya administrador.
+2. Valida el secreto `FARMI_ADMIN_BOOTSTRAP_TOKEN`.
+3. Enumera las cuentas mediante `auth.admin.listUsers()`.
+4. Si no encuentra administradores, promueve al solicitante mediante `auth.admin.updateUserById()`.
+
+La comprobación global y la promoción no están dentro de una transacción ni comparten un bloqueo persistente. Dos solicitudes concurrentes desde cuentas distintas pueden completar el listado antes de que alguna promoción sea visible y ambas intentar convertirse en administradoras. La comprobación secuencial protege el caso normal, pero no demuestra la invariante de un único bootstrap.
+
+**Corrección requerida:** implementar una exclusión atómica persistente en un recurso transaccional de Supabase/Postgres, con clave única o bloqueo de fila, y que la operación de reserva/promoción se resuelva en una sola transacción o en un protocolo recuperable e idempotente. El endpoint debe comprobar el resultado de esa operación antes de actualizar Auth; cualquier reserva huérfana debe tener un procedimiento de recuperación auditado. Un booleano en memoria de una función serverless, un bloqueo de React o una segunda llamada a `listUsers()` no corrigen la carrera entre instancias.
+
+**Restricción actual:** no se aplicó DDL, RPC ni cambios al proyecto Supabase activo. No se implementa un parche parcial en la API porque sin primitiva transaccional persistente no se puede garantizar la exclusión.
+
+### BOOTSTRAP-03 — El estado informativo no confirma que el bootstrap siga disponible
+
+La acción `status` devuelve `canBootstrap` según que el solicitante no sea administrador y exista `FARMI_ADMIN_BOOTSTRAP_TOKEN`. No comprueba si ya existe otro administrador. Por tanto, puede mostrar el formulario a cuentas no administradoras incluso después de que el primer administrador ya haya sido creado. La acción `bootstrap` sí vuelve a comprobar el directorio y rechaza la solicitud si encuentra un administrador; el formulario visible no equivale a autorización.
+
+**Corrección requerida:** derivar el estado de una reserva/bootstrap persistente y transaccional, no de la mera presencia del secreto. La respuesta informativa debe minimizar lo que revela y nunca sustituir la validación de la acción final.
+
+### Límite de intentos
+
+En el código revisado no se encontró un contador persistente ni una limitación distribuida de intentos para la acción `bootstrap`. La comparación del secreto en tiempo constante es positiva, pero por sí sola no limita intentos. No se añade un rate limit en memoria porque las funciones serverless pueden ejecutarse en instancias distintas y reiniciarse.
+
+**Corrección requerida:** limitar intentos por cuenta y ventana temporal con almacenamiento persistente y operación atómica; aplicar pausas/bloqueos progresivos sin permitir que un tercero bloquee permanentemente a la cuenta legítima; registrar intentos sin guardar el secreto ni incluirlo en logs. Mantener el secreto solo en variables de entorno del servidor, con alta entropía y rotación operativa.
+
+### Verificaciones y estado
+
+- Se verificaron las implementaciones actuales de `api/admin-users.ts`, `AuthGate.tsx`, `App.tsx` y `Settings.tsx`, junto con sus SHA de la rama auditada.
+- Se buscó cobertura de pruebas específica para bootstrap y rate limit; la búsqueda del repositorio no devolvió pruebas coincidentes. Esto no prueba que no existan pruebas con otros nombres.
+- Casos obligatorios en staging: dos cuentas haciendo bootstrap simultáneamente; tres o más solicitudes inválidas desde una y varias instancias; bootstrap cuando ya existe administrador; reintento después de fallo parcial; recuperación tras reserva incompleta; rotación o ausencia del secreto.
+- **Estado:** BOOTSTRAP-02 y BOOTSTRAP-03 documentados, sin corrección transaccional aplicada. La carrera no puede declararse resuelta hasta disponer de la primitiva persistente y pasar pruebas concurrentes. Supabase activo, datos, esquema, políticas y producción permanecen sin cambios.
