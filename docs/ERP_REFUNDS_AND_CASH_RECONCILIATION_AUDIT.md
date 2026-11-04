@@ -78,3 +78,16 @@ El modelo `SaleAdjustmentRecord` conserva `refundAmount` y `refundStatus`, pero 
 **Corrección requerida:** crear un subledger de reembolsos por pagar al cliente enlazado al ajuste original. Debe soportar liquidaciones parciales idempotentes, saldo calculado, fechas, beneficiario, método y evidencia; impedir liquidar más que el saldo y conciliar cada salida con caja o banco. Antes de migrar, clasificar los ajustes históricos sin inventar pagos ni saldos ya liquidados.
 
 **Nota de actualización:** este análisis describe el código vigente inspeccionado. La referencia histórica del hallazgo 1 sobre uso del método de pago original debe leerse junto con el campo actual `refundPaymentMethod`: el flujo actual ya distingue ese método en el registro del ajuste, pero todavía no valida ni concilia la liquidación real.
+
+
+### 7. El importe, impuesto y costo unitario del ajuste se aceptan desde el cliente sin cotejarlos con la línea original
+
+Severidad: alta para integridad financiera e inventario. Confirmado por inspección estática de `recordSaleAdjustment` en `src/hooks/useErpState.ts` y del constructor del registro en `src/components/POS.tsx` el 2026-11-04.
+
+La función comprueba que `unitPrice`, `unitTaxAmount` y `unitCost` sean finitos y no negativos, que el total informado coincida con la suma de esos importes y que la cantidad no supere la disponible. Sin embargo, no vuelve a derivar esos valores de la línea original de `sales` ni compara precio, impuesto y costo unitario con ella. El POS suele construir el registro usando la información de la venta seleccionada, pero esa validación ocurre en el navegador y no constituye una garantía de integridad.
+
+El valor `unitCost` recibido también se utiliza para calcular el costo de la mercancía reingresada y el nuevo costo promedio ponderado del producto. Por tanto, un ajuste manipulado o construido desde otra ruta puede cambiar el importe reconocido de la devolución y la valoración del inventario sin respetar los datos originales de la factura.
+
+**Corrección requerida:** derivar en una única operación de dominio los importes permitidos desde la línea original identificada por `saleLineId`; para registros históricos sin identificador, resolver la línea mediante una regla determinista y auditable. Rechazar discrepancias de precio, impuesto o costo fuera de tolerancia definida. El servidor debe repetir las validaciones y realizar ajuste, inventario y movimientos financieros en una transacción; no confiar en el cálculo del cliente.
+
+**Pruebas requeridas:** precio unitario alterado; impuesto alterado; costo unitario alterado; línea de otra factura; línea duplicada; línea histórica sin identificador; devolución parcial repetida; y verificación de que un rechazo no cambia existencias, costo promedio, cuenta por cobrar ni caja.
