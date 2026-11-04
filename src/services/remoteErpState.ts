@@ -102,62 +102,90 @@ const saveQueues = new Map<string, Promise<void>>();
 
 async function saveErpSnapshotNow(userId: string, snapshot: ErpSnapshot): Promise<void> {
   const client = requireSupabase();
-  const { data: sessionData, error: sessionError } = await client.auth.getSession();
-  const session = sessionData.session;
-  if (sessionError || !session || session.user.id !== userId) {
-    throw new Error('La sesión no corresponde a la cuenta que intenta guardar los datos.');
+  const expectedRevision = lastSeenRevision.get(userId);
+
+  // Ensure each successful write changes the revision, even when two saves
+  // happen within the same millisecond.
+  const nextRevision = new Date(Math.max(Date.now(), expectedRevision ? Date.parse(expectedRevision) + 1 : 0)).toISOString();
+  const payload = { user_id: userId, state: snapshot, updated_at: nextRevision };
+
+  if (!expectedRevision) {
+    // First save must be insert-only. An upsert here could overwrite a record
+    // created by another device after this browser's initial read.
+    const { data, error } = await client
+      .from('erp_state')
+      .insert(payload)
+      .select('updated_at')
+      .single();
+    if (error) {
+      if (error.code === '23505') {
+        throw new Error('Los datos fueron creados desde otra sesión. Recarga el ERP para sincronizar antes de guardar.');
+      }
+      throw error;
+    }
+    if (typeof data?.updated_at !== 'string') throw new Error('Supabase no devolvió la versión guardada.');
+    lastSeenRevision.set(userId, data.updated_at);
+    return;
   }
 
-  const response = await fetch('/api/erp-state', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session.access_token}`,
-    },
-    body: JSON.stringify({
-      action: 'snapshot',
-      expectedUpdatedAt: lastSeenRevision.get(userId) ?? null,
-      snapshot,
-    }),
-  });
-  const result: unknown = await response.json().catch(() => null);
-  if (!response.ok || !isRecord(result) || typeof result.updatedAt !== 'string') {
-    const message = isRecord(result) && typeof result.error === 'string'
-      ? result.error
-      : 'No se pudo confirmar el guardado seguro en el servidor.';
-    throw new Error(message);
+  const { data, error } = await client
+    .from('erp_state')
+    .update({ state: snapshot, updated_at: nextRevision })
+    .eq('user_id', userId)
+    .eq('updated_at', expectedRevision)
+    .select('updated_at')
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data || typeof data.updated_at !== 'string') {
+    throw new Error('Se detectaron cambios más recientes desde otra sesión. No se sobrescribieron; recarga el ERP antes de continuar.');
   }
-  lastSeenRevision.set(userId, result.updatedAt);
+  lastSeenRevision.set(userId, data.updated_at);
 }
 
+
 async function saveQuotesForUserNow(userId: string, quotes: QuoteRecord[], fallbackSnapshot: ErpSnapshot): Promise<void> {
-  // The server merges quotes into the latest snapshot and checks the
-  // cotizaciones permission. The fallback is retained for API compatibility;
-  // it is never trusted as the base for a cloud write.
-  void fallbackSnapshot;
   const client = requireSupabase();
-  const { data: sessionData, error: sessionError } = await client.auth.getSession();
-  const session = sessionData.session;
-  if (sessionError || !session || session.user.id !== userId) {
-    throw new Error('La sesión no corresponde a la cuenta que intenta guardar cotizaciones.');
+
+  // Read the latest cloud revision inside the same per-user save queue. This
+  // prevents a stale autosave snapshot from being used as the base for edits.
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const { data, error } = await client
+      .from('erp_state')
+      .select('user_id,state,updated_at')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!data) {
+      lastSeenRevision.delete(userId);
+      await saveErpSnapshotNow(userId, { ...fallbackSnapshot, quotes });
+      return;
+    }
+    if (data.user_id !== userId) throw new Error('La cuenta no coincide con el propietario de los datos.');
+    if (typeof data.updated_at !== 'string') throw new Error('No se pudo verificar la versión de los datos en Supabase.');
+
+    const latestState = isRecord(data.state) ? data.state : {};
+    const nextRevision = new Date(Math.max(Date.now(), Date.parse(data.updated_at) + 1)).toISOString();
+    const { data: updated, error: updateError } = await client
+      .from('erp_state')
+      .update({ state: { ...latestState, quotes }, updated_at: nextRevision })
+      .eq('user_id', userId)
+      .eq('updated_at', data.updated_at)
+      .select('updated_at')
+      .maybeSingle();
+
+    if (updateError) throw updateError;
+    if (updated && typeof updated.updated_at === 'string') {
+      lastSeenRevision.set(userId, updated.updated_at);
+      return;
+    }
+    // A different device changed the row while we were saving. Re-read it and
+    // retry the quote-only update without replacing its other data.
   }
 
-  const response = await fetch('/api/erp-state', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session.access_token}`,
-    },
-    body: JSON.stringify({ action: 'quotes', quotes }),
-  });
-  const result: unknown = await response.json().catch(() => null);
-  if (!response.ok || !isRecord(result) || typeof result.updatedAt !== 'string') {
-    const message = isRecord(result) && typeof result.error === 'string'
-      ? result.error
-      : 'No se pudo confirmar el guardado de cotizaciones.';
-    throw new Error(message);
-  }
-  lastSeenRevision.set(userId, result.updatedAt);
+  throw new Error('Otra sesión está modificando los datos. No se pudo confirmar el guardado; vuelve a intentarlo.');
 }
 
 export function saveQuotesForUser(userId: string, quotes: QuoteRecord[], fallbackSnapshot: ErpSnapshot): Promise<void> {
