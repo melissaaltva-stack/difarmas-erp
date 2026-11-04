@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => {
   const query: Record<string, ReturnType<typeof vi.fn>> = {};
   for (const method of ['select', 'eq', 'insert', 'update', 'maybeSingle', 'single']) query[method] = vi.fn();
-  return { query, client: { from: vi.fn(() => query) } };
+  const rpc = vi.fn();
+  return { query, rpc, client: { from: vi.fn(() => query), rpc } };
 });
 
 vi.mock('./supabaseClient', () => ({ requireSupabase: () => mocks.client }));
@@ -139,5 +140,84 @@ describe('remoteErpState', () => {
     const { loadErpSnapshot } = await import('./remoteErpState');
     const result = await loadErpSnapshot('user-1');
     expect(result).toMatchObject(finance);
+  });
+});
+
+
+describe('resolveSupplierCreditNoteAtomically', () => {
+  const resolution = {
+    supplierReturns: [{ id: 7, status: 'Nota de crédito recibida' }],
+    payables: [{ id: 3, total: 80, paid: 20 }],
+    supplierCredits: [{ id: 1, amount: 20, remainingBalance: 20 }],
+    updatedAt: '2026-11-04T18:00:00.000Z',
+  };
+
+  it('rejects invalid return identifiers before contacting Supabase', async () => {
+    const { resolveSupplierCreditNoteAtomically } = await import('./remoteErpState');
+    await expect(resolveSupplierCreditNoteAtomically('user-1', 0)).rejects.toThrow(/no es válida/);
+    expect(mocks.client.rpc).not.toHaveBeenCalled();
+  });
+
+  it('uses the authenticated RPC and returns only a complete confirmed result', async () => {
+    mocks.client.rpc.mockResolvedValue({ data: resolution, error: null });
+    const { resolveSupplierCreditNoteAtomically } = await import('./remoteErpState');
+
+    await expect(resolveSupplierCreditNoteAtomically('user-1', 7)).resolves.toEqual(resolution);
+    expect(mocks.client.rpc).toHaveBeenCalledWith('resolve_supplier_credit_note', { p_return_id: 7 });
+  });
+
+  it('rejects an incomplete RPC response instead of treating it as a successful credit note', async () => {
+    mocks.client.rpc.mockResolvedValue({
+      data: { supplierReturns: [], payables: [], supplierCredits: [] },
+      error: null,
+    });
+    const { resolveSupplierCreditNoteAtomically } = await import('./remoteErpState');
+
+    await expect(resolveSupplierCreditNoteAtomically('user-1', 7)).rejects.toThrow(/confirmación íntegra/);
+  });
+
+  it('propagates database authorization and transaction errors', async () => {
+    const databaseError = { code: '42501', message: 'permission denied' };
+    mocks.client.rpc.mockResolvedValue({ data: null, error: databaseError });
+    const { resolveSupplierCreditNoteAtomically } = await import('./remoteErpState');
+
+    await expect(resolveSupplierCreditNoteAtomically('user-1', 7)).rejects.toEqual(databaseError);
+  });
+
+  it('updates the local revision only after the database confirms the transaction', async () => {
+    const oldRevision = '2026-11-04T17:00:00.000Z';
+    const newRevision = resolution.updatedAt;
+    mocks.query.maybeSingle
+      .mockResolvedValueOnce({
+        data: { user_id: 'user-1', updated_at: oldRevision, state: emptySnapshot },
+        error: null,
+      })
+      .mockResolvedValueOnce({ data: { updated_at: '2026-11-04T18:00:01.000Z' }, error: null });
+    mocks.client.rpc.mockResolvedValue({ data: resolution, error: null });
+
+    const { loadErpSnapshot, resolveSupplierCreditNoteAtomically, saveErpSnapshot } = await import('./remoteErpState');
+    await loadErpSnapshot('user-1');
+    await resolveSupplierCreditNoteAtomically('user-1', 7);
+    await saveErpSnapshot('user-1', emptySnapshot);
+
+    expect(mocks.query.eq).toHaveBeenCalledWith('updated_at', newRevision);
+  });
+
+  it('does not advance the local revision when the database rejects the transaction', async () => {
+    const oldRevision = '2026-11-04T17:00:00.000Z';
+    mocks.query.maybeSingle
+      .mockResolvedValueOnce({
+        data: { user_id: 'user-1', updated_at: oldRevision, state: emptySnapshot },
+        error: null,
+      })
+      .mockResolvedValueOnce({ data: null, error: null });
+    mocks.client.rpc.mockResolvedValue({ data: null, error: { code: '42501', message: 'denied' } });
+
+    const { loadErpSnapshot, resolveSupplierCreditNoteAtomically, saveErpSnapshot } = await import('./remoteErpState');
+    await loadErpSnapshot('user-1');
+    await expect(resolveSupplierCreditNoteAtomically('user-1', 7)).rejects.toBeTruthy();
+    await expect(saveErpSnapshot('user-1', emptySnapshot)).rejects.toThrow(/cambios más recientes/);
+
+    expect(mocks.query.eq).toHaveBeenCalledWith('updated_at', oldRevision);
   });
 });
