@@ -166,3 +166,42 @@ Revisión estática de los archivos y SHA actuales de esta rama. No se inició s
 5. Probar las rutas con cuentas reales de cada rol en staging antes de aplicar cambios de permisos o RLS.
 
 **Estado:** hallazgo documentado; no se modificó código funcional, usuarios, claims, Supabase ni datos comerciales.
+## AUTHZ-03 — La autorización de escritura permite reemplazar el snapshot completo sin validar permisos por módulo
+
+**Severidad: crítica para integridad y segregación de funciones; requiere confirmar en staging con cuentas de prueba antes de cualquier cambio.**
+
+### Evidencia de implementación
+
+- `src/services/remoteErpState.ts` ejecuta las operaciones `insert` y `update` de `public.erp_state` directamente desde el cliente Supabase autenticado.
+- `saveErpSnapshotNow` envía el objeto `state: snapshot` completo en una sola actualización. El filtro `user_id` y `updated_at` protege la propiedad de la fila y detecta revisiones concurrentes, pero no limita qué propiedades del JSON puede cambiar el usuario.
+- `saveQuotesForUserNow` actualiza la clave `quotes` dentro del mismo JSONB, también directamente desde el cliente. No verifica el permiso `cotizaciones` en servidor.
+- `src/hooks/useErpState.ts` construye un snapshot que incluye clientes, productos, ventas, compras, proveedores, gastos, cuentas por cobrar/pagar, movimientos, cierres, configuración y otros módulos. Los setters locales pueden cambiar cualquiera de esas colecciones antes del autosave.
+- `api/admin-users.ts` filtra `farmi_permissions` para el editor y los claims, pero esa lista no es consultada por `saveErpSnapshotNow` ni por la actualización directa de `saveQuotesForUserNow`.
+- La migración `202611020001_erp_state_role_write_guard.sql` que existe en esta rama exige cuenta activa y limita escritura a los roles Administrador, Supervisor, Ventas, Compras y Finanzas. La revisión de migraciones remotas confirmó que esta migración no está aplicada en el proyecto activo.
+- La política activa de escritura revisada en Supabase permite esos roles para la fila propia, pero no valida cada módulo o clave del JSONB. Por tanto, el control de rol no equivale a autorización por función. El rol Solo lectura está excluido de escritura en la policy observada; no se afirma que pueda persistir cambios con su sesión normal.
+
+### Impacto
+
+Una cuenta operativa que sí supera la policy de escritura puede enviar un snapshot que cambie datos de módulos que no tiene asignados en su lista de permisos. Por ejemplo, la lista de módulos puede ocultar Compras a Ventas, pero la autorización de fila no comprueba que el cambio del JSONB se limite a ventas/clientes/cotizaciones. La restricción visual de navegación no es una barrera de seguridad para una llamada directa a Supabase.
+
+La revisión de código demuestra que el cliente envía el snapshot completo y que el control de permisos por módulo no participa en la autorización de persistencia. La posibilidad concreta de explotar cada colección depende de la policy efectiva y de los claims de la sesión; no se realizó una escritura de prueba contra datos reales.
+
+### Diferencia entre controles existentes y autorización
+
+- `user_id = auth.uid()` limita la fila al propietario.
+- `updated_at` como revisión compare-and-swap ayuda a evitar sobrescrituras concurrentes.
+- `farmi_active` y `farmi_role` limitan la elegibilidad general de escritura.
+- Ninguno de esos controles valida el permiso de módulo, la acción de negocio, el esquema permitido por rol ni la transición válida de cada registro.
+
+### Corrección necesaria
+
+1. Dejar de aceptar snapshots completos modificables por el navegador como frontera de autorización.
+2. Diseñar operaciones servidoras explícitas para cada dominio (por ejemplo, registrar venta, recibir compra, editar producto, registrar cobro/pago y cerrar caja), validando sesión, rol, permiso específico, propiedad y reglas de negocio.
+3. Hacer que la base de datos aplique transacciones, idempotencia y control de concurrencia en las operaciones monetarias y de inventario.
+4. Para lecturas, conservar consultas por propietario; para escrituras, validar capacidades por operación y no solo por rol.
+5. Migrar el almacenamiento monolítico por etapas, con respaldo, reconciliación y pruebas de compatibilidad; no dividir ni transformar datos comerciales en esta auditoría.
+6. Crear pruebas negativas de solicitudes directas: Ventas intentando alterar productos/compras/finanzas; Compras intentando alterar ventas/caja; Finanzas intentando recibir compras o modificar inventario; Solo lectura intentando cualquier mutación. Verificar que el rechazo ocurra en servidor y que el snapshot permanezca idéntico.
+
+### Estado y límites
+
+Hallazgo de revisión estática del código y de la configuración RLS observada en modo solo lectura. No se enviaron solicitudes de escritura, no se modificó ninguna policy, grant, tabla, claim, cuenta o dato. La migración de endurecimiento que está en la rama no se aplicó. Esta corrección requiere un plan de migración y pruebas en staging; no es seguro simularla con bloqueos de botones ni desplegarla directamente a producción.
