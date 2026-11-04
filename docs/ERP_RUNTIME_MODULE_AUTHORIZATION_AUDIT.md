@@ -512,3 +512,27 @@ Se compararon los archivos actuales de la rama de auditoría con `main`. En la r
 ### Evidencia y límites de esta revisión de inventario/devoluciones
 
 Se inspeccionaron el hook de estado, `inventoryService.ts`, `saleAdjustmentService.ts` y los tipos de dominio. El servicio de inventario sí comprueba productos existentes, cantidades positivas, servicios, existencias, costos y vencimiento mínimo para recepciones; el helper de devoluciones de venta controla cantidades acumuladas por línea en la interfaz. Esos controles reducen errores accidentales, pero están en código cliente y no sustituyen validación autoritativa. No se ejecutaron pruebas dinámicas, no se enviaron operaciones de negocio, no se aplicaron migraciones y no se modificaron datos de Supabase ni producción.
+
+
+
+### FIN-11 — El cierre diario no tiene unicidad ni bloqueo transaccional compartido
+
+**Evidencia:** `src/components/Finance.tsx` (SHA `556a4e667e1c336f0055a8a7de96a5240ba3d363`). `closeCash` comprueba `alreadyClosedToday` sobre el array local y utiliza `closingRef` para evitar doble clic en esa instancia. Después agrega el cierre mediante `setClosures`. Dos sesiones pueden observar que el día sigue abierto y registrar cierres simultáneos; no hay evidencia de clave única por caja/fecha ni de una operación transaccional en servidor. El cierre tampoco congela el conjunto de operaciones que alimentó el cálculo: pueden registrarse movimientos concurrentes mientras se cierra.
+
+**Severidad: alta (control de caja y auditoría).** Crear una operación de cierre en servidor con identificador de caja/fecha y restricción única, bloqueo transaccional, corte consistente de movimientos y totales recalculados desde registros autoritativos. El cierre debe quedar inmutable; correcciones posteriores deben ser ajustes auditados con actor, motivo y referencia, no edición o sustitución del cierre original. No aplicar cambios ni migraciones en producción durante esta auditoría.
+
+### FIN-12 — Los movimientos manuales de caja no conservan evidencia suficiente para una conciliación auditada
+
+**Evidencia:** En la sección `movimientos` de `Finance.tsx`, el formulario registra tipo, descripción, monto y categoría mediante `addCashMovement`, usando el estado local. El modelo `CashMovement` solo contiene `id`, tipo, descripción, monto, categoría y fecha; no incluye actor, referencia documental, contraparte, aprobador ni evidencia adjunta. La categoría se selecciona desde el navegador y determina si el movimiento participa en el efectivo esperado.
+
+**Severidad: alta (trazabilidad financiera).** Exigir motivo y categoría controlada en servidor, actor autenticado, fecha del servidor y referencia/evidencia según el tipo de movimiento. Separar movimientos de caja de banco/no efectivo con clasificación validada, y establecer aprobación para retiros/aportes que superen umbrales configurables. No se cambió el modelo ni los datos existentes.
+
+### FIN-13 — El método de pago y la imputación de cobros/pagos son datos confiados al navegador
+
+**Evidencia:** `collect` y `paySupplier` en `Finance.tsx` leen el monto y método de pago del estado del componente, validan el saldo local y actualizan por separado la cuenta por cobrar/pagar y `paymentTransactions`. La validación `validPayment` es útil para la interfaz, pero no es autoritativa. Un request manipulado puede intentar alterar método, monto o cuenta, y dos sesiones pueden consumir el mismo saldo pendiente antes de sincronizar.
+
+**Severidad: crítica (integridad de saldos y caja).** La operación de cobro/pago debe recibir un identificador idempotente y una cuenta destino; el servidor debe bloquear la cuenta, recalcular saldo, validar rol/permisos/capacidad, validar método y referencia, registrar la transacción y actualizar el saldo dentro de una sola transacción. No permitir que el navegador envíe un saldo actualizado como fuente de verdad.
+
+### Evidencia y límites de la revisión financiera complementaria
+
+Se inspeccionó `src/components/Finance.tsx` y se contrastó con los hallazgos previos FIN-06 a FIN-10. La interfaz valida montos positivos, saldo disponible, evita doble clic local y calcula el efectivo esperado a partir de ventas, cobros, gastos, compras, pagos y movimientos del día. Esos controles no proporcionan bloqueo multiusuario, unicidad persistente ni autorización de servidor. No se ejecutaron pruebas dinámicas, no se crearon cobros/pagos/cierres, no se aplicaron migraciones y no se modificaron datos de Supabase ni producción.
