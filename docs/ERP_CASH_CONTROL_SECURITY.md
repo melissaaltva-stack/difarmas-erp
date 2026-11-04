@@ -243,3 +243,16 @@ La acción `bootstrap` compara el código enviado con `FARMI_ADMIN_BOOTSTRAP_TOK
 Se inspeccionaron los despliegues Preview de la rama. El despliegue del commit `370cbe2ea9345bd722a620e761f8008661b3bfd4` terminó en error de compilación por dos errores TS1005 en `src/components/FinancialModules.tsx` (líneas 105 y 106). Esos errores corresponden a un commit anterior a la corrección JSX incorporada después en la rama; no se deben atribuir al HEAD actual.
 
 El HEAD actual `04382480bdd197a6b7d8920d80be7171d9cf600c` tiene GitHub Actions aprobada (instalación, auditoría npm, build y pruebas), pero Vercel no devuelve un despliegue asociado a ese SHA. Por tanto, no hay Preview actual verificado y no se ha comprobado por HTTP el conjunto de cabeceras de seguridad del despliegue vigente.
+
+
+## CASH-11 — El cierre no conserva el desglose completo de movimientos manuales
+
+La revisión cruzada de `Finance.tsx`, `financeService.ts` y `domain/types.ts` confirma que el efectivo esperado sí incluye las entradas y salidas manuales del día (`dayMovementIn` y `dayMovementOut`). Sin embargo, `closeCash` llama a `createCashClosure` sin pasar esos dos importes. La función guarda ventas, cobros, gastos, pagos a proveedores y compras al contado, pero el tipo `CashClosure` tampoco tiene campos para entradas/salidas manuales ni referencias a los movimientos que las componen.
+
+**Impacto:** el cierre conserva el total esperado y la diferencia, pero no permite reconstruir íntegramente cómo se llegó al total cuando hubo aportes, retiros u otros movimientos manuales. La lista general de movimientos puede cambiar o recibir nuevos registros después, y el cierre histórico no contiene una fotografía propia de ese desglose. Esto debilita la trazabilidad y la conciliación posterior; no cambia por sí solo el cálculo del efectivo esperado.
+
+**Severidad:** media para auditoría y trazabilidad de caja.
+
+**Corrección requerida:** al cerrar, congelar en el registro del cierre los totales de entradas y salidas manuales y las referencias/IDs de movimientos incluidos, además de los demás componentes. La operación debe capturar esos datos desde la fuente autoritativa en la misma transacción que registra el cierre. No basta con ampliar el objeto en el navegador: debe ser parte del contrato transaccional del servidor y tener pruebas de conciliación y compatibilidad con cierres históricos.
+
+**Estado:** hallazgo documentado tras revisión estática; no se modificó código funcional, tipos, Supabase, datos ni producción.
