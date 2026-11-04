@@ -74,7 +74,7 @@ function jsonEqual(a: unknown, b: unknown): boolean {
 }
 function roleOf(user: User): Role | null {
   const role = user.app_metadata?.farmi_role;
-  return typeof role === 'string' && role in ROLE_MODULES ? role as Role : null;
+  return typeof role === 'string' && Object.prototype.hasOwnProperty.call(ROLE_MODULES, role) ? role as Role : null;
 }
 function permissionsOf(user: User): Set<string> {
   const role = roleOf(user);
@@ -168,10 +168,12 @@ export default async function handler(req: Req, res: Res) {
       if (key === 'fixedExpenses') return value !== 25000;
       return value !== undefined && value !== null;
     });
-    if (nonEmpty.some(key => !canWriteKey(key, permissions))) {
+    const unauthorized = nonEmpty.filter(key => !canWriteKey(key, permissions) && !(key === 'settings' && !permissions.has('configuracion')));
+    if (unauthorized.length) {
       return reply(res, 403, { error: 'No puedes inicializar datos de módulos que no tienes autorizados.' });
     }
     const seeded = { ...EMPTY_STATE, ...nextState };
+    if (!permissions.has('configuracion')) delete seeded.settings;
     const nextRevision = new Date().toISOString();
     const { error } = await admin.from('erp_state').insert({ user_id: user.id, state: seeded, updated_at: nextRevision });
     if (error) return reply(res, error.code === '23505' ? 409 : 500, { error: 'No se pudo inicializar el registro. Recarga antes de guardar.' });
