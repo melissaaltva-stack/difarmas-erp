@@ -91,3 +91,26 @@ El valor `unitCost` recibido también se utiliza para calcular el costo de la me
 **Corrección requerida:** derivar en una única operación de dominio los importes permitidos desde la línea original identificada por `saleLineId`; para registros históricos sin identificador, resolver la línea mediante una regla determinista y auditable. Rechazar discrepancias de precio, impuesto o costo fuera de tolerancia definida. El servidor debe repetir las validaciones y realizar ajuste, inventario y movimientos financieros en una transacción; no confiar en el cálculo del cliente.
 
 **Pruebas requeridas:** precio unitario alterado; impuesto alterado; costo unitario alterado; línea de otra factura; línea duplicada; línea histórica sin identificador; devolución parcial repetida; y verificación de que un rechazo no cambia existencias, costo promedio, cuenta por cobrar ni caja.
+
+
+### 8. La capa de dominio permite registrar una anulación parcial
+
+Severidad: alta para integridad documental y financiera. Confirmado por inspección estática de `recordSaleAdjustment` en `src/hooks/useErpState.ts` y del constructor del ajuste en `src/components/POS.tsx` el 2026-11-04.
+
+El formulario POS prepara `adjustmentItems` con todas las cantidades pendientes cuando el tipo no es «Devolución parcial» y bloquea una anulación si ya existen ajustes previos. Sin embargo, la función de dominio `recordSaleAdjustment` no aplica una regla equivalente: para `type === 'Anulación'` solo impide una segunda anulación. La validación de líneas usa `canApplySaleAdjustmentItems`, que permite cualquier subconjunto de cantidades pendientes, y el importe solo se coteja contra la suma de los importes suministrados y el total restante. Por ello, una llamada directa o una ruta alternativa puede registrar un ajuste parcial etiquetado como anulación.
+
+**Impacto:** los reportes y el historial pueden clasificar como anulada una venta que conserva unidades/importe pendientes. La interfaz habitual reduce la exposición, pero no constituye una validación de dominio.
+
+**Corrección requerida:** imponer en la función de dominio que una anulación cubra exactamente todas las cantidades pendientes de todas las líneas originales y el importe total pendiente calculado desde la venta fuente. Rechazar líneas omitidas, cantidades parciales y discrepancias; probar también concurrencia y ventas con ajustes previos. La regla debe repetirse en servidor cuando exista una operación transaccional autorizada.
+
+### 9. La decisión de reingreso al inventario es global y no separa mercancía no apta
+
+Severidad: alta para control de inventario. Confirmado por inspección estática de `src/components/POS.tsx`, `src/hooks/useErpState.ts`, `src/domain/types.ts` e `src/components/Inventory.tsx` el 2026-11-04.
+
+El formulario de devoluciones expone un único checkbox `returnStock` para toda la operación. Ese mismo valor se copia a cada línea del ajuste; no hay selección por artículo para separar unidades aptas, dañadas, abiertas, contaminadas o no vendibles. Si se marca, `recordSaleAdjustment` suma las cantidades al stock general del producto y recalcula el costo promedio. Los movimientos quedan clasificados genéricamente como `Ajuste` con una nota de devolución. El modelo `Product` mantiene lote y vencimiento a nivel del producto, no una recepción/condición independiente por unidad o lote devuelto.
+
+**Impacto:** si una devolución contiene varias líneas y solo algunas unidades están en condiciones de venta, el control actual no permite registrar una disposición diferente por línea. Al reingresar el conjunto, mercancía no apta puede incrementar el stock disponible. Tampoco existe una ubicación o estado de cuarentena separado que la excluya de POS, picking y reportes de disponibilidad. La comprobación de vencimiento en POS usa la fecha del producto, pero no acredita que cada unidad devuelta esté íntegra ni que pertenezca al mismo lote registrado.
+
+**Corrección requerida:** permitir clasificar cada línea/unidad devuelta como «Apta para venta», «Cuarentena» o «No vendible», con motivo, cantidad, lote/vencimiento, actor y evidencia. Solo «Apta para venta» debe aumentar el inventario disponible; cuarentena y no vendible deben mantenerse fuera del stock vendible y requerir liberación o disposición autorizada. Definir compatibilidad para los registros históricos antes de cualquier migración.
+
+**Pruebas requeridas:** devolución mixta con una línea apta y otra dañada; varias unidades de una misma línea con disposiciones distintas; lote vencido; producto con fecha de vencimiento no registrada; confirmación de que cuarentena/no vendible no puede agregarse al POS; y conciliación entre cantidad devuelta, disponible, en cuarentena y descartada.
