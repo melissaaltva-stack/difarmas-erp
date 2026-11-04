@@ -469,3 +469,39 @@ No se generaron operaciones duplicadas ni se ejecutaron pruebas de concurrencia 
 ### Alcance
 
 Revisión estática de `useErpState.ts` y `remoteErpState.ts` en la rama `security/erp-state-permission-matrix`. No se modificó código funcional, Supabase, RLS, grants, Auth ni datos. No se aplicaron migraciones y no se probó concurrencia contra producción.
+
+
+
+## FIN-02 / CASH-05 / RET-02 — Idempotencia y conciliación de cobros, pagos, cierres y devoluciones
+
+**Estado: hallazgos confirmados por revisión estática; sin cambios funcionales ni de datos.**
+
+### FIN-02 — Cobros y pagos no son transacciones atómicas
+
+En `src/components/FinancialModules.tsx` (`ReceivablesModule.collect` y `PayablesModule.pay`) y `src/components/Finance.tsx` (`collect` y `paySupplier`), los flujos calculan el saldo desde el estado del navegador, actualizan `receivables[].paid` o `payables[].paid` mediante setters y agregan por separado una fila a `paymentTransactions`. Los bloqueos `useRef` son locales a cada instancia y se limpian al cambiar las colecciones. Los avisos de éxito se muestran antes de confirmar la persistencia remota.
+
+La revisión de `docs/ERP_PAYMENT_TRANSACTION_SECURITY.md` y `docs/ERP_CASH_CONTROL_SECURITY.md` identifica el escenario concreto de concurrencia: dos operaciones pueden validar contra el mismo saldo previo; el saldo acumulado puede quedar limitado por `Math.min(total, paid + value)`, mientras el historial conserva ambos importes completos. Esto puede desalinear saldo, cobros/pagos y conciliación de caja. El control optimista del snapshot no es una transacción financiera ni una clave de idempotencia.
+
+**Corrección requerida:** una operación servidor por tipo de pago, con autorización por acción, bloqueo de la cuenta, recálculo del saldo, clave de idempotencia única y escritura atómica de saldo + transacción. La interfaz debe mostrar éxito solo con respuesta confirmada y reconciliarse con el resultado del servidor.
+
+### CASH-05 — Cierre diario y movimientos de caja no tienen unicidad autoritativa
+
+En `src/components/Finance.tsx`, `alreadyClosedToday` depende de los cierres cargados localmente y `closingRef` evita únicamente doble pulsación en la instancia actual. El cierre se agrega por setter y se guarda en el snapshot general. No se identificó una restricción única servidor por usuario/caja + fecha de negocio ni una transacción que recalcule y congele los movimientos incluidos. Gastos y movimientos manuales también se crean en el cliente con IDs locales y persistencia diferida.
+
+**Corrección requerida:** endpoint/RPC autorizado para cierre, clave de idempotencia y restricción única por fecha/caja; calcular importes desde movimientos confirmados dentro de la misma transacción. Registrar gastos y movimientos con IDs de servidor y confirmación remota antes de mostrarlos como definitivos.
+
+### RET-02 — Resolución de devolución de proveedor puede repetirse después de liberar el bloqueo local
+
+En `src/hooks/useErpState.ts`, `recordSupplierDispatch` usa estado y movimientos locales para detectar un despacho previo. `resolveSupplierReturn` mantiene un Set de operaciones en curso, pero libera el bloqueo al salir; el Set de completadas se limpia cuando cambia `supplierReturns`. El paso `Cambio recibido` incrementa existencias y agrega movimientos de inventario mediante setters cliente. Una repetición tras un estado obsoleto o entre sesiones no tiene una reserva persistente/única por devolución y puede duplicar la reposición.
+
+El paso `Nota de crédito recibida` intenta una ruta distinta mediante `resolveSupplierCreditNoteAtomically`, pero la RPC correspondiente no existe en la base Supabase activa revisada. Por tanto, no se debe considerar esa protección disponible en el entorno activo hasta instalar y verificar la migración con autorización.
+
+**Corrección requerida:** resolución transaccional e idempotente por ID de devolución y transición de estado, con bloqueo/validación de estado en servidor y escritura atómica de estado + inventario + movimientos o crédito. No basta con mantener un Set en React.
+
+### Alcance y verificación
+
+- Revisión estática de `FinancialModules.tsx`, `Finance.tsx`, `SupplierReturns.tsx`, `useErpState.ts` y servicios de finanzas/créditos/devoluciones en la rama `security/erp-state-permission-matrix`.
+- Se confirmó que la base activa no contiene la RPC `resolve_supplier_credit_note(bigint)`; no se aplicó migración.
+- No se ejecutaron pagos, cobros, cierres ni devoluciones de prueba sobre datos reales.
+- No se modificaron código funcional, Supabase, políticas, grants, Auth, sesiones ni datos comerciales.
+- No se tocó `main` ni se promovió el Preview a producción.
