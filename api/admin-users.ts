@@ -116,8 +116,15 @@ export default async function handler(req: Req, res: Res) {
 
   try {
     if (action === 'status') {
-      const admins = (await listAllUsers()).filter(isAdmin);
-      return reply(res, 200, { isAdmin: isAdmin(currentUser), canBootstrap: admins.length === 0 && Boolean(process.env.FARMI_ADMIN_BOOTSTRAP_TOKEN), email: currentUser.email ?? '' });
+      // This endpoint reports only the caller's own status. Do not enumerate
+      // the entire Auth user directory just to decide whether to display the
+      // bootstrap form: the bootstrap action independently checks the global
+      // administrator invariant before changing any account.
+      return reply(res, 200, {
+        isAdmin: isAdmin(currentUser),
+        canBootstrap: !isAdmin(currentUser) && Boolean(process.env.FARMI_ADMIN_BOOTSTRAP_TOKEN),
+        email: currentUser.email ?? '',
+      });
     }
 
     if (action === 'bootstrap') {
