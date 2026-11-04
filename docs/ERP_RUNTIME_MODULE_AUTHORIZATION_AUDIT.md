@@ -548,3 +548,41 @@ Se inspeccionó `src/components/Finance.tsx` y se contrastó con los hallazgos p
 El cliente Supabase configura persistencia, renovación automática y detección de enlaces; `AuthGate` escucha cambios de autenticación y desuscribe el listener al desmontarse. `App.tsx` exige `farmi_active === true` para habilitar módulos. El guard visual de `AuthGate`, en cambio, muestra «Acceso desactivado» cuando el claim es explícitamente `false`; la denegación de un claim ausente depende de las capas posteriores y de RLS. La caché de datos permanece en `localStorage` tras cerrar sesión (LOCAL-04).
 
 La revisión fue estática y la corrección AUTH-21 aún no cuenta con pruebas dinámicas. No se inspeccionaron tokens ni datos personales, no se usaron cuentas reales, no se ejecutaron operaciones de negocio ni se modificaron datos o configuración de producción.
+
+## Cierre de auditoría — 4 de noviembre de 2026
+
+### Resultado ejecutivo
+
+**La revisión estática del código y la verificación de CI quedan completadas para esta ronda. El ERP NO queda certificado como seguro para liberar a producción.** Se identificaron controles útiles y se corrigió AUTH-21, pero persisten riesgos críticos de autorización e integridad de operaciones que requieren cambios de arquitectura y pruebas controladas. No se debe interpretar el cierre de esta revisión como cierre de los hallazgos ni como autorización para desplegar.
+
+### Verificaciones finales realizadas
+
+- Se revisó el flujo de carga, aislamiento por usuario, autosave, serialización local, control de revisión `updated_at`, detección de conflicto y `flushPendingSave`.
+- La caché local utiliza claves con ámbito de usuario y un marcador de propietario para migrar datos antiguos. Si hay datos heredados sin propietario y no existe snapshot remoto, la sincronización se bloquea en lugar de asignarlos a una cuenta al azar. Al cambiar de cuenta, el hook restablece el estado y conserva la caché del propietario anterior. La caché por usuario permanece en el navegador después del logout; no debe considerarse almacenamiento confidencial frente a otros usuarios con acceso al mismo perfil/dispositivo ni frente a una vulnerabilidad XSS.
+- El autosave se serializa dentro de una cola por usuario y compara la revisión cargada antes de actualizar. Un conflicto se informa y no se reintenta automáticamente con un snapshot completo obsoleto. Esto protege frente a cierta pérdida de actualizaciones, pero no implementa autorización por módulo/campo ni transacciones de negocio multiusuario.
+- La suite CI del commit de cierre `5c28f043c008d6690dbe64810d5405e08fa07156` terminó **SUCCESS**. El job confirmó los pasos `npm install`, `npm audit`, `npm run build` y `npm test` exitosos (workflow run `41917578896`). Esto valida compilación y tests automatizados existentes, no pruebas reales de autorización contra Supabase ni concurrencia multi-dispositivo.
+- El check Vercel para ese mismo commit terminó **FAILURE** por límite de despliegues del plan (`build-rate-limit`, reintento indicado por Vercel en 24 horas). No hay deployment de Vercel confirmado para ese SHA.
+- GitHub informa `protected: false` para `main` y para la rama de auditoría; la respuesta de la API muestra protección deshabilitada y sin checks requeridos. Configurar protección de `main` con PR obligatorio y checks requeridos antes de aceptar cambios de seguridad.
+- La rama de auditoría no se ha fusionado. La inspección previa indica que está 406 commits por delante de `main`; no hacer merge global ni promoverla como paquete único.
+- El alias de producción sigue vinculado al deployment anterior de `main` (`f785087c0cccc8602f0dca537987b7f05086b1bf`). No se desplegó ni modificó producción. No se ejecutaron escrituras, DDL ni DML en Supabase.
+
+### Riesgos que impiden la aprobación de producción
+
+1. **Críticos — integridad financiera e inventario:** ventas, devoluciones, recepción/despacho de compras, cobros/pagos y movimientos de inventario siguen teniendo rutas compuestas desde el cliente; los bloqueos locales no impiden duplicados entre dispositivos. Requieren RPC transaccionales, idempotencia persistente, bloqueo de filas y recálculo/validación en servidor.
+2. **Críticos/altos — autorización:** la política del snapshot no aplica autorización por módulo/campo/acción; el rol Solo lectura no tiene una capa completa de capacidades en UI/servicios; el alta/protección del último administrador necesita atomicidad y rate limiting persistente. Los claims desactualizados y las reglas RLS deben probarse con cuentas de prueba.
+3. **Altos — contabilidad y trazabilidad:** la RPC de nota de crédito de proveedor confía en el importe del snapshot; el cierre diario y los movimientos manuales de caja no cuentan con unicidad, bloqueo y evidencia suficientes; la recepción acepta un total introducido sin conciliación de componentes.
+4. **Altos — control del cambio:** la rama principal no tiene protección reportada por GitHub; la rama de auditoría está muy divergida de `main`; Vercel no pudo generar deployment del SHA auditado por rate limit.
+5. **Medios — defensa en profundidad y cadena de suministro:** faltan cabeceras HTTP observadas en producción, lockfile reproducible y controles adicionales de CI/permisos de Actions; el catálogo público requiere una regla explícita de publicación por allowlist.
+
+### Acciones necesarias para cerrar los riesgos (no ejecutadas)
+
+- Preparar una rama limpia desde el SHA actual de `main` y aplicar cambios de seguridad por grupos pequeños, no fusionar los 406 commits.
+- Diseñar y probar primero en staging RPC transaccionales para las operaciones financieras e inventario; validar roles, permisos de módulo y capacidades por acción en servidor. Añadir pruebas negativas con usuarios de cada rol y pruebas de repetición/concurrencia.
+- Revisar la migración RLS de escritura por rol y la RPC de nota de crédito; corregir la validación de importes/cantidades antes de aplicar cualquiera de ellas.
+- Confirmar inventario de usuarios/claims y ejecutar pruebas RLS con cuentas de prueba. No activar una política más restrictiva en producción sin plan de recuperación.
+- Activar protección de `main`, PR obligatorio, revisión y checks requeridos; fijar dependencias mediante lockfile y acciones por SHA.
+- Resolver el límite de Vercel y verificar un Preview con SHA exacto; ejecutar smoke tests funcionales sin datos reales. Solo después preparar una liberación aprobada y verificar el SHA READY de producción.
+
+### Declaración de cierre
+
+La auditoría de revisión de código queda **cerrada con resultado: NO APROBADA PARA LIBERACIÓN**. No quedan tareas de lectura pendientes dentro de esta ronda documental; sí quedan remediaciones técnicas y pruebas de seguridad obligatorias. No se hicieron cambios en datos de Supabase, no se aplicaron migraciones, no se modificó `main` y no se desplegó producción.
