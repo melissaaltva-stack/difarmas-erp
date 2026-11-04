@@ -162,3 +162,59 @@ describe('admin-users username creation uniqueness', () => {
     expect(mocks.listUsers).not.toHaveBeenCalled();
   });
 });
+
+
+describe('admin-users privileged action authorization', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.env.SUPABASE_URL = 'https://example.supabase.co';
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
+    mocks.getUser.mockResolvedValue({
+      data: {
+        user: {
+          id: 'operator-123',
+          email: 'operator@example.com',
+          app_metadata: { farmi_active: true, farmi_role: 'Ventas', farmi_permissions: ['dashboard', 'ventas'] },
+          user_metadata: {},
+        },
+      },
+      error: null,
+    });
+    mocks.createClient.mockReturnValue({
+      auth: { getUser: mocks.getUser, admin: { listUsers: mocks.listUsers, createUser: mocks.createUser } },
+    });
+  });
+
+  it('denies account listing to an active non-admin role', async () => {
+    const { value, res } = response();
+    await handler(
+      { method: 'POST', headers: { authorization: 'Bearer operator-token' }, body: { action: 'list' } } as never,
+      res as never,
+    );
+
+    expect(value.statusCode).toBe(403);
+    expect(mocks.listUsers).not.toHaveBeenCalled();
+  });
+
+  it('denies privileged actions when the active claim is missing, even if role metadata says admin', async () => {
+    mocks.getUser.mockResolvedValueOnce({
+      data: {
+        user: {
+          id: 'unprovisioned-admin',
+          email: 'unprovisioned@example.com',
+          app_metadata: { farmi_role: 'Administrador', farmi_admin: true },
+          user_metadata: {},
+        },
+      },
+      error: null,
+    });
+    const { value, res } = response();
+    await handler(
+      { method: 'POST', headers: { authorization: 'Bearer unprovisioned-token' }, body: { action: 'list' } } as never,
+      res as never,
+    );
+
+    expect(value.statusCode).toBe(403);
+    expect(mocks.listUsers).not.toHaveBeenCalled();
+  });
+});
