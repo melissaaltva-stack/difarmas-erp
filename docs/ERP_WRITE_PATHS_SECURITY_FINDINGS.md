@@ -1199,3 +1199,18 @@ La API vuelve a consultar al usuario con `auth.getUser(accessToken)` en cada sol
 **Pruebas requeridas:** mantener dos sesiones simultáneas; desde la primera, desactivar o degradar al usuario de la segunda; comprobar inmediatamente llamadas a `list`, `create`, `invite`, `reset-password` y `update`; repetir con tokens previos y tras renovar sesión. Registrar la latencia real de revocación y verificar también RLS/RPC, no solo la interfaz.
 
 **Estado:** controles HTTP positivos documentados; ADMIN-25 permanece pendiente de prueba de integración. No se modificó código operativo, Auth, Supabase ni producción.
+
+
+## FIN-04 — Cobros y pagos a proveedores se registran como dos mutaciones independientes del snapshot
+
+**Severidad: crítica para integridad financiera. Estado: confirmado por revisión estática el 2026-11-04; no se ejecutaron cobros ni pagos reales.**
+
+En `src/components/FinancialModules.tsx`, `ReceivablesModule.collect` valida el importe contra el saldo que tiene la fila en memoria y después ejecuta dos actualizaciones independientes: `setReceivables` incrementa `paid` y `setTransactions` agrega el movimiento de cobro. `PayablesModule.pay` repite el patrón con `setPayables` y `setTransactions`. Ambas funciones generan el identificador con `Date.now()` y el máximo de los IDs visibles en esa sesión, y usan la fecha del reloj del navegador. La protección `processing` es un `useRef` local al componente; un efecto lo limpia cuando cambian las cuentas o transacciones. En `src/App.tsx`, los módulos reciben directamente los setters de estado. En `src/hooks/useErpState.ts`, cuentas y transacciones forman parte del mismo snapshot completo guardado de forma diferida, no de una operación financiera transaccional individual.
+
+**Impacto:** si falla una de las dos actualizaciones, se interrumpe la sesión o se produce una escritura concurrente desde otra pestaña/dispositivo, el saldo pagado y el historial pueden quedar desincronizados o una actualización puede sobrescribir otra. Dos sesiones pueden validar simultáneamente contra el mismo saldo pendiente y aceptar abonos/pagos cuyo total supere el saldo real. El bloqueo React no es una restricción compartida ni una garantía de idempotencia. El ID y la fecha generados en el navegador tampoco son identificadores/tiempos autoritativos globales.
+
+**Corrección requerida:** sustituir los dos setters por una única operación de servidor transaccional para cobrar y otra para pagar. La operación debe volver a leer y bloquear la cuenta, validar importe y saldo vigente, actualizar el acumulado, insertar el movimiento con ID/fecha de servidor, actor, método y referencia, y devolver el estado confirmado. Añadir clave de idempotencia única para reintentos y restricciones que impidan pagos/cobros superiores al saldo. El snapshot de compatibilidad no debe permitir sobrescribir el ledger autoritativo.
+
+**Pruebas obligatorias en staging:** dos sesiones abonan/pagan simultáneamente el mismo saldo; doble envío; reintento tras timeout; error entre actualización e inserción; pérdida de red; cambio de cuenta; y conciliación de saldo contra suma de movimientos. Debe comprobarse que cada operación se aplica exactamente una vez o devuelve el resultado previo, nunca dos veces.
+
+**Alcance de esta revisión:** se inspeccionaron `FinancialModules.tsx`, `App.tsx`, `domain/types.ts` y `useErpState.ts`. No se modificó código funcional, datos ni políticas de Supabase.
