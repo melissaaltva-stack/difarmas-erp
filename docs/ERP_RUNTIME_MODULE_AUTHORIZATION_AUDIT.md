@@ -297,3 +297,22 @@ Se enumeró el directorio `api/` de la rama `security/erp-state-permission-matri
 La suite de `admin-users.test.ts` cubre estado propio, ausencia/token inválido, unicidad de nombre y denegación de algunas acciones a no administradores o cuentas sin claim activo. No cubre bootstrap concurrente, carrera del último administrador, rate limiting, reset-password/update, límites de tamaño de petición, ni escenarios de permisos personalizados. La inspección fue estática y de tests existentes; no se ejecutó una batería dinámica contra despliegue ni se hicieron llamadas de escritura a Supabase.
 
 No se modificó código funcional, configuración, secretos, cuentas ni datos de Supabase. No se aplicó ninguna migración. Los riesgos AUTHZ-15 y AUTHZ-16 requieren una solución coordinada del lado servidor y pruebas de concurrencia/abuso antes de desplegar.
+
+
+### SUPPLY-01 — Dependencias sin versiones reproducibles y CI instala con `npm install`
+
+La inspección de `package.json` (SHA `3b1d0618990b1ffc73a9d158b8e43aa91bb52e5f`) encontró dependencias principales declaradas como `latest` (Vite, React, TypeScript, plugin React y tipos React), sin que el directorio raíz muestre un lockfile npm. Los workflows `.github/workflows/ci.yml` (SHA `6026e790c0587d17b207aa718a95d84d0bcaf452`) y `deploy-pages.yml` (SHA `9aad1c6bc7b183f26b7e061b50b54ed1adc7d563`) instalan con `npm install`, no `npm ci`. Por tanto, dos ejecuciones pueden resolver versiones distintas sin cambios en Git, y la revisión de seguridad del árbol de dependencias no es reproducible.
+
+**Severidad: alta (riesgo de cadena de suministro y reproducibilidad).** Fijar versiones directas, generar y versionar el lockfile, cambiar CI a `npm ci` y revisar/actualizar dependencias mediante PR controlado. Complementar con auditoría de dependencias y actualización periódica. No se ejecutó instalación ni se cambiaron paquetes en esta revisión.
+
+### SUPPLY-02 — Workflows de GitHub Actions no fijan las acciones externas por SHA
+
+Los workflows revisados utilizan acciones de terceros/Marketplace mediante etiquetas de versión (`actions/checkout@v4`, `actions/setup-node@v4`, `actions/upload-pages-artifact@v3`, `actions/deploy-pages@v4`) y el workflow CI no declara explícitamente un bloque `permissions` mínimo a nivel de workflow/job. Las etiquetas pueden avanzar a otra revisión y los permisos efectivos dependen de la configuración predeterminada del repositorio.
+
+**Severidad: media.** Fijar las acciones a SHA completos verificados, añadir comentarios con la versión semántica, y declarar permisos mínimos por job (por ejemplo, solo `contents: read` para build/test; Pages requiere los permisos específicos ya declarados en su workflow). Revisar también protección de ramas y aprobación de cambios de workflows. No se modificaron workflows ni configuración del repositorio.
+
+### Configuración de build y despliegue — observaciones
+
+`.env.example` solo documenta URL y publishable key de Supabase; no contiene secretos privilegiados, lo cual es correcto. `vite.config.ts` usa base `/` en Vercel y `/difarmas-erp/` en GitHub Pages para rutas de assets. El workflow de Pages valida la presencia de las dos variables públicas antes del build. La inspección del directorio raíz no mostró `vercel.json` ni un archivo equivalente de cabeceras; no se debe asumir que faltan cabeceras en producción sin comprobar la configuración efectiva de Vercel. La siguiente revisión debe verificar CSP, HSTS, nosniff, referrer-policy, frame-ancestors y permisos de navegador desde la configuración real del deployment.
+
+No se ejecutaron workflows ni despliegues. La auditoría de dependencias en CI puede detectar vulnerabilidades, pero su resultado debe revisarse en la ejecución correspondiente; no se infiere el estado de paquetes a partir de este análisis estático.
