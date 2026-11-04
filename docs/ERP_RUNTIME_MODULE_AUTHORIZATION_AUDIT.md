@@ -48,3 +48,42 @@ La función `normalizeSnapshot` valida principalmente que determinados campos se
 6. Migrar gradualmente sin borrar ni reemplazar el snapshot existente; mantener respaldo y plan de reversión.
 
 **No aplicar una migración RLS restrictiva todavía:** primero se debe inventariar la base de datos real, las cuentas y las escrituras que hoy dependen del snapshot completo para evitar bloquear a la administración o interrumpir el ERP.
+
+## Verificación de base activa — solo lectura
+
+**Proyecto consultado:** `nreumomoqiwgqbtnhbdy`. Se ejecutaron únicamente consultas SELECT de catálogos y la lectura de Security Advisors. No se aplicaron migraciones, no se ejecutó DDL/DML y no se consultaron valores de negocio.
+
+### AUTHZ-LIVE-01 — RLS habilitado, pero no forzado
+
+El catálogo de PostgreSQL confirma que RLS está habilitado en `public.erp_state` y `public.store_products`, pero `FORCE ROW LEVEL SECURITY` está desactivado en ambas tablas. Esto no elimina las policies para los usuarios normales, pero el propietario de la tabla y roles con bypass RLS pueden no quedar sujetos a ellas. Debe revisarse quién es el propietario y qué rol usa cada operación privilegiada.
+
+### AUTHZ-LIVE-02 — La policy activa de erp_state acepta claim activo ausente
+
+Las policies actualmente activas `erp_state_select_own`, `erp_state_insert_own` y `erp_state_update_own` usan `COALESCE(farmi_active, true)`. Por tanto, si el claim `farmi_active` falta, se interpreta como activo. INSERT y UPDATE además admiten los roles Administrador, Supervisor, Ventas, Compras y Finanzas. No existe una condición de `farmi_permissions` por módulo en estas policies.
+
+**Severidad: alta.** Esto confirma en la base activa la discrepancia de autorización identificada estáticamente. No se cambió la policy porque endurecerla sin inventario de sesiones/cuentas podría bloquear usuarios legítimos.
+
+### AUTHZ-LIVE-03 — Función de nota de crédito no está instalada en el proyecto consultado
+
+La consulta al catálogo `pg_proc` no devolvió `public.resolve_supplier_credit_note(bigint)`. La función sí existe como SQL en el repositorio, pero no está presente en la base consultada; por ello, no debe considerarse una protección operativa activa ni afirmarse que esa ruta transaccional está disponible en producción.
+
+La herramienta de historial de migraciones devolvió una lista vacía. Esto no demuestra por sí solo que no haya habido cambios manuales, pero sí significa que no hay migraciones registradas en esa respuesta que permitan acreditar la aplicación de esta función.
+
+### STORE-LIVE-01 — Grants de escritura redundantes en store_products
+
+El catálogo de privilegios muestra grants INSERT, UPDATE y DELETE para `anon` y `authenticated` sobre `public.store_products`. La policy RLS observada para esos roles es únicamente SELECT con `is_published = true`; no se observó una policy de escritura para esos roles. Por tanto, los grants no prueban por sí mismos que puedan escribir mientras RLS siga activo, pero son privilegios innecesarios y una exposición de defensa en profundidad.
+
+**Recomendación:** verificar primero el flujo administrativo y luego revocar esos grants a `anon` y `authenticated` en una migración controlada, conservando SELECT público y la policy de productos publicados.
+
+### AUTH-LIVE-01 — Advertencia de seguridad Auth
+
+El Security Advisor devuelve `auth_leaked_password_protection`: la protección contra contraseñas filtradas está deshabilitada. Se recomienda habilitarla desde la configuración de Auth si el plan y la configuración del proyecto lo permiten. No se modificó la configuración.
+
+### Alcance y limitaciones
+
+- La consulta confirmó las policies, grants y flags RLS vigentes en el momento de la revisión.
+- No se probaron escrituras con cuentas de cada rol ni se intentó evadir RLS.
+- No se inspeccionó ni cambió contenido de filas `erp_state`.
+- No se aplicó la migración de nota de crédito ni la migración restrictiva de permisos.
+- La revisión no certifica la seguridad de roles privilegiados, propietarios, backups ni configuración de red; requiere una fase específica de validación en staging.
+
