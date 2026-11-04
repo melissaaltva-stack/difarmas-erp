@@ -41,7 +41,7 @@ begin
   end if;
   if not v_active
      or v_role is null
-     or v_role not in ('Administrador','Supervisor','Compras','Finanzas') then
+     or v_role not in ('Administrador','Supervisor','Compras') then
     raise exception 'Tu usuario no tiene permiso para registrar notas de crédito de proveedores.' using errcode = '42501';
   end if;
   if v_permissions is null
