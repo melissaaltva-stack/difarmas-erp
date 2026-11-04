@@ -1103,3 +1103,37 @@ En el código revisado no se encontró un contador persistente ni una limitació
 - Se buscó cobertura de pruebas específica para bootstrap y rate limit; la búsqueda del repositorio no devolvió pruebas coincidentes. Esto no prueba que no existan pruebas con otros nombres.
 - Casos obligatorios en staging: dos cuentas haciendo bootstrap simultáneamente; tres o más solicitudes inválidas desde una y varias instancias; bootstrap cuando ya existe administrador; reintento después de fallo parcial; recuperación tras reserva incompleta; rotación o ausencia del secreto.
 - **Estado:** BOOTSTRAP-02 y BOOTSTRAP-03 documentados, sin corrección transaccional aplicada. La carrera no puede declararse resuelta hasta disponer de la primitiva persistente y pasar pruebas concurrentes. Supabase activo, datos, esquema, políticas y producción permanecen sin cambios.
+
+
+## Revalidación de controles activos de Supabase — 2026-11-04
+
+Se realizó una inspección SQL estrictamente de lectura en el proyecto activo `nreumomoqiwgqbtnhbdy`, además de consultar los Security Advisors. No se ejecutó DDL, DML, cambios de Auth ni modificaciones de configuración.
+
+### SUPABASE-LIVE-04 — Confirmación de policies permisivas para claims ausentes
+
+La consulta actual de `pg_policies` confirmó:
+
+- `erp_state_select_own`: exige que `auth.uid() = user_id`, pero considera activo un claim ausente mediante `COALESCE(farmi_active, true)`.
+- `erp_state_insert_own` y `erp_state_update_own`: aplican la misma aceptación del claim ausente y además requieren uno de los roles operativos permitidos.
+- La tabla tiene RLS habilitado, pero no forzado.
+- El rol `authenticated` tiene privilegios SQL de SELECT, INSERT y UPDATE; el control de filas depende de las policies.
+
+**Impacto confirmado:** una sesión autenticada propietaria de su fila cuyo JWT no incluya `farmi_active` puede superar la condición de activo en SELECT. INSERT/UPDATE también podrían superar el chequeo de activo si, además, el JWT conserva uno de los roles admitidos. Esto no elimina el filtro de propietario y no demuestra acceso a filas ajenas.
+
+**Estado:** riesgo activo, no corregido. La policy estricta con `COALESCE(..., false)` sigue sin aplicarse. Antes de endurecerla deben probarse el aprovisionamiento inicial, las cuentas existentes, las sesiones antiguas y el proceso de recuperación en staging.
+
+### SUPABASE-LIVE-05 — Protección contra contraseñas comprometidas deshabilitada
+
+El Security Advisor de Supabase devolvió el aviso `auth_leaked_password_protection` (WARN): la protección que compara contraseñas contra credenciales comprometidas conocidas está deshabilitada.
+
+**Corrección recomendada:** habilitar la protección contra contraseñas filtradas en la configuración de Auth del proyecto y verificar el comportamiento de creación/cambio de contraseña en staging. Esta configuración puede depender del plan y de la disponibilidad de la función; no debe contratarse un servicio adicional ni cambiarse el plan sin autorización.
+
+**Estado:** hallazgo verificado y pendiente de configuración. No se cambió la configuración de Auth ni se intentó modificar contraseñas.
+
+### Verificación de grants y alcance
+
+La consulta de catálogo confirmó SELECT/INSERT/UPDATE concedidos a `authenticated` sobre `public.erp_state`. Esto es coherente con el diseño actual de acceso mediado por RLS, pero hace especialmente importante que las policies sean estrictas. No se encontró en los esquemas consultados una función con nombre relacionado con bootstrap, administración o `erp_state` que proporcione una primitiva transaccional para resolver la carrera del primer administrador.
+
+**Límite de la comprobación:** la búsqueda de funciones se restringió a nombres relacionados en los esquemas `public` y `private`; no constituye una auditoría de todas las funciones ni de todos los objetos del proyecto.
+
+**Estado general:** SUPABASE-LIVE-04 y SUPABASE-LIVE-05 continúan abiertos. No se alteraron filas, snapshots, tablas, policies, grants, funciones, Auth ni producción.
