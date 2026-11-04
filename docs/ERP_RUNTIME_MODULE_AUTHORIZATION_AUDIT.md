@@ -352,3 +352,20 @@ La revisión de `src/hooks/useErpState.ts` (SHA `e87833ca750cf1f1e2bfa6415560d5f
 `src/services/supabaseClient.ts` configura persistencia y renovación automática de sesión con el cliente oficial de Supabase y utiliza únicamente la publishable key en el navegador; no se observó una service-role key en el cliente revisado. `useErpState.ts` separa claves de caché por ID de usuario y solo importa claves antiguas si el marcador de propietario coincide exactamente. `remoteErpState.ts` valida la identidad del propietario al leer el snapshot y usa una revisión `updated_at` condicional para evitar sobrescrituras obsoletas entre sesiones/dispositivos. Estos controles reducen riesgos, pero no convierten localStorage en almacenamiento confidencial ni sustituyen la autorización por operación en el backend.
 
 La revisión de autenticación fue estática. No se inspeccionó el perfil real del navegador, no se extrajeron tokens, no se consultaron datos privados de usuarios y no se ejecutaron pruebas con cuentas reales. No se modificaron código, almacenamiento local, sesiones ni datos de Supabase.
+
+
+### STORE-LIVE-03 — Superficie de Storage sin políticas RLS visibles
+
+La consulta de catálogos de la base activa encontró RLS habilitado en las tablas de `storage`, incluidas `storage.objects` y `storage.buckets`, pero no devolvió políticas en el esquema `storage`. Los grants de `anon` y `authenticated` aparecen en algunas tablas del esquema, pero sin policies RLS aplicables esos roles no obtienen acceso a filas mediante las rutas sujetas a RLS. No se inspeccionaron objetos ni archivos, ni se consultaron nombres de buckets.
+
+**Estado: requiere validar necesidad funcional.** Si FARMI o la tienda necesitan subir, reemplazar o leer imágenes mediante Supabase Storage, el flujo podría estar bloqueado o depender de URLs/servicios distintos. Antes de crear policies, identificar el bucket y el flujo real, definir propiedad y visibilidad pública/privada, y limitar SELECT/INSERT/UPDATE/DELETE por bucket y propietario. No añadir políticas genéricas ni abrir lectura/escritura pública.
+
+### DB-LIVE-04 — No se identificaron vistas en los esquemas consultados
+
+La consulta a `pg_views` no devolvió vistas en `public` ni `storage`. Por tanto, en esos esquemas no se encontró una vista que pueda estar omitiendo RLS por defecto. La consulta no cubre otros esquemas ni funciones Edge/API.
+
+### DB-LIVE-05 — Historial de migraciones no permite acreditar el esquema desplegado
+
+La herramienta de migraciones devolvió cero entradas, mientras que el repositorio contiene migraciones SQL preparadas, incluida `202611020002_supplier_credit_note_atomic.sql`. La inspección de funciones confirma que `public.resolve_supplier_credit_note(bigint)` no existe en la base activa. La migración no está aplicada. No debe inferirse que el estado completo de producción coincide con los archivos SQL del repositorio; hay que reconciliar el esquema real mediante un diff controlado antes de planificar cambios.
+
+**Alcance de esta ronda:** consultas SELECT de catálogos, policies, grants y roles; lectura de archivos de auditoría y migración en la rama de seguridad. No se leyeron filas ERP, objetos de Storage ni datos personales. No se ejecutó DDL/DML ni se cambió configuración.
