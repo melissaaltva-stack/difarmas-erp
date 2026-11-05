@@ -27,6 +27,7 @@ Alcance: documentación; no modifica código de ejecución ni datos de Supabase.
 | DATA-01 | Maestros | Clientes/proveedores se crean, editan y desactivan mediante mutaciones del snapshot; existe eliminación física de proveedor. | Falta de trazabilidad y riesgo de romper referencias históricas. |
 | DATA-02 | Productos | Ajustes de existencia y baja de productos requieren controles auditables del lado servidor. | Cambios de inventario sin evidencia suficiente. |
 | STATE-01 | Sincronización | `useErpState` bloquea algunas operaciones con `remoteReady`, pero expone setters directos (`setExpenses`, `setReceivables`, `setPayables`, `setCashClosures`, `setCashMovements`, `setPaymentTransactions`, `setSuppliers`, entre otros) sin una barrera común. El autosave sí se detiene mientras `remoteReady` es falso. | La UI puede cambiar el estado local durante carga/error aunque no se sincronice; los cambios pueden perderse al terminar la carga o quedar solo en el navegador. La protección es desigual según la operación. |
+| FIN-13 | Finanzas / sincronización | `Finance` recibe setters de gastos, CxC, CxP, caja y transacciones, pero no recibe `remoteReady` ni comprueba un estado de sincronización antes de `addExpense`, `collect`, `paySupplier`, `closeCash` o el alta de movimientos. | Las acciones financieras pueden modificar el estado local mientras la sesión aún carga o la sincronización está en error; el autosave puede no persistirlas. Los locks `useRef` solo limitan eventos en esa instancia y no coordinan dispositivos. |
 
 ## Arquitectura objetivo
 
