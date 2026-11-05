@@ -44,6 +44,13 @@ export function AuthGate({ children }: Props) {
       const initialLinkType=new URLSearchParams(window.location.hash.replace(/^#/,'')).get('type');
       if(initialLinkType==='invite'||initialLinkType==='recovery')setRecoveryMode(true);
       setChecking(false);
+    }).catch((sessionError: unknown) => {
+      if (!mounted) return;
+      // A rejected session lookup must not leave the login screen loading forever
+      // or create an unhandled promise rejection.
+      setUser(null);
+      setError(getSignInErrorMessage(sessionError));
+      setChecking(false);
     });
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
