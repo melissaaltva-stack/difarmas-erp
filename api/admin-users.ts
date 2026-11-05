@@ -72,12 +72,22 @@ function safeUser(user: User) {
   };
 }
 export const MAX_ADMIN_BODY_BYTES = 16 * 1024;
-export function isAdminBodySizeAllowed(contentLength: unknown): boolean {
-  if (contentLength === undefined || contentLength === null || contentLength === '') return true;
-  const raw = Array.isArray(contentLength) ? contentLength[0] : contentLength;
-  if (typeof raw !== 'string' && typeof raw !== 'number') return false;
-  const parsed = Number(raw);
-  return Number.isSafeInteger(parsed) && parsed >= 0 && parsed <= MAX_ADMIN_BODY_BYTES;
+export function isAdminBodySizeAllowed(contentLength: unknown, body?: unknown): boolean {
+  if (contentLength !== undefined && contentLength !== null && contentLength !== '') {
+    const raw = Array.isArray(contentLength) ? contentLength[0] : contentLength;
+    if (typeof raw !== 'string' && typeof raw !== 'number') return false;
+    const declared = Number(raw);
+    if (!Number.isSafeInteger(declared) || declared < 0 || declared > MAX_ADMIN_BODY_BYTES) return false;
+  }
+
+  // Do not rely only on Content-Length: some runtimes/proxies omit it.
+  if (body === undefined) return true;
+  try {
+    const serialized = typeof body === 'string' ? body : JSON.stringify(body);
+    return typeof serialized === 'string' && Buffer.byteLength(serialized, 'utf8') <= MAX_ADMIN_BODY_BYTES;
+  } catch {
+    return false;
+  }
 }
 function reply(res: Res, status: number, value: unknown) { return res.status(status).json(value); }
 
@@ -86,7 +96,7 @@ export default async function handler(req: Req, res: Res) {
   res.setHeader('Vary', 'Authorization');
   if (req.method === 'OPTIONS') return reply(res, 204, {});
   if (req.method !== 'POST') return reply(res, 405, { error: 'Usa POST para esta operación.' });
-  if (!isAdminBodySizeAllowed(req.headers['content-length'])) return reply(res, 413, { error: 'La solicitud supera el tamaño permitido.' });
+  if (!isAdminBodySizeAllowed(req.headers['content-length'], req.body)) return reply(res, 413, { error: 'La solicitud supera el tamaño permitido.' });
 
   const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
   const secret = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
