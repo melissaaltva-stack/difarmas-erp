@@ -26,6 +26,7 @@ Alcance: documentación; no modifica código de ejecución ni datos de Supabase.
 | AUTH-01 | Autorización | La visibilidad de módulos/acciones en UI no constituye autorización de servidor por operación/campo. | Un usuario con capacidad de escritura del snapshot puede intentar cambiar datos fuera de su función. |
 | DATA-01 | Maestros | Clientes/proveedores se crean, editan y desactivan mediante mutaciones del snapshot; existe eliminación física de proveedor. | Falta de trazabilidad y riesgo de romper referencias históricas. |
 | DATA-02 | Productos | Ajustes de existencia y baja de productos requieren controles auditables del lado servidor. | Cambios de inventario sin evidencia suficiente. |
+| STATE-01 | Sincronización | `useErpState` bloquea algunas operaciones con `remoteReady`, pero expone setters directos (`setExpenses`, `setReceivables`, `setPayables`, `setCashClosures`, `setCashMovements`, `setPaymentTransactions`, `setSuppliers`, entre otros) sin una barrera común. El autosave sí se detiene mientras `remoteReady` es falso. | La UI puede cambiar el estado local durante carga/error aunque no se sincronice; los cambios pueden perderse al terminar la carga o quedar solo en el navegador. La protección es desigual según la operación. |
 
 ## Arquitectura objetivo
 
