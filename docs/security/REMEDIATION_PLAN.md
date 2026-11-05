@@ -103,3 +103,28 @@ Decisión de seguridad:
 - No reutilizar la base de ComparaFarma.
 - Antes de implementar y probar `sales.create`, se necesita un entorno aislado de FARMI con esquema reproducible y datos sintéticos.
 - Hasta disponer de ese entorno, limitar los cambios a código sin efectos en datos, pruebas unitarias y documentación; cualquier integración de base de datos queda bloqueada.
+
+
+## Avance verificado — mitigación de sincronización financiera (2026-11-05)
+
+Commit revisado: `59cf3a80520e2cba687ee917520a6a1b1fef59c4`.
+
+Cambios de interfaz/código comprobados en esta rama:
+- `financeService.ts` incorpora `canWriteFinance(remoteReady, syncStatus)`; solo permite mutaciones cuando el snapshot remoto está cargado y el estado es `synced`.
+- `Finance.tsx` comprueba esa condición antes de ejecutar las mutaciones de gastos, cobros, pagos, cierres y movimientos; los controles correspondientes se deshabilitan cuando no está sincronizado.
+- `FinancialModules.tsx` aplica la misma barrera a los módulos de cuentas por cobrar y cuentas por pagar, incluidos los handlers y botones de cobro/pago.
+- `App.tsx` pasa `remoteReady` y `syncStatus` a ambos módulos; se corrigió la omisión de props de `PayablesModule` que había provocado un fallo TypeScript en el Preview anterior.
+- `financeService.test.ts` cubre estados loading, saving, error, synced y remoteReady falso.
+
+Verificación automatizada del mismo SHA:
+- GitHub Actions run `42111162419`: completed / success. Los pasos `npm install`, reporte de vulnerabilidades, `npm run build` y `npm test` terminaron en success.
+- Vercel Preview `dpl_2spvnesXcjYn9NMC5prtyoVSVwPi`: READY; el commit de origen coincide exactamente con el SHA indicado.
+- GitHub status check Vercel: success.
+
+Clasificación actualizada:
+- `FIN-13`: mitigado parcialmente en la interfaz para impedir que estas acciones se ejecuten antes de la carga y sincronización satisfactoria. No está resuelto a nivel de servidor.
+- `STATE-01`: sigue abierto. Los setters directos del snapshot continúan expuestos y esta corrección no constituye una barrera general de escritura.
+- Los riesgos TX-05, TX-06 y TX-07 siguen abiertos en cuanto a atomicidad, idempotencia persistente y concurrencia entre dispositivos. Un lock de React o la comprobación del estado de sincronización no sustituye una transacción PostgreSQL ni autorización de servidor.
+- No se ejecutaron pruebas de escritura ni cambios de datos en Supabase; no se fusionó el PR ni se desplegó a producción.
+
+Advertencia de build no bloqueante: Vercel informa que algunos bundles minificados superan 500 kB. Debe tratarse como trabajo de rendimiento separado; no se amplía el alcance de esta corrección financiera.
