@@ -8,9 +8,9 @@ export function canWriteSnapshot(remoteReady: boolean, syncStatus: SnapshotSyncS
 
 export function guardSnapshotSetter<T>(
   setter: Dispatch<SetStateAction<T>>,
-  allowed: boolean,
+  canWrite: () => boolean,
 ): Dispatch<SetStateAction<T>> {
   return value => {
-    if (allowed) setter(value);
+    if (canWrite()) setter(value);
   };
 }
