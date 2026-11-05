@@ -233,7 +233,7 @@ export function useErpState(userId: string) {
   }, [userId]);
 
   useEffect(() => {
-    if (!canWriteSnapshot(remoteReady, syncStatus)) return;
+    if (!remoteReady) return;
     setSyncStatus('saving');
     setSyncError(null);
     const timer = window.setTimeout(() => {
