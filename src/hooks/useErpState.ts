@@ -7,6 +7,7 @@ import { createPayableFromPurchase } from '../services/purchaseService';
 import { createInventoryMovementsForPurchase, createInventoryMovementsForSale } from '../services/inventoryMovementService';
 import { loadErpSnapshot, saveErpSnapshot, saveQuotesForUser, type ErpSnapshot } from '../services/remoteErpState';
 import { ensureCustomerCodes } from '../services/customerCodeService';
+import { canWriteSnapshot, guardSnapshotSetter } from '../services/snapshotWriteGuard';
 
 const initialProducts: Product[] = [
   { id: 1, code: '750100000001', name: 'Eutirox 50 mcg', category: 'Medicamentos', laboratory: 'Merck', presentation: 'Caja x 50 tabletas', cost: 250, retail: 330, wholesale: 310, stock: 18, minStock: 8, lot: 'EUT-2607', expiry: '2027-07-31', supplier: 'Distribuidora Nacional' },
@@ -37,10 +38,10 @@ billingInfo:{cai:'',authorizedRangeStart:'',authorizedRangeEnd:'',authorizationE
 
 export function useErpState(userId: string) {
   const [active, setActive] = useState<Module>('dashboard');
-  const [customers,setCustomersRaw]=useState<Customer[]>(()=>ensureCustomerCodes(loadJson<Customer[]>('difarmas_customers',[])));
+  const [customers,setCustomers:guardedSetCustomersRaw]=useState<Customer[]>(()=>ensureCustomerCodes(loadJson<Customer[]>('difarmas_customers',[])));
   const setCustomers=(value:Customer[]|((current:Customer[])=>Customer[]))=>setCustomersRaw(current=>ensureCustomerCodes(typeof value==='function'?value(current):value,current));
-  const [quotes,setQuotes]=useState<QuoteRecord[]>(()=>loadJson<QuoteRecord[]>('difarmas_quotes',[]));
-  const [suppliers,setSuppliers]=useState<Supplier[]>(()=>loadJson<Supplier[]>('difarmas_suppliers',[]));
+  const [quotes,setQuotes:guardedSetQuotes]=useState<QuoteRecord[]>(()=>loadJson<QuoteRecord[]>('difarmas_quotes',[]));
+  const [suppliers,setSuppliers:guardedSetSuppliers]=useState<Supplier[]>(()=>loadJson<Supplier[]>('difarmas_suppliers',[]));
   const [products, setProducts] = useState<Product[]>(() => loadJson<Product[]>('difarmas_products',initialProducts));
   const [search, setSearch] = useState('');
   const [monthlyGoal, setMonthlyGoal] = useState(() => loadNumber('difarmas_monthly_goal',100000));
@@ -78,7 +79,7 @@ export function useErpState(userId: string) {
     lastPurchaseCostHistoryId.current=nextId;
     return nextId;
   };
-  const [settings,setSettings] = useState<ErpSettings>(()=>loadJson<ErpSettings>('difarmas_settings',initialSettings));
+  const [settings,setSettings:guardedSetSettings] = useState<ErpSettings>(()=>loadJson<ErpSettings>('difarmas_settings',initialSettings));
   const [expenses, setExpenses] = useState<Expense[]>(()=>loadJson<Expense[]>('difarmas_expenses',[]));
   const [receivables, setReceivables] = useState<Receivable[]>(()=>loadJson<Receivable[]>('difarmas_receivables',[]));
   const [payables, setPayables] = useState<Payable[]>(()=>loadJson<Payable[]>('difarmas_payables',[]));
@@ -229,7 +230,7 @@ export function useErpState(userId: string) {
   }, [userId]);
 
   useEffect(() => {
-    if (!remoteReady) return;
+    if (!canWriteSnapshot(remoteReady, syncStatus)) return;
     setSyncStatus('saving');
     setSyncError(null);
     const timer = window.setTimeout(() => {
@@ -249,7 +250,7 @@ export function useErpState(userId: string) {
   }, [remoteReady, userId, snapshot]);
 
   const saveQuotes = async (nextQuotes: QuoteRecord[]): Promise<void> => {
-    if (!remoteReady) throw new Error('El sistema todavía está sincronizando los datos. Espera a que termine e inténtalo de nuevo.');
+    if (!canWriteSnapshot(remoteReady, syncStatus)) throw new Error('El sistema no está sincronizado. Espera a que termine la sincronización e inténtalo de nuevo.');
     // Cancel a delayed autosave captured before this edit. Any save already
     // queued completes first; the quote update then merges only the quotes field.
     if (autoSaveTimerRef.current !== null) {
@@ -274,7 +275,7 @@ export function useErpState(userId: string) {
   const filtered=useMemo(()=>products.filter(p=>[p.code,p.name,p.category,p.laboratory].join(' ').toLowerCase().includes(search.toLowerCase())),[products,search]);
 
   const recordMissingProduct=(request:Omit<MissingProductRequest,'id'|'requestedAt'|'status'>):boolean=>{
-    if (!remoteReady) return false;
+    if (!canWriteSnapshot(remoteReady, syncStatus)) return false;
     const name=request.name.trim();
     if(!name||!Number.isFinite(request.quantity)||request.quantity<1)return false;
     setMissingProductRequests(current=>[{...request,name,id:nextMissingProductRequestId(),requestedAt:new Date().toISOString(),status:'Pendiente'},...current]);
@@ -282,7 +283,7 @@ export function useErpState(userId: string) {
   };
 
   const recordSale=(sold:CartItem[],customer='',dueDate='',customerRtn='',invoiceNumber='',invoiceDetails?:StandardInvoiceDetails):boolean=>{
-    if (!remoteReady || saleInProgress.current) return false;
+    if (!canWriteSnapshot(remoteReady, syncStatus) || saleInProgress.current) return false;
     if (!sold.length || sold.some(item => !Number.isFinite(item.qty) || item.qty <= 0)) return false;
     if (((settings.paymentMethods??[]).find(method=>method.name===payment)?.kind==='credit'||payment==='Crédito') && (!customer.trim() || !dueDate.trim())) return false;
     const normalizedInvoiceNumber=invoiceNumber.trim().toLocaleLowerCase();
@@ -329,7 +330,7 @@ export function useErpState(userId: string) {
   };
 
   const updateStandardInvoice=(invoiceId:number,sold:CartItem[],customer='',customerRtn='',details?:StandardInvoiceDetails):boolean=>{
-    if (!remoteReady) return false;
+    if (!canWriteSnapshot(remoteReady, syncStatus)) return false;
     const original=sales.find(sale=>sale.id===invoiceId);
     if(!original||original.type!=='factura_estandar'||!sold.length||sold.some(item=>!Number.isFinite(item.qty)||item.qty<=0||!Number.isFinite(item.price)||item.price<0))return false;
     const oldQty=new Map<number,number>();
@@ -511,7 +512,7 @@ export function useErpState(userId: string) {
   };
 
   const saveProduct=(product:Product):Product|null=>{
-    if (!remoteReady) return null;
+    if (!canWriteSnapshot(remoteReady, syncStatus)) return null;
     if (!product.name.trim() || [product.cost,product.retail,product.wholesale,product.stock,product.minStock].some(v=>!Number.isFinite(v)||v<0)) return null;
     let saved:Product;
     if (editing) {
@@ -530,10 +531,10 @@ export function useErpState(userId: string) {
     return saved;
   };
 
-  const deleteProduct=(id:number)=>{ if (!remoteReady) return; setProducts(current=>current.filter(product=>product.id!==id)); };
+  const deleteProduct=(id:number)=>{ if (!canWriteSnapshot(remoteReady, syncStatus)) return; setProducts(current=>current.filter(product=>product.id!==id)); };
 
   const receivePurchase=(items:PurchaseItem[],paymentMethod:string,dueDate:string,invoiceNumber='',invoiceDate='',notes='',enteredTotal?:number,paymentTerms='Contado - Efectivo'):boolean=>{
-    if (!remoteReady || purchaseInProgress.current) return false;
+    if (!canWriteSnapshot(remoteReady, syncStatus) || purchaseInProgress.current) return false;
     if (!items.length || items.some(item => !Number.isFinite(item.qty) || item.qty <= 0 || !Number.isFinite(item.unitCost) || item.unitCost < 0)) return false;
     const supplierKey=purchaseSupplier.trim().toLocaleLowerCase();
     const invoiceKey=invoiceNumber.trim().toLocaleLowerCase();
@@ -556,5 +557,25 @@ export function useErpState(userId: string) {
     return true;
   };
 
-  return {active,setActive,customers,setCustomers,quotes,setQuotes,saveQuotes,suppliers,setSuppliers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,settings,setSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,purchases,purchaseCostHistory,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,cashClosures,setCashClosures,cashMovements,setCashMovements,paymentTransactions,setPaymentTransactions,missingProductRequests,setMissingProductRequests,supplierReturns,setSupplierReturns,saleAdjustments,setSaleAdjustments,recordSupplierDispatch,resolveSupplierReturn,recordSaleAdjustment,recordMissingProduct,filtered,recordSale,updateStandardInvoice,saveProduct,deleteProduct,receivePurchase,syncStatus,syncError,remoteReady};
+  // Public snapshot setters fail closed; internal hydration continues using raw setters.
+  const snapshotWritesAllowed = canWriteSnapshot(remoteReady, syncStatus);
+  const guardedSetCustomers = guardSnapshotSetter(setCustomers, snapshotWritesAllowed);
+  const guardedSetQuotes = guardSnapshotSetter(setQuotes, snapshotWritesAllowed);
+  const guardedSetSuppliers = guardSnapshotSetter(setSuppliers, snapshotWritesAllowed);
+  const guardedSetProducts = guardSnapshotSetter(setProducts, snapshotWritesAllowed);
+  const guardedSetMonthlyGoal = guardSnapshotSetter(setMonthlyGoal, snapshotWritesAllowed);
+  const guardedSetFixedExpenses = guardSnapshotSetter(setFixedExpenses, snapshotWritesAllowed);
+  const guardedSetSettings = guardSnapshotSetter(setSettings, snapshotWritesAllowed);
+  const guardedSetSales = guardSnapshotSetter(setSales, snapshotWritesAllowed);
+  const guardedSetExpenses = guardSnapshotSetter(setExpenses, snapshotWritesAllowed);
+  const guardedSetReceivables = guardSnapshotSetter(setReceivables, snapshotWritesAllowed);
+  const guardedSetPayables = guardSnapshotSetter(setPayables, snapshotWritesAllowed);
+  const guardedSetCashClosures = guardSnapshotSetter(setCashClosures, snapshotWritesAllowed);
+  const guardedSetCashMovements = guardSnapshotSetter(setCashMovements, snapshotWritesAllowed);
+  const guardedSetPaymentTransactions = guardSnapshotSetter(setPaymentTransactions, snapshotWritesAllowed);
+  const guardedSetMissingProductRequests = guardSnapshotSetter(setMissingProductRequests, snapshotWritesAllowed);
+  const guardedSetSupplierReturns = guardSnapshotSetter(setSupplierReturns, snapshotWritesAllowed);
+  const guardedSetSaleAdjustments = guardSnapshotSetter(setSaleAdjustments, snapshotWritesAllowed);
+
+  return {active,setActive,customers,setCustomers,quotes,setQuotes,saveQuotes,suppliers,setSuppliers,products,setProducts:guardedSetProducts,search,setSearch,monthlyGoal,setMonthlyGoal:guardedSetMonthlyGoal,fixedExpenses,setFixedExpenses:guardedSetFixedExpenses,settings,setSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales:guardedSetSales,purchases,purchaseCostHistory,expenses,setExpenses:guardedSetExpenses,receivables,setReceivables:guardedSetReceivables,payables,setPayables:guardedSetPayables,inventoryMovements,cashClosures,setCashClosures:guardedSetCashClosures,cashMovements,setCashMovements:guardedSetCashMovements,paymentTransactions,setPaymentTransactions:guardedSetPaymentTransactions,missingProductRequests,setMissingProductRequests:guardedSetMissingProductRequests,supplierReturns,setSupplierReturns:guardedSetSupplierReturns,saleAdjustments,setSaleAdjustments:guardedSetSaleAdjustments,recordSupplierDispatch,resolveSupplierReturn,recordSaleAdjustment,recordMissingProduct,filtered,recordSale,updateStandardInvoice,saveProduct,deleteProduct,receivePurchase,syncStatus,syncError,remoteReady};
 }
