@@ -245,7 +245,13 @@ export default async function handler(req: Req, res: Res) {
 
     return reply(res, 400, { error: 'Operación de usuarios desconocida.' });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Error interno al administrar usuarios.';
-    return reply(res, 500, { error: message });
+    // Provider/database error details can contain implementation information.
+    // Keep the diagnostic in server logs and return a stable message to clients.
+    const code = typeof error === 'object' && error !== null && 'code' in error
+      && typeof (error as { code?: unknown }).code === 'string'
+      ? (error as { code: string }).code
+      : undefined;
+    console.error('[admin-users] request failed', { action, code });
+    return reply(res, 500, { error: 'No se pudo completar la operación administrativa. Inténtalo de nuevo o contacta al administrador del sistema.' });
   }
 }
