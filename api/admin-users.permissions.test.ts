@@ -44,3 +44,21 @@ describe('safeRole', () => {
     expect(safeRole('Administrador')).toBe('Administrador');
   });
 });
+
+
+describe('admin request size limit', () => {
+  it('accepts absent content length and small valid requests', async () => {
+    const { isAdminBodySizeAllowed } = await import('./admin-users');
+    expect(isAdminBodySizeAllowed(undefined)).toBe(true);
+    expect(isAdminBodySizeAllowed('1024')).toBe(true);
+    expect(isAdminBodySizeAllowed(0)).toBe(true);
+  });
+
+  it('rejects oversized, negative, malformed, and unsafe lengths', async () => {
+    const { isAdminBodySizeAllowed, MAX_ADMIN_BODY_BYTES } = await import('./admin-users');
+    expect(isAdminBodySizeAllowed(String(MAX_ADMIN_BODY_BYTES + 1))).toBe(false);
+    expect(isAdminBodySizeAllowed('-1')).toBe(false);
+    expect(isAdminBodySizeAllowed('not-a-number')).toBe(false);
+    expect(isAdminBodySizeAllowed('9007199254740992')).toBe(false);
+  });
+});
