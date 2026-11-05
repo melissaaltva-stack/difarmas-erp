@@ -1,12 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import {
-  addCashMovement, calculateExpectedCash, cashExpenses, cashMovementTotals, cashSales,
+  addCashMovement, calculateExpectedCash, canWriteFinance, cashExpenses, cashMovementTotals, cashSales,
   collectedReceivables, createCashClosure, pendingPayables, pendingReceivables,
   sumExpenses, sumProfit, sumSales, supplierPayments,
 } from './financeService';
 import type { Expense, Payable, Receivable, SaleRecord } from '../domain/types';
 
 describe('financeService', () => {
+  it('allows finance writes only after remote data is loaded and fully synced', () => {
+    expect(canWriteFinance(false, 'loading')).toBe(false);
+    expect(canWriteFinance(true, 'loading')).toBe(false);
+    expect(canWriteFinance(true, 'saving')).toBe(false);
+    expect(canWriteFinance(true, 'error')).toBe(false);
+    expect(canWriteFinance(false, 'synced')).toBe(false);
+    expect(canWriteFinance(true, 'synced')).toBe(true);
+  });
+
   it('calculates expected cash', () => {
     expect(calculateExpectedCash(1000, 500, 200, 50, 100, 75, 25)).toBe(1550);
   });

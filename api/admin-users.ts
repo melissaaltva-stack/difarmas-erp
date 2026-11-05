@@ -28,14 +28,19 @@ const ROLE_PERMISSIONS: Record<Role, string[]> = {
 };
 const ROLES: Role[] = ['Administrador','Supervisor','Ventas','Compras','Finanzas','Solo lectura'];
 const isRole = (value: unknown): value is Role => typeof value === 'string' && ROLES.includes(value as Role);
+export const safeRole = (value: unknown): Role => isRole(value) ? value : 'Solo lectura';
 const isAdmin = (user: User) => user.app_metadata?.farmi_admin === true || user.app_metadata?.farmi_role === 'Administrador';
 
-function safePermissions(role: Role, value: unknown): string[] {
-  if (role === 'Administrador' && !Array.isArray(value)) return [...MODULES];
+export function safePermissions(role: Role, value: unknown): string[] {
+  if (role === 'Administrador') return [...MODULES];
   if (!Array.isArray(value)) return [...ROLE_PERMISSIONS[role]];
-  const allowed = new Set<string>(MODULES);
-  const permissions = [...new Set(value.filter((item): item is string => typeof item === 'string' && allowed.has(item)))];
-  return role === 'Administrador' ? [...MODULES] : permissions;
+
+  // A custom permission list may reduce a role's access, never expand it.
+  // This keeps the server's role matrix as the upper authorization boundary.
+  const roleAllowed = new Set<string>(ROLE_PERMISSIONS[role]);
+  return [...new Set(value.filter(
+    (item): item is string => typeof item === 'string' && roleAllowed.has(item),
+  ))];
 }
 function constantTimeMatch(a: string, b: string): boolean {
   const left = Buffer.from(a);
@@ -60,11 +65,38 @@ function safeUser(user: User) {
     createdAt: user.created_at,
     lastSignInAt: user.last_sign_in_at ?? null,
     emailConfirmed: Boolean(user.email_confirmed_at),
-    role: isRole(metadata.farmi_role) ? metadata.farmi_role : 'Ventas',
-    permissions: safePermissions(isRole(metadata.farmi_role) ? metadata.farmi_role : 'Ventas', metadata.farmi_permissions),
+    role: safeRole(metadata.farmi_role),
+    permissions: safePermissions(safeRole(metadata.farmi_role), metadata.farmi_permissions),
     active: metadata.farmi_active !== false && !user.banned_until,
     isAdmin: isAdmin(user),
   };
+}
+export function safeAuthUserId(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  const candidate = value.trim();
+  // Supabase Auth user IDs are UUIDs; reject arbitrary identifiers before
+  // invoking privileged admin APIs.
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(candidate)
+    ? candidate
+    : '';
+}
+export const MAX_ADMIN_BODY_BYTES = 16 * 1024;
+export function isAdminBodySizeAllowed(contentLength: unknown, body?: unknown): boolean {
+  if (contentLength !== undefined && contentLength !== null && contentLength !== '') {
+    const raw = Array.isArray(contentLength) ? contentLength[0] : contentLength;
+    if (typeof raw !== 'string' && typeof raw !== 'number') return false;
+    const declared = Number(raw);
+    if (!Number.isSafeInteger(declared) || declared < 0 || declared > MAX_ADMIN_BODY_BYTES) return false;
+  }
+
+  // Do not rely only on Content-Length: some runtimes/proxies omit it.
+  if (body === undefined) return true;
+  try {
+    const serialized = typeof body === 'string' ? body : JSON.stringify(body);
+    return typeof serialized === 'string' && Buffer.byteLength(serialized, 'utf8') <= MAX_ADMIN_BODY_BYTES;
+  } catch {
+    return false;
+  }
 }
 function reply(res: Res, status: number, value: unknown) { return res.status(status).json(value); }
 
@@ -73,6 +105,7 @@ export default async function handler(req: Req, res: Res) {
   res.setHeader('Vary', 'Authorization');
   if (req.method === 'OPTIONS') return reply(res, 204, {});
   if (req.method !== 'POST') return reply(res, 405, { error: 'Usa POST para esta operación.' });
+  if (!isAdminBodySizeAllowed(req.headers['content-length'], req.body)) return reply(res, 413, { error: 'La solicitud supera el tamaño permitido.' });
 
   const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
   const secret = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
@@ -124,7 +157,7 @@ export default async function handler(req: Req, res: Res) {
       const { data, error } = await adminClient.auth.admin.updateUserById(currentUser.id, {
         app_metadata: { ...(currentUser.app_metadata ?? {}), ...claimForRole('Administrador', [...MODULES], true) },
       });
-      if (error || !data.user) return reply(res, 400, { error: error?.message ?? 'No se pudo activar la administración.' });
+      if (error || !data.user) return reply(res, 400, { error: 'No se pudo activar la administración. Verifica la configuración y vuelve a intentarlo.' });
       return reply(res, 200, { isAdmin: true, user: safeUser(data.user), message: 'Administración activada correctamente.' });
     }
 
@@ -165,7 +198,7 @@ export default async function handler(req: Req, res: Res) {
           user_metadata: action === 'create-username' ? { full_name: name, username } : { full_name: name },
           app_metadata: metadata,
         });
-        if (error || !data.user) return reply(res, 400, { error: error?.message ?? 'No se pudo crear la cuenta.' });
+        if (error || !data.user) return reply(res, 400, { error: 'No se pudo crear la cuenta. Verifica los datos e inténtalo de nuevo.' });
         newUser = data.user;
       } else {
         const headerOrigin = req.headers.origin;
@@ -174,7 +207,7 @@ export default async function handler(req: Req, res: Res) {
           data: { full_name: name },
           redirectTo: origin,
         });
-        if (error || !data.user) return reply(res, 400, { error: error?.message ?? 'No se pudo enviar la invitación. Comprueba la configuración de correo de Supabase.' });
+        if (error || !data.user) return reply(res, 400, { error: 'No se pudo enviar la invitación. Comprueba los datos y la configuración de correo.' });
         const { data: updated, error: updateError } = await adminClient.auth.admin.updateUserById(data.user.id, { app_metadata: metadata });
         if (updateError || !updated.user) return reply(res, 500, { error: 'Se creó la invitación, pero no se pudieron guardar los permisos. Revisa este usuario antes de que inicie sesión.' });
         newUser = updated.user;
@@ -183,24 +216,24 @@ export default async function handler(req: Req, res: Res) {
     }
 
     if (action === 'reset-password') {
-      const targetId = typeof body.userId === 'string' ? body.userId : '';
+      const targetId = safeAuthUserId(body.userId);
       const password = typeof body.password === 'string' ? body.password : '';
       if (!targetId) return reply(res, 400, { error: 'Falta el usuario al que deseas asignar la nueva contraseña.' });
       if (password.length < 12) return reply(res, 400, { error: 'La contraseña debe tener al menos 12 caracteres.' });
       const { data: targetData, error: targetError } = await adminClient.auth.admin.getUserById(targetId);
       if (targetError || !targetData.user) return reply(res, 404, { error: 'No se encontró ese usuario.' });
       const { error } = await adminClient.auth.admin.updateUserById(targetId, { password });
-      if (error) return reply(res, 400, { error: error.message ?? 'No se pudo cambiar la contraseña.' });
+      if (error) return reply(res, 400, { error: 'No se pudo cambiar la contraseña. Verifica los datos e inténtalo de nuevo.' });
       return reply(res, 200, { message: 'Contraseña actualizada correctamente.' });
     }
 
     if (action === 'update') {
-      const targetId = typeof body.userId === 'string' ? body.userId : '';
+      const targetId = safeAuthUserId(body.userId);
       if (!targetId) return reply(res, 400, { error: 'Falta el usuario que deseas actualizar.' });
       const { data: targetData, error: targetError } = await adminClient.auth.admin.getUserById(targetId);
       if (targetError || !targetData.user) return reply(res, 404, { error: 'No se encontró ese usuario.' });
       const target = targetData.user;
-      const oldRole = isRole(target.app_metadata?.farmi_role) ? target.app_metadata.farmi_role : 'Ventas';
+      const oldRole = safeRole(target.app_metadata?.farmi_role);
       const role = isRole(body.role) ? body.role : oldRole;
       const active = typeof body.active === 'boolean' ? body.active : (target.app_metadata?.farmi_active !== false && !target.banned_until);
       const permissions = safePermissions(role, body.permissions ?? target.app_metadata?.farmi_permissions);
@@ -215,13 +248,19 @@ export default async function handler(req: Req, res: Res) {
         app_metadata: { ...(target.app_metadata ?? {}), ...claimForRole(role, permissions, active) },
         ban_duration: active ? 'none' : '876000h',
       });
-      if (error || !data.user) return reply(res, 400, { error: error?.message ?? 'No se pudieron guardar los cambios de usuario.' });
+      if (error || !data.user) return reply(res, 400, { error: 'No se pudieron guardar los cambios de usuario. Verifica los datos e inténtalo de nuevo.' });
       return reply(res, 200, { user: safeUser(data.user) });
     }
 
     return reply(res, 400, { error: 'Operación de usuarios desconocida.' });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Error interno al administrar usuarios.';
-    return reply(res, 500, { error: message });
+    // Provider/database error details can contain implementation information.
+    // Keep the diagnostic in server logs and return a stable message to clients.
+    const code = typeof error === 'object' && error !== null && 'code' in error
+      && typeof (error as { code?: unknown }).code === 'string'
+      ? (error as { code: string }).code
+      : undefined;
+    console.error('[admin-users] request failed', { action, code });
+    return reply(res, 500, { error: 'No se pudo completar la operación administrativa. Inténtalo de nuevo o contacta al administrador del sistema.' });
   }
 }

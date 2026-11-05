@@ -7,6 +7,7 @@ import { createPayableFromPurchase } from '../services/purchaseService';
 import { createInventoryMovementsForPurchase, createInventoryMovementsForSale } from '../services/inventoryMovementService';
 import { loadErpSnapshot, saveErpSnapshot, saveQuotesForUser, type ErpSnapshot } from '../services/remoteErpState';
 import { ensureCustomerCodes } from '../services/customerCodeService';
+import { canWriteSnapshot, guardSnapshotSetter } from '../services/snapshotWriteGuard';
 
 const initialProducts: Product[] = [
   { id: 1, code: '750100000001', name: 'Eutirox 50 mcg', category: 'Medicamentos', laboratory: 'Merck', presentation: 'Caja x 50 tabletas', cost: 250, retail: 330, wholesale: 310, stock: 18, minStock: 8, lot: 'EUT-2607', expiry: '2027-07-31', supplier: 'Distribuidora Nacional' },
@@ -120,6 +121,9 @@ export function useErpState(userId: string) {
   const [remoteReady, setRemoteReady] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'loading'|'saving'|'synced'|'error'>('loading');
   const [syncError, setSyncError] = useState<string | null>(null);
+  const syncStateRef = useRef<{remoteReady:boolean;syncStatus:'loading'|'saving'|'synced'|'error'}>({remoteReady:false,syncStatus:'loading'});
+  syncStateRef.current = {remoteReady, syncStatus};
+  const canWriteSnapshotNow = () => canWriteSnapshot(syncStateRef.current.remoteReady, syncStateRef.current.syncStatus);
   const autoSaveTimerRef = useRef<number | null>(null);
   const saleInProgress = useRef(false);
   const purchaseInProgress = useRef(false);
@@ -249,7 +253,7 @@ export function useErpState(userId: string) {
   }, [remoteReady, userId, snapshot]);
 
   const saveQuotes = async (nextQuotes: QuoteRecord[]): Promise<void> => {
-    if (!remoteReady) throw new Error('El sistema todavía está sincronizando los datos. Espera a que termine e inténtalo de nuevo.');
+    if (!canWriteSnapshot(remoteReady, syncStatus)) throw new Error('El sistema no está sincronizado. Espera a que termine la sincronización e inténtalo de nuevo.');
     // Cancel a delayed autosave captured before this edit. Any save already
     // queued completes first; the quote update then merges only the quotes field.
     if (autoSaveTimerRef.current !== null) {
@@ -274,6 +278,7 @@ export function useErpState(userId: string) {
   const filtered=useMemo(()=>products.filter(p=>[p.code,p.name,p.category,p.laboratory].join(' ').toLowerCase().includes(search.toLowerCase())),[products,search]);
 
   const recordMissingProduct=(request:Omit<MissingProductRequest,'id'|'requestedAt'|'status'>):boolean=>{
+    if (!canWriteSnapshot(remoteReady, syncStatus)) return false;
     const name=request.name.trim();
     if(!name||!Number.isFinite(request.quantity)||request.quantity<1)return false;
     setMissingProductRequests(current=>[{...request,name,id:nextMissingProductRequestId(),requestedAt:new Date().toISOString(),status:'Pendiente'},...current]);
@@ -281,7 +286,7 @@ export function useErpState(userId: string) {
   };
 
   const recordSale=(sold:CartItem[],customer='',dueDate='',customerRtn='',invoiceNumber='',invoiceDetails?:StandardInvoiceDetails):boolean=>{
-    if (saleInProgress.current) return false;
+    if (!canWriteSnapshot(remoteReady, syncStatus) || saleInProgress.current) return false;
     if (!sold.length || sold.some(item => !Number.isFinite(item.qty) || item.qty <= 0)) return false;
     if (((settings.paymentMethods??[]).find(method=>method.name===payment)?.kind==='credit'||payment==='Crédito') && (!customer.trim() || !dueDate.trim())) return false;
     const normalizedInvoiceNumber=invoiceNumber.trim().toLocaleLowerCase();
@@ -328,6 +333,7 @@ export function useErpState(userId: string) {
   };
 
   const updateStandardInvoice=(invoiceId:number,sold:CartItem[],customer='',customerRtn='',details?:StandardInvoiceDetails):boolean=>{
+    if (!canWriteSnapshot(remoteReady, syncStatus)) return false;
     const original=sales.find(sale=>sale.id===invoiceId);
     if(!original||original.type!=='factura_estandar'||!sold.length||sold.some(item=>!Number.isFinite(item.qty)||item.qty<=0||!Number.isFinite(item.price)||item.price<0))return false;
     const oldQty=new Map<number,number>();
@@ -374,6 +380,7 @@ export function useErpState(userId: string) {
   };
 
   const recordSupplierDispatch=(record:SupplierReturnRecord):boolean=>{
+    if(!canWriteSnapshot(remoteReady, syncStatus))return false;
     const dispatchNote='Devolución enviada al proveedor: ';
     if(supplierDispatchInProgress.current.has(record.id)||inventoryMovements.some(movement=>movement.referenceId===record.id&&movement.note?.startsWith(dispatchNote)))return false;
     if(!record.items.length||record.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!Number.isFinite(item.unitCost)||item.unitCost<0))return false;
@@ -400,6 +407,7 @@ export function useErpState(userId: string) {
   };
 
   const resolveSupplierReturn=(record:SupplierReturnRecord,status:SupplierReturnRecord['status']):boolean=>{
+    if(!canWriteSnapshot(remoteReady, syncStatus))return false;
     if(supplierReturnResolutionInProgress.current.has(record.id))return false;
     supplierReturnResolutionInProgress.current.add(record.id);
     try {
@@ -445,6 +453,7 @@ export function useErpState(userId: string) {
   };
 
   const recordSaleAdjustment=(adjustment:SaleAdjustmentRecord):boolean=>{
+    if(!canWriteSnapshot(remoteReady, syncStatus))return false;
     if(saleAdjustments.some(item=>item.id===adjustment.id)||!sales.some(sale=>sale.id===adjustment.saleId)||!adjustment.items.length||!Number.isFinite(adjustment.amount)||adjustment.amount<=0)return false;
     if(adjustment.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!Number.isFinite(item.unitPrice)||item.unitPrice<0||!Number.isFinite(item.unitCost)||item.unitCost<0))return false;
     const originalSale=sales.find(sale=>sale.id===adjustment.saleId);
@@ -506,6 +515,7 @@ export function useErpState(userId: string) {
   };
 
   const saveProduct=(product:Product):Product|null=>{
+    if (!canWriteSnapshot(remoteReady, syncStatus)) return null;
     if (!product.name.trim() || [product.cost,product.retail,product.wholesale,product.stock,product.minStock].some(v=>!Number.isFinite(v)||v<0)) return null;
     let saved:Product;
     if (editing) {
@@ -524,10 +534,10 @@ export function useErpState(userId: string) {
     return saved;
   };
 
-  const deleteProduct=(id:number)=>{ setProducts(current=>current.filter(product=>product.id!==id)); };
+  const deleteProduct=(id:number)=>{ if (!canWriteSnapshot(remoteReady, syncStatus)) return; setProducts(current=>current.filter(product=>product.id!==id)); };
 
   const receivePurchase=(items:PurchaseItem[],paymentMethod:string,dueDate:string,invoiceNumber='',invoiceDate='',notes='',enteredTotal?:number,paymentTerms='Contado - Efectivo'):boolean=>{
-    if (purchaseInProgress.current) return false;
+    if (!canWriteSnapshot(remoteReady, syncStatus) || purchaseInProgress.current) return false;
     if (!items.length || items.some(item => !Number.isFinite(item.qty) || item.qty <= 0 || !Number.isFinite(item.unitCost) || item.unitCost < 0)) return false;
     const supplierKey=purchaseSupplier.trim().toLocaleLowerCase();
     const invoiceKey=invoiceNumber.trim().toLocaleLowerCase();
@@ -550,5 +560,24 @@ export function useErpState(userId: string) {
     return true;
   };
 
-  return {active,setActive,customers,setCustomers,quotes,setQuotes,saveQuotes,suppliers,setSuppliers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,settings,setSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,purchases,purchaseCostHistory,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,cashClosures,setCashClosures,cashMovements,setCashMovements,paymentTransactions,setPaymentTransactions,missingProductRequests,setMissingProductRequests,supplierReturns,setSupplierReturns,saleAdjustments,setSaleAdjustments,recordSupplierDispatch,resolveSupplierReturn,recordSaleAdjustment,recordMissingProduct,filtered,recordSale,updateStandardInvoice,saveProduct,deleteProduct,receivePurchase,syncStatus,syncError};
+  // Public snapshot setters fail closed; internal hydration continues using raw setters.
+  const guardedSetCustomers = guardSnapshotSetter(setCustomers, canWriteSnapshotNow);
+  const guardedSetQuotes = guardSnapshotSetter(setQuotes, canWriteSnapshotNow);
+  const guardedSetSuppliers = guardSnapshotSetter(setSuppliers, canWriteSnapshotNow);
+  const guardedSetProducts = guardSnapshotSetter(setProducts, canWriteSnapshotNow);
+  const guardedSetMonthlyGoal = guardSnapshotSetter(setMonthlyGoal, canWriteSnapshotNow);
+  const guardedSetFixedExpenses = guardSnapshotSetter(setFixedExpenses, canWriteSnapshotNow);
+  const guardedSetSettings = guardSnapshotSetter(setSettings, canWriteSnapshotNow);
+  const guardedSetSales = guardSnapshotSetter(setSales, canWriteSnapshotNow);
+  const guardedSetExpenses = guardSnapshotSetter(setExpenses, canWriteSnapshotNow);
+  const guardedSetReceivables = guardSnapshotSetter(setReceivables, canWriteSnapshotNow);
+  const guardedSetPayables = guardSnapshotSetter(setPayables, canWriteSnapshotNow);
+  const guardedSetCashClosures = guardSnapshotSetter(setCashClosures, canWriteSnapshotNow);
+  const guardedSetCashMovements = guardSnapshotSetter(setCashMovements, canWriteSnapshotNow);
+  const guardedSetPaymentTransactions = guardSnapshotSetter(setPaymentTransactions, canWriteSnapshotNow);
+  const guardedSetMissingProductRequests = guardSnapshotSetter(setMissingProductRequests, canWriteSnapshotNow);
+  const guardedSetSupplierReturns = guardSnapshotSetter(setSupplierReturns, canWriteSnapshotNow);
+  const guardedSetSaleAdjustments = guardSnapshotSetter(setSaleAdjustments, canWriteSnapshotNow);
+
+  return {active,setActive,customers,setCustomers:guardedSetCustomers,quotes,setQuotes:guardedSetQuotes,saveQuotes,suppliers,setSuppliers:guardedSetSuppliers,products,setProducts:guardedSetProducts,search,setSearch,monthlyGoal,setMonthlyGoal:guardedSetMonthlyGoal,fixedExpenses,setFixedExpenses:guardedSetFixedExpenses,settings,setSettings:guardedSetSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales:guardedSetSales,purchases,purchaseCostHistory,expenses,setExpenses:guardedSetExpenses,receivables,setReceivables:guardedSetReceivables,payables,setPayables:guardedSetPayables,inventoryMovements,cashClosures,setCashClosures:guardedSetCashClosures,cashMovements,setCashMovements:guardedSetCashMovements,paymentTransactions,setPaymentTransactions:guardedSetPaymentTransactions,missingProductRequests,setMissingProductRequests:guardedSetMissingProductRequests,supplierReturns,setSupplierReturns:guardedSetSupplierReturns,saleAdjustments,setSaleAdjustments:guardedSetSaleAdjustments,recordSupplierDispatch,resolveSupplierReturn,recordSaleAdjustment,recordMissingProduct,filtered,recordSale,updateStandardInvoice,saveProduct,deleteProduct,receivePurchase,syncStatus,syncError,remoteReady};
 }

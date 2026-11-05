@@ -1,0 +1,146 @@
+# Plan de remediación de seguridad y consistencia transaccional
+
+Estado: propuesta técnica para la rama `security/approval-remediation`.
+Fecha de revisión: 2026-11-05.
+Alcance: documentación; no modifica código de ejecución ni datos de Supabase.
+
+## Estado y límites
+
+- Este documento registra hallazgos observados en el código de la rama auditada.
+- No declara corregidos los riesgos de integridad de negocio descritos abajo.
+- No se ejecutaron migraciones ni escrituras en Supabase.
+- No se fusionó el PR ni se modificó producción.
+- El modelo actual persiste un snapshot JSONB por usuario en `erp_state`; las políticas RLS revisadas restringen el usuario/rol general, pero no autorizan cada operación o campo de negocio.
+
+## Hallazgos confirmados
+
+| ID | Área | Hallazgo | Impacto |
+|---|---|---|---|
+| TX-01 | Ventas | El navegador calcula y envía precios, descuentos, impuestos, costos y totales; el estado se actualiza en varias escrituras. | Manipulación de importes, ventas parciales y duplicados entre sesiones. |
+| TX-02 | Inventario | Las validaciones locales comprueban existencia y stock, pero los datos del carrito no se contrastan con un catálogo autoritativo del servidor. | Precios/costos manipulados y carreras de stock. |
+| TX-03 | Compras | La recepción actualiza por separado existencias, movimientos, historial de costos, compra y posible CxP. El total digitado requiere conciliación con las líneas. | Recepciones parciales y saldos no conciliados. |
+| TX-04 | Devoluciones a proveedor | Cantidades acumuladas y bloqueos dependen del snapshot/cliente; despacho y resolución afectan varios registros. | Devoluciones duplicadas o superiores a lo recibido. |
+| TX-05 | Cuentas por cobrar | Cobrar modifica el saldo y crea la transacción en dos actualizaciones locales separadas. | Saldo y libro de cobros divergentes; doble cobro concurrente. |
+| TX-06 | Cuentas por pagar | Pagar modifica saldo y transacción por separado desde el navegador. | Pago duplicado o historial incompleto. |
+| TX-07 | Finanzas/caja | Gastos, movimientos y cierres se registran en cliente; locks locales no coordinan dispositivos. | Duplicados, cierres concurrentes y auditoría insuficiente. |
+| AUTH-01 | Autorización | La visibilidad de módulos/acciones en UI no constituye autorización de servidor por operación/campo. | Un usuario con capacidad de escritura del snapshot puede intentar cambiar datos fuera de su función. |
+| DATA-01 | Maestros | Clientes/proveedores se crean, editan y desactivan mediante mutaciones del snapshot; existe eliminación física de proveedor. | Falta de trazabilidad y riesgo de romper referencias históricas. |
+| DATA-02 | Productos | Ajustes de existencia y baja de productos requieren controles auditables del lado servidor. | Cambios de inventario sin evidencia suficiente. |
+| STATE-01 | Sincronización | `useErpState` bloquea algunas operaciones con `remoteReady`, pero expone setters directos (`setExpenses`, `setReceivables`, `setPayables`, `setCashClosures`, `setCashMovements`, `setPaymentTransactions`, `setSuppliers`, entre otros) sin una barrera común. El autosave sí se detiene mientras `remoteReady` es falso. | La UI puede cambiar el estado local durante carga/error aunque no se sincronice; los cambios pueden perderse al terminar la carga o quedar solo en el navegador. La protección es desigual según la operación. |
+| FIN-13 | Finanzas / sincronización | `Finance` recibe setters de gastos, CxC, CxP, caja y transacciones, pero no recibe `remoteReady` ni comprueba un estado de sincronización antes de `addExpense`, `collect`, `paySupplier`, `closeCash` o el alta de movimientos. | Las acciones financieras pueden modificar el estado local mientras la sesión aún carga o la sincronización está en error; el autosave puede no persistirlas. Los locks `useRef` solo limitan eventos en esa instancia y no coordinan dispositivos. |
+
+## Arquitectura objetivo
+
+1. Mantener el snapshot como mecanismo de lectura/compatibilidad durante la transición, no como autoridad para operaciones críticas.
+2. Crear un backend de comandos autenticados para operaciones críticas. El servidor obtiene el usuario desde el token validado; nunca acepta `user_id`, rol, precio, costo o permiso como autoridad enviada por el navegador.
+3. Cada comando ejecuta autorización, validación de esquema, reglas de negocio y persistencia dentro de una única transacción PostgreSQL.
+4. Usar claves de idempotencia persistentes con restricción única, vinculadas a usuario, tipo de operación y clave; devolver el resultado original al repetir la misma solicitud.
+5. Bloquear filas relevantes y comprobar existencias/saldos acumulados dentro de la transacción.
+6. Calcular importes desde catálogo, factura/compra original y reglas fiscales vigentes en servidor. Rechazar diferencias; no aceptar un total digitado como sustituto silencioso del detalle.
+7. Registrar auditoría inmutable: actor, fecha del servidor, acción, entidad, referencia, motivo, importes anteriores/nuevos y clave de idempotencia.
+8. Usar bajas lógicas para productos, clientes y proveedores con referencias históricas; impedir borrado físico de entidades con movimientos asociados.
+9. Aplicar autorización denegada por defecto y validar rol, estado de cuenta y permiso específico en cada comando.
+10. Mantener lecturas y escrituras separadas: el cliente no debe poder sobrescribir arbitrariamente el JSON completo para modificar áreas protegidas.
+
+## Orden de implementación
+
+### Etapa 0 — Descubrimiento y contrato
+- Inspeccionar esquema real de staging y producción en modo solo lectura, incluyendo columnas, índices, RLS, funciones, triggers y datos de compatibilidad.
+- No inferir el esquema a partir de migraciones del repositorio.
+- Definir contratos y matriz de permisos por comando.
+- Definir estrategia de transición, respaldo, reconciliación y reversión.
+
+### Etapa 1 — Infraestructura de transacciones
+- Preparar tablas/funciones en un entorno no productivo.
+- Implementar tabla de idempotencia y auditoría.
+- Implementar validadores de entrada y respuestas de error sanitizadas.
+- Probar autorización negativa y concurrencia.
+
+### Etapa 2 — Operaciones de mayor riesgo
+Orden: venta/consumo de stock; recepción de compra; devolución de cliente/proveedor; cobro y pago; cierre de caja.
+Cada operación debe ser atómica y tener pruebas de concurrencia e idempotencia antes de migrar su UI.
+
+### Etapa 3 — Maestros y ajustes
+- Migrar ajustes de inventario, gastos y movimientos de caja.
+- Añadir archivo lógico y auditoría para productos, clientes y proveedores.
+- Impedir escrituras de snapshot que eludan los comandos autorizados.
+
+### Etapa 4 — Corte controlado
+- Ejecutar pruebas de reconciliación entre snapshot y registros transaccionales.
+- Migrar por etapas con feature flags y monitoreo.
+- Solo después de aprobación explícita, plan de respaldo y verificación de staging, solicitar autorización para producción.
+
+## Pruebas obligatorias de aceptación
+
+- Dos solicitudes simultáneas con la misma clave de idempotencia generan una sola operación.
+- Dos dispositivos intentando vender la última unidad: solo una operación se confirma.
+- Dos cobros/pagos concurrentes no superan el saldo pendiente.
+- Devoluciones acumuladas nunca exceden cantidades recibidas/vendidas ni el importe acreditable.
+- Alterar precio, costo, descuento, impuesto, rol o `user_id` en el cliente no altera el cálculo/identidad del servidor.
+- Un usuario sin permiso recibe denegación incluso si invoca directamente el endpoint.
+- Fallo en cualquier paso revierte todos los cambios de la operación.
+- Cada operación confirmada tiene auditoría consistente y referenciable.
+- Las pruebas de migración demuestran que el histórico existente sigue consultable.
+
+## No hacer
+
+- No aplicar migraciones existentes sin contrastarlas con el esquema real.
+- No crear nuevas tablas o funciones sobre supuestos no verificados.
+- No llamar “seguridad resuelta” a una validación en React o a un lock en memoria.
+- No fusionar ni desplegar a producción antes de pasar pruebas y obtener aprobación.
+
+
+## Bloqueo de entorno para implementar transacciones (2026-11-05)
+
+Verificación de proyectos accesibles:
+- El proyecto `difarmas-erp` (`nreumomoqiwgqbtnhbdy`) está activo y corresponde al ERP productivo.
+- No hay ramas de desarrollo Supabase disponibles en ese proyecto.
+- No se encontró un segundo proyecto Supabase dedicado a pruebas de FARMI.
+- `ComparaFarma Honduras` es un proyecto distinto y no se utilizará como entorno de pruebas del ERP.
+
+Decisión de seguridad:
+- No ejecutar DDL, DML, migraciones ni pruebas de escritura contra el proyecto productivo.
+- No reutilizar la base de ComparaFarma.
+- Antes de implementar y probar `sales.create`, se necesita un entorno aislado de FARMI con esquema reproducible y datos sintéticos.
+- Hasta disponer de ese entorno, limitar los cambios a código sin efectos en datos, pruebas unitarias y documentación; cualquier integración de base de datos queda bloqueada.
+
+
+## Avance verificado — mitigación de sincronización financiera (2026-11-05)
+
+Commit revisado: `59cf3a80520e2cba687ee917520a6a1b1fef59c4`.
+
+Cambios de interfaz/código comprobados en esta rama:
+- `financeService.ts` incorpora `canWriteFinance(remoteReady, syncStatus)`; solo permite mutaciones cuando el snapshot remoto está cargado y el estado es `synced`.
+- `Finance.tsx` comprueba esa condición antes de ejecutar las mutaciones de gastos, cobros, pagos, cierres y movimientos; los controles correspondientes se deshabilitan cuando no está sincronizado.
+- `FinancialModules.tsx` aplica la misma barrera a los módulos de cuentas por cobrar y cuentas por pagar, incluidos los handlers y botones de cobro/pago.
+- `App.tsx` pasa `remoteReady` y `syncStatus` a ambos módulos; se corrigió la omisión de props de `PayablesModule` que había provocado un fallo TypeScript en el Preview anterior.
+- `financeService.test.ts` cubre estados loading, saving, error, synced y remoteReady falso.
+
+Verificación automatizada del mismo SHA:
+- GitHub Actions run `42111162419`: completed / success. Los pasos `npm install`, reporte de vulnerabilidades, `npm run build` y `npm test` terminaron en success.
+- Vercel Preview `dpl_2spvnesXcjYn9NMC5prtyoVSVwPi`: READY; el commit de origen coincide exactamente con el SHA indicado.
+- GitHub status check Vercel: success.
+
+Clasificación actualizada:
+- `FIN-13`: mitigado parcialmente en la interfaz para impedir que estas acciones se ejecuten antes de la carga y sincronización satisfactoria. No está resuelto a nivel de servidor.
+- `STATE-01`: sigue abierto. Los setters directos del snapshot continúan expuestos y esta corrección no constituye una barrera general de escritura.
+- Los riesgos TX-05, TX-06 y TX-07 siguen abiertos en cuanto a atomicidad, idempotencia persistente y concurrencia entre dispositivos. Un lock de React o la comprobación del estado de sincronización no sustituye una transacción PostgreSQL ni autorización de servidor.
+- No se ejecutaron pruebas de escritura ni cambios de datos en Supabase; no se fusionó el PR ni se desplegó a producción.
+
+Advertencia de build no bloqueante: Vercel informa que algunos bundles minificados superan 500 kB. Debe tratarse como trabajo de rendimiento separado; no se amplía el alcance de esta corrección financiera.
+
+
+## Avance verificado — barrera común de escritura del snapshot (2026-11-05)
+
+Implementación en revisión en `security/approval-remediation`:
+- Se añadió `snapshotWriteGuard.ts`, con una política única: las mutaciones del snapshot solo se permiten cuando `remoteReady === true` y `syncStatus === 'synced'`.
+- Se envolvieron los setters de snapshot expuestos por `useErpState`: clientes, cotizaciones, proveedores, productos, metas, gastos fijos, configuración, ventas, gastos, CxC, CxP, cierres, movimientos de caja, transacciones de pago, solicitudes de productos, devoluciones a proveedor y ajustes de venta.
+- La barrera consulta una referencia actualizada del estado de sincronización en el momento de ejecutar el setter; no depende del estado capturado por un callback antiguo.
+- Se aplicó la misma condición a los comandos del hook que modifican snapshot (ventas, actualización de factura, compras, ajustes, devoluciones, productos y solicitudes), y a `saveQuotes`.
+- La hidratación del snapshot remoto conserva setters internos sin envolver para que la carga legítima de datos pueda completarse.
+- Se añadieron pruebas unitarias para estados loading/saving/error/synced y para bloquear/permitir setters directos y funcionales.
+
+Clasificación:
+- `STATE-01`: mitigación cliente parcial implementada. Validación del commit `e4b28bfda9608f667dcd7d27da2567913fd2ba6d`: Vercel Preview READY y GitHub Actions run `42112501818` SUCCESS; los pasos `npm run build` y `npm test` terminaron correctamente. La barrera evita cambios locales mediante la API pública del hook mientras la sincronización no está confirmada.
+- Esto no es autorización de servidor: un cliente modificado puede invocar directamente Supabase o manipular el snapshot. Tampoco soluciona escrituras solapadas ya iniciadas, atomicidad, idempotencia ni concurrencia entre dispositivos.
+- No se modificaron tablas, políticas, funciones ni datos de Supabase. No se fusionó el PR ni se desplegó a producción.
