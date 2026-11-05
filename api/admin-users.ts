@@ -148,7 +148,7 @@ export default async function handler(req: Req, res: Res) {
       const { data, error } = await adminClient.auth.admin.updateUserById(currentUser.id, {
         app_metadata: { ...(currentUser.app_metadata ?? {}), ...claimForRole('Administrador', [...MODULES], true) },
       });
-      if (error || !data.user) return reply(res, 400, { error: error?.message ?? 'No se pudo activar la administración.' });
+      if (error || !data.user) return reply(res, 400, { error: 'No se pudo activar la administración. Verifica la configuración y vuelve a intentarlo.' });
       return reply(res, 200, { isAdmin: true, user: safeUser(data.user), message: 'Administración activada correctamente.' });
     }
 
@@ -189,7 +189,7 @@ export default async function handler(req: Req, res: Res) {
           user_metadata: action === 'create-username' ? { full_name: name, username } : { full_name: name },
           app_metadata: metadata,
         });
-        if (error || !data.user) return reply(res, 400, { error: error?.message ?? 'No se pudo crear la cuenta.' });
+        if (error || !data.user) return reply(res, 400, { error: 'No se pudo crear la cuenta. Verifica los datos e inténtalo de nuevo.' });
         newUser = data.user;
       } else {
         const headerOrigin = req.headers.origin;
@@ -198,7 +198,7 @@ export default async function handler(req: Req, res: Res) {
           data: { full_name: name },
           redirectTo: origin,
         });
-        if (error || !data.user) return reply(res, 400, { error: error?.message ?? 'No se pudo enviar la invitación. Comprueba la configuración de correo de Supabase.' });
+        if (error || !data.user) return reply(res, 400, { error: 'No se pudo enviar la invitación. Comprueba los datos y la configuración de correo.' });
         const { data: updated, error: updateError } = await adminClient.auth.admin.updateUserById(data.user.id, { app_metadata: metadata });
         if (updateError || !updated.user) return reply(res, 500, { error: 'Se creó la invitación, pero no se pudieron guardar los permisos. Revisa este usuario antes de que inicie sesión.' });
         newUser = updated.user;
@@ -214,7 +214,7 @@ export default async function handler(req: Req, res: Res) {
       const { data: targetData, error: targetError } = await adminClient.auth.admin.getUserById(targetId);
       if (targetError || !targetData.user) return reply(res, 404, { error: 'No se encontró ese usuario.' });
       const { error } = await adminClient.auth.admin.updateUserById(targetId, { password });
-      if (error) return reply(res, 400, { error: error.message ?? 'No se pudo cambiar la contraseña.' });
+      if (error) return reply(res, 400, { error: 'No se pudo cambiar la contraseña. Verifica los datos e inténtalo de nuevo.' });
       return reply(res, 200, { message: 'Contraseña actualizada correctamente.' });
     }
 
@@ -239,7 +239,7 @@ export default async function handler(req: Req, res: Res) {
         app_metadata: { ...(target.app_metadata ?? {}), ...claimForRole(role, permissions, active) },
         ban_duration: active ? 'none' : '876000h',
       });
-      if (error || !data.user) return reply(res, 400, { error: error?.message ?? 'No se pudieron guardar los cambios de usuario.' });
+      if (error || !data.user) return reply(res, 400, { error: 'No se pudieron guardar los cambios de usuario. Verifica los datos e inténtalo de nuevo.' });
       return reply(res, 200, { user: safeUser(data.user) });
     }
 
