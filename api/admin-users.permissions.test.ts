@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isAdminBodySizeAllowed, MAX_ADMIN_BODY_BYTES, safePermissions, safeRole } from './admin-users';
+import { isAdminBodySizeAllowed, MAX_ADMIN_BODY_BYTES, safeAuthUserId, safePermissions, safeRole } from './admin-users';
 
 describe('safePermissions', () => {
   it('never lets Ventas gain inventory, finance, or configuration access', () => {
@@ -68,5 +68,23 @@ describe('admin request size limit', () => {
 
   it('rejects a body that exceeds the limit even when the declared length is small', () => {
     expect(isAdminBodySizeAllowed('1', { payload: 'x'.repeat(MAX_ADMIN_BODY_BYTES) })).toBe(false);
+  });
+});
+
+
+describe('safeAuthUserId', () => {
+  it('accepts canonical Supabase Auth UUID identifiers', () => {
+    expect(safeAuthUserId('550e8400-e29b-41d4-a716-446655440000'))
+      .toBe('550e8400-e29b-41d4-a716-446655440000');
+    expect(safeAuthUserId('  550e8400-e29b-41d4-a716-446655440000  '))
+      .toBe('550e8400-e29b-41d4-a716-446655440000');
+  });
+
+  it('rejects malformed, oversized, and non-string identifiers', () => {
+    expect(safeAuthUserId('admin')).toBe('');
+    expect(safeAuthUserId('550e8400-e29b-41d4-a716-44665544000')).toBe('');
+    expect(safeAuthUserId('x'.repeat(10000))).toBe('');
+    expect(safeAuthUserId(null)).toBe('');
+    expect(safeAuthUserId(42)).toBe('');
   });
 });
