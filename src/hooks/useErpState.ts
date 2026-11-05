@@ -377,7 +377,7 @@ export function useErpState(userId: string) {
   };
 
   const recordSupplierDispatch=(record:SupplierReturnRecord):boolean=>{
-    if(!remoteReady)return false;
+    if(!canWriteSnapshot(remoteReady, syncStatus))return false;
     const dispatchNote='Devolución enviada al proveedor: ';
     if(supplierDispatchInProgress.current.has(record.id)||inventoryMovements.some(movement=>movement.referenceId===record.id&&movement.note?.startsWith(dispatchNote)))return false;
     if(!record.items.length||record.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!Number.isFinite(item.unitCost)||item.unitCost<0))return false;
@@ -404,7 +404,7 @@ export function useErpState(userId: string) {
   };
 
   const resolveSupplierReturn=(record:SupplierReturnRecord,status:SupplierReturnRecord['status']):boolean=>{
-    if(!remoteReady)return false;
+    if(!canWriteSnapshot(remoteReady, syncStatus))return false;
     if(supplierReturnResolutionInProgress.current.has(record.id))return false;
     supplierReturnResolutionInProgress.current.add(record.id);
     try {
@@ -450,7 +450,7 @@ export function useErpState(userId: string) {
   };
 
   const recordSaleAdjustment=(adjustment:SaleAdjustmentRecord):boolean=>{
-    if(!remoteReady)return false;
+    if(!canWriteSnapshot(remoteReady, syncStatus))return false;
     if(saleAdjustments.some(item=>item.id===adjustment.id)||!sales.some(sale=>sale.id===adjustment.saleId)||!adjustment.items.length||!Number.isFinite(adjustment.amount)||adjustment.amount<=0)return false;
     if(adjustment.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!Number.isFinite(item.unitPrice)||item.unitPrice<0||!Number.isFinite(item.unitCost)||item.unitCost<0))return false;
     const originalSale=sales.find(sale=>sale.id===adjustment.saleId);
