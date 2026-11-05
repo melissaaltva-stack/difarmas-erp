@@ -141,6 +141,6 @@ Implementación en revisión en `security/approval-remediation`:
 - Se añadieron pruebas unitarias para estados loading/saving/error/synced y para bloquear/permitir setters directos y funcionales.
 
 Clasificación:
-- `STATE-01`: mitigación cliente parcial implementada; pendiente validar build/CI y probar los flujos en Preview. La barrera evita cambios locales mediante la API pública del hook mientras la sincronización no está confirmada.
+- `STATE-01`: mitigación cliente parcial implementada. Validación del commit `e4b28bfda9608f667dcd7d27da2567913fd2ba6d`: Vercel Preview READY y GitHub Actions run `42112501818` SUCCESS; los pasos `npm run build` y `npm test` terminaron correctamente. La barrera evita cambios locales mediante la API pública del hook mientras la sincronización no está confirmada.
 - Esto no es autorización de servidor: un cliente modificado puede invocar directamente Supabase o manipular el snapshot. Tampoco soluciona escrituras solapadas ya iniciadas, atomicidad, idempotencia ni concurrencia entre dispositivos.
 - No se modificaron tablas, políticas, funciones ni datos de Supabase. No se fusionó el PR ni se desplegó a producción.
