@@ -329,6 +329,7 @@ export function useErpState(userId: string) {
   };
 
   const updateStandardInvoice=(invoiceId:number,sold:CartItem[],customer='',customerRtn='',details?:StandardInvoiceDetails):boolean=>{
+    if (!remoteReady) return false;
     const original=sales.find(sale=>sale.id===invoiceId);
     if(!original||original.type!=='factura_estandar'||!sold.length||sold.some(item=>!Number.isFinite(item.qty)||item.qty<=0||!Number.isFinite(item.price)||item.price<0))return false;
     const oldQty=new Map<number,number>();
