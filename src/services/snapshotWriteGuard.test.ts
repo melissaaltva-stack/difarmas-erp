@@ -12,7 +12,7 @@ describe('snapshotWriteGuard', () => {
 
   it('blocks direct values and updater functions when writes are not allowed', () => {
     const setter = vi.fn();
-    const guarded = guardSnapshotSetter(setter, false);
+    const guarded = guardSnapshotSetter(setter, () => false);
     guarded(['local-only']);
     guarded(current => [...current, 'local-only']);
     expect(setter).not.toHaveBeenCalled();
@@ -20,7 +20,7 @@ describe('snapshotWriteGuard', () => {
 
   it('forwards values and updater functions when writes are allowed', () => {
     const setter = vi.fn();
-    const guarded = guardSnapshotSetter(setter, true);
+    const guarded = guardSnapshotSetter(setter, () => true);
     const next = ['accepted'];
     const updater = (current: string[]) => [...current, 'next'];
     guarded(next);
