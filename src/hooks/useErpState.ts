@@ -561,7 +561,6 @@ export function useErpState(userId: string) {
   };
 
   // Public snapshot setters fail closed; internal hydration continues using raw setters.
-  const snapshotWritesAllowed = canWriteSnapshot(remoteReady, syncStatus);
   const guardedSetCustomers = guardSnapshotSetter(setCustomers, canWriteSnapshotNow);
   const guardedSetQuotes = guardSnapshotSetter(setQuotes, canWriteSnapshotNow);
   const guardedSetSuppliers = guardSnapshotSetter(setSuppliers, canWriteSnapshotNow);
