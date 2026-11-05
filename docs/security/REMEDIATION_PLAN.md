@@ -86,3 +86,18 @@ Cada operación debe ser atómica y tener pruebas de concurrencia e idempotencia
 - No crear nuevas tablas o funciones sobre supuestos no verificados.
 - No llamar “seguridad resuelta” a una validación en React o a un lock en memoria.
 - No fusionar ni desplegar a producción antes de pasar pruebas y obtener aprobación.
+
+
+## Bloqueo de entorno para implementar transacciones (2026-11-05)
+
+Verificación de proyectos accesibles:
+- El proyecto `difarmas-erp` (`nreumomoqiwgqbtnhbdy`) está activo y corresponde al ERP productivo.
+- No hay ramas de desarrollo Supabase disponibles en ese proyecto.
+- No se encontró un segundo proyecto Supabase dedicado a pruebas de FARMI.
+- `ComparaFarma Honduras` es un proyecto distinto y no se utilizará como entorno de pruebas del ERP.
+
+Decisión de seguridad:
+- No ejecutar DDL, DML, migraciones ni pruebas de escritura contra el proyecto productivo.
+- No reutilizar la base de ComparaFarma.
+- Antes de implementar y probar `sales.create`, se necesita un entorno aislado de FARMI con esquema reproducible y datos sintéticos.
+- Hasta disponer de ese entorno, limitar los cambios a código sin efectos en datos, pruebas unitarias y documentación; cualquier integración de base de datos queda bloqueada.
