@@ -121,6 +121,9 @@ export function useErpState(userId: string) {
   const [remoteReady, setRemoteReady] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'loading'|'saving'|'synced'|'error'>('loading');
   const [syncError, setSyncError] = useState<string | null>(null);
+  const syncStateRef = useRef<{remoteReady:boolean;syncStatus:'loading'|'saving'|'synced'|'error'}>({remoteReady:false,syncStatus:'loading'});
+  syncStateRef.current = {remoteReady, syncStatus};
+  const canWriteSnapshotNow = () => canWriteSnapshot(syncStateRef.current.remoteReady, syncStateRef.current.syncStatus);
   const autoSaveTimerRef = useRef<number | null>(null);
   const saleInProgress = useRef(false);
   const purchaseInProgress = useRef(false);
@@ -559,23 +562,23 @@ export function useErpState(userId: string) {
 
   // Public snapshot setters fail closed; internal hydration continues using raw setters.
   const snapshotWritesAllowed = canWriteSnapshot(remoteReady, syncStatus);
-  const guardedSetCustomers = guardSnapshotSetter(setCustomers, snapshotWritesAllowed);
-  const guardedSetQuotes = guardSnapshotSetter(setQuotes, snapshotWritesAllowed);
-  const guardedSetSuppliers = guardSnapshotSetter(setSuppliers, snapshotWritesAllowed);
-  const guardedSetProducts = guardSnapshotSetter(setProducts, snapshotWritesAllowed);
-  const guardedSetMonthlyGoal = guardSnapshotSetter(setMonthlyGoal, snapshotWritesAllowed);
-  const guardedSetFixedExpenses = guardSnapshotSetter(setFixedExpenses, snapshotWritesAllowed);
-  const guardedSetSettings = guardSnapshotSetter(setSettings, snapshotWritesAllowed);
-  const guardedSetSales = guardSnapshotSetter(setSales, snapshotWritesAllowed);
-  const guardedSetExpenses = guardSnapshotSetter(setExpenses, snapshotWritesAllowed);
-  const guardedSetReceivables = guardSnapshotSetter(setReceivables, snapshotWritesAllowed);
-  const guardedSetPayables = guardSnapshotSetter(setPayables, snapshotWritesAllowed);
-  const guardedSetCashClosures = guardSnapshotSetter(setCashClosures, snapshotWritesAllowed);
-  const guardedSetCashMovements = guardSnapshotSetter(setCashMovements, snapshotWritesAllowed);
-  const guardedSetPaymentTransactions = guardSnapshotSetter(setPaymentTransactions, snapshotWritesAllowed);
-  const guardedSetMissingProductRequests = guardSnapshotSetter(setMissingProductRequests, snapshotWritesAllowed);
-  const guardedSetSupplierReturns = guardSnapshotSetter(setSupplierReturns, snapshotWritesAllowed);
-  const guardedSetSaleAdjustments = guardSnapshotSetter(setSaleAdjustments, snapshotWritesAllowed);
+  const guardedSetCustomers = guardSnapshotSetter(setCustomers, canWriteSnapshotNow);
+  const guardedSetQuotes = guardSnapshotSetter(setQuotes, canWriteSnapshotNow);
+  const guardedSetSuppliers = guardSnapshotSetter(setSuppliers, canWriteSnapshotNow);
+  const guardedSetProducts = guardSnapshotSetter(setProducts, canWriteSnapshotNow);
+  const guardedSetMonthlyGoal = guardSnapshotSetter(setMonthlyGoal, canWriteSnapshotNow);
+  const guardedSetFixedExpenses = guardSnapshotSetter(setFixedExpenses, canWriteSnapshotNow);
+  const guardedSetSettings = guardSnapshotSetter(setSettings, canWriteSnapshotNow);
+  const guardedSetSales = guardSnapshotSetter(setSales, canWriteSnapshotNow);
+  const guardedSetExpenses = guardSnapshotSetter(setExpenses, canWriteSnapshotNow);
+  const guardedSetReceivables = guardSnapshotSetter(setReceivables, canWriteSnapshotNow);
+  const guardedSetPayables = guardSnapshotSetter(setPayables, canWriteSnapshotNow);
+  const guardedSetCashClosures = guardSnapshotSetter(setCashClosures, canWriteSnapshotNow);
+  const guardedSetCashMovements = guardSnapshotSetter(setCashMovements, canWriteSnapshotNow);
+  const guardedSetPaymentTransactions = guardSnapshotSetter(setPaymentTransactions, canWriteSnapshotNow);
+  const guardedSetMissingProductRequests = guardSnapshotSetter(setMissingProductRequests, canWriteSnapshotNow);
+  const guardedSetSupplierReturns = guardSnapshotSetter(setSupplierReturns, canWriteSnapshotNow);
+  const guardedSetSaleAdjustments = guardSnapshotSetter(setSaleAdjustments, canWriteSnapshotNow);
 
   return {active,setActive,customers,setCustomers:guardedSetCustomers,quotes,setQuotes:guardedSetQuotes,saveQuotes,suppliers,setSuppliers:guardedSetSuppliers,products,setProducts:guardedSetProducts,search,setSearch,monthlyGoal,setMonthlyGoal:guardedSetMonthlyGoal,fixedExpenses,setFixedExpenses:guardedSetFixedExpenses,settings,setSettings:guardedSetSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales:guardedSetSales,purchases,purchaseCostHistory,expenses,setExpenses:guardedSetExpenses,receivables,setReceivables:guardedSetReceivables,payables,setPayables:guardedSetPayables,inventoryMovements,cashClosures,setCashClosures:guardedSetCashClosures,cashMovements,setCashMovements:guardedSetCashMovements,paymentTransactions,setPaymentTransactions:guardedSetPaymentTransactions,missingProductRequests,setMissingProductRequests:guardedSetMissingProductRequests,supplierReturns,setSupplierReturns:guardedSetSupplierReturns,saleAdjustments,setSaleAdjustments:guardedSetSaleAdjustments,recordSupplierDispatch,resolveSupplierReturn,recordSaleAdjustment,recordMissingProduct,filtered,recordSale,updateStandardInvoice,saveProduct,deleteProduct,receivePurchase,syncStatus,syncError,remoteReady};
 }
