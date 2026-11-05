@@ -71,6 +71,15 @@ function safeUser(user: User) {
     isAdmin: isAdmin(user),
   };
 }
+export function safeAuthUserId(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  const candidate = value.trim();
+  // Supabase Auth user IDs are UUIDs; reject arbitrary identifiers before
+  // invoking privileged admin APIs.
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(candidate)
+    ? candidate
+    : '';
+}
 export const MAX_ADMIN_BODY_BYTES = 16 * 1024;
 export function isAdminBodySizeAllowed(contentLength: unknown, body?: unknown): boolean {
   if (contentLength !== undefined && contentLength !== null && contentLength !== '') {
@@ -207,7 +216,7 @@ export default async function handler(req: Req, res: Res) {
     }
 
     if (action === 'reset-password') {
-      const targetId = typeof body.userId === 'string' ? body.userId : '';
+      const targetId = safeAuthUserId(body.userId);
       const password = typeof body.password === 'string' ? body.password : '';
       if (!targetId) return reply(res, 400, { error: 'Falta el usuario al que deseas asignar la nueva contraseña.' });
       if (password.length < 12) return reply(res, 400, { error: 'La contraseña debe tener al menos 12 caracteres.' });
@@ -219,7 +228,7 @@ export default async function handler(req: Req, res: Res) {
     }
 
     if (action === 'update') {
-      const targetId = typeof body.userId === 'string' ? body.userId : '';
+      const targetId = safeAuthUserId(body.userId);
       if (!targetId) return reply(res, 400, { error: 'Falta el usuario que deseas actualizar.' });
       const { data: targetData, error: targetError } = await adminClient.auth.admin.getUserById(targetId);
       if (targetError || !targetData.user) return reply(res, 404, { error: 'No se encontró ese usuario.' });
