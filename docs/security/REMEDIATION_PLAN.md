@@ -128,3 +128,19 @@ Clasificación actualizada:
 - No se ejecutaron pruebas de escritura ni cambios de datos en Supabase; no se fusionó el PR ni se desplegó a producción.
 
 Advertencia de build no bloqueante: Vercel informa que algunos bundles minificados superan 500 kB. Debe tratarse como trabajo de rendimiento separado; no se amplía el alcance de esta corrección financiera.
+
+
+## Avance verificado — barrera común de escritura del snapshot (2026-11-05)
+
+Implementación en revisión en `security/approval-remediation`:
+- Se añadió `snapshotWriteGuard.ts`, con una política única: las mutaciones del snapshot solo se permiten cuando `remoteReady === true` y `syncStatus === 'synced'`.
+- Se envolvieron los setters de snapshot expuestos por `useErpState`: clientes, cotizaciones, proveedores, productos, metas, gastos fijos, configuración, ventas, gastos, CxC, CxP, cierres, movimientos de caja, transacciones de pago, solicitudes de productos, devoluciones a proveedor y ajustes de venta.
+- La barrera consulta una referencia actualizada del estado de sincronización en el momento de ejecutar el setter; no depende del estado capturado por un callback antiguo.
+- Se aplicó la misma condición a los comandos del hook que modifican snapshot (ventas, actualización de factura, compras, ajustes, devoluciones, productos y solicitudes), y a `saveQuotes`.
+- La hidratación del snapshot remoto conserva setters internos sin envolver para que la carga legítima de datos pueda completarse.
+- Se añadieron pruebas unitarias para estados loading/saving/error/synced y para bloquear/permitir setters directos y funcionales.
+
+Clasificación:
+- `STATE-01`: mitigación cliente parcial implementada; pendiente validar build/CI y probar los flujos en Preview. La barrera evita cambios locales mediante la API pública del hook mientras la sincronización no está confirmada.
+- Esto no es autorización de servidor: un cliente modificado puede invocar directamente Supabase o manipular el snapshot. Tampoco soluciona escrituras solapadas ya iniciadas, atomicidad, idempotencia ni concurrencia entre dispositivos.
+- No se modificaron tablas, políticas, funciones ni datos de Supabase. No se fusionó el PR ni se desplegó a producción.
