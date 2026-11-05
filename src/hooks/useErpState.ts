@@ -38,10 +38,10 @@ billingInfo:{cai:'',authorizedRangeStart:'',authorizedRangeEnd:'',authorizationE
 
 export function useErpState(userId: string) {
   const [active, setActive] = useState<Module>('dashboard');
-  const [customers,setCustomers:guardedSetCustomersRaw]=useState<Customer[]>(()=>ensureCustomerCodes(loadJson<Customer[]>('difarmas_customers',[])));
+  const [customers,setCustomersRaw]=useState<Customer[]>(()=>ensureCustomerCodes(loadJson<Customer[]>('difarmas_customers',[])));
   const setCustomers=(value:Customer[]|((current:Customer[])=>Customer[]))=>setCustomersRaw(current=>ensureCustomerCodes(typeof value==='function'?value(current):value,current));
-  const [quotes,setQuotes:guardedSetQuotes]=useState<QuoteRecord[]>(()=>loadJson<QuoteRecord[]>('difarmas_quotes',[]));
-  const [suppliers,setSuppliers:guardedSetSuppliers]=useState<Supplier[]>(()=>loadJson<Supplier[]>('difarmas_suppliers',[]));
+  const [quotes,setQuotes]=useState<QuoteRecord[]>(()=>loadJson<QuoteRecord[]>('difarmas_quotes',[]));
+  const [suppliers,setSuppliers]=useState<Supplier[]>(()=>loadJson<Supplier[]>('difarmas_suppliers',[]));
   const [products, setProducts] = useState<Product[]>(() => loadJson<Product[]>('difarmas_products',initialProducts));
   const [search, setSearch] = useState('');
   const [monthlyGoal, setMonthlyGoal] = useState(() => loadNumber('difarmas_monthly_goal',100000));
@@ -79,7 +79,7 @@ export function useErpState(userId: string) {
     lastPurchaseCostHistoryId.current=nextId;
     return nextId;
   };
-  const [settings,setSettings:guardedSetSettings] = useState<ErpSettings>(()=>loadJson<ErpSettings>('difarmas_settings',initialSettings));
+  const [settings,setSettings] = useState<ErpSettings>(()=>loadJson<ErpSettings>('difarmas_settings',initialSettings));
   const [expenses, setExpenses] = useState<Expense[]>(()=>loadJson<Expense[]>('difarmas_expenses',[]));
   const [receivables, setReceivables] = useState<Receivable[]>(()=>loadJson<Receivable[]>('difarmas_receivables',[]));
   const [payables, setPayables] = useState<Payable[]>(()=>loadJson<Payable[]>('difarmas_payables',[]));
@@ -577,5 +577,5 @@ export function useErpState(userId: string) {
   const guardedSetSupplierReturns = guardSnapshotSetter(setSupplierReturns, snapshotWritesAllowed);
   const guardedSetSaleAdjustments = guardSnapshotSetter(setSaleAdjustments, snapshotWritesAllowed);
 
-  return {active,setActive,customers,setCustomers,quotes,setQuotes,saveQuotes,suppliers,setSuppliers,products,setProducts:guardedSetProducts,search,setSearch,monthlyGoal,setMonthlyGoal:guardedSetMonthlyGoal,fixedExpenses,setFixedExpenses:guardedSetFixedExpenses,settings,setSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales:guardedSetSales,purchases,purchaseCostHistory,expenses,setExpenses:guardedSetExpenses,receivables,setReceivables:guardedSetReceivables,payables,setPayables:guardedSetPayables,inventoryMovements,cashClosures,setCashClosures:guardedSetCashClosures,cashMovements,setCashMovements:guardedSetCashMovements,paymentTransactions,setPaymentTransactions:guardedSetPaymentTransactions,missingProductRequests,setMissingProductRequests:guardedSetMissingProductRequests,supplierReturns,setSupplierReturns:guardedSetSupplierReturns,saleAdjustments,setSaleAdjustments:guardedSetSaleAdjustments,recordSupplierDispatch,resolveSupplierReturn,recordSaleAdjustment,recordMissingProduct,filtered,recordSale,updateStandardInvoice,saveProduct,deleteProduct,receivePurchase,syncStatus,syncError,remoteReady};
+  return {active,setActive,customers,setCustomers:guardedSetCustomers,quotes,setQuotes:guardedSetQuotes,saveQuotes,suppliers,setSuppliers:guardedSetSuppliers,products,setProducts:guardedSetProducts,search,setSearch,monthlyGoal,setMonthlyGoal:guardedSetMonthlyGoal,fixedExpenses,setFixedExpenses:guardedSetFixedExpenses,settings,setSettings:guardedSetSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales:guardedSetSales,purchases,purchaseCostHistory,expenses,setExpenses:guardedSetExpenses,receivables,setReceivables:guardedSetReceivables,payables,setPayables:guardedSetPayables,inventoryMovements,cashClosures,setCashClosures:guardedSetCashClosures,cashMovements,setCashMovements:guardedSetCashMovements,paymentTransactions,setPaymentTransactions:guardedSetPaymentTransactions,missingProductRequests,setMissingProductRequests:guardedSetMissingProductRequests,supplierReturns,setSupplierReturns:guardedSetSupplierReturns,saleAdjustments,setSaleAdjustments:guardedSetSaleAdjustments,recordSupplierDispatch,resolveSupplierReturn,recordSaleAdjustment,recordMissingProduct,filtered,recordSale,updateStandardInvoice,saveProduct,deleteProduct,receivePurchase,syncStatus,syncError,remoteReady};
 }
