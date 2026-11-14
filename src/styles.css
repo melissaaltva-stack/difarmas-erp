@@ -4882,3 +4882,71 @@ button.icon-btn:focus-visible svg,
   outline-color:var(--farmi-ui-primary) !important;
   box-shadow:0 0 0 3px var(--farmi-ui-focus) !important;
 }
+
+
+/* FARMI theme v2: palette centralized and consistent across all modules */
+:root[data-farmi-theme="emerald"]{--farmi-ui-primary:#16856b;--farmi-ui-primary-dark:#116a56;--farmi-ui-primary-soft:#e7f4ef;--farmi-ui-border:#cfe5dc;--farmi-ui-sidebar:#123b35;--farmi-ui-sidebar-hover:#1b5b4d;--farmi-ui-focus:rgba(22,133,107,.2)}
+:root[data-farmi-theme="blue"]{--farmi-ui-primary:#2867b2;--farmi-ui-primary-dark:#1e4f8c;--farmi-ui-primary-soft:#eaf1fb;--farmi-ui-border:#d0def1;--farmi-ui-sidebar:#172f50;--farmi-ui-sidebar-hover:#254d7b;--farmi-ui-focus:rgba(40,103,178,.2)}
+:root[data-farmi-theme="violet"]{--farmi-ui-primary:#7653b5;--farmi-ui-primary-dark:#5e4094;--farmi-ui-primary-soft:#f0ebf8;--farmi-ui-border:#ddd2ef;--farmi-ui-sidebar:#30234a;--farmi-ui-sidebar-hover:#514078;--farmi-ui-focus:rgba(118,83,181,.2)}
+:root[data-farmi-theme="slate"]{--farmi-ui-primary:#526477;--farmi-ui-primary-dark:#3d4d5e;--farmi-ui-primary-soft:#edf1f4;--farmi-ui-border:#d5dde4;--farmi-ui-sidebar:#273543;--farmi-ui-sidebar-hover:#40566a;--farmi-ui-focus:rgba(82,100,119,.2)}
+:root[data-farmi-theme="rose"]{--farmi-ui-primary:#b65370;--farmi-ui-primary-dark:#93415a;--farmi-ui-primary-soft:#faedf1;--farmi-ui-border:#efd4dc;--farmi-ui-sidebar:#492b36;--farmi-ui-sidebar-hover:#754354;--farmi-ui-focus:rgba(182,83,112,.2)}
+:root[data-farmi-theme] body{accent-color:var(--farmi-ui-primary)}
+:root[data-farmi-theme] .app .sidebar{background:var(--farmi-ui-sidebar)!important}
+:root[data-farmi-theme] .app .brand-mark{background:var(--farmi-ui-primary)!important}
+:root[data-farmi-theme] .app .nav:hover,
+:root[data-farmi-theme] .app .nav.active,
+:root[data-farmi-theme] .app .nav-submenu button.active{background:var(--farmi-ui-sidebar-hover)!important;color:#fff!important}
+:root[data-farmi-theme] .app .primary,
+:root[data-farmi-theme] .app .checkout-btn,
+:root[data-farmi-theme] .app .type.active,
+:root[data-farmi-theme] .app .tab.active,
+:root[data-farmi-theme] .app [role="tab"].active,
+:root[data-farmi-theme] .app button[type="submit"]:not(.danger){background:var(--farmi-ui-primary)!important;border-color:var(--farmi-ui-primary)!important;color:#fff!important}
+:root[data-farmi-theme] .app .primary:hover,
+:root[data-farmi-theme] .app .checkout-btn:hover{background:var(--farmi-ui-primary-dark)!important;border-color:var(--farmi-ui-primary-dark)!important}
+:root[data-farmi-theme] .app .secondary,
+:root[data-farmi-theme] .app .icon-btn,
+:root[data-farmi-theme] .app .outline,
+:root[data-farmi-theme] .app .ghost,
+:root[data-farmi-theme] .app .subtle,
+:root[data-farmi-theme] .app .filter-btn,
+:root[data-farmi-theme] .app .tab-btn{background:var(--farmi-ui-primary-soft)!important;border-color:var(--farmi-ui-border)!important;color:var(--farmi-ui-primary-dark)!important}
+:root[data-farmi-theme] .app .pill,
+:root[data-farmi-theme] .app .stock:not(.low),
+:root[data-farmi-theme] .app .change-line{background:var(--farmi-ui-primary-soft)!important;border-color:var(--farmi-ui-border)!important;color:var(--farmi-ui-primary-dark)!important}
+:root[data-farmi-theme] .app .hero{background:linear-gradient(120deg,var(--farmi-ui-primary-dark),var(--farmi-ui-primary))!important}
+:root[data-farmi-theme] .app .hero .pill{background:var(--farmi-ui-primary-soft)!important;color:var(--farmi-ui-primary-dark)!important}
+:root[data-farmi-theme] .app .card,
+:root[data-farmi-theme] .app .metric,
+:root[data-farmi-theme] .app .modal,
+:root[data-farmi-theme] .app .modal-card{border-color:var(--farmi-ui-border)}
+:root[data-farmi-theme] .app th{background:var(--farmi-ui-primary-soft)!important;color:var(--farmi-ui-primary-dark)!important}
+:root[data-farmi-theme] .app input:focus,
+:root[data-farmi-theme] .app select:focus,
+:root[data-farmi-theme] .app textarea:focus,
+:root[data-farmi-theme] .app [role="combobox"]:focus{border-color:var(--farmi-ui-primary)!important;box-shadow:0 0 0 3px var(--farmi-ui-focus)!important;outline-color:var(--farmi-ui-primary)}
+:root[data-farmi-theme] .app input[type="checkbox"],
+:root[data-farmi-theme] .app input[type="radio"],
+:root[data-farmi-theme] .app input[type="range"]{accent-color:var(--farmi-ui-primary)}
+:root[data-farmi-theme] .app .progress-fill,
+:root[data-farmi-theme] .app .bar.current,
+:root[data-farmi-theme] .app .status span{background:var(--farmi-ui-primary)!important}
+:root[data-farmi-theme] .app .bar{background:color-mix(in srgb,var(--farmi-ui-primary) 28%,white)!important}
+:root[data-farmi-theme] .app a,
+:root[data-farmi-theme] .app .link-button,
+:root[data-farmi-theme] .app .grand strong,
+:root[data-farmi-theme] .app .cash-closing-kicker,
+:root[data-farmi-theme] .app .cash-count-card> .cash-closing-section-head>svg{color:var(--farmi-ui-primary)!important}
+:root[data-farmi-theme] .app .section-title,
+:root[data-farmi-theme] .app .page-title,
+:root[data-farmi-theme] .app .module-title,
+:root[data-farmi-theme] .app .section-heading{color:var(--farmi-ui-primary-dark)}
+/* Lucide icons must follow the text/icon color of their control, not stale CSS colors. */
+:root[data-farmi-theme] .app svg.lucide{stroke:currentColor}
+:root[data-farmi-theme] .app button svg.lucide,
+:root[data-farmi-theme] .app a svg.lucide{color:inherit!important}
+:root[data-farmi-theme] .app button:focus-visible,
+:root[data-farmi-theme] .app a:focus-visible,
+:root[data-farmi-theme] .app [role="tab"]:focus-visible{outline-color:var(--farmi-ui-primary)!important;box-shadow:0 0 0 3px var(--farmi-ui-focus)!important}
+:root[data-farmi-theme] .app .nav,
+:root[data-farmi-theme] .app .nav-parent{transition:background-color .16s ease,color .16s ease}
