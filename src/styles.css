@@ -4763,3 +4763,53 @@ button.icon-btn:focus-visible svg,
 .receivables-selected-balance strong{font-size:16px;color:#16664f}
 @media(max-width:760px){.receivables-ledger-head{align-items:flex-start;flex-direction:column}.receivables-ledger-actions{width:100%}.receivables-ledger-actions button{flex:1}.receivables-ledger-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.receivables-payment-fields{grid-template-columns:1fr}.receivables-selected-balance{grid-column:auto}.receivables-invoice-option{align-items:flex-start;flex-wrap:wrap}.receivables-invoice-option>span:last-child{margin-left:28px}}
+
+/* FARMI: tema global aplicado a toda la interfaz */
+:root[data-farmi-theme]{
+  --farmi-ui-primary:var(--farmi-accent,#16856b);
+  --farmi-ui-primary-dark:var(--farmi-accent-dark,#116a56);
+  --farmi-ui-primary-soft:var(--farmi-accent-soft,#e7f4ef);
+  --farmi-ui-sidebar:color-mix(in srgb,var(--farmi-ui-primary-dark) 28%,#102f2f);
+  --farmi-ui-sidebar-hover:color-mix(in srgb,var(--farmi-ui-primary) 34%,#102f2f);
+  --farmi-ui-border:color-mix(in srgb,var(--farmi-ui-primary) 19%,#e2ebe9);
+  --farmi-ui-focus:color-mix(in srgb,var(--farmi-ui-primary) 20%,transparent);
+}
+:root[data-farmi-theme] body{accent-color:var(--farmi-ui-primary)}
+:root[data-farmi-theme] .sidebar{background:var(--farmi-ui-sidebar)}
+:root[data-farmi-theme] .brand-mark,
+:root[data-farmi-theme] .auth-logo{background:var(--farmi-ui-primary)}
+:root[data-farmi-theme] .nav:hover,
+:root[data-farmi-theme] .nav.active,
+:root[data-farmi-theme] .nav-submenu button.active{background:var(--farmi-ui-sidebar-hover);color:#fff}
+:root[data-farmi-theme] .primary,
+:root[data-farmi-theme] .checkout-btn,
+:root[data-farmi-theme] .type.active,
+:root[data-farmi-theme] .tab.active,
+:root[data-farmi-theme] .segmented-control button.active{background:var(--farmi-ui-primary);border-color:var(--farmi-ui-primary);color:#fff}
+:root[data-farmi-theme] .primary:hover,
+:root[data-farmi-theme] .checkout-btn:hover{background:var(--farmi-ui-primary-dark);border-color:var(--farmi-ui-primary-dark)}
+:root[data-farmi-theme] .secondary,
+:root[data-farmi-theme] .icon-btn{background:var(--farmi-ui-primary-soft);color:var(--farmi-ui-primary-dark);border-color:var(--farmi-ui-border)}
+:root[data-farmi-theme] .pill,
+:root[data-farmi-theme] .stock:not(.low),
+:root[data-farmi-theme] .change-line{background:var(--farmi-ui-primary-soft);border-color:var(--farmi-ui-border);color:var(--farmi-ui-primary-dark)}
+:root[data-farmi-theme] .hero{background:linear-gradient(120deg,var(--farmi-ui-primary-dark),var(--farmi-ui-primary))}
+:root[data-farmi-theme] .hero .pill{background:color-mix(in srgb,var(--farmi-ui-primary-soft) 82%,white);color:var(--farmi-ui-primary-dark)}
+:root[data-farmi-theme] .grand strong,
+:root[data-farmi-theme] .auth-logo,
+:root[data-farmi-theme] a,
+:root[data-farmi-theme] .link-button{color:var(--farmi-ui-primary)}
+:root[data-farmi-theme] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+:root[data-farmi-theme] select:focus,
+:root[data-farmi-theme] textarea:focus,
+:root[data-farmi-theme] .search:focus-within,
+:root[data-farmi-theme] .search-pos:focus-within,
+:root[data-farmi-theme] .social-search:focus-within{border-color:var(--farmi-ui-primary);box-shadow:0 0 0 4px var(--farmi-ui-focus)}
+:root[data-farmi-theme] .progress-fill,
+:root[data-farmi-theme] .bar.current{background:var(--farmi-ui-primary)}
+:root[data-farmi-theme] .bar{background:color-mix(in srgb,var(--farmi-ui-primary) 28%,white)}
+:root[data-farmi-theme] .card{border-color:var(--farmi-ui-border)}
+:root[data-farmi-theme] th{background:var(--farmi-ui-primary-soft);color:var(--farmi-ui-primary-dark)}
+:root[data-farmi-theme] .status span{background:var(--farmi-ui-primary)}
+:root[data-farmi-theme] .field-focus,
+:root[data-farmi-theme] .auth-login-card .auth-logo{color:var(--farmi-ui-primary)}
