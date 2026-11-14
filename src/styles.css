@@ -4579,3 +4579,16 @@ button.icon-btn:focus-visible svg,
 .customer-clickable-row:focus-visible{outline:2px solid #72b89e;outline-offset:-2px}
 .customer-clickable-row .customer-name-link{pointer-events:none}
 .customer-clickable-row .customer-actions{cursor:default}
+
+
+/* Clientes: búsqueda y alta en una sola fila */
+.customers-page .customer-search-toolbar{display:flex;flex-direction:column;align-items:stretch;gap:6px}
+.customers-page .customer-search-actions-row{display:flex;align-items:center;gap:10px;min-width:0}
+.customers-page .customer-search-actions-row .search{flex:1 1 auto;min-width:0;max-width:none}
+.customers-page .customer-search-actions-row .primary{flex:0 0 auto;white-space:nowrap}
+.customers-page .customer-search-toolbar>.count{text-align:right}
+@media(max-width:420px){
+ .customers-page .customer-search-actions-row{gap:6px}
+ .customers-page .customer-search-actions-row .primary{padding:8px 9px;font-size:11px}
+ .customers-page .customer-search-actions-row .primary svg{width:14px;height:14px}
+}
