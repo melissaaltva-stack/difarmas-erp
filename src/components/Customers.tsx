@@ -111,7 +111,7 @@ export function Customers({customers,setCustomers}:{customers:Customer[];setCust
     if(form.paymentTerms==='Crédito'&&creditDays<1){setError('Para términos de crédito, indica al menos 1 día de plazo.');return;}
     const rtn=form.rtn.trim();
     if(rtn&&customers.some(c=>c.id!==editing?.id&&(c.rtn??'').replace(/[^0-9A-Za-z]/g,'').toLowerCase()===rtn.replace(/[^0-9A-Za-z]/g,'').toLowerCase())){setError('Ya existe un cliente con ese RTN.');return;}
-    const record=toCustomer(form,editing?.id??nextCustomerId(),editing?.code??nextCustomerCode(customers));
+    const record={...toCustomer(form,editing?.id??nextCustomerId(),editing?.code??nextCustomerCode(customers)),medicationInstructions:editing?.medicationInstructions};
     setCustomers(current=>editing?current.map(c=>c.id===editing.id?record:c):[record,...current]);
     setShowForm(false);setEditing(null);setForm(emptyForm);setError('');
   };
