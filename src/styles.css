@@ -4592,3 +4592,13 @@ button.icon-btn:focus-visible svg,
  .customers-page .customer-search-actions-row .primary{padding:8px 9px;font-size:11px}
  .customers-page .customer-search-actions-row .primary svg{width:14px;height:14px}
 }
+
+
+/* Pedidos: gestión de reservas de inventario */
+.orders-page{display:grid;gap:16px}
+.orders-page>.page-intro{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.orders-page .order-editor{display:grid;gap:14px}
+.orders-page .order-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.orders-page .order-actions button{display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
+.orders-page .order-editor input{max-width:120px}
+@media(max-width:700px){.orders-page .order-actions{align-items:stretch}.orders-page .order-actions button{font-size:11px;padding:7px 9px}.orders-page>.page-intro{flex-direction:column}}
