@@ -32,7 +32,7 @@ export function AuthGate({ children }: Props) {
   const [backgroundError,setBackgroundError] = useState('');
   const [settingsOpen,setSettingsOpen] = useState(false);
   const [backgroundOpacity,setBackgroundOpacity] = useState(()=>{try{return Number(window.localStorage.getItem('farmi-background-opacity')??'58');}catch{return 58;}});
-  const [loginTheme,setLoginTheme] = useState(()=>{try{return window.localStorage.getItem('farmi-system-theme')??'emerald';}catch{return 'emerald';}});
+  const [loginTheme,setLoginTheme] = useState(()=>{try{const saved=window.localStorage.getItem('farmi-system-theme')??'emerald';return ['emerald','blue','violet','slate','rose'].includes(saved)?saved:'emerald';}catch{return 'emerald';}});
   const themes=[{id:'emerald',name:'Esmeralda',color:'#16856b'},{id:'blue',name:'Azul',color:'#2867b2'},{id:'violet',name:'Violeta',color:'#7653b5'},{id:'slate',name:'Grafito',color:'#526477'},{id:'rose',name:'Rosa',color:'#b65370'}];
   useEffect(()=>{document.documentElement.dataset.farmiTheme=loginTheme;try{window.localStorage.setItem('farmi-system-theme',loginTheme);}catch{}},[loginTheme]);
   useEffect(()=>{try{window.localStorage.setItem('farmi-background-opacity',String(backgroundOpacity));}catch{}},[backgroundOpacity]);
