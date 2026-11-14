@@ -4698,3 +4698,11 @@ button.icon-btn:focus-visible svg,
 @media(max-width:760px){.receivables-toolbar{grid-template-columns:minmax(0,1fr) 180px}.receivables-results{grid-column:1/-1;justify-self:end;height:32px;padding:0 10px}}
 @media(max-width:520px){.receivables-toolbar{grid-template-columns:1fr;gap:11px;padding:12px}.receivables-results{grid-column:auto;justify-self:end}}
 @media print{.receivables-toolbar{display:none!important}}
+
+
+/* Impresión de recibos y estados de cuenta */
+.receivable-print-button{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 10px;border-radius:8px;font-size:11px;font-weight:700;white-space:nowrap}
+.settings-notice>span{flex:1;min-width:0}
+.settings-notice .secondary{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 11px;border:1px solid #c9dfd4;border-radius:8px;background:#fff;color:#17664f;font-size:11px;font-weight:700;white-space:nowrap}
+.settings-notice .secondary:hover{background:#f4faf6}
+@media(max-width:650px){.settings-notice{flex-wrap:wrap;gap:8px}.settings-notice>span{flex-basis:100%}}
