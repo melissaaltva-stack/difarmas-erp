@@ -1,6 +1,6 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { LockKeyhole, LogIn, Mail, KeyRound, ShieldAlert, ImagePlus, RotateCcw } from 'lucide-react';
+import { LockKeyhole, LogIn, Mail, KeyRound, ShieldAlert, ImagePlus, RotateCcw, Settings, Palette, Check } from 'lucide-react';
 import './AuthGate.css';
 import { requireSupabase, supabase, supabaseConfigured } from '../services/supabaseClient';
 
@@ -30,6 +30,10 @@ export function AuthGate({ children }: Props) {
   const [notice,setNotice] = useState('');
   const [loginBackground,setLoginBackground] = useState(()=>{try{return window.localStorage.getItem('farmi-login-background')??'';}catch{return '';}});
   const [backgroundError,setBackgroundError] = useState('');
+  const [settingsOpen,setSettingsOpen] = useState(false);
+  const [loginTheme,setLoginTheme] = useState(()=>{try{return window.localStorage.getItem('farmi-system-theme')??'emerald';}catch{return 'emerald';}});
+  const themes=[{id:'emerald',name:'Esmeralda',color:'#16856b'},{id:'blue',name:'Azul',color:'#2867b2'},{id:'violet',name:'Violeta',color:'#7653b5'},{id:'slate',name:'Grafito',color:'#526477'},{id:'rose',name:'Rosa',color:'#b65370'}];
+  useEffect(()=>{document.documentElement.dataset.farmiTheme=loginTheme;try{window.localStorage.setItem('farmi-system-theme',loginTheme);}catch{}},[loginTheme]);
   const [recoveryMode,setRecoveryMode] = useState(false);
   const [recoveryPassword,setRecoveryPassword] = useState('');
   const [confirmRecoveryPassword,setConfirmRecoveryPassword] = useState('');
@@ -182,10 +186,15 @@ export function AuthGate({ children }: Props) {
 
   return <div className={`auth-page auth-login-page${loginBackground?' has-custom-background':''}`}>
     {loginBackground&&<div className="auth-login-background-image" style={{backgroundImage:`url("${loginBackground}")`}} aria-hidden="true"/>}
-    <div className="auth-background-actions">
-      <label className="auth-background-button"><ImagePlus size={16}/> Cambiar imagen de fondo<input type="file" accept="image/*" onChange={handleBackgroundUpload}/></label>
-      {loginBackground&&<button type="button" className="auth-background-reset" onClick={clearLoginBackground}><RotateCcw size={14}/> Restablecer</button>}
-      {backgroundError&&<span className="auth-background-error" role="alert">{backgroundError}</span>}
+    <div className="auth-settings">
+      <button type="button" className="auth-settings-trigger" aria-label="Ajustes de apariencia" aria-expanded={settingsOpen} onClick={()=>setSettingsOpen(value=>!value)}><Settings size={19}/></button>
+      {settingsOpen&&<div className="auth-settings-menu">
+        <p className="auth-settings-heading">Personalizar FARMI</p>
+        <label className="auth-settings-item"><span className="auth-settings-icon"><ImagePlus size={17}/></span><span>Cambiar imagen de fondo</span><input type="file" accept="image/*" onChange={handleBackgroundUpload}/></label>
+        <div className="auth-settings-themes"><div className="auth-settings-item-title"><Palette size={17}/> Tema de colores</div><div className="auth-theme-options">{themes.map(theme=><button key={theme.id} type="button" className={loginTheme===theme.id?'selected':''} title={theme.name} aria-label={`Tema ${theme.name}`} onClick={()=>setLoginTheme(theme.id)}><span style={{background:theme.color}}/>{loginTheme===theme.id&&<Check size={12}/>}</button>)}</div><small>{themes.find(theme=>theme.id===loginTheme)?.name}</small></div>
+        {loginBackground&&<button type="button" className="auth-settings-item auth-settings-reset" onClick={clearLoginBackground}><span className="auth-settings-icon"><RotateCcw size={16}/></span><span>Restablecer fondo</span></button>}
+        {backgroundError&&<span className="auth-background-error" role="alert">{backgroundError}</span>}
+      </div>}
     </div>
     <div className="auth-login-layout">
       <section className="auth-brand-panel">
