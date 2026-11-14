@@ -4721,3 +4721,46 @@ button.icon-btn:focus-visible svg,
 .receivables-history-card .table-wrap table{margin:0}
 @media(max-width:600px){.receivables-history-toggle{min-height:60px;padding:12px 14px}}
 @media print{.receivables-history-toggle{display:none!important}.receivables-history-card>.table-wrap{display:block!important}}
+
+
+/* Customer-ledger receivables workflow */
+.receivables-customer-search{position:relative;z-index:2;margin-bottom:14px}
+.receivables-customer-search .receivables-search-field{max-width:620px;position:relative}
+.receivables-customer-results{position:absolute;top:100%;left:0;right:0;z-index:8;margin-top:5px;background:#fff;border:1px solid #dce8e5;border-radius:10px;box-shadow:0 12px 30px #173e3e18;max-height:280px;overflow:auto}
+.receivables-customer-results button{width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border:0;border-bottom:1px solid #edf2f1;background:#fff;text-align:left;cursor:pointer;color:#233c37}
+.receivables-customer-results button:hover{background:#f2f8f5}
+.receivables-customer-results button small,.receivables-customer-results p{color:#718a85;font-size:11px}
+.receivables-customer-results p{padding:10px 14px}
+.receivables-empty-ledger{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;padding:42px 20px;color:#718a85;text-align:center}
+.receivables-empty-ledger strong{color:#36534d;font-size:14px}
+.receivables-empty-ledger span{font-size:12px}
+.receivables-ledger-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:16px}
+.receivables-ledger-head h3{margin:0;font-size:17px;color:#203d36}
+.receivables-ledger-head p{margin:5px 0 0;color:#718a85;font-size:12px}
+.receivables-ledger-actions{display:flex;gap:8px;flex-wrap:wrap}
+.receivables-ledger-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 16px}
+.receivables-ledger-summary>div{padding:12px;border:1px solid #e2ebe9;border-radius:10px;background:#fbfdfc}
+.receivables-ledger-summary small,.receivables-ledger-summary strong{display:block}
+.receivables-ledger-summary small{font-size:10px;color:#718a85}
+.receivables-ledger-summary strong{margin-top:5px;font-size:16px;color:#21483d}
+.receivables-credit-tag,.receivables-debit-tag{display:inline-block;padding:4px 8px;border-radius:99px;font-size:10px;font-weight:800}
+.receivables-credit-tag{background:#e2f4ee;color:#17674f}
+.receivables-debit-tag{background:#fff3df;color:#986515}
+.receivables-invoices{margin-top:22px}
+.receivables-invoices h4,.receivables-modal-invoices h4{margin:0 0 10px;color:#36534d;font-size:13px}
+.receivables-modal-backdrop{z-index:30}
+.receivables-payment-modal{width:min(680px,100%)}
+.receivables-modal-invoices{margin:10px 0 16px}
+.receivables-invoice-option{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #e0e9e5;border-radius:10px;margin:8px 0;cursor:pointer}
+.receivables-invoice-option.selected{border-color:#269878;background:#f1faf6;box-shadow:0 0 0 2px #26987818}
+.receivables-invoice-option input{accent-color:#167b61}
+.receivables-invoice-option>span:first-of-type{flex:1;min-width:0}
+.receivables-invoice-option strong,.receivables-invoice-option small{display:block}
+.receivables-invoice-option small{margin-top:4px;color:#718a85;font-size:10px}
+.receivables-payment-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.receivables-payment-fields label{display:block;font-size:11px;font-weight:700;color:#607a74}
+.receivables-payment-fields input,.receivables-payment-fields select{display:block;width:100%;margin-top:6px;border:1px solid #d9e5e2;border-radius:8px;padding:10px;font:inherit;color:#233c37;background:#fff}
+.receivables-selected-balance{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;padding:11px 13px;background:#f1f7f4;border-radius:9px;color:#607a74;font-size:11px}
+.receivables-selected-balance strong{font-size:16px;color:#16664f}
+@media(max-width:760px){.receivables-ledger-head{align-items:flex-start;flex-direction:column}.receivables-ledger-actions{width:100%}.receivables-ledger-actions button{flex:1}.receivables-ledger-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.receivables-payment-fields{grid-template-columns:1fr}.receivables-selected-balance{grid-column:auto}.receivables-invoice-option{align-items:flex-start;flex-wrap:wrap}.receivables-invoice-option>span:last-child{margin-left:28px}}
