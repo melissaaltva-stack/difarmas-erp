@@ -1,8 +1,10 @@
 .auth-login-page{
+  display:block;
   position:relative;
   isolation:isolate;
-  overflow:hidden;
+  overflow-x:hidden;
   min-height:100vh;
+  min-height:100svh;
   padding:clamp(24px,5vw,72px);
   background:
     radial-gradient(ellipse at 78% 18%,rgba(47,145,113,.18),transparent 34%),
@@ -22,14 +24,14 @@
 .auth-brand-copy>span{display:block;max-width:430px;color:#d2e8df;font-size:16px;line-height:1.75}
 .auth-brand-footer{display:flex;align-items:center;gap:12px;color:#c4ded4;font-size:12px;letter-spacing:.2px}
 .auth-brand-line{width:32px;height:2px;background:#45c195;border-radius:2px}
-.auth-login-card{width:100%;gap:12px;padding:36px;border:1px solid rgba(255,255,255,.65);border-radius:22px;box-shadow:0 28px 90px rgba(0,0,0,.24)}
+ .auth-login-card{width:min(440px,100%);min-width:0;box-sizing:border-box;gap:12px;padding:36px;border:1px solid rgba(255,255,255,.65);border-radius:22px;box-shadow:0 28px 90px rgba(0,0,0,.24)}
 .auth-login-card .auth-logo{width:48px;height:48px;border-radius:14px;margin-bottom:3px}
 .auth-login-card h1{font-size:29px;letter-spacing:-.7px}
 .auth-login-card .auth-subtitle{margin-bottom:8px}
 .auth-login-card .auth-submit{min-height:48px}
 .auth-login-card .primary{box-shadow:0 7px 16px rgba(22,123,97,.2)}
 .auth-background-actions{position:absolute;z-index:2;top:22px;right:24px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-.auth-background-button,.auth-background-reset{min-height:38px;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 12px;border:1px solid rgba(255,255,255,.35);border-radius:9px;background:rgba(8,36,33,.5);backdrop-filter:blur(12px);color:#fff;font:600 11px/1.2 inherit;cursor:pointer;transition:background .15s ease,border-color .15s ease}
+.auth-background-button,.auth-background-reset{min-height:38px;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 12px;border:1px solid rgba(255,255,255,.35);border-radius:9px;background:rgba(8,36,33,.5);backdrop-filter:blur(12px);color:#fff;font-family:inherit;font-size:11px;font-weight:600;line-height:1.2;cursor:pointer;transition:background .15s ease,border-color .15s ease}
 .auth-background-button:hover,.auth-background-reset:hover{background:rgba(8,36,33,.78);border-color:rgba(255,255,255,.65)}
 .auth-background-button input{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;clip-path:inset(50%)}
 .auth-background-error{flex-basis:100%;max-width:320px;padding:7px 10px;border-radius:7px;background:#fff0ef;color:#9b2c2c;font-size:11px;text-align:right}
