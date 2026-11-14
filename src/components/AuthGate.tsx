@@ -180,7 +180,8 @@ export function AuthGate({ children }: Props) {
 
   if (user) return <>{children(user, signOut)}</>;
 
-  return <div className={`auth-page auth-login-page${loginBackground?' has-custom-background':''}`} style={loginBackground?{backgroundImage:`linear-gradient(110deg,rgba(5,28,27,.78),rgba(8,43,39,.48)),url("${loginBackground}")`}:undefined}>
+  return <div className={`auth-page auth-login-page${loginBackground?' has-custom-background':''}`}>
+    {loginBackground&&<div className="auth-login-background-image" style={{backgroundImage:`url("${loginBackground}")`}} aria-hidden="true"/>}
     <div className="auth-background-actions">
       <label className="auth-background-button"><ImagePlus size={16}/> Cambiar imagen de fondo<input type="file" accept="image/*" onChange={handleBackgroundUpload}/></label>
       {loginBackground&&<button type="button" className="auth-background-reset" onClick={clearLoginBackground}><RotateCcw size={14}/> Restablecer</button>}
