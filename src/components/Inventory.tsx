@@ -21,7 +21,7 @@ const makeBarcode = (products: Product[]) => {
 };
 
 export function Inventory({products, search, setSearch, movements, onNew, onEdit}:{products:Product[];search:string;setSearch:(v:string)=>void;movements:InventoryMovement[];onNew:()=>void;onEdit:(p:Product)=>void}) {
-  const lowStock = products.filter(p => p.stock <= p.minStock);
+  const lowStock = products.filter(p => p.itemType !== 'Servicio' && p.stock <= p.minStock);
   const expiring = products.filter(p => daysUntil(p.expiry) >= 0 && daysUntil(p.expiry) <= 90);
   const expired = products.filter(p => daysUntil(p.expiry) < 0);
   const lowMargin = products.filter(p => margin(p.retail, p.cost) < 15);
