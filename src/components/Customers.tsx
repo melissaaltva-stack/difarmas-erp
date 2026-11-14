@@ -119,8 +119,7 @@ export function Customers({customers,setCustomers}:{customers:Customer[];setCust
   };
   const toggleActive=(customer:Customer)=>setCustomers(current=>current.map(c=>c.id===customer.id?{...c,active:!c.active}:c));
   return <div className="content customers-page">
-    <div className="page-head customer-page-head-compact"><div className="customer-page-actions"><button className="primary" onClick={startNew}><Plus size={17}/> Nuevo cliente</button></div></div>
-    <div className="inventory-toolbar card"><div className="search"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar por nombre, RTN, teléfono o correo..."/></div><span className="count">{customers.length} clientes registrados</span></div>
+    <div className="inventory-toolbar card customer-search-toolbar"><div className="customer-search-actions-row"><div className="search"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar por nombre, RTN, teléfono o correo..."/></div><button className="primary" onClick={startNew}><Plus size={17}/> Nuevo cliente</button></div><span className="count">{customers.length} clientes registrados</span></div>
     <div className="inventory-alerts">
       <div className="card alert-card"><UsersRound size={18}/><div><strong>{customers.length} registrados</strong><small>Todos los clientes guardados en el ERP.</small></div></div>
       <div className="card alert-card"><CheckCircle2 size={18}/><div><strong>{customers.filter(c=>c.active).length} activos</strong><small>Disponibles para futuras operaciones.</small></div></div>
