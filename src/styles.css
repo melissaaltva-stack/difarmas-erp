@@ -4569,3 +4569,5 @@ button.icon-btn:focus-visible svg,
 .medication-instructions-modal .medication-entry-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 .medication-modal-footer{display:flex;justify-content:flex-end;padding-top:2px}
 @media(max-width:650px){.customer-detail-modal{padding:16px}.customer-detail-grid{grid-template-columns:1fr;gap:0}.customer-detail-full{grid-column:auto}.customer-detail-footer{align-items:stretch;flex-direction:column}.customer-detail-footer button{width:100%;justify-content:center}.medication-modal-backdrop{padding:8px}.medication-instructions-modal{width:calc(100vw - 16px);max-height:calc(100dvh - 16px);padding:12px}.medication-instructions-modal .medication-entry-grid{grid-template-columns:1fr}.medication-instructions-modal .medication-list-heading{align-items:center;flex-direction:row}}
+
+.customer-create-instruction{width:42px;height:42px;display:inline-grid;place-items:center;flex:0 0 42px;border:1px solid #cfe4da;border-radius:11px;background:#eaf5f0;color:#16765f}.customer-create-instruction:hover{background:#dff0e8;border-color:#a8d3c1}
