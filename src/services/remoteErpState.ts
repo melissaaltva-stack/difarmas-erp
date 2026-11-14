@@ -1,6 +1,6 @@
 import type {
   CashClosure, CashMovement, Customer, Supplier, ErpSettings, Expense, InventoryMovement, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseRecord,
-  Receivable, SaleRecord, OrderRecord, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord, QuoteRecord,
+  Receivable, SaleRecord, OrderRecord, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord, QuoteRecord, AccountingAccount, AccountingEntry,
 } from '../domain/types';
 import { requireSupabase } from './supabaseClient';
 
@@ -26,6 +26,8 @@ export type ErpSnapshot = {
   missingProductRequests?: MissingProductRequest[];
   supplierReturns?: SupplierReturnRecord[];
   saleAdjustments?: SaleAdjustmentRecord[];
+  accountingAccounts?: AccountingAccount[];
+  accountingEntries?: AccountingEntry[];
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -72,6 +74,8 @@ function normalizeSnapshot(value: unknown): ErpSnapshot {
     missingProductRequests: value.missingProductRequests as MissingProductRequest[] | undefined,
     supplierReturns: value.supplierReturns as SupplierReturnRecord[] | undefined,
     saleAdjustments: value.saleAdjustments as SaleAdjustmentRecord[] | undefined,
+    accountingAccounts: (value.accountingAccounts ?? []) as AccountingAccount[],
+    accountingEntries: (value.accountingEntries ?? []) as AccountingEntry[],
   };
 }
 
