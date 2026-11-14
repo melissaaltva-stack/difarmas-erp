@@ -4950,3 +4950,82 @@ button.icon-btn:focus-visible svg,
 :root[data-farmi-theme] .app [role="tab"]:focus-visible{outline-color:var(--farmi-ui-primary)!important;box-shadow:0 0 0 3px var(--farmi-ui-focus)!important}
 :root[data-farmi-theme] .app .nav,
 :root[data-farmi-theme] .app .nav-parent{transition:background-color .16s ease,color .16s ease}
+
+
+/* FARMI: cobertura transversal de controles activos, pestañas, iconos y módulos. */
+:root[data-farmi-theme] .app button.active,
+:root[data-farmi-theme] .app button.selected,
+:root[data-farmi-theme] .app [role="tab"][aria-selected="true"],
+:root[data-farmi-theme] .app .settings-tabs button.active,
+:root[data-farmi-theme] .app .settings-document-list>button.selected,
+:root[data-farmi-theme] .app .nav-submenu button.active{
+  background:var(--farmi-ui-primary)!important;
+  border-color:var(--farmi-ui-primary)!important;
+  color:#fff!important;
+}
+:root[data-farmi-theme] .app .settings-tabs button:not(.active),
+:root[data-farmi-theme] .app .settings-document-list>button:not(.selected),
+:root[data-farmi-theme] .app .settings-section-head button.secondary,
+:root[data-farmi-theme] .app .toolbar button.secondary,
+:root[data-farmi-theme] .app button.secondary,
+:root[data-farmi-theme] .app button.outline,
+:root[data-farmi-theme] .app button.ghost,
+:root[data-farmi-theme] .app button.subtle,
+:root[data-farmi-theme] .app button.icon-btn,
+:root[data-farmi-theme] .app button.filter-btn,
+:root[data-farmi-theme] .app button.tab-btn{
+  background-color:var(--farmi-ui-primary-soft)!important;
+  border-color:var(--farmi-ui-border)!important;
+  color:var(--farmi-ui-primary-dark)!important;
+}
+:root[data-farmi-theme] .app .settings-tabs button:not(.active):hover,
+:root[data-farmi-theme] .app .settings-document-list>button:not(.selected):hover,
+:root[data-farmi-theme] .app button.secondary:hover,
+:root[data-farmi-theme] .app button.outline:hover,
+:root[data-farmi-theme] .app button.ghost:hover,
+:root[data-farmi-theme] .app button.subtle:hover,
+:root[data-farmi-theme] .app button.icon-btn:hover{
+  background-color:color-mix(in srgb,var(--farmi-ui-primary) 15%,white)!important;
+  border-color:var(--farmi-ui-primary)!important;
+  color:var(--farmi-ui-primary-dark)!important;
+}
+:root[data-farmi-theme] .app .card,
+:root[data-farmi-theme] .app .metric,
+:root[data-farmi-theme] .app .modal,
+:root[data-farmi-theme] .app .modal-card,
+:root[data-farmi-theme] .app .settings-editor,
+:root[data-farmi-theme] .app .settings-document-list,
+:root[data-farmi-theme] .app .settings-tabs button{
+  border-color:var(--farmi-ui-border)!important;
+}
+:root[data-farmi-theme] .app .settings-section-head h2,
+:root[data-farmi-theme] .app .settings-section-head h3,
+:root[data-farmi-theme] .app .settings-editor h3,
+:root[data-farmi-theme] .app .settings-document-list h3,
+:root[data-farmi-theme] .app .settings-custom-fields h4,
+:root[data-farmi-theme] .app .settings-system-grid>div{
+  color:var(--farmi-ui-primary-dark)!important;
+}
+:root[data-farmi-theme] .app .settings-system-grid>div>svg,
+:root[data-farmi-theme] .app .settings-hint>svg,
+:root[data-farmi-theme] .app .settings-section-head button svg,
+:root[data-farmi-theme] .app button.secondary svg,
+:root[data-farmi-theme] .app button.icon-btn svg,
+:root[data-farmi-theme] .app button.outline svg,
+:root[data-farmi-theme] .app button.ghost svg{
+  color:currentColor!important;
+  stroke:currentColor!important;
+}
+:root[data-farmi-theme] .app svg.lucide{
+  stroke:currentColor;
+}
+:root[data-farmi-theme] .app button svg.lucide,
+:root[data-farmi-theme] .app a svg.lucide,
+:root[data-farmi-theme] .app [role="button"] svg.lucide{
+  color:inherit!important;
+}
+:root[data-farmi-theme] .app input[type="checkbox"],
+:root[data-farmi-theme] .app input[type="radio"],
+:root[data-farmi-theme] .app input[type="range"]{
+  accent-color:var(--farmi-ui-primary)!important;
+}
