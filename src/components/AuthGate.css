@@ -328,3 +328,20 @@
 .auth-opacity-control label strong{color:var(--farmi-accent,#16856b);font-variant-numeric:tabular-nums}
 .auth-opacity-control input{display:block;width:100%;margin:11px 0 5px;accent-color:var(--farmi-accent,#16856b);cursor:pointer}
 .auth-opacity-control>div{display:flex;justify-content:space-between;color:#87958f;font-size:9px}
+
+
+/* Icono principal de acceso: siempre visible y alineado dentro de su contenedor. */
+.auth-login-card .auth-login-symbol{
+  display:grid;
+  place-items:center;
+  color:var(--farmi-accent,#16856b);
+  background:var(--farmi-accent-soft,#e7f4ef);
+}
+.auth-login-card .auth-login-symbol svg{
+  display:block;
+  width:25px;
+  height:25px;
+  flex:0 0 25px;
+  stroke:currentColor;
+  color:inherit;
+}
