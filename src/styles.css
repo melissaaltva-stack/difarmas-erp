@@ -4679,3 +4679,22 @@ button.icon-btn:focus-visible svg,
 @media(max-width:560px){.customer-receivable-meta{align-items:flex-start;flex-direction:column;gap:3px}.customer-receivable-payment{display:grid;grid-template-columns:1fr 1fr;width:100%}.customer-receivable-payment input,.customer-receivable-payment button{grid-column:1/-1}}
 
 .customer-section-dropdown{display:flex;align-items:center;gap:10px;margin:0 0 16px}.customer-section-dropdown label{font-size:12px;font-weight:650;color:#52665d}.customer-section-dropdown select{width:min(280px,100%);min-height:38px;padding:8px 34px 8px 11px;border:1px solid #d8e3dd;border-radius:8px;background:#fff;color:#263d35;font-size:13px;font-weight:600;cursor:pointer}.customer-section-dropdown select:focus{outline:2px solid #b8ddce;outline-offset:1px}.customer-ar-overview{display:grid;gap:14px}.customer-ar-customer-list{display:grid;gap:12px}.customer-ar-customer{padding:15px}.customer-ar-customer>header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.customer-ar-customer>header>div{display:grid;gap:4px}.customer-ar-customer>header strong{font-size:14px;color:#263d35}.customer-ar-customer>header small{font-size:11px;color:#71827c}.customer-ar-customer>header>span{font-size:15px;font-weight:700;color:#18765f;white-space:nowrap}.customer-ar-customer .customer-receivables-section{border-top:1px solid #edf2ef;margin-top:0}.customer-ar-empty{padding:28px;text-align:center;color:#71827c;font-size:13px}@media(max-width:560px){.customer-section-dropdown{align-items:stretch;flex-direction:column;gap:6px}.customer-section-dropdown select{width:100%}.customer-ar-customer{padding:11px}}
+
+
+/* Cuentas por cobrar: búsqueda y filtros */
+.receivables-toolbar{display:grid;grid-template-columns:minmax(0,1fr) 190px auto;align-items:end;gap:14px;margin:16px 0;padding:14px;background:#f7faf9;border:1px solid #e2ebe7;border-radius:12px}
+.receivables-search-field,.receivables-status-field{display:grid;gap:7px;min-width:0}
+.receivables-search-field>label,.receivables-status-field>label{font-size:11px;font-weight:750;letter-spacing:.02em;color:#526c63}
+.receivables-search-control{height:44px;display:flex;align-items:center;gap:10px;min-width:0;padding:0 12px;border:1px solid #d3e1dc;border-radius:9px;background:#fff;color:#70877e;transition:border-color .15s ease,box-shadow .15s ease}
+.receivables-search-control:focus-within{border-color:#168367;box-shadow:0 0 0 3px rgba(22,131,103,.11)}
+.receivables-search-control input{flex:1;min-width:0;height:100%;padding:0!important;border:0!important;outline:0!important;box-shadow:none!important;background:transparent!important;color:#20352d;font:inherit;font-size:13px}
+.receivables-search-control input::placeholder{color:#98a9a2}
+.receivables-clear{display:grid;place-items:center;flex:0 0 27px;width:27px;height:27px;padding:0;border-radius:7px;background:#edf3f0;color:#617a70;font-size:19px;line-height:1}
+.receivables-clear:hover{background:#dfeae5;color:#245d49}
+.receivables-status-field select{width:100%;height:44px;min-width:0;padding:0 11px;border:1px solid #d3e1dc;border-radius:9px;background:#fff;color:#20352d;font:inherit;font-size:13px}
+.receivables-status-field select:focus{outline:0;border-color:#168367;box-shadow:0 0 0 3px rgba(22,131,103,.11)}
+.receivables-results{display:flex;align-items:center;justify-content:center;gap:5px;height:44px;padding:0 12px;border-radius:9px;background:#eaf3ef;color:#60786e;font-size:12px;white-space:nowrap}
+.receivables-results strong{color:#17694f;font-size:15px}
+@media(max-width:760px){.receivables-toolbar{grid-template-columns:minmax(0,1fr) 180px}.receivables-results{grid-column:1/-1;justify-self:end;height:32px;padding:0 10px}}
+@media(max-width:520px){.receivables-toolbar{grid-template-columns:1fr;gap:11px;padding:12px}.receivables-results{grid-column:auto;justify-self:end}}
+@media print{.receivables-toolbar{display:none!important}}
