@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
-import { Plus, Search, Pencil, UserRound, UsersRound, X, Save, Ban, CheckCircle2, FileText, CreditCard, Receipt, Building2 } from 'lucide-react';
-import type { Customer } from '../domain/types';
+import { Plus, Search, Pencil, UserRound, UsersRound, X, Save, Ban, CheckCircle2, FileText, CreditCard, Receipt, Building2, Pill, Printer, History, ArrowLeft, Trash2, CalendarDays } from 'lucide-react';
+import type { Customer, MedicationInstructionItem, MedicationInstructionRecord } from '../domain/types';
 import { nextCustomerCode } from '../services/customerCodeService';
 
 type CustomerForm = {
@@ -96,6 +96,7 @@ export function Customers({customers,setCustomers}:{customers:Customer[];setCust
   const [editing,setEditing]=useState<Customer|null>(null);
   const [form,setForm]=useState<CustomerForm>(emptyForm);
   const [error,setError]=useState('');
+  const [showMedicationInstructions,setShowMedicationInstructions]=useState(false);
   const lastCustomerId=useRef(0);
   const nextCustomerId=()=>{const highestStoredId=customers.reduce((highest,customer)=>Math.max(highest,Number(customer.id)||0),0);const nextId=Math.max(Date.now(),highestStoredId,lastCustomerId.current)+1;lastCustomerId.current=nextId;return nextId;};
   const filtered=useMemo(()=>customers.filter(c=>[c.code??'',c.name,c.rtn??'',c.phone,c.email??'',c.address??''].join(' ').toLocaleLowerCase().includes(query.toLocaleLowerCase())),[customers,query]);
@@ -115,8 +116,8 @@ export function Customers({customers,setCustomers}:{customers:Customer[];setCust
     setShowForm(false);setEditing(null);setForm(emptyForm);setError('');
   };
   const toggleActive=(customer:Customer)=>setCustomers(current=>current.map(c=>c.id===customer.id?{...c,active:!c.active}:c));
-  return <div className="content customers-page">
-    <div className="page-head customer-page-head-compact"><button className="primary" onClick={startNew}><Plus size={17}/> Nuevo cliente</button></div>
+  return <div className="content customers-page">{showMedicationInstructions ? <MedicationInstructions customers={customers} setCustomers={setCustomers} onClose={()=>setShowMedicationInstructions(false)}/> : <>
+    <div className="page-head customer-page-head-compact"><div className="customer-page-actions"><button className="secondary" type="button" onClick={()=>setShowMedicationInstructions(true)}><Pill size={17}/> Indicaciones de medicamentos</button><button className="primary" onClick={startNew}><Plus size={17}/> Nuevo cliente</button></div></div>
     <div className="inventory-toolbar card"><div className="search"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar por nombre, RTN, teléfono o correo..."/></div><span className="count">{customers.length} clientes registrados</span></div>
     <div className="inventory-alerts">
       <div className="card alert-card"><UsersRound size={18}/><div><strong>{customers.length} registrados</strong><small>Todos los clientes guardados en el ERP.</small></div></div>
@@ -133,6 +134,58 @@ export function Customers({customers,setCustomers}:{customers:Customer[];setCust
       {error&&<p className="form-error" role="alert">{error}</p>}
       <div className="customer-form-footer"><button className="secondary" type="button" onClick={closeForm}>Cancelar</button><button className="primary" type="button" onClick={save}><Save size={16}/> Guardar</button></div>
     </div></div>}
+    </>}
+  </div>;
+}
+
+const newMedicationRow=():MedicationInstructionItem=>({id:crypto.randomUUID(),name:"",concentration:"",dosage:"",schedule:"",duration:"",notes:""});
+
+function MedicationInstructions({customers,setCustomers,onClose}:{customers:Customer[];setCustomers:(value:Customer[]|((current:Customer[])=>Customer[]))=>void;onClose:()=>void}) {
+  const [customerId,setCustomerId]=useState<number|null>(customers[0]?.id??null);
+  const [items,setItems]=useState<MedicationInstructionItem[]>([newMedicationRow()]);
+  const [generalNotes,setGeneralNotes]=useState("");
+  const [preparedBy,setPreparedBy]=useState("");
+  const [error,setError]=useState("");
+  const [printData,setPrintData]=useState<{customer:Customer;record:MedicationInstructionRecord}|null>(null);
+  const selectedCustomer=customers.find(customer=>customer.id===customerId)??null;
+  const history=selectedCustomer?.medicationInstructions??[];
+  const updateItem=(id:string,key:keyof MedicationInstructionItem,value:string)=>setItems(current=>current.map(item=>item.id===id?{...item,[key]:value}:item));
+  const save=()=>{
+    if(!selectedCustomer){setError("Selecciona un cliente.");return;}
+    const validItems=items.filter(item=>item.name.trim());
+    if(!validItems.length){setError("Agrega al menos un medicamento.");return;}
+    if(validItems.some(item=>!item.dosage.trim()||!item.schedule.trim())){setError("Completa la dosis y el horario de cada medicamento.");return;}
+    const record:MedicationInstructionRecord={id:crypto.randomUUID(),createdAt:new Date().toISOString(),items:validItems.map(item=>({...item,name:item.name.trim(),concentration:item.concentration.trim(),dosage:item.dosage.trim(),schedule:item.schedule.trim(),duration:item.duration.trim(),notes:item.notes.trim()})),generalNotes:generalNotes.trim(),preparedBy:preparedBy.trim()};
+    setCustomers(current=>current.map(customer=>customer.id===selectedCustomer.id?{...customer,medicationInstructions:[record,...(customer.medicationInstructions??[])]}:customer));
+    setItems([newMedicationRow()]);setGeneralNotes("");setError("");
+    setPrintData({customer:selectedCustomer,record});
+    window.setTimeout(()=>window.print(),250);
+  };
+  const printExisting=(record:MedicationInstructionRecord)=>{if(selectedCustomer){setPrintData({customer:selectedCustomer,record});window.setTimeout(()=>window.print(),150);}};
+  const dateLabel=(value:string)=>new Date(value).toLocaleDateString("es-HN",{year:"numeric",month:"long",day:"numeric"});
+  return <div className="medication-instructions-page">
+    <div className="medication-instructions-head"><div><button type="button" className="text-back" onClick={onClose}><ArrowLeft size={16}/> Volver a Clientes</button><h2><Pill size={23}/> Indicaciones de medicamentos</h2><p>Registra, conserva e imprime las indicaciones asociadas a cada cliente.</p></div><span className="medication-history-count"><History size={16}/> Historial por cliente</span></div>
+    <section className="card medication-editor-card">
+      <div className="medication-section-title"><div><h3>Nueva indicación</h3><p>Selecciona al cliente y transcribe la información de su receta o indicación profesional.</p></div></div>
+      <label className="customer-form-field medication-customer-select"><span>Cliente *</span><select value={customerId??""} onChange={e=>setCustomerId(e.target.value?Number(e.target.value):null)}><option value="">Seleccionar cliente</option>{customers.map(customer=><option key={customer.id} value={customer.id}>{customer.name} · {customer.code??"Sin código"}</option>)}</select></label>
+      {selectedCustomer&&<div className="medication-customer-summary"><UserRound size={18}/><div><strong>{selectedCustomer.name}</strong><small>{selectedCustomer.phone||"Sin teléfono"}{selectedCustomer.documentNumber?" · "+selectedCustomer.documentNumber:""}</small></div></div>}
+      <div className="medication-list-heading"><h4>Medicamentos</h4><button type="button" className="secondary" onClick={()=>setItems(current=>[...current,newMedicationRow()])}><Plus size={15}/> Agregar medicamento</button></div>
+      <div className="medication-entry-list">{items.map((item,index)=><div className="medication-entry" key={item.id}><div className="medication-entry-top"><strong>Medicamento {index+1}</strong>{items.length>1&&<button type="button" className="icon-btn" title="Quitar medicamento" aria-label="Quitar medicamento" onClick={()=>setItems(current=>current.filter(row=>row.id!==item.id))}><Trash2 size={16}/></button>}</div><div className="medication-entry-grid">
+        <label className="customer-form-field"><span>Nombre del medicamento *</span><input value={item.name} onChange={e=>updateItem(item.id,"name",e.target.value)} placeholder="Nombre según receta"/></label>
+        <label className="customer-form-field"><span>Concentración / presentación</span><input value={item.concentration} onChange={e=>updateItem(item.id,"concentration",e.target.value)} placeholder="Ej. 500 mg, tabletas"/></label>
+        <label className="customer-form-field"><span>Dosis indicada *</span><input value={item.dosage} onChange={e=>updateItem(item.id,"dosage",e.target.value)} placeholder="Transcribir dosis prescrita"/></label>
+        <label className="customer-form-field"><span>Horario *</span><input value={item.schedule} onChange={e=>updateItem(item.id,"schedule",e.target.value)} placeholder="Ej. después del desayuno"/></label>
+        <label className="customer-form-field"><span>Duración</span><input value={item.duration} onChange={e=>updateItem(item.id,"duration",e.target.value)} placeholder="Según receta"/></label>
+        <label className="customer-form-field"><span>Observaciones</span><input value={item.notes} onChange={e=>updateItem(item.id,"notes",e.target.value)} placeholder="Indicaciones adicionales"/></label>
+      </div></div>)}</div>
+      <div className="medication-bottom-fields"><label className="customer-form-field"><span>Observaciones generales</span><textarea rows={2} value={generalNotes} onChange={e=>setGeneralNotes(e.target.value)} placeholder="Cuidados o notas que deban aparecer impresos..."/></label><label className="customer-form-field"><span>Elaborado por</span><input value={preparedBy} onChange={e=>setPreparedBy(e.target.value)} placeholder="Nombre del personal"/></label></div>
+      {error&&<p className="form-error" role="alert">{error}</p>}
+      <div className="medication-save-row"><small>Las dosis y horarios se registran tal como fueron indicados; el sistema no prescribe ni calcula dosis.</small><button type="button" className="primary" disabled={!selectedCustomer} onClick={save}><Save size={16}/> Guardar e imprimir</button></div>
+    </section>
+    <section className="card medication-history-card"><div className="medication-list-heading"><div><h3><History size={18}/> Historial de indicaciones</h3><p>Registros anteriores del cliente seleccionado.</p></div><span className="count">{history.length} registros</span></div>
+      {!selectedCustomer?<div className="empty"><UserRound size={28}/><p>Selecciona un cliente para consultar su historial.</p></div>:history.length===0?<div className="empty"><FileText size={28}/><p>Este cliente aún no tiene indicaciones guardadas.</p></div>:<div className="medication-history-list">{history.map(record=><article className="medication-history-item" key={record.id}><div className="medication-history-meta"><span><CalendarDays size={15}/> {dateLabel(record.createdAt)}</span><strong>{record.items.length} {record.items.length===1?"medicamento":"medicamentos"}</strong></div><div className="medication-history-drugs">{record.items.map(item=><span key={item.id}>{item.name}{item.concentration?" · "+item.concentration:""}</span>)}</div><button type="button" className="secondary" onClick={()=>printExisting(record)}><Printer size={15}/> Imprimir nuevamente</button></article>)}</div>}
+    </section>
+    {printData&&<div className="medication-print-sheet"><header><div className="medication-print-brand">DIFARMÁS</div><div><h1>Indicaciones de medicamentos</h1><p>Información registrada para el paciente</p></div></header><div className="medication-print-patient"><div><small>Paciente / Cliente</small><strong>{printData.customer.name}</strong></div><div><small>Teléfono</small><strong>{printData.customer.phone||"—"}</strong></div><div><small>Documento</small><strong>{printData.customer.documentNumber||printData.customer.rtn||"—"}</strong></div><div><small>Fecha de emisión</small><strong>{dateLabel(printData.record.createdAt)}</strong></div></div><h2>Detalle de medicamentos</h2><table><thead><tr><th>Medicamento</th><th>Dosis indicada</th><th>Horario</th><th>Duración</th></tr></thead><tbody>{printData.record.items.map(item=><tr key={item.id}><td><strong>{item.name}</strong>{item.concentration&&<small>{item.concentration}</small>}{item.notes&&<small>{item.notes}</small>}</td><td>{item.dosage}</td><td>{item.schedule}</td><td>{item.duration||"—"}</td></tr>)}</tbody></table>{printData.record.generalNotes&&<section className="medication-print-notes"><strong>Observaciones generales</strong><p>{printData.record.generalNotes}</p></section>}<footer><div><small>Elaborado por</small><strong>{printData.record.preparedBy||"Personal DIFARMÁS"}</strong></div><p>Verifique que estas indicaciones coincidan con la receta vigente del profesional de salud.</p></footer></div>}
   </div>;
 }
 
