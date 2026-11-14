@@ -4706,3 +4706,18 @@ button.icon-btn:focus-visible svg,
 .settings-notice .secondary{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 11px;border:1px solid #c9dfd4;border-radius:8px;background:#fff;color:#17664f;font-size:11px;font-weight:700;white-space:nowrap}
 .settings-notice .secondary:hover{background:#f4faf6}
 @media(max-width:650px){.settings-notice{flex-wrap:wrap;gap:8px}.settings-notice>span{flex-basis:100%}}
+
+
+/* Historial de cobros desplegable */
+.receivables-history-card{padding:0;overflow:hidden}
+.receivables-history-toggle{width:100%;min-height:66px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 18px;border:0;background:#fff;color:#20352d;text-align:left;cursor:pointer}
+.receivables-history-toggle:hover{background:#f8fbf9}
+.receivables-history-title{display:grid;gap:4px}
+.receivables-history-title strong{font-size:14px;font-weight:750;color:#203b31}
+.receivables-history-title small{font-size:11px;color:#74877e}
+.receivables-history-toggle>svg{flex:0 0 auto;color:#567267;transition:transform .18s ease}
+.receivables-history-toggle>svg.is-open{transform:rotate(180deg)}
+.receivables-history-card>.table-wrap{border-top:1px solid #e8efeb}
+.receivables-history-card .table-wrap table{margin:0}
+@media(max-width:600px){.receivables-history-toggle{min-height:60px;padding:12px 14px}}
+@media print{.receivables-history-toggle{display:none!important}.receivables-history-card>.table-wrap{display:block!important}}
