@@ -11,7 +11,7 @@ export function Orders({orders,products,onUpdate,onDelete,onInvoice,onEdit}:{ord
  const save=()=>{if(editing===null)return;const total=draft.reduce((sum,item)=>sum+item.price*item.qty,0);if(onUpdate(editing,draft,customer,rtn,total)){setEditing(null);setDraft([]);setNotice('Pedido actualizado y existencias ajustadas.');}else setNotice('No se pudo actualizar. Verifica las existencias disponibles y la sincronización.');};
  const editQty=(id:number,value:number)=>setDraft(current=>current.map(item=>item.id===id?{...item,qty:Math.max(1,Math.floor(value)||1)}:item));
  return <div className="content orders-page">
-  <div className="page-intro"><div></div><span className="pill">{pending.length} pendientes</span></div>
+  <div className="page-intro"><span className="pill">{pending.length} pendientes</span></div>
   {notice&&<p className="helper" role="status">{notice}</p>}
   {editing!==null&&<section className="card order-editor"><div className="section-heading"><div><h3>Editar pedido</h3><p>Al guardar, el inventario se ajustará a las cantidades nuevas.</p></div><button className="icon-button" type="button" onClick={()=>setEditing(null)} aria-label="Cerrar edición"><X size={17}/></button></div>
    <div className="form-grid"><label>Cliente<input value={customer} onChange={e=>setCustomer(e.target.value)} placeholder="Consumidor final"/></label><label>RTN<input value={rtn} onChange={e=>setRtn(e.target.value)} placeholder="RTN (opcional)"/></label></div>
