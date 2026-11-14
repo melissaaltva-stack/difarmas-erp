@@ -96,7 +96,7 @@ export function ReceivablesModule({receivables,setReceivables,transactions,setTr
       accountRows.push({key:'movement-'+t.id,date:t.date,kind:t.type==='Cobro'?'Abono':t.type,reference:t.reference||((t.type==='Cobro'?'RC-':'NC-')+t.id),description:t.type==='Cobro'?(t.paymentMethod||'Pago')+(t.reference?' · Ref. '+t.reference:''):t.type,debit,credit,accountId:r.id,balance:runningBalance,sortOrder:t.id});
     });
     return accountRows;
-  }).sort((a,b)=>a.date.localeCompare(b.date)||a.sortOrder-b.sortOrder);
+  });
   const selectedPendingInvoices=customerAccounts.filter(r=>balanceOf(r)>0);
   const selectedInvoice=customerAccounts.find(r=>r.id===selectedInvoiceId);
   const customerTotal=customerAccounts.reduce((sum,r)=>sum+r.total,0),customerPaid=customerAccounts.reduce((sum,r)=>sum+r.paid,0),customerBalance=customerAccounts.reduce((sum,r)=>sum+balanceOf(r),0);
