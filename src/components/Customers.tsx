@@ -140,7 +140,6 @@ export function Customers({customers,setCustomers,receivables,setReceivables,tra
   const toggleActive=(customer:Customer)=>setCustomers(current=>current.map(c=>c.id===customer.id?{...c,active:!c.active}:c));
   return <div className="content customers-page">
     <div className="inventory-toolbar card customer-search-toolbar"><div className="customer-search-actions-row"><div className="search"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar por nombre, RTN, teléfono o correo..."/></div><button className="primary" onClick={startNew}><Plus size={17}/> Nuevo cliente</button></div><span className="count">{activeSection==='clientes'?customers.length+' clientes registrados':receivables.filter(item=>item.total>item.paid).length+' cuentas pendientes'}</span></div>
-    <div className="customer-section-dropdown"><label htmlFor="customer-module-section">Sección</label><select id="customer-module-section" value={activeSection} onChange={event=>{setActiveSection(event.target.value as 'clientes'|'cuentas_cobrar');setQuery('');}}><option value="clientes">Clientes</option><option value="cuentas_cobrar">Cuentas por cobrar ({receivables.filter(item=>item.total>item.paid).length})</option></select></div>
     {activeSection==='clientes'?<>
     <div className="inventory-alerts">
       <div className="card alert-card"><UsersRound size={18}/><div><strong>{customers.length} registrados</strong><small>Todos los clientes guardados en el ERP.</small></div></div>
