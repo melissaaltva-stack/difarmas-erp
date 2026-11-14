@@ -4813,3 +4813,72 @@ button.icon-btn:focus-visible svg,
 :root[data-farmi-theme] .status span{background:var(--farmi-ui-primary)}
 :root[data-farmi-theme] .field-focus,
 :root[data-farmi-theme] .auth-login-card .auth-logo{color:var(--farmi-ui-primary)}
+
+/* FARMI theme coverage: secondary actions, controls and accent text */
+:root[data-farmi-theme] .app button:not(.primary):not(.checkout-btn):not(.danger):not(.delete):not(.remove):not(.success):not(.warning):not(.nav-parent):not(.mobile-menu-close):not(.close-btn):not([aria-label*="Cerrar"]):not([aria-label*="Eliminar"]):not([disabled]){
+  border-color:var(--farmi-ui-border);
+}
+:root[data-farmi-theme] .app button.secondary,
+:root[data-farmi-theme] .app button.outline,
+:root[data-farmi-theme] .app button.ghost,
+:root[data-farmi-theme] .app button.subtle,
+:root[data-farmi-theme] .app button.action-btn,
+:root[data-farmi-theme] .app button.icon-btn,
+:root[data-farmi-theme] .app button.filter-btn,
+:root[data-farmi-theme] .app button.tab-btn,
+:root[data-farmi-theme] .app [role="tab"]{
+  background-color:var(--farmi-ui-primary-soft) !important;
+  border-color:var(--farmi-ui-border) !important;
+  color:var(--farmi-ui-primary-dark) !important;
+}
+:root[data-farmi-theme] .app button.secondary:hover,
+:root[data-farmi-theme] .app button.outline:hover,
+:root[data-farmi-theme] .app button.ghost:hover,
+:root[data-farmi-theme] .app button.subtle:hover,
+:root[data-farmi-theme] .app button.action-btn:hover,
+:root[data-farmi-theme] .app button.icon-btn:hover,
+:root[data-farmi-theme] .app button.filter-btn:hover,
+:root[data-farmi-theme] .app button.tab-btn:hover,
+:root[data-farmi-theme] .app [role="tab"]:hover{
+  background-color:color-mix(in srgb,var(--farmi-ui-primary) 16%,white) !important;
+  color:var(--farmi-ui-primary-dark) !important;
+}
+:root[data-farmi-theme] .app button.primary,
+:root[data-farmi-theme] .app button.checkout-btn,
+:root[data-farmi-theme] .app button[type="submit"]:not(.danger){
+  background-color:var(--farmi-ui-primary) !important;
+  border-color:var(--farmi-ui-primary) !important;
+  color:#fff !important;
+}
+:root[data-farmi-theme] .app button.primary:hover,
+:root[data-farmi-theme] .app button.checkout-btn:hover,
+:root[data-farmi-theme] .app button[type="submit"]:not(.danger):hover{
+  background-color:var(--farmi-ui-primary-dark) !important;
+  border-color:var(--farmi-ui-primary-dark) !important;
+}
+:root[data-farmi-theme] .app .text-primary,
+:root[data-farmi-theme] .app .text-accent,
+:root[data-farmi-theme] .app .accent,
+:root[data-farmi-theme] .app .section-title,
+:root[data-farmi-theme] .app .page-title,
+:root[data-farmi-theme] .app .module-title,
+:root[data-farmi-theme] .app .section-heading,
+:root[data-farmi-theme] .app .link-button,
+:root[data-farmi-theme] .app .field-focus,
+:root[data-farmi-theme] .app .grand strong{
+  color:var(--farmi-ui-primary) !important;
+}
+:root[data-farmi-theme] .app .nav-submenu button.active,
+:root[data-farmi-theme] .app .tab.active,
+:root[data-farmi-theme] .app .type.active,
+:root[data-farmi-theme] .app .segmented-control button.active{
+  background-color:var(--farmi-ui-primary) !important;
+  border-color:var(--farmi-ui-primary) !important;
+  color:#fff !important;
+}
+:root[data-farmi-theme] .app button:focus-visible,
+:root[data-farmi-theme] .app a:focus-visible,
+:root[data-farmi-theme] .app [role="tab"]:focus-visible{
+  outline-color:var(--farmi-ui-primary) !important;
+  box-shadow:0 0 0 3px var(--farmi-ui-focus) !important;
+}
