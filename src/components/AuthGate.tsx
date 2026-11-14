@@ -1,6 +1,6 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent, type ReactNode, type CSSProperties } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { LockKeyhole, LogIn, Mail, KeyRound, ShieldAlert, ImagePlus, RotateCcw, Settings, Palette, Check } from 'lucide-react';
+import { LogIn, Mail, KeyRound, ShieldAlert, ImagePlus, RotateCcw, Settings, Palette, Check } from 'lucide-react';
 import './AuthGate.css';
 import { requireSupabase, supabase, supabaseConfigured } from '../services/supabaseClient';
 
@@ -205,7 +205,7 @@ export function AuthGate({ children }: Props) {
         <div className="auth-brand-footer"><span className="auth-brand-line"/> Gestión inteligente para DIFARMÁS</div>
       </section>
       <form className="auth-card auth-login-card" onSubmit={signIn}>
-        <div className="auth-logo"><LockKeyhole size={24}/></div>
+        <div className="auth-logo auth-login-symbol"><LogIn size={25} aria-hidden="true"/></div>
         <p className="auth-eyebrow">BIENVENIDO A FARMI</p>
         <h1>Iniciar sesión</h1>
         <p className="auth-subtitle">Ingresa tus credenciales para continuar.</p>
