@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
-import { Plus, Search, Pencil, UserRound, UsersRound, X, Save, Ban, CheckCircle2, FileText, CreditCard, Receipt, Building2, Pill, Printer, History, ArrowLeft, Trash2, CalendarDays, ClipboardPlus, Mail, MapPin, Phone } from 'lucide-react';
+import { Plus, Search, Pencil, UserRound, UsersRound, X, Save, Ban, CheckCircle2, FileText, CreditCard, Receipt, Building2, Pill, Printer, History, Trash2, CalendarDays, ClipboardPlus } from 'lucide-react';
 import type { Customer, MedicationInstructionItem, MedicationInstructionRecord } from '../domain/types';
 import { nextCustomerCode } from '../services/customerCodeService';
 
@@ -168,7 +168,7 @@ function MedicationInstructions({customers,setCustomers,initialCustomerId,onClos
   return <div className="modal-backdrop medication-modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onClose();}}><section className="modal medication-instructions-modal" role="dialog" aria-modal="true" aria-label={"Nueva indicación médica para "+(selectedCustomer?.name??"cliente")}>
     <header className="medication-modal-header"><div><h2><Pill size={22}/> Nueva indicación médica</h2><p>Cliente: {selectedCustomer?.name??"—"}</p></div><button type="button" className="icon-btn" aria-label="Cerrar" onClick={onClose}><X size={18}/></button></header>
     <section className="card medication-editor-card">
-      <div className="medication-section-title"><div><h3>Nueva indicación</h3><p>Selecciona al cliente y transcribe la información de su receta o indicación profesional.</p></div></div>
+      <div className="medication-section-title"><div><h3>Nueva indicación</h3><p>Transcribe la información de la receta o indicación profesional del cliente.</p></div></div>
       {selectedCustomer&&<div className="medication-customer-summary"><UserRound size={18}/><div><strong>{selectedCustomer.name}</strong><small>{selectedCustomer.phone||"Sin teléfono"}{selectedCustomer.documentNumber?" · "+selectedCustomer.documentNumber:""}</small></div></div>}
       <div className="medication-list-heading"><h4>Medicamentos</h4><button type="button" className="secondary" onClick={()=>setItems(current=>[...current,newMedicationRow()])}><Plus size={15}/> Agregar medicamento</button></div>
       <div className="medication-entry-list">{items.map((item,index)=><div className="medication-entry" key={item.id}><div className="medication-entry-top"><strong>Medicamento {index+1}</strong>{items.length>1&&<button type="button" className="icon-btn" title="Quitar medicamento" aria-label="Quitar medicamento" onClick={()=>setItems(current=>current.filter(row=>row.id!==item.id))}><Trash2 size={16}/></button>}</div><div className="medication-entry-grid">
