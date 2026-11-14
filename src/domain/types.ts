@@ -1,5 +1,5 @@
 export type MissingProductRequest = { id:number; name:string; presentation:string; quantity:number; notes:string; requestedAt:string; status:'Pendiente'|'Comprado'|'Descartado' };
-export type Module = 'dashboard' | 'facturacion_estandar' | 'ventas' | 'pedidos' | 'redes_sociales' | 'inventario' | 'clientes' | 'cotizaciones' | 'compras' | 'finanzas' | 'cuentas_cobrar' | 'cuentas_pagar' | 'reportes' | 'asistente_ia' | 'proveedores' | 'configuracion';
+export type Module = 'dashboard' | 'facturacion_estandar' | 'ventas' | 'pedidos' | 'redes_sociales' | 'inventario' | 'clientes' | 'cotizaciones' | 'compras' | 'finanzas' | 'cuentas_cobrar' | 'cuentas_pagar' | 'reportes' | 'asistente_ia' | 'proveedores' | 'configuracion' | 'contabilidad';
 export type DocumentTemplate = { id:'factura'|'orden_compra'|'nota_debito'|'nota_credito'|'orden_entrega'; name:string; title:string; subtitle:string; footer:string; paperSize:'A4'|'A5'|'ticket'; showLogo:boolean; showTaxLines:boolean; showSignatures:boolean; customFields:string[] };
 export type UserAccess = { id:string; email:string; name:string; role:'Administrador'|'Supervisor'|'Ventas'|'Compras'|'Finanzas'|'Solo lectura'; permissions:Module[]; active:boolean };
 export type CurrencyConfig = { code:string; name:string; symbol:string; exchangeRate:number; active:boolean };
@@ -38,3 +38,7 @@ export type Supplier = { id:number; name:string; contact:string; phone:string; e
 
 export type QuoteLine = { id:number; name:string; code:string; qty:number; price:number; discountPercent?:number };
 export type QuoteRecord = { id:number; number:string; client:string; date:string; valid:string; discount:number; lines:QuoteLine[]; notes:string };
+
+export type AccountingAccount = { id:string; code:string; name:string; type:'Activo'|'Pasivo'|'Patrimonio'|'Ingreso'|'Costo'|'Gasto'; nature:'Deudora'|'Acreedora'; active:boolean };
+export type AccountingEntryLine = { accountId:string; description:string; debit:number; credit:number };
+export type AccountingEntry = { id:string; date:string; description:string; reference:string; lines:AccountingEntryLine[]; status:'Contabilizado'; createdAt:string };
