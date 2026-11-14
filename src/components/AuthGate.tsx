@@ -1,4 +1,4 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useState, type ChangeEvent, type FormEvent, type ReactNode, type CSSProperties } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { LockKeyhole, LogIn, Mail, KeyRound, ShieldAlert, ImagePlus, RotateCcw, Settings, Palette, Check } from 'lucide-react';
 import './AuthGate.css';
