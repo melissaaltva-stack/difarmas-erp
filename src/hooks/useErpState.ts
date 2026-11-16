@@ -477,7 +477,8 @@ export function useErpState(userId: string) {
   const updateStandardInvoice=(invoiceId:number,sold:CartItem[],customer='',customerRtn='',details?:StandardInvoiceDetails):boolean=>{
     if (!canWriteSnapshot(remoteReady, syncStatus)) return false;
     const original=sales.find(sale=>sale.id===invoiceId);
-    if(!original||original.type!=='factura_estandar'||!sold.length||sold.some(item=>!Number.isFinite(item.qty)||item.qty<=0||!Number.isFinite(item.price)||item.price<0))return false;
+    if(!original||original.type!=='factura_estandar'||!sold.length||sold.some(item=>!Number.isInteger(item.qty)||item.qty<=0||!Number.isFinite(item.price)||item.price<0))return false;
+    if((original.items??[]).some(line=>products.some(product=>product.id===line.productId&&product.unitInventoryEnabled&&line.baseUnitsPerSale===undefined)))return false;
     const oldQty=new Map<number,number>();
     (original.items??[]).forEach(line=>oldQty.set(line.productId,(oldQty.get(line.productId)??0)+line.qty*(line.baseUnitsPerSale??1)));
     const newQty=new Map<number,number>();
@@ -620,6 +621,7 @@ export function useErpState(userId: string) {
     const alreadyAdjusted=new Map<number,number>();
     adjustedItems.forEach(item=>alreadyAdjusted.set(item.productId,(alreadyAdjusted.get(item.productId)??0)+item.quantity*(item.baseUnitsPerSale??1)));
     if(adjustment.items.some(item=>!validBaseMultiplier(item.baseUnitsPerSale)))return false;
+    if(adjustment.items.some(line=>line.returnToStock&&products.some(product=>product.id===line.productId&&product.unitInventoryEnabled)&&(originalSale.items??[]).some(soldLine=>soldLine.productId===line.productId&&soldLine.baseUnitsPerSale===undefined)))return false;
     const requestedInThisAdjustment=new Map<number,number>();
     adjustment.items.forEach(item=>requestedInThisAdjustment.set(item.productId,(requestedInThisAdjustment.get(item.productId)??0)+item.quantity*(item.baseUnitsPerSale??1)));
     for(const [productId,quantity] of requestedInThisAdjustment){
