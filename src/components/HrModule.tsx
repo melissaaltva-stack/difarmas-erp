@@ -87,9 +87,9 @@ export function HrModule({canWrite}:Pick<Props,'canWrite'>){
     if(changed.length)void supabase.from('hr_leave_requests').upsert(changed.map(item=>({id:item.id,employee_id:item.employeeId,request_type:item.type,start_date:item.startDate,end_date:item.endDate,days:item.days,reason:item.reason,status:item.status,requested_at:item.requestedAt,reviewed_at:item.reviewedAt??null}))).then(({error})=>{if(error){console.error('Error guardando solicitudes:',error.message);void loadSharedRecords();}});
     if(removed.length)void supabase.from('hr_leave_requests').delete().in('id',removed).then(({error})=>{if(error){console.error('Error eliminando solicitudes:',error.message);void loadSharedRecords();}});
   },[canWrite,loadSharedRecords]);
-  const setEmployeesShared=(update:HrEmployee[]|((current:HrEmployee[])=>HrEmployee[]))=>{const next=typeof update==='function'?update(employeesRef.current):update;employeesRef.current=next;setEmployees(next);persistEmployees(next);};
-  const setAttendanceShared=(update:HrAttendanceRecord[]|((current:HrAttendanceRecord[])=>HrAttendanceRecord[]))=>{const next=typeof update==='function'?update(attendanceRef.current):update;attendanceRef.current=next;setAttendance(next);persistAttendance(next);};
-  const setLeaveRequestsShared=(update:HrLeaveRequest[]|((current:HrLeaveRequest[])=>HrLeaveRequest[]))=>{const next=typeof update==='function'?update(leaveRequestsRef.current):update;leaveRequestsRef.current=next;setLeaveRequests(next);persistLeaveRequests(next);};
+  const setEmployeesShared=(update:HrEmployee[]|((current:HrEmployee[])=>HrEmployee[]))=>{const next=typeof update==='function'?update(employeesRef.current):update;persistEmployees(next);employeesRef.current=next;setEmployees(next);};
+  const setAttendanceShared=(update:HrAttendanceRecord[]|((current:HrAttendanceRecord[])=>HrAttendanceRecord[]))=>{const next=typeof update==='function'?update(attendanceRef.current):update;persistAttendance(next);attendanceRef.current=next;setAttendance(next);};
+  const setLeaveRequestsShared=(update:HrLeaveRequest[]|((current:HrLeaveRequest[])=>HrLeaveRequest[]))=>{const next=typeof update==='function'?update(leaveRequestsRef.current):update;persistLeaveRequests(next);leaveRequestsRef.current=next;setLeaveRequests(next);};
 
   const [tab,setTab]=useState<Tab>('personal');
   const [query,setQuery]=useState('');
