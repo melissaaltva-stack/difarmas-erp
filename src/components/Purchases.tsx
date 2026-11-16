@@ -22,6 +22,8 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
   const itemsTotal=cart.reduce((sum,i)=>sum+i.unitCost*i.qty,0);
   const purchaseTaxTotal=cart.reduce((sum,item)=>sum+linePurchaseTax(item),0);
   const [paymentMethod,setPaymentMethod]=useState<'Efectivo'|'Transferencia'|'Crédito'>('Efectivo');
+  const purchaseOptions=(product:Product)=>[{name:product.baseUnitName||'Unidad',unitsPerPresentation:1,retailPrice:product.retail,wholesalePrice:product.wholesale},...(product.unitInventoryEnabled?(product.unitPresentations??[]):[])];
+  const changePurchaseUnit=(id:number,name:string)=>setCart(cart.map(item=>{if(item.id!==id)return item;const product=products.find(p=>p.id===id)??item;const option=purchaseOptions(product).find(choice=>choice.name===name);if(!option)return item;const oldUnits=item.baseUnitsPerPurchase??1;const nextUnits=option.unitsPerPresentation;const baseCost=item.unitCost/oldUnits;return {...item,purchaseUnit:option.name,baseUnitsPerPurchase:nextUnits,unitCost:Number((baseCost*nextUnits).toFixed(4))};}));
   const [paymentTerms,setPaymentTerms]=useState('Contado - Efectivo');
   const [invoiceTotal,setInvoiceTotal]=useState('');
   const [showPurchaseModal,setShowPurchaseModal]=useState(false);
@@ -80,13 +82,13 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
     setShowPurchaseModal(false);
   };
   const minExpiry=sixMonthExpiryThreshold();
-  const add=(p:Product)=>{setCart(cart.some(i=>i.id===p.id)?cart.map(i=>i.id===p.id?{...i,qty:i.qty+1}:i):[...cart,{...p,expiry:p.expiry||'',qty:1,unitCost:p.cost,purchaseTaxRate:p.taxEnabled?Number(p.taxRate??15):0}]);setSearch('');setError('');};
+  const add=(p:Product)=>{const option=purchaseOptions(p)[0];setCart(cart.some(i=>i.id===p.id)?cart.map(i=>i.id===p.id?{...i,qty:i.qty+1}:i):[...cart,{...p,expiry:p.expiry||'',qty:1,unitCost:p.cost*option.unitsPerPresentation,purchaseUnit:option.name,baseUnitsPerPurchase:option.unitsPerPresentation,purchaseTaxRate:p.taxEnabled?Number(p.taxRate??15):0}]);setSearch('');setError('');};
   const change=(id:number,delta:number)=>setCart(cart.map(i=>i.id===id?{...i,qty:Math.max(1,i.qty+delta)}:i));
   const updateCost=(id:number,value:number)=>setCart(cart.map(i=>i.id===id?{...i,unitCost:value}:i));
   const updatePurchaseTax=(id:number,rate:number)=>setCart(cart.map(i=>i.id===id?{...i,purchaseTaxRate:rate}:i));
   const updateExpiry=(id:number,value:string)=>{setCart(cart.map(i=>i.id===id?{...i,expiry:value}:i));setError('');};
   const invalidExpiry=cart.filter(i=>!isExpiryAtLeastSixMonths(i.expiry));
-  const priceChanges=cart.map(item=>{const product=products.find(p=>p.id===item.id);const oldCost=product?.cost??item.cost;const delta=item.unitCost-oldCost;const changePct=oldCost>0?delta/oldCost*100:(item.unitCost>0?100:0);const oldMargin=product&&product.retail>0?(product.retail-oldCost)/product.retail*100:null;const newMargin=product&&product.retail>0?(product.retail-item.unitCost)/product.retail*100:null;return {item,oldCost,delta,changePct,oldMargin,newMargin};});
+  const priceChanges=cart.map(item=>{const product=products.find(p=>p.id===item.id);const units=item.baseUnitsPerPurchase??1;const oldCost=(product?.cost??item.cost/units)*units;const delta=item.unitCost-oldCost;const changePct=oldCost>0?delta/oldCost*100:(item.unitCost>0?100:0);const option=product?purchaseOptions(product).find(choice=>choice.name===item.purchaseUnit):undefined;const retail=option?.retailPrice??(product?.retail??0)*units;const oldMargin=retail>0?(retail-oldCost)/retail*100:null;const newMargin=retail>0?(retail-item.unitCost)/retail*100:null;return {item,oldCost,delta,changePct,oldMargin,newMargin};});
   const increases=priceChanges.filter(x=>x.delta>0.005);
   const marginWarnings=priceChanges.filter(x=>x.newMargin!==null&&x.newMargin<0);
   const recommendations=useMemo(()=>buildPurchaseRecommendations(products,sales),[products,sales]);
@@ -94,7 +96,7 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
   const addRecommended=(product:Product,quantity:number)=>{
     setCart(cart.some(item=>item.id===product.id)
       ? cart.map(item=>item.id===product.id?{...item,qty:item.qty+quantity}:item)
-      : [...cart,{...product,expiry:product.expiry||'',qty:quantity,unitCost:product.cost,purchaseTaxRate:product.taxEnabled?Number(product.taxRate??15):0}]);
+      : [...cart,{...product,expiry:product.expiry||'',qty:quantity,unitCost:product.cost,purchaseUnit:product.baseUnitName||'Unidad',baseUnitsPerPurchase:1,purchaseTaxRate:product.taxEnabled?Number(product.taxRate??15):0}]);
     setSearch('');
     setError('');
   };
@@ -141,7 +143,7 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
           <div className="purchase-detail-list">
             {cart.map(i=><div className="purchase-row purchase-row-expiry" key={i.id}>
               <div className="purchase-detail-product">
-                <button type="button" className="purchase-product-edit-link" style={{border:0,background:"transparent",padding:0,color:"inherit",font:"inherit",textAlign:"left",cursor:"pointer"}} onClick={()=>onEditProduct(products.find(product=>product.id===i.id)??i)} title={`Editar ${i.name}`}><strong>{i.name}</strong></button><small>{i.code||'Sin código'}</small>
+                <button type="button" className="purchase-product-edit-link" style={{border:0,background:"transparent",padding:0,color:"inherit",font:"inherit",textAlign:"left",cursor:"pointer"}} onClick={()=>onEditProduct(products.find(product=>product.id===i.id)??i)} title={`Editar ${i.name}`}><strong>{i.name}</strong></button><small>{i.code||'Sin código'}</small>{i.unitInventoryEnabled&&<label className="helper" style={{display:'grid',gap:3}}>Presentación de compra<select value={i.purchaseUnit??i.baseUnitName??'Unidad'} onChange={e=>changePurchaseUnit(i.id,e.target.value)}>{purchaseOptions(i).map(option=><option key={option.name} value={option.name}>{option.name} · {option.unitsPerPresentation} {i.baseUnitName||'unidades'}</option>)}</select></label>}<small>{i.baseUnitsPerPurchase&&i.baseUnitsPerPurchase>1?`Equivale a ${i.baseUnitsPerPurchase} ${i.baseUnitName||'unidades'} por empaque`:i.purchaseUnit||i.presentation}</small>
               </div>
               <div className="purchase-detail-expiry-cell">
                 <label className="purchase-expiry-label">
@@ -179,7 +181,7 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
     <div className="purchase-detail-footer">
       <div className="purchase-detail-counts">
         <span>Productos <strong>{cart.length}</strong></span>
-        <span>Unidades <strong>{cart.reduce((sum,item)=>sum+item.qty,0)}</strong></span>
+        <span>Unidades base <strong>{cart.reduce((sum,item)=>sum+item.qty*(item.baseUnitsPerPurchase??1),0)}</strong></span>
       </div>
       <div className="purchase-detail-totals">
         <div><small>Subtotal de productos</small><strong>{money(itemsTotal)}</strong></div>
