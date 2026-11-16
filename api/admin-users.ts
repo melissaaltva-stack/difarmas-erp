@@ -16,11 +16,11 @@ type Role = 'Administrador' | 'Supervisor' | 'Ventas' | 'Compras' | 'Finanzas' |
 const MODULES = [
   'dashboard', 'facturacion_estandar', 'ventas', 'redes_sociales', 'inventario',
   'clientes', 'cotizaciones', 'compras', 'finanzas', 'cuentas_cobrar',
-  'cuentas_pagar', 'reportes', 'asistente_ia', 'proveedores', 'configuracion',
+  'cuentas_pagar', 'reportes', 'asistente_ia', 'proveedores', 'rrhh', 'configuracion',
 ] as const;
 const ROLE_PERMISSIONS: Record<Role, string[]> = {
   Administrador: [...MODULES],
-  Supervisor: ['dashboard','facturacion_estandar','ventas','redes_sociales','clientes','cotizaciones','inventario','compras','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','proveedores'],
+  Supervisor: ['dashboard','facturacion_estandar','ventas','redes_sociales','clientes','cotizaciones','inventario','compras','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','proveedores','rrhh'],
   Ventas: ['dashboard','facturacion_estandar','ventas','redes_sociales','clientes','cotizaciones'],
   Compras: ['dashboard','inventario','compras','proveedores'],
   Finanzas: ['dashboard','facturacion_estandar','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','compras'],
