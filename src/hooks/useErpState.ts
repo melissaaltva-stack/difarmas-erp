@@ -325,6 +325,7 @@ export function useErpState(userId: string) {
 
   const baseQuantityOf=(item:Pick<CartItem,'qty'|'baseUnitsPerSale'>)=>item.qty*(item.baseUnitsPerSale??1);
   const validBaseMultiplier=(value:number|undefined)=>value===undefined||(Number.isInteger(value)&&value>0&&value<=1000000);
+  const validUnitInventoryProduct=(product:Product)=>!product.unitInventoryEnabled||(product.itemType==='Producto'&&!!product.baseUnitName?.trim()&&Number.isInteger(product.stock)&&Number.isInteger(product.minStock)&&!!product.unitPresentations?.length&&product.unitPresentations.every(option=>option.name.trim()&&option.name.trim().toLocaleLowerCase()!==product.baseUnitName!.trim().toLocaleLowerCase()&&Number.isInteger(option.unitsPerPresentation)&&option.unitsPerPresentation>1&&Number.isFinite(option.retailPrice)&&option.retailPrice>0&&Number.isFinite(option.wholesalePrice)&&option.wholesalePrice>0)&&new Set(product.unitPresentations.map(option=>option.name.trim().toLocaleLowerCase())).size===product.unitPresentations.length);
   const allocateFefo=(sourceLots:InventoryLot[],productId:number,quantity:number,reference:string,type:'Venta'|'Reserva'|'Devolución a proveedor',includeExpired=false):{lots:InventoryLot[];allocations:LotAllocation[];movements:LotKardexMovement[]}|null=>{
     let remaining=quantity;const allocations:LotAllocation[]=[];const movements:LotKardexMovement[]=[];
     const eligible=sourceLots.filter(lot=>lot.productId===productId&&lot.quantityRemaining>0&&(includeExpired||lot.expiry>=new Date().toISOString().slice(0,10))).sort((a,b)=>a.expiry.localeCompare(b.expiry)||a.receivedAt.localeCompare(b.receivedAt));
@@ -694,16 +695,16 @@ export function useErpState(userId: string) {
     if (editing) {
       const previous = products.find(p=>p.id===editing.id);
       if(previous&&!previous.unitInventoryEnabled&&product.unitInventoryEnabled&&(fefoProductIds.includes(previous.id)||inventoryLots.some(lot=>lot.productId===previous.id)||orders.some(order=>order.status==='Pendiente'&&order.items.some(item=>item.id===previous.id))))return null;
-      if(product.unitInventoryEnabled&&(!product.baseUnitName?.trim()||!product.unitPresentations?.length||product.unitPresentations.some(option=>!option.name.trim()||!Number.isInteger(option.unitsPerPresentation)||option.unitsPerPresentation<=1||option.retailPrice<0||option.wholesalePrice<0)))return null;
+      if(!validUnitInventoryProduct(product))return null;
       saved = {...product,id:editing.id};
-      if(previous&&previous.stock!==saved.stock&&fefoProductIds.includes(previous.id))return null;
+      if(previous&&previous.stock!==saved.stock&&(fefoProductIds.includes(previous.id)||previous.unitInventoryEnabled))return null;
       setProducts(current=>current.map(p=>p.id===editing.id?saved:p));
       if (previous && previous.stock !== saved.stock) {
         const difference = saved.stock - previous.stock;
         setInventoryMovements(current=>[...current,{id:nextInventoryMovementId(),productId:saved.id,productName:saved.name,type:'Ajuste',quantity:Math.abs(difference),stockBefore:previous.stock,stockAfter:saved.stock,unitCost:saved.cost,date:new Date().toISOString(),note:difference>0?'Ajuste de entrada manual':'Ajuste de salida manual'}]);
       }
     } else {
-      if(product.unitInventoryEnabled&&(!product.baseUnitName?.trim()||!product.unitPresentations?.length||product.unitPresentations.some(option=>!option.name.trim()||!Number.isInteger(option.unitsPerPresentation)||option.unitsPerPresentation<=1||option.retailPrice<0||option.wholesalePrice<0)))return null;
+      if(!validUnitInventoryProduct(product))return null;
       saved = {...product,id:nextProductId()};
       setProducts(current=>[...current,saved]);
     }
