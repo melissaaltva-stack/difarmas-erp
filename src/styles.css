@@ -5074,3 +5074,30 @@ button.icon-btn:focus-visible svg,
 .agent-history-row small{margin-top:4px;color:#82938d;font-size:10px}
 @media(max-width:800px){.ai-view-tabs{margin:16px 16px 0}.agent-alert-card{flex-wrap:wrap}.agent-alert-action{margin-left:48px}.agent-alert-toolbar{align-items:flex-start;flex-direction:column}.agent-alert-summary{align-items:flex-start;flex-direction:column}.agent-alert-summary>strong{margin-left:54px}}
 @media(max-width:480px){.ai-view-tabs button{flex:1;justify-content:center;padding:9px 8px;font-size:11px}.agent-history-row{align-items:flex-start;flex-direction:column}.agent-alert-action{margin-left:0}}
+
+
+.ai-analysis-intro{margin:16px 0 12px;padding:0 2px}
+.ai-analysis-intro h3{display:flex;align-items:center;gap:8px;margin:0 0 5px;font-size:14px;color:var(--farmi-ui-text,#29463c)}
+.ai-analysis-intro p{margin:0;color:var(--farmi-ui-muted,#7a8e86);font-size:11px;line-height:1.5}
+.ai-analysis-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+.ai-analysis-panel{min-width:0;padding:16px}
+.ai-analysis-panel h3{margin:0 0 12px;font-size:13px;color:var(--farmi-ui-text,#29463c)}
+.ai-analysis-panel>p{margin:0;color:var(--farmi-ui-muted,#7a8e86);font-size:11px;line-height:1.5}
+.ai-finding{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--farmi-ui-border,#edf1ef)}
+.ai-finding>span{width:8px;height:8px;flex:0 0 8px;margin-top:4px;border-radius:50%;background:var(--farmi-ui-primary,#168568)}
+.ai-finding.warning>span{background:#d58b27}
+.ai-finding strong,.ai-finding p{display:block;margin:0;font-size:11px}
+.ai-finding p{margin-top:3px;color:var(--farmi-ui-muted,#7a8e86);line-height:1.45}
+.ai-product-rank,.ai-stock-risk,.ai-aging-block>div{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--farmi-ui-border,#edf1ef)}
+.ai-product-rank>span{display:grid;place-items:center;width:22px;height:22px;flex:0 0 22px;border-radius:7px;background:var(--farmi-ui-surface,#f2f6f4);font-size:10px;font-weight:700}
+.ai-product-rank>div,.ai-stock-risk>div{flex:1;min-width:0}
+.ai-product-rank strong,.ai-product-rank small,.ai-stock-risk strong,.ai-stock-risk small{display:block;overflow-wrap:anywhere}
+.ai-product-rank strong,.ai-stock-risk strong{font-size:11px;color:var(--farmi-ui-text,#36584c)}
+.ai-product-rank small,.ai-stock-risk small{margin-top:3px;font-size:10px;color:var(--farmi-ui-muted,#7a8e86)}
+.ai-product-rank>b,.ai-stock-risk>b{font-size:10px;white-space:nowrap;color:var(--farmi-ui-text,#36584c)}
+.ai-aging-block{margin-top:10px}
+.ai-aging-block>strong{display:block;margin-bottom:4px;font-size:11px}
+.ai-aging-block>div{font-size:10px;color:var(--farmi-ui-muted,#7a8e86)}
+.ai-aging-block b{color:var(--farmi-ui-text,#36584c)}
+@media(max-width:760px){.ai-analysis-grid{grid-template-columns:1fr}.ai-analysis-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.ai-analysis-metrics{grid-template-columns:1fr}.ai-product-rank>b{white-space:normal;text-align:right}}
