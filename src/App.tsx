@@ -114,7 +114,7 @@ function App({ userId, userEmail, userAppMetadata, signOut }: { userId: string; 
         }
       }} onDelete={id=>{deleteProduct(id);setEditing(null);setShowForm(false);setNewProductOrigin('inventory')}}/>}
     </main>
-    {active!=='asistente_ia'&&<div className="farmi-floating-assistant">
+    {active!=='asistente_ia'&&active!=='compras'&&active!=='proveedores'&&<div className="farmi-floating-assistant">
       {floatingAssistantOpen&&<section className="farmi-assistant-popover" role="dialog" aria-modal="false" aria-label="Asistente IA FARMI">
         <header><div><span><BrainCircuit size={18}/></span><div><strong>Asistente FARMI</strong><small>Disponible en cualquier módulo</small></div></div><button type="button" aria-label="Cerrar asistente" onClick={()=>setFloatingAssistantOpen(false)}><X size={19}/></button></header>
         <div className="farmi-assistant-popover-body"><Suspense fallback={<div className="content"><div className="card">Cargando asistente…</div></div>}><AiAssistant userId={userId} products={products} sales={sales} purchases={purchases} expenses={expenses} receivables={receivables} payables={payables} movements={inventoryMovements} variant="floating"/></Suspense></div>
