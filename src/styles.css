@@ -5129,3 +5129,14 @@ button.icon-btn:focus-visible svg,
 .farmi-assistant-popover-body .ai-page-floating .ai-analysis-grid{grid-template-columns:1fr}
 @media(max-width:640px){.farmi-floating-assistant{right:14px;bottom:14px}.farmi-assistant-fab{min-height:48px;padding:0 15px}.farmi-assistant-popover{width:calc(100vw - 20px);height:min(78dvh,720px);border-radius:14px}.farmi-assistant-popover-body .ai-page-floating{padding:12px}}
 @media(prefers-reduced-motion:reduce){.farmi-assistant-fab{transition:none}}
+
+/* POS search: keep focus styling on the rounded wrapper, not on an inner input rectangle. */
+.pos-grid .search-pos input,
+.pos-grid .search-pos input:focus,
+.pos-grid .search-pos input:focus-visible{
+  border:0!important;
+  border-radius:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+}
