@@ -342,7 +342,7 @@ export function useErpState(userId: string) {
   };
   const registerOpeningLot=(productId:number,lotCode:string,expiry:string,quantity:number,unitCost:number,supplier=''):boolean=>{
     if(!canWriteSnapshot(remoteReady,syncStatus)||fefoProductIds.includes(productId))return false;
-    const product=products.find(item=>item.id===productId);if(!product||!lotCode.trim()||!/^\d{4}-\\d{2}-\\d{2}$/.test(expiry)||!Number.isInteger(quantity)||quantity<=0||!Number.isFinite(unitCost)||unitCost<0)return false;
+    const product=products.find(item=>item.id===productId);if(!product||!lotCode.trim()||!/^\d{4}-\d{2}-\d{2}$/.test(expiry)||!Number.isInteger(quantity)||quantity<=0||!Number.isFinite(unitCost)||unitCost<0)return false;
     const already=inventoryLots.filter(lot=>lot.productId===productId&&lot.opening).reduce((sum,lot)=>sum+lot.quantityReceived,0);
     if(already+quantity>product.stock)return false;
     const date=new Date().toISOString(),id=crypto.randomUUID();
@@ -713,7 +713,7 @@ export function useErpState(userId: string) {
     let updated: Product[];
     try { updated = applyPurchaseToInventory(products,items,purchaseSupplier); } catch { return false; }
     const receivedAt=new Date().toISOString();const newLots:InventoryLot[]=[];const newLotMovements:LotKardexMovement[]=[];
-    for(const item of items){if(!fefoProductIds.includes(item.id))continue;if(!item.lot?.trim()||!item.expiry||!/^\d{4}-\\d{2}-\\d{2}$/.test(item.expiry))return false;const lotId=crypto.randomUUID();const lot:InventoryLot={id:lotId,productId:item.id,lotCode:item.lot.trim(),expiry:item.expiry,receivedAt,supplier:purchaseSupplier.trim(),unitCost:item.unitCost,quantityReceived:item.qty,quantityRemaining:item.qty,sourceReference:invoiceNumber||'COMPRA',opening:false};newLots.push(lot);newLotMovements.push({id:crypto.randomUUID(),lotId,productId:item.id,productName:item.name,lotCode:lot.lotCode,expiry:lot.expiry,type:'Compra',quantity:item.qty,stockBefore:0,stockAfter:item.qty,unitCost:item.unitCost,reference:invoiceNumber||'COMPRA',date:receivedAt});}
+    for(const item of items){if(!fefoProductIds.includes(item.id))continue;if(!item.lot?.trim()||!item.expiry||!/^\d{4}-\d{2}-\d{2}$/.test(item.expiry))return false;const lotId=crypto.randomUUID();const lot:InventoryLot={id:lotId,productId:item.id,lotCode:item.lot.trim(),expiry:item.expiry,receivedAt,supplier:purchaseSupplier.trim(),unitCost:item.unitCost,quantityReceived:item.qty,quantityRemaining:item.qty,sourceReference:invoiceNumber||'COMPRA',opening:false};newLots.push(lot);newLotMovements.push({id:crypto.randomUUID(),lotId,productId:item.id,productName:item.name,lotCode:lot.lotCode,expiry:lot.expiry,type:'Compra',quantity:item.qty,stockBefore:0,stockAfter:item.qty,unitCost:item.unitCost,reference:invoiceNumber||'COMPRA',date:receivedAt});}
     purchaseInProgress.current=true;
     const referenceId = nextPurchaseId();
     setProducts(updated);
