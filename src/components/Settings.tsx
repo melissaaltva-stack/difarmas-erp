@@ -76,11 +76,12 @@ export function Settings({settings,setSettings,userEmail,userId}:{settings:ErpSe
   const updateQuotePrintFormat=(patch:Partial<typeof defaultQuotePrintFormat>)=>setDraftSettings(current=>({...current,quotePrintFormat:{...quotePrintFormat,...patch}}));
   const saveQuotePrintFormat=()=>{setSettings({...draftSettings,quotePrintFormat});setNotice('Formato de impresión de cotizaciones guardado.');};
 
+  const adminApiUrl=import.meta.env.VITE_ADMIN_API_URL?.trim()||'/api/admin-users';
   const callAdminApi=async(payload:Record<string,unknown>):Promise<AdminApiResult>=>{
     const client=requireSupabase();
     const {data:sessionData,error:sessionError}=await client.auth.getSession();
     if(sessionError||!sessionData.session?.access_token)throw new Error('La sesión ha caducado. Inicia sesión de nuevo.');
-    const response=await fetch('/api/admin-users',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${sessionData.session.access_token}`},body:JSON.stringify(payload)});
+    const response=await fetch(adminApiUrl,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${sessionData.session.access_token}`},body:JSON.stringify(payload)});
     const result=await response.json().catch(()=>({error:'El servidor devolvió una respuesta no válida.'})) as AdminApiResult;
     if(!response.ok)throw new Error(result.error||'No se pudo completar la operación de usuarios.');
     return result;
