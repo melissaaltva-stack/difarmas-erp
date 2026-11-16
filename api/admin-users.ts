@@ -24,7 +24,7 @@ const ROLE_PERMISSIONS: Record<Role, string[]> = {
   Ventas: ['dashboard','facturacion_estandar','ventas','redes_sociales','clientes','cotizaciones'],
   Compras: ['dashboard','inventario','compras','proveedores'],
   Finanzas: ['dashboard','facturacion_estandar','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','compras'],
-  RRHH: ['dashboard','rrhh'],
+  RRHH: ['rrhh'],
   'Solo lectura': ['dashboard','ventas','redes_sociales','clientes','cotizaciones','inventario','compras','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','proveedores'],
 };
 const ROLES: Role[] = ['Administrador','Supervisor','Ventas','Compras','Finanzas','RRHH','Solo lectura'];
