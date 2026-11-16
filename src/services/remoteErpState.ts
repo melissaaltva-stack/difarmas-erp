@@ -1,6 +1,6 @@
 import type {
   CashClosure, CashMovement, Customer, Supplier, ErpSettings, Expense, InventoryMovement, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseRecord,
-  Receivable, SaleRecord, OrderRecord, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord, QuoteRecord, AccountingAccount, AccountingEntry,
+  Receivable, SaleRecord, OrderRecord, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord, QuoteRecord, AccountingAccount, AccountingEntry, HrEmployee, HrAttendanceRecord, HrLeaveRequest,
 } from '../domain/types';
 import { requireSupabase } from './supabaseClient';
 
@@ -28,6 +28,9 @@ export type ErpSnapshot = {
   saleAdjustments?: SaleAdjustmentRecord[];
   accountingAccounts?: AccountingAccount[];
   accountingEntries?: AccountingEntry[];
+  hrEmployees?: HrEmployee[];
+  hrAttendance?: HrAttendanceRecord[];
+  hrLeaveRequests?: HrLeaveRequest[];
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -42,7 +45,7 @@ function normalizeSnapshot(value: unknown): ErpSnapshot {
       throw new Error(`El campo ${key} de los datos guardados no es válido.`);
     }
   }
-  for (const key of ['cashClosures', 'cashMovements', 'paymentTransactions', 'missingProductRequests', 'supplierReturns', 'saleAdjustments', 'quotes', 'orders'] as const) {
+  for (const key of ['cashClosures', 'cashMovements', 'paymentTransactions', 'missingProductRequests', 'supplierReturns', 'saleAdjustments', 'quotes', 'orders', 'hrEmployees', 'hrAttendance', 'hrLeaveRequests'] as const) {
     if (value[key] !== undefined && !Array.isArray(value[key])) {
       throw new Error(`El campo ${key} de los datos guardados no es válido.`);
     }
@@ -76,6 +79,9 @@ function normalizeSnapshot(value: unknown): ErpSnapshot {
     saleAdjustments: value.saleAdjustments as SaleAdjustmentRecord[] | undefined,
     accountingAccounts: (value.accountingAccounts ?? []) as AccountingAccount[],
     accountingEntries: (value.accountingEntries ?? []) as AccountingEntry[],
+    hrEmployees: (value.hrEmployees ?? []) as HrEmployee[],
+    hrAttendance: (value.hrAttendance ?? []) as HrAttendanceRecord[],
+    hrLeaveRequests: (value.hrLeaveRequests ?? []) as HrLeaveRequest[],
   };
 }
 
