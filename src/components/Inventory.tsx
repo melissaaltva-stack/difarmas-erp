@@ -21,7 +21,7 @@ const makeBarcode = (products: Product[]) => {
   return code;
 };
 
-export function Inventory({products, search, setSearch, movements, lots, lotKardex, fefoProductIds, onAddOpeningLot, onActivateFefo, onAdjustLot, onNew, onEdit}:{products:Product[];search:string;setSearch:(v:string)=>void;movements:InventoryMovement[];lots:InventoryLot[];lotKardex:LotKardexMovement[];fefoProductIds:number[];onAddOpeningLot:(productId:number,lotCode:string,expiry:string,quantity:number,unitCost:number,supplier:string)=>boolean;onActivateFefo:(productId:number)=>boolean;onAdjustLot:(lotId:string,delta:number,note:string)=>boolean;onNew:()=>void;onEdit:(p:Product)=>void}) {
+export function Inventory({products, allProducts, search, setSearch, movements, lots, lotKardex, fefoProductIds, onAddOpeningLot, onActivateFefo, onAdjustLot, onNew, onEdit}:{products:Product[];allProducts:Product[];search:string;setSearch:(v:string)=>void;movements:InventoryMovement[];lots:InventoryLot[];lotKardex:LotKardexMovement[];fefoProductIds:number[];onAddOpeningLot:(productId:number,lotCode:string,expiry:string,quantity:number,unitCost:number,supplier:string)=>boolean;onActivateFefo:(productId:number)=>boolean;onAdjustLot:(lotId:string,delta:number,note:string)=>boolean;onNew:()=>void;onEdit:(p:Product)=>void}) {
   const lowStock = products.filter(p => p.itemType !== 'Servicio' && p.stock <= p.minStock);
   const expiring = products.filter(p => daysUntil(p.expiry) >= 0 && daysUntil(p.expiry) <= 90);
   const expired = products.filter(p => daysUntil(p.expiry) < 0);
@@ -126,7 +126,7 @@ function InventoryProductDetails({product,onClose,onEdit,onPrintLabel}:{product:
       </div>
       <footer className="inventory-detail-footer"><button className="secondary" type="button" title="Preparar etiqueta de este producto" onClick={()=>onPrintLabel(product)}><Printer size={14}/> Imprimir etiqueta</button><button className="secondary inventory-detail-pharma-btn" type="button" onClick={()=>{const query=[product.name,product.laboratory,product.presentation,(product.activeIngredientDetails??[]).map(i=>i.name+" "+i.strength+" "+i.unit).join(" ")].filter(Boolean).join(" ").trim();window.open("https://www.google.com/search?q="+encodeURIComponent(query+" medicamento ficha técnica principio activo indicaciones advertencias"),"_blank","noopener,noreferrer");}}><Pill size={14}/> Asistente farmacológico</button><button className="secondary" type="button" onClick={onClose}><X size={16}/> Cerrar</button></footer>
     </section>
-  <InventoryLotsKardex products={products} lots={lots} kardex={lotKardex} fefoProductIds={fefoProductIds} onAddOpeningLot={onAddOpeningLot} onActivate={onActivateFefo} onAdjustLot={onAdjustLot}/>
+  <InventoryLotsKardex products={allProducts} lots={lots} kardex={lotKardex} fefoProductIds={fefoProductIds} onAddOpeningLot={onAddOpeningLot} onActivate={onActivateFefo} onAdjustLot={onAdjustLot}/>
   </div>;
 }
 
