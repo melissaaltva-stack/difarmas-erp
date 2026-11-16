@@ -323,9 +323,9 @@ export function useErpState(userId: string) {
   };
 
 
-  const allocateFefo=(sourceLots:InventoryLot[],productId:number,quantity:number,reference:string,type:'Venta'|'Reserva'|'Devolución a proveedor'):{lots:InventoryLot[];allocations:LotAllocation[];movements:LotKardexMovement[]}|null=>{
+  const allocateFefo=(sourceLots:InventoryLot[],productId:number,quantity:number,reference:string,type:'Venta'|'Reserva'|'Devolución a proveedor',includeExpired=false):{lots:InventoryLot[];allocations:LotAllocation[];movements:LotKardexMovement[]}|null=>{
     let remaining=quantity;const allocations:LotAllocation[]=[];const movements:LotKardexMovement[]=[];
-    const eligible=sourceLots.filter(lot=>lot.productId===productId&&lot.quantityRemaining>0&&lot.expiry>=new Date().toISOString().slice(0,10)).sort((a,b)=>a.expiry.localeCompare(b.expiry)||a.receivedAt.localeCompare(b.receivedAt));
+    const eligible=sourceLots.filter(lot=>lot.productId===productId&&lot.quantityRemaining>0&&(includeExpired||lot.expiry>=new Date().toISOString().slice(0,10))).sort((a,b)=>a.expiry.localeCompare(b.expiry)||a.receivedAt.localeCompare(b.receivedAt));
     let next=sourceLots;
     for(const lot of eligible){if(remaining<=0)break;const take=Math.min(remaining,lot.quantityRemaining);if(take<=0)continue;
       next=next.map(item=>item.id===lot.id?{...item,quantityRemaining:item.quantityRemaining-take}:item);
@@ -531,7 +531,7 @@ export function useErpState(userId: string) {
     record.items.forEach(item=>quantitiesByProduct.set(item.productId,(quantitiesByProduct.get(item.productId)??0)+item.quantity));
     if([...quantitiesByProduct].some(([productId,quantity])=>!products.some(product=>product.id===productId&&product.stock>=quantity)))return false;
     let workingLots=inventoryLots;const supplierLotMovements:LotKardexMovement[]=[];
-    for(const [productId,quantity] of quantitiesByProduct){if(!fefoProductIds.includes(productId))continue;const allocated=allocateFefo(workingLots,productId,quantity,'DEV-PROV-'+record.id,'Devolución a proveedor');if(!allocated)return false;workingLots=allocated.lots;supplierLotMovements.push(...allocated.movements);}
+    for(const [productId,quantity] of quantitiesByProduct){if(!fefoProductIds.includes(productId))continue;const allocated=allocateFefo(workingLots,productId,quantity,'DEV-PROV-'+record.id,'Devolución a proveedor',true);if(!allocated)return false;workingLots=allocated.lots;supplierLotMovements.push(...allocated.movements);}
     const updated=products.map(product=>{
       const quantity=quantitiesByProduct.get(product.id)??0;
       return quantity?{...product,stock:product.stock-quantity}:product;
@@ -629,17 +629,17 @@ export function useErpState(userId: string) {
       if(!products.some(product=>product.id===productId))return false;
     }
     const movementDate=new Date().toISOString();let returnedLots=inventoryLots;const lotReturnMovements:LotKardexMovement[]=[];
+    const previousReturned=new Map<string,number>();
+    saleAdjustments.filter(record=>record.saleId===adjustment.saleId).flatMap(record=>record.items).forEach(item=>(item.lotAllocations??[]).forEach(allocation=>previousReturned.set(allocation.lotId,(previousReturned.get(allocation.lotId)??0)+allocation.quantity)));
     const adjustedItems=adjustment.items.map(line=>{
       if(!line.returnToStock||!fefoProductIds.includes(line.productId))return line;
       if(!originalSale.lotAllocations?.length)return null;
-      const previousReturned=new Map<string,number>();
-      saleAdjustments.filter(record=>record.saleId===adjustment.saleId).flatMap(record=>record.items).forEach(item=>(item.lotAllocations??[]).forEach(allocation=>previousReturned.set(allocation.lotId,(previousReturned.get(allocation.lotId)??0)+allocation.quantity)));
       let remaining=line.quantity;const allocations:LotAllocation[]=[];
       for(const soldAllocation of originalSale.lotAllocations.filter(allocation=>allocation.lotId&&inventoryLots.some(lot=>lot.id===allocation.lotId&&lot.productId===line.productId))){
         const already=previousReturned.get(soldAllocation.lotId)??0;const available=Math.max(0,soldAllocation.quantity-already);const take=Math.min(remaining,available);if(!take)continue;
         const lot=returnedLots.find(item=>item.id===soldAllocation.lotId);if(!lot)continue;
         returnedLots=returnedLots.map(item=>item.id===lot.id?{...item,quantityRemaining:item.quantityRemaining+take}:item);
-        allocations.push({...soldAllocation,quantity:take});
+        allocations.push({...soldAllocation,quantity:take});previousReturned.set(soldAllocation.lotId,already+take);
         lotReturnMovements.push({id:crypto.randomUUID(),lotId:lot.id,productId:line.productId,productName:line.productName,lotCode:lot.lotCode,expiry:lot.expiry,type:'Devolución',quantity:take,stockBefore:lot.quantityRemaining,stockAfter:lot.quantityRemaining+take,unitCost:lot.unitCost,reference:adjustment.invoiceNumber,date:movementDate,note:'Devolución reincorporada al lote original'});
         remaining-=take;if(remaining===0)break;
       }
