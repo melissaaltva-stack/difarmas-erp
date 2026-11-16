@@ -11,7 +11,7 @@ type Res = {
   setHeader(name: string, value: string): void;
   json(body: unknown): void;
 };
-type Role = 'Administrador' | 'Supervisor' | 'Ventas' | 'Compras' | 'Finanzas' | 'Solo lectura';
+type Role = 'Administrador' | 'Supervisor' | 'Ventas' | 'Compras' | 'Finanzas' | 'RRHH' | 'Solo lectura';
 
 const MODULES = [
   'dashboard', 'facturacion_estandar', 'ventas', 'redes_sociales', 'inventario',
@@ -24,9 +24,10 @@ const ROLE_PERMISSIONS: Record<Role, string[]> = {
   Ventas: ['dashboard','facturacion_estandar','ventas','redes_sociales','clientes','cotizaciones'],
   Compras: ['dashboard','inventario','compras','proveedores'],
   Finanzas: ['dashboard','facturacion_estandar','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','compras'],
+  RRHH: ['dashboard','rrhh'],
   'Solo lectura': ['dashboard','ventas','redes_sociales','clientes','cotizaciones','inventario','compras','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','proveedores'],
 };
-const ROLES: Role[] = ['Administrador','Supervisor','Ventas','Compras','Finanzas','Solo lectura'];
+const ROLES: Role[] = ['Administrador','Supervisor','Ventas','Compras','Finanzas','RRHH','Solo lectura'];
 const isRole = (value: unknown): value is Role => typeof value === 'string' && ROLES.includes(value as Role);
 export const safeRole = (value: unknown): Role => isRole(value) ? value : 'Solo lectura';
 const isAdmin = (user: User) => user.app_metadata?.farmi_admin === true || user.app_metadata?.farmi_role === 'Administrador';
