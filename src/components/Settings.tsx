@@ -13,9 +13,10 @@ const rolePermissions:Record<UserAccess['role'],Module[]> = {
   Ventas:['dashboard','facturacion_estandar','ventas','redes_sociales','clientes','cotizaciones'],
   Compras:['dashboard','inventario','compras','proveedores'],
   Finanzas:['dashboard','contabilidad','facturacion_estandar','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','compras'],
+  RRHH:['dashboard','rrhh'],
   'Solo lectura':['dashboard','contabilidad','ventas','redes_sociales','clientes','cotizaciones','inventario','compras','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','proveedores']
 };
-const roleOptions:UserAccess['role'][]=['Administrador','Supervisor','Ventas','Compras','Finanzas','Solo lectura'];
+const roleOptions:UserAccess['role'][]=['Administrador','Supervisor','Ventas','Compras','Finanzas','RRHH','Solo lectura'];
 type ManagedUser = {id:string;email:string;username?:string;name:string;role:UserAccess['role'];permissions:Module[];active:boolean;createdAt:string;lastSignInAt:string|null;emailConfirmed:boolean;isAdmin:boolean};
 type AdminApiResult = {isAdmin?:boolean;canBootstrap?:boolean;users?:ManagedUser[];user?:ManagedUser;message?:string;error?:string};
 export function Settings({settings,setSettings,userEmail,userId}:{settings:ErpSettings;setSettings:(s:ErpSettings)=>void;userEmail:string;userId:string}) {
