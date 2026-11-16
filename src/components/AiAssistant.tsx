@@ -75,13 +75,13 @@ export function AiAssistant({userId,products,sales,purchases,expenses,receivable
   const arAging=receivables.reduce((acc,item)=>{
     const balance=Math.max(0,item.total+(item.debitNotes??0)-item.paid-(item.creditNotes??0));
     const late=item.dueDate?Math.max(0,-daysTo(item.dueDate)):0;
-    if(balance>0&&late>0){const bucket=late<=30?'1–30 días':late<=60?'31–60 días':'Más de 60 días';acc[bucket]+=balance;}
+    if(balance>0&&late>0){const bucket:'1–30 días'|'31–60 días'|'Más de 60 días'=late<=30?'1–30 días':late<=60?'31–60 días':'Más de 60 días';acc[bucket]+=balance;}
     return acc;
   },{'1–30 días':0,'31–60 días':0,'Más de 60 días':0});
   const apAging=payables.reduce((acc,item)=>{
     const balance=Math.max(0,item.total-item.paid);
     const late=item.dueDate?Math.max(0,-daysTo(item.dueDate)):0;
-    if(balance>0&&late>0){const bucket=late<=30?'1–30 días':late<=60?'31–60 días':'Más de 60 días';acc[bucket]+=balance;}
+    if(balance>0&&late>0){const bucket:'1–30 días'|'31–60 días'|'Más de 60 días'=late<=30?'1–30 días':late<=60?'31–60 días':'Más de 60 días';acc[bucket]+=balance;}
     return acc;
   },{'1–30 días':0,'31–60 días':0,'Más de 60 días':0});
   const periodMargin=periodRevenue>0?(periodProfit/periodRevenue)*100:0;
