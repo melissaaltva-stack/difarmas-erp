@@ -323,7 +323,7 @@ export function useErpState(userId: string) {
   };
 
 
-  const allocateFefo=(sourceLots:InventoryLot[],productId:number,quantity:number,reference:string,type:'Venta'|'Reserva'):{lots:InventoryLot[];allocations:LotAllocation[];movements:LotKardexMovement[]}|null=>{
+  const allocateFefo=(sourceLots:InventoryLot[],productId:number,quantity:number,reference:string,type:'Venta'|'Reserva'|'Devolución a proveedor'):{lots:InventoryLot[];allocations:LotAllocation[];movements:LotKardexMovement[]}|null=>{
     let remaining=quantity;const allocations:LotAllocation[]=[];const movements:LotKardexMovement[]=[];
     const eligible=sourceLots.filter(lot=>lot.productId===productId&&lot.quantityRemaining>0&&lot.expiry>=new Date().toISOString().slice(0,10)).sort((a,b)=>a.expiry.localeCompare(b.expiry)||a.receivedAt.localeCompare(b.receivedAt));
     let next=sourceLots;
@@ -518,6 +518,8 @@ export function useErpState(userId: string) {
     const quantitiesByProduct=new Map<number,number>();
     record.items.forEach(item=>quantitiesByProduct.set(item.productId,(quantitiesByProduct.get(item.productId)??0)+item.quantity));
     if([...quantitiesByProduct].some(([productId,quantity])=>!products.some(product=>product.id===productId&&product.stock>=quantity)))return false;
+    let workingLots=inventoryLots;const supplierLotMovements:LotKardexMovement[]=[];
+    for(const [productId,quantity] of quantitiesByProduct){if(!fefoProductIds.includes(productId))continue;const allocated=allocateFefo(workingLots,productId,quantity,'DEV-PROV-'+record.id,'Devolución a proveedor');if(!allocated)return false;workingLots=allocated.lots;supplierLotMovements.push(...allocated.movements);}
     const updated=products.map(product=>{
       const quantity=quantitiesByProduct.get(product.id)??0;
       return quantity?{...product,stock:product.stock-quantity}:product;
@@ -534,6 +536,7 @@ export function useErpState(userId: string) {
     supplierDispatchInProgress.current.add(record.id);
     setProducts(updated);
     setInventoryMovements(current=>[...current,...movements]);
+    if(supplierLotMovements.length){setInventoryLots(workingLots);setLotKardex(current=>[...current,...supplierLotMovements]);}
     return true;
   };
 
@@ -560,6 +563,7 @@ export function useErpState(userId: string) {
       return true;
     }
     if(status==='Cambio recibido') {
+      if(record.items.some(item=>fefoProductIds.includes(item.productId)))return false;
       const quantities=new Map<number,number>();record.items.forEach(item=>quantities.set(item.productId,(quantities.get(item.productId)??0)+item.quantity));
       if([...quantities.keys()].some(id=>!products.some(product=>product.id===id)))return false;
       const date=new Date().toISOString();
@@ -674,6 +678,7 @@ export function useErpState(userId: string) {
       saved = {...product,id:editing.id};
       setProducts(current=>current.map(p=>p.id===editing.id?saved:p));
       if (previous && previous.stock !== saved.stock) {
+        if(fefoProductIds.includes(previous.id))return null;
         const difference = saved.stock - previous.stock;
         setInventoryMovements(current=>[...current,{id:nextInventoryMovementId(),productId:saved.id,productName:saved.name,type:'Ajuste',quantity:Math.abs(difference),stockBefore:previous.stock,stockAfter:saved.stock,unitCost:saved.cost,date:new Date().toISOString(),note:difference>0?'Ajuste de entrada manual':'Ajuste de salida manual'}]);
       }
