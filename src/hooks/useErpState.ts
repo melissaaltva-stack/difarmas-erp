@@ -415,9 +415,9 @@ export function useErpState(userId: string) {
     if(invoiceDetails?.orderId&&!sourceOrder)return false;
     if(sourceOrder){const reserved=new Map<number,number>();sourceOrder.items.forEach(item=>reserved.set(item.id,(reserved.get(item.id)??0)+item.qty));if([...requestedQuantities].some(([id,qty])=>qty>(reserved.get(id)??0))||[...reserved].some(([id,qty])=>qty!==(requestedQuantities.get(id)??0)))return false;}
     else if ([...requestedQuantities.entries()].some(([id,qty])=>!products.some(p=>p.id===id&&p.stock>=qty))) return false;
-    let updated: Product[]=products;let saleLots=inventoryLots;const saleLotMovements:LotKardexMovement[]=[];
+    let updated: Product[]=products;let saleLots=inventoryLots;const saleLotMovements:LotKardexMovement[]=[];const saleLotAllocations:LotAllocation[]=[];
     if(!sourceOrder){try { updated = applySaleToInventory(products,sold); } catch { return false; }
-      for(const [productId,qty] of requestedQuantities){if(!fefoProductIds.includes(productId))continue;const allocated=allocateFefo(saleLots,productId,qty,invoiceNumber||'VENTA','Venta');if(!allocated)return false;saleLots=allocated.lots;saleLotMovements.push(...allocated.movements);}
+      for(const [productId,qty] of requestedQuantities){if(!fefoProductIds.includes(productId))continue;const allocated=allocateFefo(saleLots,productId,qty,invoiceNumber||'VENTA','Venta');if(!allocated)return false;saleLots=allocated.lots;saleLotMovements.push(...allocated.movements);saleLotAllocations.push(...allocated.allocations);}
     }
     saleInProgress.current=true;
     const recordDate=invoiceDetails?.invoiceDate ? new Date(invoiceDetails.invoiceDate+'T12:00:00') : new Date();
@@ -435,6 +435,7 @@ export function useErpState(userId: string) {
       customer:customer.trim()||undefined,
       customerRtn:customerRtn.trim()||undefined,
       items,
+      lotAllocations:sourceOrder?.lotAllocations??saleLotAllocations,
       total:invoiceDetails?invoiceDetails.lines.reduce((sum,row)=>sum+row.lineTotal,0):base.total,
       profit:items?.reduce((sum,line)=>sum+line.profit,0)??base.profit,
       customerAddress:invoiceDetails?.customerAddress||undefined,
@@ -465,6 +466,10 @@ export function useErpState(userId: string) {
     const newQty=new Map<number,number>();
     sold.forEach(item=>newQty.set(item.id,(newQty.get(item.id)??0)+item.qty));
     for(const item of sold){const product=products.find(p=>p.id===item.id);if(!product||product.stock+(oldQty.get(item.id)??0)<(newQty.get(item.id)??0))return false;}
+    if([...newQty.keys()].some(id=>fefoProductIds.includes(id))&&!original.lotAllocations?.length)return false;
+    let updatedLots=inventoryLots;const revisedAllocations:LotAllocation[]=[];const lotMovements:LotKardexMovement[]=[];
+    const released=releaseLotAllocations(updatedLots,original.lotAllocations??[],'FACTURA-'+(original.invoiceNumber??invoiceId));updatedLots=released.lots;lotMovements.push(...released.movements);
+    for(const [productId,qty] of newQty){if(!fefoProductIds.includes(productId))continue;const allocated=allocateFefo(updatedLots,productId,qty,'FACTURA-'+(original.invoiceNumber??invoiceId),'Venta');if(!allocated)return false;updatedLots=allocated.lots;revisedAllocations.push(...allocated.allocations);lotMovements.push(...allocated.movements);}
     const updatedProducts=products.map(product=>{const before=oldQty.get(product.id)??0;const after=newQty.get(product.id)??0;return before===after?product:{...product,stock:product.stock+before-after};});
     const movements:InventoryMovement[]=[];
     for(const product of products){const before=oldQty.get(product.id)??0;const after=newQty.get(product.id)??0;if(before===after)continue;movements.push({id:nextInventoryMovementId(),productId:product.id,productName:product.name,type:'Ajuste',quantity:Math.abs(after-before),stockBefore:product.stock,stockAfter:product.stock+before-after,unitCost:product.cost,referenceId:invoiceId,date:new Date().toISOString(),note:'Corrección de detalle de factura estándar '+(original.invoiceNumber??invoiceId)});}
@@ -476,6 +481,7 @@ export function useErpState(userId: string) {
     });
     const updatedSale:SaleRecord={
       ...original,
+      lotAllocations:revisedAllocations,
       customer:customer.trim()||undefined,
       customerRtn:customerRtn.trim()||undefined,
       items,
@@ -497,6 +503,7 @@ export function useErpState(userId: string) {
     const existingReceivable=receivables.find(item=>item.saleId===invoiceId);
     if(existingReceivable&&updatedSale.total<existingReceivable.paid)return false;
     setProducts(updatedProducts);
+    if(lotMovements.length){setInventoryLots(updatedLots);setLotKardex(current=>[...current,...lotMovements]);}
     setInventoryMovements(current=>[...current,...movements]);
     setSales(current=>current.map(sale=>sale.id===invoiceId?updatedSale:sale));
     if(existingReceivable)setReceivables(current=>current.map(item=>item.saleId===invoiceId?{...item,total:updatedSale.total,customer:updatedSale.customer||item.customer,dueDate:updatedSale.dueDate||item.dueDate}:item));
