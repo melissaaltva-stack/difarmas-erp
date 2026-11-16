@@ -1,6 +1,6 @@
 import type {
   CashClosure, CashMovement, Customer, Supplier, ErpSettings, Expense, InventoryMovement, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseRecord,
-  Receivable, SaleRecord, OrderRecord, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord, QuoteRecord, AccountingAccount, AccountingEntry, HrEmployee, HrAttendanceRecord, HrLeaveRequest,
+  Receivable, SaleRecord, OrderRecord, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord, QuoteRecord, AccountingAccount, AccountingEntry, HrEmployee, HrAttendanceRecord, HrLeaveRequest, InventoryLot, LotKardexMovement,
 } from '../domain/types';
 import { requireSupabase } from './supabaseClient';
 
@@ -18,6 +18,9 @@ export type ErpSnapshot = {
   receivables: Receivable[];
   payables: Payable[];
   inventoryMovements: InventoryMovement[];
+  inventoryLots?: InventoryLot[];
+  lotKardex?: LotKardexMovement[];
+  fefoProductIds?: number[];
   monthlyGoal: number;
   fixedExpenses: number;
   cashClosures?: CashClosure[];
@@ -45,7 +48,7 @@ function normalizeSnapshot(value: unknown): ErpSnapshot {
       throw new Error(`El campo ${key} de los datos guardados no es válido.`);
     }
   }
-  for (const key of ['cashClosures', 'cashMovements', 'paymentTransactions', 'missingProductRequests', 'supplierReturns', 'saleAdjustments', 'quotes', 'orders', 'hrEmployees', 'hrAttendance', 'hrLeaveRequests'] as const) {
+  for (const key of ['cashClosures', 'cashMovements', 'paymentTransactions', 'missingProductRequests', 'supplierReturns', 'saleAdjustments', 'quotes', 'orders', 'hrEmployees', 'hrAttendance', 'hrLeaveRequests', 'inventoryLots', 'lotKardex', 'fefoProductIds'] as const) {
     if (value[key] !== undefined && !Array.isArray(value[key])) {
       throw new Error(`El campo ${key} de los datos guardados no es válido.`);
     }
@@ -69,6 +72,9 @@ function normalizeSnapshot(value: unknown): ErpSnapshot {
     receivables: (value.receivables ?? []) as Receivable[],
     payables: (value.payables ?? []) as Payable[],
     inventoryMovements: (value.inventoryMovements ?? []) as InventoryMovement[],
+    inventoryLots: (value.inventoryLots ?? []) as InventoryLot[],
+    lotKardex: (value.lotKardex ?? []) as LotKardexMovement[],
+    fefoProductIds: (value.fefoProductIds ?? []) as number[],
     monthlyGoal,
     fixedExpenses,
     cashClosures: value.cashClosures as CashClosure[] | undefined,
