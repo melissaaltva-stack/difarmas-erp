@@ -5029,3 +5029,48 @@ button.icon-btn:focus-visible svg,
 :root[data-farmi-theme] .app input[type="range"]{
   accent-color:var(--farmi-ui-primary)!important;
 }
+
+
+/* FARMI agent: in-app operational alert center */
+.ai-view-tabs{display:flex;gap:8px;margin:18px 34px 0;border-bottom:1px solid #e0eae5;padding-bottom:9px}
+.ai-view-tabs button{display:inline-flex;align-items:center;gap:8px;border:1px solid transparent;border-radius:10px;padding:10px 14px;background:transparent;color:#60766e;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.ai-view-tabs button.active{background:var(--farmi-ui-primary-soft,#e6f4ee);border-color:var(--farmi-ui-primary,#168568);color:var(--farmi-ui-primary-dark,#12634e)}
+.ai-view-tabs button span{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:99px;background:#fff0df;color:#9b5b16;font-size:10px}
+.agent-alert-summary{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:18px}
+.agent-alert-summary>div{display:flex;align-items:center;gap:12px;min-width:0}
+.agent-alert-icon{width:42px;height:42px;display:grid;place-items:center;flex:0 0 42px;border-radius:12px;background:var(--farmi-ui-primary-soft,#e6f4ee);color:var(--farmi-ui-primary-dark,#12634e)}
+.agent-alert-summary h3{margin:0;font-size:15px;color:#25483d}
+.agent-alert-summary p{margin:4px 0 0;color:#71867f;font-size:11px;line-height:1.5}
+.agent-alert-summary>strong{white-space:nowrap;border-radius:99px;background:#fff3e4;color:#955816;padding:8px 11px;font-size:11px}
+.agent-alert-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:18px 0 12px;color:#627a71;font-size:11px}
+.agent-alert-toolbar>span{display:flex;align-items:center;gap:7px;font-weight:700}
+.agent-alert-toolbar button,.agent-history-row button{display:inline-flex;align-items:center;gap:6px;font-size:11px}
+.agent-alert-list{display:flex;flex-direction:column;gap:9px}
+.agent-alert-card{display:flex;align-items:flex-start;gap:12px;padding:15px;border-left:4px solid #d6a24e}
+.agent-alert-card.severity-critical{border-left-color:#c84e4e}
+.agent-alert-card.severity-info{border-left-color:#5c93b7}
+.agent-alert-symbol{width:36px;height:36px;display:grid;place-items:center;flex:0 0 36px;border-radius:10px;background:#fff4e5;color:#a86b20}
+.severity-critical .agent-alert-symbol{background:#fff0ef;color:#bb4444}
+.severity-info .agent-alert-symbol{background:#edf6fb;color:#477f9f}
+.agent-alert-content{flex:1;min-width:0}
+.agent-alert-meta{display:flex;align-items:center;gap:8px;margin-bottom:6px;color:#71867f;font-size:10px}
+.agent-alert-meta b{border-radius:99px;padding:3px 7px;background:#fff2df;color:#946018;font-size:9px}
+.severity-critical .agent-alert-meta b{background:#ffeded;color:#b63e3e}
+.severity-info .agent-alert-meta b{background:#edf6fb;color:#477f9f}
+.agent-alert-content>strong{display:block;color:#28463d;font-size:13px;line-height:1.4}
+.agent-alert-content p{margin:5px 0;color:#60766e;font-size:11px;line-height:1.55}
+.agent-alert-content small{color:#8a9a94;font-size:10px}
+.agent-alert-action{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-size:10px}
+.agent-alert-empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;padding:34px 18px;color:var(--farmi-ui-primary-dark,#12634e)}
+.agent-alert-empty strong{font-size:13px;color:#36584c}
+.agent-alert-empty p{margin:0;color:#7a8e86;font-size:11px}
+.agent-alert-history{margin-top:16px}
+.agent-alert-history h3{display:flex;align-items:center;gap:8px;margin:0 0 12px;font-size:13px;color:#36584c}
+.agent-alert-history>p{font-size:11px;color:#7a8e86}
+.agent-history-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #edf1ef}
+.agent-history-row>div{min-width:0}
+.agent-history-row strong,.agent-history-row small{display:block;overflow-wrap:anywhere}
+.agent-history-row strong{font-size:11px;color:#38564b}
+.agent-history-row small{margin-top:4px;color:#82938d;font-size:10px}
+@media(max-width:800px){.ai-view-tabs{margin:16px 16px 0}.agent-alert-card{flex-wrap:wrap}.agent-alert-action{margin-left:48px}.agent-alert-toolbar{align-items:flex-start;flex-direction:column}.agent-alert-summary{align-items:flex-start;flex-direction:column}.agent-alert-summary>strong{margin-left:54px}}
+@media(max-width:480px){.ai-view-tabs button{flex:1;justify-content:center;padding:9px 8px;font-size:11px}.agent-history-row{align-items:flex-start;flex-direction:column}.agent-alert-action{margin-left:0}}
