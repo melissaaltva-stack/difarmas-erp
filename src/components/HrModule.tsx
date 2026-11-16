@@ -1,6 +1,8 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { Users, UserPlus, Search, CalendarDays, Clock3, ClipboardList, Pencil, Trash2, Check, X, Phone, Mail, BriefcaseBusiness, FileText } from 'lucide-react';
 import type { HrEmployee, HrAttendanceRecord, HrLeaveRequest } from '../domain/types';
+import { supabase } from '../services/supabaseClient';
+import { useCallback, useEffect, useRef } from 'react';
 
 type Setter<T> = (value:T|((current:T)=>T))=>void;
 type Props = {
@@ -27,7 +29,68 @@ const blankEmployee=(employees:HrEmployee[]):EmployeeDraft=>{
 };
 const statusClass=(status:string)=>status.toLocaleLowerCase('es-HN').replace(/\s+/g,'-');
 
-export function HrModule({employees,setEmployees,attendance,setAttendance,leaveRequests,setLeaveRequests,canWrite}:Props){
+export function HrModule({canWrite}:Pick<Props,'canWrite'>){
+
+  const [employees,setEmployees]=useState<HrEmployee[]>([]);
+  const [attendance,setAttendance]=useState<HrAttendanceRecord[]>([]);
+  const [leaveRequests,setLeaveRequests]=useState<HrLeaveRequest[]>([]);
+  const employeesRef=useRef(employees), attendanceRef=useRef(attendance), leaveRequestsRef=useRef(leaveRequests);
+  useEffect(()=>{employeesRef.current=employees},[employees]);
+  useEffect(()=>{attendanceRef.current=attendance},[attendance]);
+  useEffect(()=>{leaveRequestsRef.current=leaveRequests},[leaveRequests]);
+  const loadSharedRecords=useCallback(async()=>{
+    if(!supabase)return;
+    const [employeeResult,attendanceResult,leaveResult]=await Promise.all([
+      supabase.from('hr_employees').select('*').order('full_name'),
+      supabase.from('hr_attendance').select('*').order('attendance_date',{ascending:false}),
+      supabase.from('hr_leave_requests').select('*').order('requested_at',{ascending:false}),
+    ]);
+    const error=employeeResult.error??attendanceResult.error??leaveResult.error;
+    if(error){console.error('No se pudieron cargar los registros compartidos de RRHH:',error.message);return;}
+    setEmployees((employeeResult.data??[]).map(row=>({id:row.id,employeeCode:row.employee_code,fullName:row.full_name,position:row.position,department:row.department,phone:row.phone,email:row.email,hireDate:row.hire_date,contractType:row.contract_type,status:row.status,emergencyContact:row.emergency_contact,notes:row.notes,createdAt:row.created_at,updatedAt:row.updated_at} as HrEmployee)));
+    setAttendance((attendanceResult.data??[]).map(row=>({id:row.id,employeeId:row.employee_id,date:row.attendance_date,status:row.status,checkIn:row.check_in??'',checkOut:row.check_out??'',notes:row.notes,createdAt:row.created_at,updatedAt:row.updated_at} as HrAttendanceRecord)));
+    setLeaveRequests((leaveResult.data??[]).map(row=>({id:row.id,employeeId:row.employee_id,type:row.request_type,startDate:row.start_date,endDate:row.end_date,days:row.days,reason:row.reason,status:row.status,requestedAt:row.requested_at,reviewedAt:row.reviewed_at??undefined} as HrLeaveRequest)));
+  },[]);
+  useEffect(()=>{
+    if(!supabase)return;
+    void loadSharedRecords();
+    const channel=supabase.channel('farmi-hr-shared-records')
+      .on('postgres_changes',{event:'*',schema:'public',table:'hr_employees'},()=>void loadSharedRecords())
+      .on('postgres_changes',{event:'*',schema:'public',table:'hr_attendance'},()=>void loadSharedRecords())
+      .on('postgres_changes',{event:'*',schema:'public',table:'hr_leave_requests'},()=>void loadSharedRecords())
+      .subscribe();
+    const refresh=()=>{if(document.visibilityState==='visible')void loadSharedRecords();};
+    window.addEventListener('focus',refresh);document.addEventListener('visibilitychange',refresh);
+    return()=>{window.removeEventListener('focus',refresh);document.removeEventListener('visibilitychange',refresh);void supabase.removeChannel(channel);};
+  },[loadSharedRecords]);
+  const persistEmployees=useCallback((next:HrEmployee[])=>{
+    if(!supabase||!canWrite)return;
+    const previous=employeesRef.current,nextIds=new Set(next.map(item=>item.id));
+    const changed=next.filter(item=>{const old=previous.find(value=>value.id===item.id);return !old||JSON.stringify(old)!==JSON.stringify(item);});
+    const removed=previous.filter(item=>!nextIds.has(item.id)).map(item=>item.id);
+    if(changed.length)void supabase.from('hr_employees').upsert(changed.map(item=>({id:item.id,employee_code:item.employeeCode,full_name:item.fullName,position:item.position,department:item.department,phone:item.phone,email:item.email,hire_date:item.hireDate,contract_type:item.contractType,status:item.status,emergency_contact:item.emergencyContact,notes:item.notes,created_at:item.createdAt,updated_at:item.updatedAt}))).then(({error})=>{if(error){console.error('Error guardando colaboradores:',error.message);void loadSharedRecords();}});
+    if(removed.length)void supabase.from('hr_employees').delete().in('id',removed).then(({error})=>{if(error){console.error('Error eliminando colaboradores:',error.message);void loadSharedRecords();}});
+  },[canWrite,loadSharedRecords]);
+  const persistAttendance=useCallback((next:HrAttendanceRecord[])=>{
+    if(!supabase||!canWrite)return;
+    const previous=attendanceRef.current,nextIds=new Set(next.map(item=>item.id));
+    const changed=next.filter(item=>{const old=previous.find(value=>value.id===item.id);return !old||JSON.stringify(old)!==JSON.stringify(item);});
+    const removed=previous.filter(item=>!nextIds.has(item.id)).map(item=>item.id);
+    if(changed.length)void supabase.from('hr_attendance').upsert(changed.map(item=>({id:item.id,employee_id:item.employeeId,attendance_date:item.date,status:item.status,check_in:item.checkIn||null,check_out:item.checkOut||null,notes:item.notes,created_at:item.createdAt,updated_at:item.updatedAt})),{onConflict:'employee_id,attendance_date'}).then(({error})=>{if(error){console.error('Error guardando asistencia:',error.message);void loadSharedRecords();}});
+    if(removed.length)void supabase.from('hr_attendance').delete().in('id',removed).then(({error})=>{if(error){console.error('Error eliminando asistencia:',error.message);void loadSharedRecords();}});
+  },[canWrite,loadSharedRecords]);
+  const persistLeaveRequests=useCallback((next:HrLeaveRequest[])=>{
+    if(!supabase||!canWrite)return;
+    const previous=leaveRequestsRef.current,nextIds=new Set(next.map(item=>item.id));
+    const changed=next.filter(item=>{const old=previous.find(value=>value.id===item.id);return !old||JSON.stringify(old)!==JSON.stringify(item);});
+    const removed=previous.filter(item=>!nextIds.has(item.id)).map(item=>item.id);
+    if(changed.length)void supabase.from('hr_leave_requests').upsert(changed.map(item=>({id:item.id,employee_id:item.employeeId,request_type:item.type,start_date:item.startDate,end_date:item.endDate,days:item.days,reason:item.reason,status:item.status,requested_at:item.requestedAt,reviewed_at:item.reviewedAt??null}))).then(({error})=>{if(error){console.error('Error guardando solicitudes:',error.message);void loadSharedRecords();}});
+    if(removed.length)void supabase.from('hr_leave_requests').delete().in('id',removed).then(({error})=>{if(error){console.error('Error eliminando solicitudes:',error.message);void loadSharedRecords();}});
+  },[canWrite,loadSharedRecords]);
+  const setEmployeesShared=(update:HrEmployee[]|((current:HrEmployee[])=>HrEmployee[]))=>{const next=typeof update==='function'?update(employeesRef.current):update;employeesRef.current=next;setEmployees(next);persistEmployees(next);};
+  const setAttendanceShared=(update:HrAttendanceRecord[]|((current:HrAttendanceRecord[])=>HrAttendanceRecord[]))=>{const next=typeof update==='function'?update(attendanceRef.current):update;attendanceRef.current=next;setAttendance(next);persistAttendance(next);};
+  const setLeaveRequestsShared=(update:HrLeaveRequest[]|((current:HrLeaveRequest[])=>HrLeaveRequest[]))=>{const next=typeof update==='function'?update(leaveRequestsRef.current):update;leaveRequestsRef.current=next;setLeaveRequests(next);persistLeaveRequests(next);};
+
   const [tab,setTab]=useState<Tab>('personal');
   const [query,setQuery]=useState('');
   const [employeeFilter,setEmployeeFilter]=useState<'Todos'|'Activo'|'Inactivo'>('Todos');
@@ -68,7 +131,7 @@ export function HrModule({employees,setEmployees,attendance,setAttendance,leaveR
     if(employees.some(employee=>employee.id!==editingEmployee?.id&&employee.employeeCode.toLocaleLowerCase()===code.toLocaleLowerCase())){setEmployeeError('Ese código de colaborador ya está registrado.');return;}
     const now=new Date().toISOString();
     if(editingEmployee){
-      setEmployees(current=>current.map(employee=>employee.id===editingEmployee.id?{...employee,...employeeDraft,employeeCode:code,fullName,position:employeeDraft.position.trim(),department:employeeDraft.department.trim(),phone:employeeDraft.phone.trim(),email:employeeDraft.email.trim(),emergencyContact:employeeDraft.emergencyContact.trim(),notes:employeeDraft.notes.trim(),updatedAt:now}:employee));
+      setEmployeesShared(current=>current.map(employee=>employee.id===editingEmployee.id?{...employee,...employeeDraft,employeeCode:code,fullName,position:employeeDraft.position.trim(),department:employeeDraft.department.trim(),phone:employeeDraft.phone.trim(),email:employeeDraft.email.trim(),emergencyContact:employeeDraft.emergencyContact.trim(),notes:employeeDraft.notes.trim(),updatedAt:now}:employee));
     }else{
       setEmployees(current=>[{...employeeDraft,id:makeId('emp'),employeeCode:code,fullName,position:employeeDraft.position.trim(),department:employeeDraft.department.trim(),phone:employeeDraft.phone.trim(),email:employeeDraft.email.trim(),emergencyContact:employeeDraft.emergencyContact.trim(),notes:employeeDraft.notes.trim(),createdAt:now,updatedAt:now},...current]);
     }
@@ -77,8 +140,8 @@ export function HrModule({employees,setEmployees,attendance,setAttendance,leaveR
   const deleteEmployee=(employee:HrEmployee)=>{
     if(!window.confirm('¿Eliminar el expediente de '+employee.fullName+'? También se eliminarán sus registros de asistencia y solicitudes de permiso.'))return;
     setEmployees(current=>current.filter(item=>item.id!==employee.id));
-    setAttendance(current=>current.filter(item=>item.employeeId!==employee.id));
-    setLeaveRequests(current=>current.filter(item=>item.employeeId!==employee.id));
+    setAttendanceShared(current=>current.filter(item=>item.employeeId!==employee.id));
+    setLeaveRequestsShared(current=>current.filter(item=>item.employeeId!==employee.id));
   };
   const saveAttendance=(event:FormEvent<HTMLFormElement>)=>{
     event.preventDefault();
