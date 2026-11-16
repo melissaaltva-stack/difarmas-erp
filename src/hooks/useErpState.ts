@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { CartItem, CashClosure, CashMovement, Customer, ErpSettings, Expense, InventoryMovement, Module, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseItem, PurchaseRecord, Receivable, SaleRecord, OrderRecord, Supplier, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord, QuoteRecord, StandardInvoiceDetails, AccountingAccount, AccountingEntry, HrEmployee, HrAttendanceRecord, HrLeaveRequest, InventoryLot, LotKardexMovement, LotAllocation } from '../domain/types';
+import type { CartItem, CashClosure, CashMovement, Customer, ErpSettings, Expense, InventoryMovement, Module, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseItem, PurchaseRecord, PurchaseLogisticsRecord, Receivable, SaleRecord, OrderRecord, Supplier, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord, QuoteRecord, StandardInvoiceDetails, AccountingAccount, AccountingEntry, HrEmployee, HrAttendanceRecord, HrLeaveRequest, InventoryLot, LotKardexMovement, LotAllocation } from '../domain/types';
 import { loadJson, saveJson, loadNumber, saveNumber } from '../utils/storage';
 import { applyPurchaseToInventory, applySaleToInventory } from '../services/inventoryService';
 import { buildSaleRecord, createReceivableFromSale } from '../services/salesService';
@@ -72,6 +72,7 @@ export function useErpState(userId: string) {
     return nextId;
   };
   const [purchases, setPurchases] = useState<PurchaseRecord[]>(()=>loadJson<PurchaseRecord[]>('difarmas_purchases',[]));
+  const [purchaseLogistics,setPurchaseLogistics]=useState<PurchaseLogisticsRecord[]>(()=>loadJson<PurchaseLogisticsRecord[]>('difarmas_purchase_logistics',[]));
   const [purchaseCostHistory, setPurchaseCostHistory] = useState<PurchaseCostHistoryEntry[]>(()=>loadJson<PurchaseCostHistoryEntry[]>('difarmas_purchase_cost_history',[]));
   const lastPurchaseId = useRef(0);
   const nextPurchaseId = () => {
@@ -161,6 +162,7 @@ export function useErpState(userId: string) {
   useEffect(()=>{saveJson('farmi_hr_leave_requests',hrLeaveRequests)},[hrLeaveRequests]);
   useEffect(()=>{saveJson('difarmas_orders',orders)},[orders]);
   useEffect(()=>{saveJson('difarmas_purchases',purchases)},[purchases]);
+  useEffect(()=>{saveJson('difarmas_purchase_logistics',purchaseLogistics)},[purchaseLogistics]);
   useEffect(()=>{saveJson('difarmas_purchase_cost_history',purchaseCostHistory)},[purchaseCostHistory]);
   useEffect(()=>{saveJson('difarmas_settings',settings)},[settings]);
   useEffect(()=>{saveJson('difarmas_expenses',expenses)},[expenses]);
@@ -178,9 +180,9 @@ export function useErpState(userId: string) {
   useEffect(()=>{saveJson('difarmas_sale_adjustments',saleAdjustments)},[saleAdjustments]);
 
   const snapshot = useMemo<ErpSnapshot>(() => ({
-    customers, quotes, suppliers, products, sales, orders, purchases, purchaseCostHistory, settings, expenses, receivables, payables,
+    customers, quotes, suppliers, products, sales, orders, purchases, purchaseLogistics, purchaseCostHistory, settings, expenses, receivables, payables,
     inventoryMovements, inventoryLots, lotKardex, fefoProductIds, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests, supplierReturns, saleAdjustments, accountingAccounts, accountingEntries, hrEmployees, hrAttendance, hrLeaveRequests,
-  }), [customers, quotes, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables, inventoryMovements, inventoryLots, lotKardex, fefoProductIds, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests, supplierReturns, saleAdjustments, orders, accountingAccounts, accountingEntries, hrEmployees, hrAttendance, hrLeaveRequests]);
+  }), [customers, quotes, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables, inventoryMovements, inventoryLots, lotKardex, fefoProductIds, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests, supplierReturns, saleAdjustments, orders, purchaseLogistics, accountingAccounts, accountingEntries, hrEmployees, hrAttendance, hrLeaveRequests]);
 
   // Load the signed-in user's snapshot before allowing remote writes. A first login
   // seeds the cloud record from this browser's existing local data.
@@ -207,6 +209,7 @@ export function useErpState(userId: string) {
       setHrLeaveRequestsRaw([]);
       setOrders([]);
       setPurchases([]);
+      setPurchaseLogistics([]);
       setPurchaseCostHistory([]);
       setSettings(initialSettings);
       setExpenses([]);
@@ -239,6 +242,7 @@ export function useErpState(userId: string) {
         setHrLeaveRequestsRaw(remote.hrLeaveRequests ?? []);
         setOrders(remote.orders ?? []);
         setPurchases(remote.purchases);
+        setPurchaseLogistics(remote.purchaseLogistics ?? []);
         setPurchaseCostHistory(remote.purchaseCostHistory ?? []);
         setSettings(remote.settings ?? initialSettings);
         setExpenses(remote.expenses);
@@ -717,18 +721,20 @@ export function useErpState(userId: string) {
 
   const deleteProduct=(id:number)=>{ if (!canWriteSnapshot(remoteReady, syncStatus)) return; setProducts(current=>current.filter(product=>product.id!==id)); };
 
-  const receivePurchase=(items:PurchaseItem[],paymentMethod:string,dueDate:string,invoiceNumber='',invoiceDate='',notes='',enteredTotal?:number,paymentTerms='Contado - Efectivo'):boolean=>{
+  const receivePurchase=(items:PurchaseItem[],paymentMethod:string,dueDate:string,invoiceNumber='',invoiceDate='',notes='',enteredTotal?:number,paymentTerms='Contado - Efectivo',supplierOverride?:string):boolean=>{
     if (!canWriteSnapshot(remoteReady, syncStatus) || purchaseInProgress.current) return false;
+    const receivingSupplier=(supplierOverride??receivingSupplier).trim();
+    if(!receivingSupplier)return false;
     if (!items.length || items.some(item => !Number.isFinite(item.qty) || item.qty <= 0 || !Number.isFinite(item.unitCost) || item.unitCost < 0)) return false;
-    const supplierKey=purchaseSupplier.trim().toLocaleLowerCase();
+    const supplierKey=receivingSupplier.toLocaleLowerCase();
     const invoiceKey=invoiceNumber.trim().toLocaleLowerCase();
     if(invoiceKey && purchases.some(p=>p.supplier.trim().toLocaleLowerCase()===supplierKey && String(p.invoiceNumber??'').trim().toLocaleLowerCase()===invoiceKey)) return false;
     if(items.some(item=>!Number.isInteger(item.baseUnitsPerPurchase??1)||(item.baseUnitsPerPurchase??1)<1||(item.baseUnitsPerPurchase??1)>1000000))return false;
     const inventoryItems:PurchaseItem[]=items.map(item=>{const units=item.baseUnitsPerPurchase??1;return {...item,qty:item.qty*units,unitCost:item.unitCost/units,purchaseUnit:undefined,baseUnitsPerPurchase:1};});
     let updated: Product[];
-    try { updated = applyPurchaseToInventory(products,inventoryItems,purchaseSupplier); } catch { return false; }
+    try { updated = applyPurchaseToInventory(products,inventoryItems,receivingSupplier); } catch { return false; }
     const receivedAt=new Date().toISOString();const newLots:InventoryLot[]=[];const newLotMovements:LotKardexMovement[]=[];
-    for(const item of inventoryItems){if(!fefoProductIds.includes(item.id))continue;if(!item.lot?.trim()||!item.expiry||!/^\d{4}-\d{2}-\d{2}$/.test(item.expiry))return false;const lotId=crypto.randomUUID();const lot:InventoryLot={id:lotId,productId:item.id,lotCode:item.lot.trim(),expiry:item.expiry,receivedAt,supplier:purchaseSupplier.trim(),unitCost:item.unitCost,quantityReceived:item.qty,quantityRemaining:item.qty,sourceReference:invoiceNumber||'COMPRA',opening:false};newLots.push(lot);newLotMovements.push({id:crypto.randomUUID(),lotId,productId:item.id,productName:item.name,lotCode:lot.lotCode,expiry:lot.expiry,type:'Compra',quantity:item.qty,stockBefore:0,stockAfter:item.qty,unitCost:item.unitCost,reference:invoiceNumber||'COMPRA',date:receivedAt});}
+    for(const item of inventoryItems){if(!fefoProductIds.includes(item.id))continue;if(!item.lot?.trim()||!item.expiry||!/^\d{4}-\d{2}-\d{2}$/.test(item.expiry))return false;const lotId=crypto.randomUUID();const lot:InventoryLot={id:lotId,productId:item.id,lotCode:item.lot.trim(),expiry:item.expiry,receivedAt,supplier:receivingSupplier,unitCost:item.unitCost,quantityReceived:item.qty,quantityRemaining:item.qty,sourceReference:invoiceNumber||'COMPRA',opening:false};newLots.push(lot);newLotMovements.push({id:crypto.randomUUID(),lotId,productId:item.id,productName:item.name,lotCode:lot.lotCode,expiry:lot.expiry,type:'Compra',quantity:item.qty,stockBefore:0,stockAfter:item.qty,unitCost:item.unitCost,reference:invoiceNumber||'COMPRA',date:receivedAt});}
     purchaseInProgress.current=true;
     const referenceId = nextPurchaseId();
     setProducts(updated);
@@ -738,7 +744,7 @@ export function useErpState(userId: string) {
     setPurchases(current=>[{id:referenceId,supplier:purchaseSupplier,total,paymentMethod:paymentMethod as 'Efectivo'|'Transferencia'|'Crédito',date:receivedAt,invoiceNumber,invoiceDate,notes,paymentTerms,dueDate:paymentMethod==='Crédito'?dueDate:undefined},...current]);
     if(newLots.length){setInventoryLots(current=>[...current,...newLots]);setLotKardex(current=>[...current,...newLotMovements]);}
     setPurchaseCostHistory(current=>[
-      ...inventoryItems.map((item):PurchaseCostHistoryEntry=>({id:nextPurchaseCostHistoryId(),purchaseId:referenceId,productId:item.id,productCode:item.code,productName:item.name,supplier:purchaseSupplier.trim(),unitCost:item.unitCost,quantity:item.qty,date:receivedAt})),
+      ...inventoryItems.map((item):PurchaseCostHistoryEntry=>({id:nextPurchaseCostHistoryId(),purchaseId:referenceId,productId:item.id,productCode:item.code,productName:item.name,supplier:receivingSupplier,unitCost:item.unitCost,quantity:item.qty,date:receivedAt})),
       ...current,
     ]);
     if(paymentMethod==='Crédito'){const payable=createPayableFromPurchase(items,purchaseSupplier,dueDate,new Date(),referenceId,invoiceNumber,nextPayableId());setPayables(current=>[...current,{...payable,total}]);}
@@ -767,7 +773,8 @@ export function useErpState(userId: string) {
   const guardedSetPaymentTransactions = guardSnapshotSetter(setPaymentTransactions, canWriteSnapshotNow);
   const guardedSetMissingProductRequests = guardSnapshotSetter(setMissingProductRequests, canWriteSnapshotNow);
   const guardedSetSupplierReturns = guardSnapshotSetter(setSupplierReturns, canWriteSnapshotNow);
+  const guardedSetPurchaseLogistics=guardSnapshotSetter(setPurchaseLogistics,canWriteSnapshotNow);
   const guardedSetSaleAdjustments = guardSnapshotSetter(setSaleAdjustments, canWriteSnapshotNow);
 
-  return {active,setActive,inventoryLots,lotKardex,fefoProductIds,registerOpeningLot,activateFefo,adjustInventoryLot,hrEmployees,setHrEmployees:guardedSetHrEmployees,hrAttendance,setHrAttendance:guardedSetHrAttendance,hrLeaveRequests,setHrLeaveRequests:guardedSetHrLeaveRequests,accountingAccounts,setAccountingAccounts:guardedSetAccountingAccounts,accountingEntries,setAccountingEntries:guardedSetAccountingEntries,orders,saveOrder,updateOrder,deleteOrder,customers,setCustomers:guardedSetCustomers,quotes,setQuotes:guardedSetQuotes,saveQuotes,suppliers,setSuppliers:guardedSetSuppliers,products,setProducts:guardedSetProducts,search,setSearch,monthlyGoal,setMonthlyGoal:guardedSetMonthlyGoal,fixedExpenses,setFixedExpenses:guardedSetFixedExpenses,settings,setSettings:guardedSetSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales:guardedSetSales,purchases,purchaseCostHistory,expenses,setExpenses:guardedSetExpenses,receivables,setReceivables:guardedSetReceivables,payables,setPayables:guardedSetPayables,inventoryMovements,cashClosures,setCashClosures:guardedSetCashClosures,cashMovements,setCashMovements:guardedSetCashMovements,paymentTransactions,setPaymentTransactions:guardedSetPaymentTransactions,missingProductRequests,setMissingProductRequests:guardedSetMissingProductRequests,supplierReturns,setSupplierReturns:guardedSetSupplierReturns,saleAdjustments,setSaleAdjustments:guardedSetSaleAdjustments,recordSupplierDispatch,resolveSupplierReturn,recordSaleAdjustment,recordMissingProduct,filtered,recordSale,updateStandardInvoice,saveProduct,deleteProduct,receivePurchase,syncStatus,syncError,remoteReady};
+  return {active,setActive,purchaseLogistics,setPurchaseLogistics:guardedSetPurchaseLogistics,inventoryLots,lotKardex,fefoProductIds,registerOpeningLot,activateFefo,adjustInventoryLot,hrEmployees,setHrEmployees:guardedSetHrEmployees,hrAttendance,setHrAttendance:guardedSetHrAttendance,hrLeaveRequests,setHrLeaveRequests:guardedSetHrLeaveRequests,accountingAccounts,setAccountingAccounts:guardedSetAccountingAccounts,accountingEntries,setAccountingEntries:guardedSetAccountingEntries,orders,saveOrder,updateOrder,deleteOrder,customers,setCustomers:guardedSetCustomers,quotes,setQuotes:guardedSetQuotes,saveQuotes,suppliers,setSuppliers:guardedSetSuppliers,products,setProducts:guardedSetProducts,search,setSearch,monthlyGoal,setMonthlyGoal:guardedSetMonthlyGoal,fixedExpenses,setFixedExpenses:guardedSetFixedExpenses,settings,setSettings:guardedSetSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales:guardedSetSales,purchases,purchaseCostHistory,expenses,setExpenses:guardedSetExpenses,receivables,setReceivables:guardedSetReceivables,payables,setPayables:guardedSetPayables,inventoryMovements,cashClosures,setCashClosures:guardedSetCashClosures,cashMovements,setCashMovements:guardedSetCashMovements,paymentTransactions,setPaymentTransactions:guardedSetPaymentTransactions,missingProductRequests,setMissingProductRequests:guardedSetMissingProductRequests,supplierReturns,setSupplierReturns:guardedSetSupplierReturns,saleAdjustments,setSaleAdjustments:guardedSetSaleAdjustments,recordSupplierDispatch,resolveSupplierReturn,recordSaleAdjustment,recordMissingProduct,filtered,recordSale,updateStandardInvoice,saveProduct,deleteProduct,receivePurchase,syncStatus,syncError,remoteReady};
 }
