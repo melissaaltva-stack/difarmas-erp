@@ -16,7 +16,7 @@ export function AiAssistant({userId,products,sales,purchases,expenses,receivable
   const [question,setQuestion]=useState('');
   const [answer,setAnswer]=useState('');
   const [active,setActive]=useState('resumen');
-  const [view,setView]=useState<'assistant'|'alerts'>('assistant');
+  const [view,setView]=useState<'assistant'|'analysis'|'alerts'>('assistant');
   const [storedAlerts,setStoredAlerts]=useState<StoredAlert[]>([]);
   const [alertLoadError,setAlertLoadError]=useState('');
   const [historyOpen,setHistoryOpen]=useState(false);
@@ -47,6 +47,53 @@ export function AiAssistant({userId,products,sales,purchases,expenses,receivable
   const monthSales=sales.filter(x=>x.date.startsWith(month)).reduce((n,x)=>n+x.total,0);
   const monthProfit=sales.filter(x=>x.date.startsWith(month)).reduce((n,x)=>n+x.profit,0);
   const monthExpenses=expenses.filter(x=>x.date.startsWith(month)).reduce((n,x)=>n+x.amount,0);
+  const currentTime=new Date(dayKey()+'T23:59:59').getTime();
+  const dayMs=86400000;
+  const saleTime=(value:string)=>{const parsed=new Date(value.length===10?value+'T12:00:00':value).getTime();return Number.isFinite(parsed)?parsed:0;};
+  const inPeriod=(value:string,start:number,end:number)=>{const t=saleTime(value);return t>=start&&t<end;};
+  const currentPeriodSales=sales.filter(s=>inPeriod(s.date,currentTime-30*dayMs,currentTime+1));
+  const previousPeriodSales=sales.filter(s=>inPeriod(s.date,currentTime-60*dayMs,currentTime-30*dayMs));
+  const periodRevenue=currentPeriodSales.reduce((n,s)=>n+s.total,0);
+  const previousRevenue=previousPeriodSales.reduce((n,s)=>n+s.total,0);
+  const periodProfit=currentPeriodSales.reduce((n,s)=>n+s.profit,0);
+  const periodExpenses=expenses.filter(e=>inPeriod(e.date,currentTime-30*dayMs,currentTime+1)).reduce((n,e)=>n+e.amount,0);
+  const revenueChange=previousRevenue>0?((periodRevenue-previousRevenue)/previousRevenue)*100:null;
+  const productPerformance=new Map<number,{name:string;qty:number;revenue:number;profit:number;lastSold:number}>();
+  sales.filter(s=>inPeriod(s.date,currentTime-60*dayMs,currentTime+1)).forEach(s=>(s.items??[]).forEach(line=>{
+    const existing=productPerformance.get(line.productId)??{name:line.productName,qty:0,revenue:0,profit:0,lastSold:0};
+    existing.qty+=Number(line.qty)||0;existing.revenue+=Number(line.revenue)||0;existing.profit+=Number(line.profit)||0;
+    existing.lastSold=Math.max(existing.lastSold,saleTime(s.date));productPerformance.set(line.productId,existing);
+  }));
+  const topProducts=[...productPerformance.values()].sort((a,b)=>b.revenue-a.revenue).slice(0,5);
+  const stockAnalysis=products.map(p=>{
+    const sold=productPerformance.get(p.id)?.qty??0;
+    const daily=sold/60;
+    return {...p,sold60:sold,coverageDays:daily>0?p.stock/daily:null};
+  });
+  const noMovementProducts=stockAnalysis.filter(p=>p.stock>0&&p.sold60===0);
+  const criticalCoverage=stockAnalysis.filter(p=>p.coverageDays!==null&&p.coverageDays<=7&&p.stock>0).sort((a,b)=>(a.coverageDays??0)-(b.coverageDays??0));
+  const arAging=receivables.reduce((acc,item)=>{
+    const balance=Math.max(0,item.total+(item.debitNotes??0)-item.paid-(item.creditNotes??0));
+    const late=item.dueDate?Math.max(0,-daysTo(item.dueDate)):0;
+    if(balance>0&&late>0){const bucket=late<=30?'1–30 días':late<=60?'31–60 días':'Más de 60 días';acc[bucket]+=balance;}
+    return acc;
+  },{'1–30 días':0,'31–60 días':0,'Más de 60 días':0});
+  const apAging=payables.reduce((acc,item)=>{
+    const balance=Math.max(0,item.total-item.paid);
+    const late=item.dueDate?Math.max(0,-daysTo(item.dueDate)):0;
+    if(balance>0&&late>0){const bucket=late<=30?'1–30 días':late<=60?'31–60 días':'Más de 60 días';acc[bucket]+=balance;}
+    return acc;
+  },{'1–30 días':0,'31–60 días':0,'Más de 60 días':0});
+  const periodMargin=periodRevenue>0?(periodProfit/periodRevenue)*100:0;
+  const periodNet=periodProfit-periodExpenses;
+  const analyticalFindings=[
+    ...(revenueChange!==null?[{level:revenueChange< -10?'warning':'info',title:'Tendencia de ventas',detail:'Las ventas de los últimos 30 días '+(revenueChange>=0?'subieron ':'bajaron ')+Math.abs(revenueChange).toFixed(1)+'% frente a los 30 días anteriores.'}]:[{level:'info',title:'Tendencia de ventas',detail:'Aún no hay un período anterior con ventas para comparar.'}]),
+    {level:periodMargin<15&&periodRevenue>0?'warning':'info',title:'Margen bruto registrado',detail:'El margen de los últimos 30 días es '+periodMargin.toFixed(1)+'%. Verifica costos, descuentos y precios si está por debajo de tu objetivo.'},
+    ...(criticalCoverage.length?[{level:'warning',title:'Riesgo de agotamiento',detail:criticalCoverage.length+' producto(s) tienen cobertura estimada de 7 días o menos, según las ventas de los últimos 60 días.'}]:[]),
+    ...(noMovementProducts.length?[{level:'warning',title:'Inventario sin movimiento',detail:noMovementProducts.length+' producto(s) con existencia no registran ventas en los últimos 60 días. Revisa vencimientos y compras antes de reponer.'}]:[]),
+    ...(arAging['Más de 60 días']>0?[{level:'warning',title:'Cartera antigua',detail:'Hay '+cash(arAging['Más de 60 días'])+' en cuentas por cobrar con más de 60 días de atraso.'}]:[]),
+    ...(periodNet<0&&periodRevenue>0?[{level:'warning',title:'Presión de gastos',detail:'Los gastos registrados superan la utilidad bruta de los últimos 30 días por '+cash(Math.abs(periodNet))+'.'}]:[])
+  ];
   const insights=useMemo(()=>[
     {title:'Inventario por reponer',value:String(stockAlerts.length),detail:'Productos en o por debajo del stock mínimo',icon:Package,kind:stockAlerts.length?'warning':'ok'},
     {title:'Próximos vencimientos',value:String(expiryAlerts.length),detail:'Productos vencidos o que vencen en 90 días',icon:CalendarClock,kind:expiryAlerts.length?'warning':'ok'},
@@ -92,12 +139,27 @@ export function AiAssistant({userId,products,sales,purchases,expenses,receivable
 
   return <div className="content ai-page">
     <section className="ai-hero"><div><span className="pill"><Sparkles size={12} style={{display:'inline',verticalAlign:'middle'}}/> AGENTE FARMI</span><h2>Tu copiloto de DIFARMÁS</h2><p>Supervisa prioridades y consulta ventas, inventario, vencimientos y cuentas por cobrar o pagar.</p></div><BrainCircuit size={52}/></section>
-    <div className="ai-view-tabs"><button type="button" className={view==='assistant'?'active':''} onClick={()=>setView('assistant')}><BrainCircuit size={16}/> Asistente</button><button type="button" className={view==='alerts'?'active':''} onClick={()=>setView('alerts')}><Bell size={16}/> Centro de alertas <span>{activeAlerts.length}</span></button></div>
+    <div className="ai-view-tabs"><button type="button" className={view==='assistant'?'active':''} onClick={()=>setView('assistant')}><BrainCircuit size={16}/> Asistente</button><button type="button" className={view==='analysis'?'active':''} onClick={()=>setView('analysis')}><Activity size={16}/> Análisis</button><button type="button" className={view==='alerts'?'active':''} onClick={()=>setView('alerts')}><Bell size={16}/> Centro de alertas <span>{activeAlerts.length}</span></button></div>
     {view==='assistant'?<>
       <div className="grid metrics ai-metrics">{insights.map(({title,value,detail,icon:Icon,kind})=><article className="card metric" key={title}><div className="metric-top"><span>{title}</span><Icon size={18}/></div><strong>{value}</strong><small>{detail}</small>{kind==='warning'&&<span className="ai-warning"><AlertTriangle size={13}/> Requiere revisión</span>}</article>)}</div>
       <section className="card ai-query"><h3><Sparkles size={18}/> ¿Qué necesitas revisar?</h3><form onSubmit={e=>{e.preventDefault();if(question.trim())generate(question.trim());}}><input value={question} onChange={e=>setQuestion(e.target.value)} placeholder="Ej.: ¿Qué productos debo reponer?" aria-label="Consulta al asistente"/><button className="primary" type="submit"><Search size={16}/> Analizar</button></form><div className="ai-prompts">{['Resumen del negocio','Productos por reponer','Próximos vencimientos','Ventas y rentabilidad','Cuentas por cobrar vencidas','Pagos a proveedores','Compras y gastos'].map(p=><button type="button" className="secondary" key={p} onClick={()=>generate(p)}>{p}</button>)}</div></section>
       {answer&&<section className="card ai-answer"><div className="ai-answer-head"><BrainCircuit size={20}/><strong>Análisis del asistente</strong><button className="secondary" onClick={()=>{void navigator.clipboard?.writeText(answer);}}>Copiar</button></div><pre>{answer}</pre></section>}
       <p className="ai-disclaimer">El análisis utiliza reglas automáticas y datos guardados en FARMI; no envía información a servicios externos ni sustituye la revisión humana. Confirma los datos antes de comprar, cobrar, pagar o modificar inventario.</p>
+    </>:view==='analysis'?<>
+      <section className="ai-analysis-intro"><div><h3><Activity size={18}/> Análisis de los últimos 30 y 60 días</h3><p>Comparaciones y señales calculadas con ventas, líneas de productos, inventario y cuentas registradas. No se modifican datos.</p></div></section>
+      <div className="grid metrics ai-analysis-metrics">
+        <article className="card metric"><div className="metric-top"><span>Ventas últimos 30 días</span><TrendingUp size={18}/></div><strong>{cash(periodRevenue)}</strong><small>{revenueChange===null?'Sin período comparable':(revenueChange>=0?'↑ ':'↓ ')+Math.abs(revenueChange).toFixed(1)+'% frente a los 30 días previos'}</small></article>
+        <article className="card metric"><div className="metric-top"><span>Margen bruto</span><Activity size={18}/></div><strong>{periodMargin.toFixed(1)}%</strong><small>Utilidad registrada / ventas</small></article>
+        <article className="card metric"><div className="metric-top"><span>Utilidad menos gastos</span><Wallet size={18}/></div><strong>{cash(periodNet)}</strong><small>Referencia operativa de 30 días</small></article>
+        <article className="card metric"><div className="metric-top"><span>Productos sin movimiento</span><Package size={18}/></div><strong>{noMovementProducts.length}</strong><small>Con existencia y sin ventas en 60 días</small></article>
+      </div>
+      <div className="ai-analysis-grid">
+        <section className="card ai-analysis-panel"><h3>Señales detectadas</h3>{analyticalFindings.length===0?<p>No se detectaron señales relevantes con los datos disponibles.</p>:analyticalFindings.map((item,i)=><div className={'ai-finding '+item.level} key={i}><span/><div><strong>{item.title}</strong><p>{item.detail}</p></div></div>)}</section>
+        <section className="card ai-analysis-panel"><h3>Productos más vendidos</h3>{topProducts.length===0?<p>No hay líneas de venta registradas en los últimos 60 días para comparar productos.</p>:topProducts.map((item,i)=><div className="ai-product-rank" key={item.name+i}><span>{i+1}</span><div><strong>{item.name}</strong><small>{item.qty.toLocaleString('es-HN')} unidades · {cash(item.revenue)}</small></div><b>{cash(item.profit)} utilidad</b></div>)}</section>
+        <section className="card ai-analysis-panel"><h3>Cobertura estimada de inventario</h3>{criticalCoverage.length===0?<p>No hay productos con cobertura estimada de 7 días o menos, según ventas registradas.</p>:criticalCoverage.slice(0,6).map(item=><div className="ai-stock-risk" key={item.id}><div><strong>{item.name}</strong><small>Existencia: {item.stock} · Vendidas en 60 días: {item.sold60}</small></div><b>{Math.max(0,Math.floor(item.coverageDays??0))} días</b></div>)}</section>
+        <section className="card ai-analysis-panel"><h3>Antigüedad de saldos vencidos</h3><div className="ai-aging-block"><strong>Cuentas por cobrar</strong>{Object.entries(arAging).map(([label,value])=><div key={'ar'+label}><span>{label}</span><b>{cash(value)}</b></div>)}</div><div className="ai-aging-block"><strong>Cuentas por pagar</strong>{Object.entries(apAging).map(([label,value])=><div key={'ap'+label}><span>{label}</span><b>{cash(value)}</b></div>)}</div></section>
+      </div>
+      <p className="ai-disclaimer">La cobertura es una estimación basada en el promedio de unidades vendidas en 60 días; no contempla estacionalidad, pedidos pendientes ni tiempos de entrega. Los análisis dependen de que las ventas y costos estén completos. Verifica los registros antes de tomar decisiones.</p>
     </>:<>
       <section className="card agent-alert-summary"><div><div className="agent-alert-icon"><Bell size={20}/></div><div><h3>Supervisión operativa</h3><p>Alertas calculadas con los datos sincronizados del ERP. No ejecutan cambios en tus registros.</p></div></div><strong>{activeAlerts.length} pendientes</strong></section>
       {alertLoadError&&<p className="sync-error" role="alert">{alertLoadError}</p>}
