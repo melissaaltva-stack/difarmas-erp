@@ -1,4 +1,4 @@
-import { lazy, Suspense, startTransition, useState } from 'react';
+import { lazy, Suspense, startTransition, useEffect, useState } from 'react';
 import { useErpState } from './hooks/useErpState';
 import type { Module, UserAccess } from './domain/types';
 
@@ -75,6 +75,7 @@ function App({ userId, userEmail, userAppMetadata, signOut }: { userId: string; 
   const [financeExpanded,setFinanceExpanded]=useState(false);
   const [financeSection,setFinanceSection]=useState<'resumen'|'gastos'|'ventas'|'compras_recibidas'|'cobrar'|'pagar'|'historial_pagos'|'movimientos'|'cierre'|'historial_cierres'|'gestion'>('resumen');
   const activeAllowed = active==='finanzas' ? (financeSection==='cobrar' ? canSee('cuentas_cobrar') : financeSection==='pagar' ? canSee('cuentas_pagar') : canSee('finanzas')) : canSee(active);
+  useEffect(()=>{if(metadataRole==='RRHH'&&active!=='rrhh')startTransition(()=>setActive('rrhh'));},[metadataRole,active,setActive]);
   const financeItems=[['resumen','Resumen financiero'],['gastos','Gastos'],['ventas','Ventas registradas'],['compras_recibidas','Compras recibidas'],['cobrar','Cuentas por cobrar'],['pagar','Cuentas por pagar'],['historial_pagos','Historial de cobros y pagos'],['movimientos','Movimientos de caja'],['cierre','Cierre de caja diario'],['historial_cierres','Historial de cierres'],['gestion','Gestión y análisis']] as const;
   const goToFinanceSection=(target:typeof financeSection)=>{setFinanceSection(target);startTransition(()=>setActive('finanzas'));setFinanceExpanded(true);setMobileMenuOpen(false);};
   const [purchaseSectionRequest,setPurchaseSectionRequest]=useState(0);
