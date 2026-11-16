@@ -5101,3 +5101,31 @@ button.icon-btn:focus-visible svg,
 .ai-aging-block b{color:var(--farmi-ui-text,#36584c)}
 @media(max-width:760px){.ai-analysis-grid{grid-template-columns:1fr}.ai-analysis-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:420px){.ai-analysis-metrics{grid-template-columns:1fr}.ai-product-rank>b{white-space:normal;text-align:right}}
+
+
+/* Floating FARMI assistant, available across ERP modules */
+.farmi-floating-assistant{position:fixed;right:24px;bottom:24px;z-index:1200;display:flex;flex-direction:column;align-items:flex-end;gap:12px;pointer-events:none}
+.farmi-floating-assistant>*{pointer-events:auto}
+.farmi-assistant-fab{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:52px;padding:0 19px;border:0;border-radius:999px;background:var(--farmi-ui-primary,#16856b);color:#fff;box-shadow:0 8px 26px rgba(20,50,40,.25);font-size:12px;font-weight:750;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease}
+.farmi-assistant-fab:hover{transform:translateY(-2px);box-shadow:0 11px 30px rgba(20,50,40,.3)}
+.farmi-assistant-fab svg{stroke:currentColor}
+.farmi-assistant-fab.is-open{background:var(--farmi-ui-sidebar,#123b35)}
+.farmi-assistant-popover{display:flex;flex-direction:column;width:min(760px,calc(100vw - 40px));height:min(720px,calc(100dvh - 112px));overflow:hidden;border:1px solid var(--farmi-ui-border,#d5e5dc);border-radius:17px;background:var(--farmi-ui-surface,#fff);box-shadow:0 18px 60px rgba(18,42,34,.24)}
+.farmi-assistant-popover>header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid var(--farmi-ui-border,#e1ebe6);background:var(--farmi-ui-surface,#fff)}
+.farmi-assistant-popover>header>div{display:flex;align-items:center;gap:10px}
+.farmi-assistant-popover>header>div>span{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--farmi-ui-primary-soft,#e7f4ef);color:var(--farmi-ui-primary,#16856b)}
+.farmi-assistant-popover>header strong,.farmi-assistant-popover>header small{display:block}
+.farmi-assistant-popover>header strong{font-size:13px;color:var(--farmi-ui-primary-dark,#116a56)}
+.farmi-assistant-popover>header small{margin-top:2px;font-size:10px;color:var(--farmi-ui-muted,#7a8e86)}
+.farmi-assistant-popover>header button{display:grid;place-items:center;width:34px;height:34px;border:0;border-radius:9px;background:transparent;color:var(--farmi-ui-muted,#657c72);cursor:pointer}
+.farmi-assistant-popover-body{min-height:0;flex:1;overflow:auto}
+.farmi-assistant-popover-body .ai-page-floating{width:100%;max-width:none;margin:0;padding:16px}
+.farmi-assistant-popover-body .ai-page-floating .ai-hero{margin:0 0 12px;padding:14px 16px}
+.farmi-assistant-popover-body .ai-page-floating .ai-hero h2{font-size:18px}
+.farmi-assistant-popover-body .ai-page-floating .ai-hero p{font-size:11px}
+.farmi-assistant-popover-body .ai-page-floating .ai-hero>svg{width:34px;height:34px}
+.farmi-assistant-popover-body .ai-page-floating .ai-view-tabs{margin:0 0 12px}
+.farmi-assistant-popover-body .ai-page-floating .agent-alert-summary{margin-top:0}
+.farmi-assistant-popover-body .ai-page-floating .ai-analysis-grid{grid-template-columns:1fr}
+@media(max-width:640px){.farmi-floating-assistant{right:14px;bottom:14px}.farmi-assistant-fab{min-height:48px;padding:0 15px}.farmi-assistant-popover{width:calc(100vw - 20px);height:min(78dvh,720px);border-radius:14px}.farmi-assistant-popover-body .ai-page-floating{padding:12px}}
+@media(prefers-reduced-motion:reduce){.farmi-assistant-fab{transition:none}}
