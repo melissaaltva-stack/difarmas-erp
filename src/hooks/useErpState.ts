@@ -723,7 +723,7 @@ export function useErpState(userId: string) {
 
   const receivePurchase=(items:PurchaseItem[],paymentMethod:string,dueDate:string,invoiceNumber='',invoiceDate='',notes='',enteredTotal?:number,paymentTerms='Contado - Efectivo',supplierOverride?:string):boolean=>{
     if (!canWriteSnapshot(remoteReady, syncStatus) || purchaseInProgress.current) return false;
-    const receivingSupplier=(supplierOverride??receivingSupplier).trim();
+    const receivingSupplier=(supplierOverride??purchaseSupplier).trim();
     if(!receivingSupplier)return false;
     if (!items.length || items.some(item => !Number.isFinite(item.qty) || item.qty <= 0 || !Number.isFinite(item.unitCost) || item.unitCost < 0)) return false;
     const supplierKey=receivingSupplier.toLocaleLowerCase();
