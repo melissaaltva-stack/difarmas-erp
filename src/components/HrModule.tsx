@@ -52,16 +52,17 @@ export function HrModule({canWrite}:Pick<Props,'canWrite'>){
     setLeaveRequests((leaveResult.data??[]).map(row=>({id:row.id,employeeId:row.employee_id,type:row.request_type,startDate:row.start_date,endDate:row.end_date,days:row.days,reason:row.reason,status:row.status,requestedAt:row.requested_at,reviewedAt:row.reviewed_at??undefined} as HrLeaveRequest)));
   },[]);
   useEffect(()=>{
-    if(!supabase)return;
+    const client=supabase;
+    if(!client)return;
     void loadSharedRecords();
-    const channel=supabase.channel('farmi-hr-shared-records')
+    const channel=client.channel('farmi-hr-shared-records')
       .on('postgres_changes',{event:'*',schema:'public',table:'hr_employees'},()=>void loadSharedRecords())
       .on('postgres_changes',{event:'*',schema:'public',table:'hr_attendance'},()=>void loadSharedRecords())
       .on('postgres_changes',{event:'*',schema:'public',table:'hr_leave_requests'},()=>void loadSharedRecords())
       .subscribe();
     const refresh=()=>{if(document.visibilityState==='visible')void loadSharedRecords();};
     window.addEventListener('focus',refresh);document.addEventListener('visibilitychange',refresh);
-    return()=>{window.removeEventListener('focus',refresh);document.removeEventListener('visibilitychange',refresh);void supabase.removeChannel(channel);};
+    return()=>{window.removeEventListener('focus',refresh);document.removeEventListener('visibilitychange',refresh);void client.removeChannel(channel);};
   },[loadSharedRecords]);
   const persistEmployees=useCallback((next:HrEmployee[])=>{
     if(!supabase||!canWrite)return;
