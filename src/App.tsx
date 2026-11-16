@@ -63,7 +63,7 @@ function App({ userId, userEmail, userAppMetadata, signOut }: { userId: string; 
   const userAccess=tokenAccess;
   const permissions=userAccess?.permissions??['dashboard','configuracion'];
   // Existing user records may predate the reports module. Preserve role-based access for those accounts.
-  const canSee=(module:string)=>module==='pedidos'?permissions.includes('ventas'):module==='contabilidad'&&['Administrador','Supervisor','Finanzas','Solo lectura'].includes(metadataRole??'')?true:permissions.includes(module as Module);
+  const canSee=(module:string)=>metadataRole==='Administrador'?true:module==='pedidos'?permissions.includes('ventas'):module==='contabilidad'&&['Supervisor','Finanzas','Solo lectura'].includes(metadataRole??'')?true:permissions.includes(module as Module);
   const visibleNav=nav.filter(([id])=>id!=='proveedores'&&id!=='cuentas_cobrar'&&id!=='cuentas_pagar'&&(id==='compras'?(canSee('compras')||canSee('proveedores')):canSee(id)));
   const [mobileMenuOpen,setMobileMenuOpen]=useState(false);
   const [floatingAssistantOpen,setFloatingAssistantOpen]=useState(false);
