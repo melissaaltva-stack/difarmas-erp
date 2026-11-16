@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import JsBarcode from 'jsbarcode';
 import { Search, Plus, Pencil, History, X, AlertTriangle, Printer, Barcode, Image as ImageIcon, CalendarClock, ChevronDown, Trash2, Package, Pill, DollarSign, Info } from 'lucide-react';
-import type { InventoryMovement, Product } from '../domain/types';
+import type { InventoryLot, InventoryMovement, LotKardexMovement, Product } from '../domain/types';
+import { InventoryLotsKardex } from './InventoryLotsKardex';
 
 const productDisplayName = (product: Product) => product.laboratory?.trim() ? `${product.name} — ${product.laboratory.trim()}` : product.name;
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
@@ -20,7 +21,7 @@ const makeBarcode = (products: Product[]) => {
   return code;
 };
 
-export function Inventory({products, search, setSearch, movements, onNew, onEdit}:{products:Product[];search:string;setSearch:(v:string)=>void;movements:InventoryMovement[];onNew:()=>void;onEdit:(p:Product)=>void}) {
+export function Inventory({products, search, setSearch, movements, lots, lotKardex, fefoProductIds, onAddOpeningLot, onActivateFefo, onNew, onEdit}:{products:Product[];search:string;setSearch:(v:string)=>void;movements:InventoryMovement[];lots:InventoryLot[];lotKardex:LotKardexMovement[];fefoProductIds:number[];onAddOpeningLot:(productId:number,lotCode:string,expiry:string,quantity:number,unitCost:number,supplier:string)=>boolean;onActivateFefo:(productId:number)=>boolean;onNew:()=>void;onEdit:(p:Product)=>void}) {
   const lowStock = products.filter(p => p.itemType !== 'Servicio' && p.stock <= p.minStock);
   const expiring = products.filter(p => daysUntil(p.expiry) >= 0 && daysUntil(p.expiry) <= 90);
   const expired = products.filter(p => daysUntil(p.expiry) < 0);
@@ -125,6 +126,7 @@ function InventoryProductDetails({product,onClose,onEdit,onPrintLabel}:{product:
       </div>
       <footer className="inventory-detail-footer"><button className="secondary" type="button" title="Preparar etiqueta de este producto" onClick={()=>onPrintLabel(product)}><Printer size={14}/> Imprimir etiqueta</button><button className="secondary inventory-detail-pharma-btn" type="button" onClick={()=>{const query=[product.name,product.laboratory,product.presentation,(product.activeIngredientDetails??[]).map(i=>i.name+" "+i.strength+" "+i.unit).join(" ")].filter(Boolean).join(" ").trim();window.open("https://www.google.com/search?q="+encodeURIComponent(query+" medicamento ficha técnica principio activo indicaciones advertencias"),"_blank","noopener,noreferrer");}}><Pill size={14}/> Asistente farmacológico</button><button className="secondary" type="button" onClick={onClose}><X size={16}/> Cerrar</button></footer>
     </section>
+  <InventoryLotsKardex products={products} lots={lots} kardex={lotKardex} fefoProductIds={fefoProductIds} onAddOpeningLot={onAddOpeningLot} onActivate={onActivateFefo}/>
   </div>;
 }
 
