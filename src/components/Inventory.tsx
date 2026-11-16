@@ -86,6 +86,7 @@ export function Inventory({products, allProducts, search, setSearch, movements, 
     </section>
 
 
+    <InventoryLotsKardex products={allProducts} lots={lots} kardex={lotKardex} fefoProductIds={fefoProductIds} onAddOpeningLot={onAddOpeningLot} onActivate={onActivateFefo} onAdjustLot={onAdjustLot}/>
     {detailProduct && !labelsOpen && <InventoryProductDetails product={detailProduct} onClose={()=>setDetailProduct(null)} onPrintLabel={(p)=>{setSelected([p.id]);setLabelsOpen(true);}} onEdit={(p)=>{setDetailProduct(null);onEdit(p);}}/>}
     {labelsOpen && <div className="modal-backdrop label-backdrop"><div className="modal labels-modal" style={{width:"min(1180px, calc(100vw - 32px))",maxWidth:"1180px",maxHeight:"calc(100vh - 32px)",overflowY:"auto",boxSizing:"border-box"}}><div className="modal-head no-print"><div><h2>Selección múltiple de productos</h2><p>Marca los productos que deseas incluir en las etiquetas. Puedes buscar y cambiar la selección aquí.</p></div><button className="icon-btn" aria-label="Cerrar ventana" onClick={()=>setLabelsOpen(false)}><X/></button></div>
       <div className="label-picker no-print" style={{display:"grid",gridTemplateColumns:"minmax(0, 1fr) minmax(260px, 0.9fr)",gap:16,alignItems:"start",minWidth:0}}>
@@ -126,7 +127,6 @@ function InventoryProductDetails({product,onClose,onEdit,onPrintLabel}:{product:
       </div>
       <footer className="inventory-detail-footer"><button className="secondary" type="button" title="Preparar etiqueta de este producto" onClick={()=>onPrintLabel(product)}><Printer size={14}/> Imprimir etiqueta</button><button className="secondary inventory-detail-pharma-btn" type="button" onClick={()=>{const query=[product.name,product.laboratory,product.presentation,(product.activeIngredientDetails??[]).map(i=>i.name+" "+i.strength+" "+i.unit).join(" ")].filter(Boolean).join(" ").trim();window.open("https://www.google.com/search?q="+encodeURIComponent(query+" medicamento ficha técnica principio activo indicaciones advertencias"),"_blank","noopener,noreferrer");}}><Pill size={14}/> Asistente farmacológico</button><button className="secondary" type="button" onClick={onClose}><X size={16}/> Cerrar</button></footer>
     </section>
-  <InventoryLotsKardex products={allProducts} lots={lots} kardex={lotKardex} fefoProductIds={fefoProductIds} onAddOpeningLot={onAddOpeningLot} onActivate={onActivateFefo} onAdjustLot={onAdjustLot}/>
   </div>;
 }
 
