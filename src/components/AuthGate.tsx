@@ -186,7 +186,7 @@ export function AuthGate({ children }: Props) {
 
   if (user) return <>{children(user, signOut)}</>;
 
-  return <div className={`auth-page auth-login-page${loginBackground?' has-custom-background':''}`}>
+  return <div className={`auth-page auth-login-page${loginBackground?' has-custom-background':''}`} style={{'--login-overlay-opacity':backgroundOpacity/100} as CSSProperties}>
     {loginBackground&&<div className="auth-login-background-image" style={{backgroundImage:`url("${loginBackground}")`}} aria-hidden="true"/>}
     <div className="auth-settings">
       <button type="button" className="auth-settings-trigger" aria-label="Ajustes de apariencia" aria-expanded={settingsOpen} onClick={()=>setSettingsOpen(value=>!value)}><Settings size={19}/></button>
