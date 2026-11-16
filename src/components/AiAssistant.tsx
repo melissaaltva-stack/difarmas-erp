@@ -19,7 +19,6 @@ export function AiAssistant({userId,products,sales,purchases,expenses,receivable
   const [view,setView]=useState<'assistant'|'alerts'>('assistant');
   const [handledAlerts,setHandledAlerts]=useState<HandledAlert[]>(()=>loadHandled(userId));
   const [historyOpen,setHistoryOpen]=useState(false);
-  useEffect(()=>{setHandledAlerts(loadHandled(userId));},[userId]);
   useEffect(()=>{try{localStorage.setItem(storageKey(userId),JSON.stringify(handledAlerts.slice(0,250)));}catch{/* Local history is optional; alerts remain available in this session. */}},[userId,handledAlerts]);
 
   const stockAlerts=useMemo(()=>products.filter(p=>p.stock<=p.minStock),[products]);
@@ -47,7 +46,8 @@ export function AiAssistant({userId,products,sales,purchases,expenses,receivable
     overdueAR.forEach(x=>list.push({id:'ar-'+x.id+'-'+(x.total+(x.debitNotes??0)-x.paid-(x.creditNotes??0))+'-'+x.dueDate,title:'Cuenta por cobrar vencida: '+x.customer,detail:'Saldo pendiente: '+cash(Math.max(0,x.total+(x.debitNotes??0)-x.paid-(x.creditNotes??0)))+' · Vencimiento: '+x.dueDate+'. Confirma el estado de cuenta antes de contactar al cliente.',category:'Cuentas por cobrar',severity:'warning',createdAt:today}));
     overdueAP.forEach(x=>list.push({id:'ap-'+x.id+'-'+(x.total-x.paid)+'-'+x.dueDate,title:'Cuenta por pagar vencida: '+x.supplier,detail:'Saldo pendiente: '+cash(Math.max(0,x.total-x.paid))+' · Vencimiento: '+x.dueDate+'. Verifica caja y condiciones con el proveedor antes de programar el pago.',category:'Cuentas por pagar',severity:'warning',createdAt:today}));
     if(monthSales>0&&monthExpenses>monthProfit)list.push({id:'expense-margin-'+month+'-'+Math.round(monthProfit)+'-'+Math.round(monthExpenses),title:'Gastos superiores a la utilidad bruta del mes',detail:'Utilidad bruta registrada: '+cash(monthProfit)+' · Gastos registrados: '+cash(monthExpenses)+'. Revisa que los registros estén completos y clasificados correctamente.',category:'Finanzas',severity:'warning',createdAt:today});
-    return list.sort((a,b)=>({critical:0,warning:1,info:2}[a.severity]-({critical:0,warning:1,info:2}[b.severity])));
+    const priority={critical:0,warning:1,info:2};
+    return list.sort((a,b)=>priority[a.severity]-priority[b.severity]);
   },[products,overdueAR,overdueAP,monthSales,monthProfit,monthExpenses,month]);
   const handledIds=new Set(handledAlerts.map(item=>item.id));
   const activeAlerts=alerts.filter(item=>!handledIds.has(item.id));
