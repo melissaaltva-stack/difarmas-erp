@@ -120,12 +120,14 @@ export function POS({products,customers,cart,setCart,saleType,setSaleType,paymen
     const expiryAlert=getExpiryAlert(p.expiry);
     if(expiryAlert&&expiryAlert.daysRemaining<0){setError(`⛔ ${p.name}: producto vencido. No se puede agregar a la venta; revisa y retira el lote según el procedimiento de la farmacia.`);return;}
     if(p.stock<=0){setError(`“${p.name}” no tiene existencias disponibles.`);return;}
+    const existing=cart.find(i=>i.id===p.id);
+    if(existing&&(existing.baseUnitsPerSale??1)!==option.unitsPerPresentation){setError(`Ya agregaste ${p.name} como ${existing.saleUnit||existing.baseUnitName||'unidad'}. Quita esa línea antes de elegir otra presentación.`);return;}
     const currentBaseQuantity=cart.filter(i=>i.id===p.id).reduce((sum,i)=>sum+i.qty*(i.baseUnitsPerSale??1),0);
     if(currentBaseQuantity+option.unitsPerPresentation>p.stock){setError(`Stock insuficiente para ${option.name} de “${p.name}”. Disponible: ${Math.max(0,p.stock-currentBaseQuantity)} ${p.baseUnitName||'unidades'}.`);return;}
     const price=priceForSaleUnit(p,option);
     if(!Number.isFinite(price)||price<=0){setError(`Configura un precio válido para la presentación ${option.name} de “${p.name}”.`);return;}
-    const cartLineId=`${p.id}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
-    setCart([...cart,{...p,cost:p.cost*option.unitsPerPresentation,qty:1,price,saleUnit:option.name,baseUnitsPerSale:option.unitsPerPresentation,cartLineId}]);setLineDiscounts(current=>({...current,[cartLineId]:0}));
+    if(existing){setCart(cart.map(item=>item.cartLineId===existing.cartLineId?{...item,qty:item.qty+1}:item));}
+    else {const cartLineId=`${p.id}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;setCart([...cart,{...p,cost:p.cost*option.unitsPerPresentation,qty:1,price,saleUnit:option.name,baseUnitsPerSale:option.unitsPerPresentation,cartLineId}]);setLineDiscounts(current=>({...current,[cartLineId]:0}));}
     setSearch('');
     setError(expiryAlert?.message ?? '');
   };
