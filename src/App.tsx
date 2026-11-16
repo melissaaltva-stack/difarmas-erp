@@ -56,7 +56,7 @@ function App({ userId, userEmail, userAppMetadata, signOut }: { userId: string; 
     ['dashboard', 'Dashboard', LayoutDashboard], ['facturacion_estandar', 'Facturación estándar', Printer], ['ventas', 'Ventas / POS', ShoppingCart], ['pedidos', 'Pedidos', ClipboardList], ['redes_sociales', 'Redes sociales / Ventas', MessagesSquare],
     ['inventario', 'Inventario', Boxes], ['clientes', 'Clientes', UsersRound], ['compras', 'Compras', ShoppingCart], ['finanzas', 'Finanzas', Wallet], ['contabilidad', 'Contabilidad', Calculator], ['cuentas_cobrar', 'Cuentas por cobrar', HandCoins], ['cuentas_pagar', 'Cuentas por pagar', CreditCard], ['reportes', 'Reportes e impresión', Printer], ['asistente_ia', 'Asistente IA', BrainCircuit], ['proveedores', 'Proveedores', Truck], ['rrhh', 'Recursos Humanos', UsersRound], ['configuracion', 'Configuración', SettingsIcon],
   ] as const;
-  const roleOptions:UserAccess['role'][]=['Administrador','Supervisor','Ventas','Compras','Finanzas','Solo lectura'];
+  const roleOptions:UserAccess['role'][]=['Administrador','Supervisor','Ventas','Compras','Finanzas','RRHH','Solo lectura'];
   const metadataRole=typeof userAppMetadata.farmi_role==='string'&&roleOptions.includes(userAppMetadata.farmi_role as UserAccess['role'])?userAppMetadata.farmi_role as UserAccess['role']:undefined;
   const metadataPermissions=Array.isArray(userAppMetadata.farmi_permissions)?userAppMetadata.farmi_permissions.filter((value):value is Module=>nav.some(item=>item[0]===value)):undefined;
   const tokenAccess:UserAccess|undefined=metadataRole?{id:userId,email:userEmail,name:userEmail.split('@')[0],role:metadataRole,permissions:metadataPermissions??[],active:userAppMetadata.farmi_active!==false}:undefined;
@@ -116,7 +116,7 @@ function App({ userId, userEmail, userAppMetadata, signOut }: { userId: string; 
         }
       }} onDelete={id=>{deleteProduct(id);setEditing(null);setShowForm(false);setNewProductOrigin('inventory')}}/>}
     </main>
-    {active!=='asistente_ia'&&active!=='compras'&&active!=='proveedores'&&<div className="farmi-floating-assistant">
+    {active!=='asistente_ia'&&active!=='compras'&&active!=='proveedores'&&canSee('asistente_ia')&&<div className="farmi-floating-assistant">
       {floatingAssistantOpen&&<section className="farmi-assistant-popover" role="dialog" aria-modal="false" aria-label="Asistente IA FARMI">
         <header><div><span><BrainCircuit size={18}/></span><div><strong>Asistente FARMI</strong><small>Disponible en cualquier módulo</small></div></div><button type="button" aria-label="Cerrar asistente" onClick={()=>setFloatingAssistantOpen(false)}><X size={19}/></button></header>
         <div className="farmi-assistant-popover-body"><Suspense fallback={<div className="content"><div className="card">Cargando asistente…</div></div>}><AiAssistant userId={userId} products={products} sales={sales} purchases={purchases} expenses={expenses} receivables={receivables} payables={payables} movements={inventoryMovements} variant="floating"/></Suspense></div>
