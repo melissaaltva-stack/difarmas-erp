@@ -631,7 +631,7 @@ export function useErpState(userId: string) {
     const movementDate=new Date().toISOString();let returnedLots=inventoryLots;const lotReturnMovements:LotKardexMovement[]=[];
     const previousReturned=new Map<string,number>();
     saleAdjustments.filter(record=>record.saleId===adjustment.saleId).flatMap(record=>record.items).forEach(item=>(item.lotAllocations??[]).forEach(allocation=>previousReturned.set(allocation.lotId,(previousReturned.get(allocation.lotId)??0)+allocation.quantity)));
-    const adjustedItems=adjustment.items.map(line=>{
+    const lotAdjustedItems=adjustment.items.map(line=>{
       if(!line.returnToStock||!fefoProductIds.includes(line.productId))return line;
       if(!originalSale.lotAllocations?.length)return null;
       let remaining=line.quantity;const allocations:LotAllocation[]=[];
@@ -646,8 +646,8 @@ export function useErpState(userId: string) {
       if(remaining>0)return null;
       return {...line,lotAllocations:allocations};
     });
-    if(adjustedItems.some(item=>item===null))return false;
-    const savedAdjustment:SaleAdjustmentRecord={...adjustment,items:adjustedItems as SaleAdjustmentRecord['items']};
+    if(lotAdjustedItems.some(item=>item===null))return false;
+    const savedAdjustment:SaleAdjustmentRecord={...adjustment,items:lotAdjustedItems as SaleAdjustmentRecord['items']};
     const movements:InventoryMovement[]=[...returnedByProduct].map(([productId,lines])=>{
       const product=products.find(item=>item.id===productId)!;
       const quantity=lines.reduce((sum,line)=>sum+line.quantity,0);
