@@ -1,5 +1,5 @@
 import type {
-  CashClosure, CashMovement, Customer, Supplier, ErpSettings, Expense, InventoryMovement, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseRecord,
+  CashClosure, CashMovement, Customer, Supplier, ErpSettings, Expense, InventoryMovement, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseRecord, PurchaseLogisticsRecord,
   Receivable, SaleRecord, OrderRecord, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord, QuoteRecord, AccountingAccount, AccountingEntry, HrEmployee, HrAttendanceRecord, HrLeaveRequest, InventoryLot, LotKardexMovement,
 } from '../domain/types';
 import { requireSupabase } from './supabaseClient';
@@ -12,6 +12,7 @@ export type ErpSnapshot = {
   sales: SaleRecord[];
   orders?: OrderRecord[];
   purchases: PurchaseRecord[];
+  purchaseLogistics?: PurchaseLogisticsRecord[];
   purchaseCostHistory?: PurchaseCostHistoryEntry[];
   settings?: ErpSettings;
   expenses: Expense[];
@@ -48,7 +49,7 @@ function normalizeSnapshot(value: unknown): ErpSnapshot {
       throw new Error(`El campo ${key} de los datos guardados no es válido.`);
     }
   }
-  for (const key of ['cashClosures', 'cashMovements', 'paymentTransactions', 'missingProductRequests', 'supplierReturns', 'saleAdjustments', 'quotes', 'orders', 'hrEmployees', 'hrAttendance', 'hrLeaveRequests', 'inventoryLots', 'lotKardex', 'fefoProductIds'] as const) {
+  for (const key of ['cashClosures', 'cashMovements', 'paymentTransactions', 'missingProductRequests', 'supplierReturns', 'saleAdjustments', 'quotes', 'orders', 'hrEmployees', 'hrAttendance', 'hrLeaveRequests', 'inventoryLots', 'lotKardex', 'fefoProductIds', 'purchaseLogistics'] as const) {
     if (value[key] !== undefined && !Array.isArray(value[key])) {
       throw new Error(`El campo ${key} de los datos guardados no es válido.`);
     }
@@ -66,6 +67,7 @@ function normalizeSnapshot(value: unknown): ErpSnapshot {
     sales: (value.sales ?? []) as SaleRecord[],
     orders: (value.orders ?? []) as OrderRecord[],
     purchases: (value.purchases ?? []) as PurchaseRecord[],
+    purchaseLogistics: (value.purchaseLogistics ?? []) as PurchaseLogisticsRecord[],
     purchaseCostHistory: (value.purchaseCostHistory ?? []) as PurchaseCostHistoryEntry[],
     settings: value.settings as ErpSettings | undefined,
     expenses: (value.expenses ?? []) as Expense[],
