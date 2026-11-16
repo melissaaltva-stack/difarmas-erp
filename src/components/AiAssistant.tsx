@@ -4,7 +4,7 @@ import type { Product, SaleRecord, PurchaseRecord, Expense, Receivable, Payable,
 import { localDateKey } from '../utils/dates';
 import { requireSupabase } from '../services/supabaseClient';
 
-type Props = { userId:string; products: Product[]; sales: SaleRecord[]; purchases: PurchaseRecord[]; expenses: Expense[]; receivables: Receivable[]; payables: Payable[]; movements: InventoryMovement[] };
+type Props = { userId:string; products: Product[]; sales: SaleRecord[]; purchases: PurchaseRecord[]; expenses: Expense[]; receivables: Receivable[]; payables: Payable[]; movements: InventoryMovement[]; variant?:'page'|'floating' };
 type AgentAlert = { id:string; title:string; detail:string; category:'Inventario'|'Vencimientos'|'Cuentas por cobrar'|'Cuentas por pagar'|'Finanzas'; severity:'critical'|'warning'|'info'; createdAt:string };
 type HandledAlert = AgentAlert & { attendedAt:string };
 type StoredAlert = { id:string; title:string; detail:string; category:AgentAlert['category']; severity:AgentAlert['severity']; status:'pending'|'attended'; detected_at:string; attended_at:string|null };
@@ -12,7 +12,7 @@ const cash=(n:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:
 const dayKey=()=>localDateKey();
 const daysTo=(date:string)=>{if(!date)return Infinity;const d=new Date(date.length===10?date+'T12:00:00':date);return Number.isNaN(d.getTime())?Infinity:Math.ceil((d.getTime()-new Date(dayKey()+'T12:00:00').getTime())/86400000);};
 
-export function AiAssistant({userId,products,sales,purchases,expenses,receivables,payables,movements}:Props){
+export function AiAssistant({userId,products,sales,purchases,expenses,receivables,payables,movements,variant='page'}:Props){
   const [question,setQuestion]=useState('');
   const [answer,setAnswer]=useState('');
   const [active,setActive]=useState('resumen');
@@ -137,7 +137,7 @@ export function AiAssistant({userId,products,sales,purchases,expenses,receivable
   };
   const iconFor=(category:AgentAlert['category'])=>category==='Inventario'?Package:category==='Vencimientos'?CalendarClock:category==='Cuentas por cobrar'?TrendingUp:category==='Cuentas por pagar'?Wallet:Activity;
 
-  return <div className="content ai-page">
+  return <div className={variant==='floating'?"content ai-page ai-page-floating":"content ai-page"}>
     <section className="ai-hero"><div><span className="pill"><Sparkles size={12} style={{display:'inline',verticalAlign:'middle'}}/> AGENTE FARMI</span><h2>Tu copiloto de DIFARMÁS</h2><p>Supervisa prioridades y consulta ventas, inventario, vencimientos y cuentas por cobrar o pagar.</p></div><BrainCircuit size={52}/></section>
     <div className="ai-view-tabs"><button type="button" className={view==='assistant'?'active':''} onClick={()=>setView('assistant')}><BrainCircuit size={16}/> Asistente</button><button type="button" className={view==='analysis'?'active':''} onClick={()=>setView('analysis')}><Activity size={16}/> Análisis</button><button type="button" className={view==='alerts'?'active':''} onClick={()=>setView('alerts')}><Bell size={16}/> Centro de alertas <span>{activeAlerts.length}</span></button></div>
     {view==='assistant'?<>
