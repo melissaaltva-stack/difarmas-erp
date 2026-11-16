@@ -5140,3 +5140,88 @@ button.icon-btn:focus-visible svg,
   box-shadow:none!important;
   background:transparent!important;
 }
+
+/* Unified search-field focus: outer control receives focus, inner text input stays borderless. */
+:root[data-farmi-theme] :is(
+  .search,
+  .search-pos,
+  .social-search,
+  .search-box,
+  .invoice-search,
+  .invoice-search-control,
+  .receivables-search-control,
+  .product-image-search
+):focus-within{
+  border-color:var(--farmi-ui-primary,var(--farmi-accent,#16856b))!important;
+  box-shadow:0 0 0 3px var(--farmi-ui-focus,rgba(22,133,107,.14))!important;
+  background:#fff;
+}
+:is(
+  .search,
+  .search-pos,
+  .social-search,
+  .search-box,
+  .invoice-search,
+  .invoice-search-control,
+  .receivables-search-control,
+  .product-image-search
+) input,
+:is(
+  .search,
+  .search-pos,
+  .social-search,
+  .search-box,
+  .invoice-search,
+  .invoice-search-control,
+  .receivables-search-control,
+  .product-image-search
+) input:focus,
+:is(
+  .search,
+  .search-pos,
+  .social-search,
+  .search-box,
+  .invoice-search,
+  .invoice-search-control,
+  .receivables-search-control,
+  .product-image-search
+) input:focus-visible{
+  border:0!important;
+  border-radius:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+}
+.search-box{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  min-height:44px;
+  padding:9px 15px;
+  border:1px solid var(--field-border,#dce8e5);
+  border-radius:999px;
+  background:#fbfdfc;
+  color:#71877f;
+  transition:border-color .18s ease,box-shadow .18s ease,background .18s ease;
+}
+.search-box input{
+  flex:1;
+  width:100%;
+  min-width:0;
+  padding:2px 0!important;
+  font:inherit;
+}
+.product-image-search{
+  align-items:center;
+  min-width:0;
+  padding:4px 6px 4px 12px;
+  border:1px solid var(--field-border,#dce8e5);
+  border-radius:999px;
+  background:#fbfdfc;
+  transition:border-color .18s ease,box-shadow .18s ease,background .18s ease;
+}
+.product-image-search input{
+  flex:1;
+  min-height:36px;
+  padding:6px 4px!important;
+}
