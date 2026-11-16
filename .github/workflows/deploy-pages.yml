@@ -2,7 +2,7 @@ name: Deploy DIFARMÁS ERP to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [deploy/github-pages-alternative]
   workflow_dispatch:
 
 permissions:
@@ -39,6 +39,7 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_ADMIN_API_URL: https://nreumomoqiwgqbtnhbdy.supabase.co/functions/v1/admin-users-pages-proxy
         run: npm run build
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
