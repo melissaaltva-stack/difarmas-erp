@@ -382,10 +382,13 @@ export function useErpState(userId: string) {
     order.items.forEach(item=>before.set(item.id,(before.get(item.id)??0)+item.qty));items.forEach(item=>after.set(item.id,(after.get(item.id)??0)+item.qty));
     for(const productId of new Set([...before.keys(),...after.keys()])){const product=products.find(item=>item.id===productId);if(!product||product.stock+(before.get(productId)??0)<(after.get(productId)??0))return false;}
     const updated=products.map(product=>{const delta=(before.get(product.id)??0)-(after.get(product.id)??0);return delta?{...product,stock:product.stock+delta}:product;});
+    let workingLots=inventoryLots;const nextAllocations:LotAllocation[]=[];const lotMovements:LotKardexMovement[]=[];
+    const released=releaseLotAllocations(workingLots,order.lotAllocations??[],'PED-'+order.number);workingLots=released.lots;lotMovements.push(...released.movements);
+    for(const [productId,qty] of after){if(!fefoProductIds.includes(productId))continue;const allocated=allocateFefo(workingLots,productId,qty,'PED-'+order.number,'Reserva');if(!allocated)return false;workingLots=allocated.lots;nextAllocations.push(...allocated.allocations);lotMovements.push(...allocated.movements);}
     const date=new Date().toISOString();
     const movements:InventoryMovement[]=[...new Set([...before.keys(),...after.keys()])].flatMap(productId=>{const oldQty=before.get(productId)??0,newQty=after.get(productId)??0,delta=newQty-oldQty;if(!delta)return [];const product=products.find(item=>item.id===productId)!;return [{id:nextInventoryMovementId(),productId,productName:product.name,type:'Ajuste' as const,quantity:Math.abs(delta),stockBefore:product.stock,stockAfter:product.stock-delta,unitCost:product.cost,referenceId:orderId,date,note:'Actualización de reserva del pedido '+order.number}];});
     orderMutationInProgress.current.add(orderId);
-    setProducts(updated);setInventoryMovements(current=>[...current,...movements]);setOrders(current=>current.map(item=>item.id===orderId?{...item,items:items.map(line=>({...line})),customer:customer.trim()||undefined,customerRtn:customerRtn.trim()||undefined,total,updatedAt:date}:item));return true;
+    setProducts(updated);setInventoryMovements(current=>[...current,...movements]);if(lotMovements.length){setInventoryLots(workingLots);setLotKardex(current=>[...current,...lotMovements]);}setOrders(current=>current.map(item=>item.id===orderId?{...item,items:items.map(line=>({...line})),lotAllocations:nextAllocations,customer:customer.trim()||undefined,customerRtn:customerRtn.trim()||undefined,total,updatedAt:date}:item));return true;
   };
   const deleteOrder=(orderId:number):boolean=>{
     if(orderMutationInProgress.current.has(orderId))return false;
