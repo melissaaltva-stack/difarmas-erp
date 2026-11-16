@@ -26,6 +26,7 @@ export function Inventory({products, allProducts, search, setSearch, movements, 
   const expiring = products.filter(p => daysUntil(p.expiry) >= 0 && daysUntil(p.expiry) <= 90);
   const expired = products.filter(p => daysUntil(p.expiry) < 0);
   const lowMargin = products.filter(p => margin(p.retail, p.cost) < 15);
+  const [inventoryView, setInventoryView] = useState<'products'|'lots'|'kardex'>('products');
   const [expiryFilter, setExpiryFilter] = useState<'all'|'expired'|'30'|'60'|'90'|'180'|'missing'>('all');
   const [showExpiryControl, setShowExpiryControl] = useState(false);
   const [showMovementHistory, setShowMovementHistory] = useState(false);
@@ -52,6 +53,8 @@ export function Inventory({products, allProducts, search, setSearch, movements, 
   const selectVisible = (checked:boolean) => setSelected(current => checked ? [...new Set([...current,...visibleProducts.map(p=>p.id)])] : current.filter(id => !visibleProducts.some(p=>p.id===id)));
   return <div className="content inventory-page">
     <div className="page-head inventory-page-head-compact"><div className="inventory-actions"><button className="secondary" onClick={()=>setLabelsOpen(true)} disabled={selected.length===0}><Printer size={17}/> Imprimir etiquetas ({selected.length})</button><button className="primary" onClick={onNew}><Plus size={17}/> Nuevo producto</button></div></div>
+    <div className="inventory-view-switch"><label htmlFor="inventory-section-select">Sección de inventario</label><select id="inventory-section-select" value={inventoryView} onChange={e=>setInventoryView(e.target.value as 'products'|'lots'|'kardex')}><option value="products">Productos</option><option value="lots">Lotes</option><option value="kardex">Kardex FEFO</option></select></div>
+    {inventoryView==='products' && <>
     <div className="inventory-toolbar card"><div className="search"><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar por código, producto, categoría..." /></div><span className="count">{products.length} productos</span></div>
     <div className="inventory-alerts">
       {lowStock.length > 0 && <div className="card alert-card"><AlertTriangle size={18}/><div><strong>{lowStock.length} con stock bajo</strong><small>{lowStock.slice(0,3).map(p=>p.name).join(', ')}</small></div></div>}
@@ -86,7 +89,8 @@ export function Inventory({products, allProducts, search, setSearch, movements, 
     </section>
 
 
-    <InventoryLotsKardex products={allProducts} lots={lots} kardex={lotKardex} fefoProductIds={fefoProductIds} onAddOpeningLot={onAddOpeningLot} onActivate={onActivateFefo} onAdjustLot={onAdjustLot}/>
+    </>}
+    {inventoryView!=='products' && <InventoryLotsKardex view={inventoryView} products={allProducts} lots={lots} kardex={lotKardex} fefoProductIds={fefoProductIds} onAddOpeningLot={onAddOpeningLot} onActivate={onActivateFefo} onAdjustLot={onAdjustLot}/>}
     {detailProduct && !labelsOpen && <InventoryProductDetails product={detailProduct} onClose={()=>setDetailProduct(null)} onPrintLabel={(p)=>{setSelected([p.id]);setLabelsOpen(true);}} onEdit={(p)=>{setDetailProduct(null);onEdit(p);}}/>}
     {labelsOpen && <div className="modal-backdrop label-backdrop"><div className="modal labels-modal" style={{width:"min(1180px, calc(100vw - 32px))",maxWidth:"1180px",maxHeight:"calc(100vh - 32px)",overflowY:"auto",boxSizing:"border-box"}}><div className="modal-head no-print"><div><h2>Selección múltiple de productos</h2><p>Marca los productos que deseas incluir en las etiquetas. Puedes buscar y cambiar la selección aquí.</p></div><button className="icon-btn" aria-label="Cerrar ventana" onClick={()=>setLabelsOpen(false)}><X/></button></div>
       <div className="label-picker no-print" style={{display:"grid",gridTemplateColumns:"minmax(0, 1fr) minmax(260px, 0.9fr)",gap:16,alignItems:"start",minWidth:0}}>
