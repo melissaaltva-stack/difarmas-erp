@@ -353,7 +353,7 @@ export function useErpState(userId: string) {
   };
   const activateFefo=(productId:number):boolean=>{
     if(!canWriteSnapshot(remoteReady,syncStatus)||fefoProductIds.includes(productId))return false;
-    const product=products.find(item=>item.id===productId);if(!product)return false;
+    const product=products.find(item=>item.id===productId);if(!product||orders.some(order=>order.status==='Pendiente'&&order.items.some(item=>item.id===productId)))return false;
     const opening=inventoryLots.filter(lot=>lot.productId===productId&&lot.opening);
     if(opening.reduce((sum,lot)=>sum+lot.quantityRemaining,0)!==product.stock||opening.length===0)return false;
     setFefoProductIds(current=>[...current,productId]);return true;
