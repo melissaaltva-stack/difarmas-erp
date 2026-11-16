@@ -13,7 +13,7 @@ const rolePermissions:Record<UserAccess['role'],Module[]> = {
   Ventas:['dashboard','facturacion_estandar','ventas','redes_sociales','clientes','cotizaciones'],
   Compras:['dashboard','inventario','compras','proveedores'],
   Finanzas:['dashboard','contabilidad','facturacion_estandar','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','compras'],
-  RRHH:['dashboard','rrhh'],
+  RRHH:['rrhh'],
   'Solo lectura':['dashboard','contabilidad','ventas','redes_sociales','clientes','cotizaciones','inventario','compras','finanzas','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','proveedores']
 };
 const roleOptions:UserAccess['role'][]=['Administrador','Supervisor','Ventas','Compras','Finanzas','RRHH','Solo lectura'];
