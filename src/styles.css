@@ -5225,3 +5225,125 @@ button.icon-btn:focus-visible svg,
   min-height:36px;
   padding:6px 4px!important;
 }
+
+/* Recursos Humanos: directorio, asistencia y permisos */
+.hr-page{max-width:1500px}
+.hr-page-head{align-items:flex-end;gap:16px}
+.hr-page-head h2{margin:7px 0 4px}
+.hr-page-head p{margin:0;color:var(--muted,#718a85);font-size:13px}
+.hr-header-actions{display:flex;align-items:center;gap:8px}
+.hr-private-note{display:inline-flex;align-items:center;gap:7px;padding:8px 10px;border:1px solid var(--farmi-ui-border,#e2ebe9);border-radius:9px;color:var(--farmi-ui-primary-dark,#41675b);background:var(--farmi-ui-primary-soft,#f2f7f5);font-size:11px;font-weight:700}
+.hr-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 16px}
+.hr-metric{display:flex;align-items:center;gap:12px;min-width:0;padding:15px}
+.hr-metric-icon{width:40px;height:40px;flex:0 0 40px;display:grid;place-items:center;border-radius:12px;color:var(--farmi-ui-primary-dark,#16664f);background:var(--farmi-ui-primary-soft,#e7f4ef)}
+.hr-metric>div{display:grid;gap:3px;min-width:0}
+.hr-metric small{font-size:10px;color:var(--muted,#718a85);font-weight:700}
+.hr-metric strong{font-size:22px;line-height:1.1;color:var(--text,#203b33);font-variant-numeric:tabular-nums}
+.hr-metric span:not(.hr-metric-icon){font-size:10px;color:var(--muted,#718a85)}
+.hr-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px;padding:5px;border:1px solid var(--border,#e2ebe9);border-radius:12px;background:var(--surface-muted,#f7faf9)}
+.hr-tabs button{display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:8px 13px;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--muted,#61776f);font-size:12px;font-weight:750;cursor:pointer}
+.hr-tabs button.active{background:#fff;color:var(--farmi-ui-primary-dark,#16664f);border-color:var(--farmi-ui-border,#dce8e3);box-shadow:0 2px 7px rgba(20,55,42,.07)}
+.hr-tab-count{display:grid;place-items:center;min-width:19px;height:19px;padding:0 5px;border-radius:99px;background:var(--farmi-ui-primary-soft,#e7f4ef);color:var(--farmi-ui-primary-dark,#16664f);font-size:10px}
+.hr-sync-hint{margin:0 0 12px}
+.hr-panel{padding:18px;min-width:0}
+.hr-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:15px}
+.hr-panel-heading h3{display:flex;align-items:center;gap:7px;margin:0;color:var(--text,#203b33);font-size:15px}
+.hr-panel-heading p{margin:5px 0 0;color:var(--muted,#718a85);font-size:11px;line-height:1.5}
+.hr-panel-heading>.primary{white-space:nowrap}
+.hr-toolbar{display:flex;align-items:center;gap:10px;margin:0 0 13px}
+.hr-toolbar .search{flex:1;min-width:180px;max-width:none}
+.hr-toolbar>select,.hr-date-filter input{min-height:42px;padding:8px 11px;border:1px solid var(--field-border,#d9e5e2);border-radius:10px;background:#fff;color:var(--text,#243c35);font:inherit;font-size:12px}
+.hr-date-filter{display:grid;gap:5px;min-width:170px;color:var(--muted,#718a85);font-size:10px;font-weight:750}
+.hr-date-filter input{min-width:0}
+.hr-table-wrap{width:100%;overflow:auto;border:1px solid var(--border,#e6eeea);border-radius:11px}
+.hr-table{width:100%;min-width:850px;border-collapse:collapse}
+.hr-table th{padding:11px 12px;background:var(--surface-muted,#f7faf9);color:var(--muted,#718a85);font-size:9px;letter-spacing:.045em}
+.hr-table td{padding:11px 12px;border-bottom:1px solid var(--border,#edf2ef);color:var(--text,#29463d);font-size:11px;vertical-align:middle}
+.hr-table tbody tr:last-child td{border-bottom:0}
+.hr-table td>strong,.hr-table td>small{display:block}
+.hr-table td>small{margin-top:4px;color:var(--muted,#82958f);font-size:10px}
+.hr-person-cell{display:flex;align-items:center;gap:9px;min-width:180px}
+.hr-person-cell>span:last-child{min-width:0}
+.hr-person-cell strong,.hr-person-cell small{display:block;overflow-wrap:anywhere}
+.hr-person-cell strong{font-size:11px;color:var(--text,#203b33)}
+.hr-person-cell small{margin-top:3px;color:var(--muted,#82958f);font-size:9px}
+.hr-avatar{width:32px;height:32px;flex:0 0 32px;display:grid;place-items:center;border-radius:10px;background:var(--farmi-ui-primary-soft,#e7f4ef);color:var(--farmi-ui-primary-dark,#16664f);font-size:10px;font-weight:850}
+.hr-status{display:inline-flex;align-items:center;justify-content:center;padding:4px 8px;border-radius:99px;background:#eef3f1;color:#5d7069;font-size:9px;font-weight:800;white-space:nowrap}
+.hr-status.activo,.hr-status.presente,.hr-status.aprobado{background:#e8f5ef;color:#17664f}
+.hr-status.inactivo,.hr-status.rechazado,.hr-status.ausente{background:#fff0ef;color:#a43d3d}
+.hr-status.tardanza,.hr-status.pendiente,.hr-status.permiso{background:#fff6df;color:#8b6416}
+.hr-contact{display:grid;gap:4px;color:var(--muted,#718a85);font-size:10px}
+.hr-contact span{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.hr-row-actions{display:flex;align-items:center;justify-content:flex-end;gap:5px;white-space:nowrap}
+.hr-row-actions .icon-btn{width:30px;height:30px}
+.hr-delete-btn{color:#a94646!important}
+.hr-footnote{margin:12px 2px 0;color:var(--muted,#83958e);font-size:10px;line-height:1.5}
+.hr-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:180px;padding:24px;text-align:center;color:var(--muted,#718a85)}
+.hr-empty>svg{color:var(--farmi-ui-primary,#16856b)}
+.hr-empty strong{color:var(--text,#29463d);font-size:13px}
+.hr-empty span{max-width:400px;font-size:11px;line-height:1.5}
+.hr-empty.compact{min-height:115px}
+.hr-inline-notice{margin:10px 0;padding:9px 11px;border:1px solid var(--farmi-ui-border,#dce8e3);border-radius:8px;background:var(--farmi-ui-primary-soft,#f2f8f5);color:var(--farmi-ui-primary-dark,#16664f);font-size:11px}
+.hr-attendance-form{display:grid;grid-template-columns:minmax(180px,1.6fr) repeat(3,minmax(110px,.8fr));gap:10px;align-items:end;padding:13px;margin:0 0 14px;border:1px solid var(--border,#e3ebe7);border-radius:11px;background:var(--surface-muted,#f8fbfa)}
+.hr-attendance-form label,.hr-form-grid label{display:grid;gap:6px;min-width:0;color:var(--muted,#607a74);font-size:10px;font-weight:750}
+.hr-attendance-form input,.hr-attendance-form select,.hr-form-grid input,.hr-form-grid select,.hr-form-grid textarea{width:100%;min-width:0;min-height:38px;padding:8px 10px;border:1px solid var(--field-border,#d9e5e2);border-radius:8px;background:#fff;color:var(--text,#263d35);font:inherit;font-size:12px;outline:none}
+.hr-attendance-form input:focus,.hr-attendance-form select:focus,.hr-form-grid input:focus,.hr-form-grid select:focus,.hr-form-grid textarea:focus{border-color:var(--farmi-ui-primary,#16856b);box-shadow:0 0 0 3px var(--farmi-ui-focus,rgba(22,133,107,.12))}
+.hr-attendance-form input:disabled{background:#f2f5f3;color:#9aa8a1}
+.hr-attendance-form .hr-attendance-notes{grid-column:span 2}
+.hr-attendance-form>button{min-height:38px;white-space:nowrap}
+.hr-list-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 1px 9px;color:var(--text,#29463d);font-size:11px}
+.hr-list-heading span{color:var(--muted,#718a85);font-size:10px}
+.hr-list-label{display:flex;align-items:center;gap:7px;color:var(--text,#38584e);font-size:11px;font-weight:750}
+.hr-leave-list{display:grid;gap:8px}
+.hr-leave-row{display:flex;align-items:center;gap:12px;min-width:0;padding:12px;border:1px solid var(--border,#e4ece8);border-radius:10px;background:#fff}
+.hr-leave-icon{width:36px;height:36px;flex:0 0 36px;display:grid;place-items:center;border-radius:10px;background:var(--farmi-ui-primary-soft,#e7f4ef);color:var(--farmi-ui-primary-dark,#16664f)}
+.hr-leave-main{display:grid;gap:4px;flex:1;min-width:0}
+.hr-leave-main strong{font-size:11px;color:var(--text,#29463d);overflow-wrap:anywhere}
+.hr-leave-main span,.hr-leave-main small{font-size:10px;color:var(--muted,#718a85);line-height:1.45}
+.hr-leave-main small{overflow-wrap:anywhere}
+.hr-approve-btn,.hr-reject-btn{min-height:30px;padding:6px 8px!important;font-size:10px}
+.hr-approve-btn{color:#17664f!important}
+.hr-reject-btn{color:#a43d3d!important}
+.hr-modal-backdrop{z-index:100}
+.hr-employee-modal,.hr-leave-modal{width:min(760px,100%);max-height:calc(100vh - 36px)}
+.hr-employee-modal .modal-head h2,.hr-leave-modal .modal-head h2{margin:0;font-size:18px;color:var(--text,#203b33)}
+.hr-employee-modal .modal-head p,.hr-leave-modal .modal-head p{margin:5px 0 0;color:var(--muted,#718a85);font-size:11px}
+.hr-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.hr-form-grid textarea{resize:vertical;min-height:76px}
+.hr-form-full{grid-column:1/-1}
+.hr-days-preview{display:grid;align-content:center;gap:4px;min-height:56px;padding:9px 11px;border-radius:9px;background:var(--farmi-ui-primary-soft,#edf6f2)}
+.hr-days-preview small{color:var(--muted,#718a85);font-size:9px;font-weight:750}
+.hr-days-preview strong{color:var(--farmi-ui-primary-dark,#16664f);font-size:13px}
+@media(max-width:900px){
+  .hr-attendance-form{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .hr-attendance-form .hr-attendance-notes{grid-column:auto}
+}
+@media(max-width:700px){
+  .hr-metrics{grid-template-columns:1fr;gap:8px}
+  .hr-metric{padding:12px}
+  .hr-panel{padding:13px}
+  .hr-panel-heading{align-items:flex-start;flex-direction:column}
+  .hr-panel-heading>.primary{width:100%;justify-content:center}
+  .hr-toolbar{align-items:stretch;flex-direction:column}
+  .hr-toolbar .search{width:100%;max-width:none}
+  .hr-toolbar>select{width:100%}
+  .hr-header-actions{width:100%}
+  .hr-date-filter{width:100%}
+  .hr-date-filter input{width:100%}
+  .hr-attendance-form{grid-template-columns:1fr 1fr;padding:10px}
+  .hr-leave-row{align-items:flex-start;flex-wrap:wrap}
+  .hr-leave-main{flex:1 1 calc(100% - 50px)}
+  .hr-leave-row>.hr-status{margin-left:48px}
+  .hr-leave-row .hr-row-actions{width:100%;justify-content:flex-start;margin-left:48px}
+}
+@media(max-width:520px){
+  .hr-page-head{align-items:flex-start;flex-direction:column}
+  .hr-tabs{display:grid;grid-template-columns:1fr}
+  .hr-tabs button{justify-content:flex-start}
+  .hr-attendance-form{grid-template-columns:1fr}
+  .hr-attendance-form .hr-attendance-notes{grid-column:auto}
+  .hr-form-grid{grid-template-columns:1fr}
+  .hr-form-full{grid-column:auto}
+  .hr-employee-modal,.hr-leave-modal{padding:15px}
+  .hr-employee-modal .modal-actions,.hr-leave-modal .modal-actions{display:grid;grid-template-columns:1fr 1fr}
+}
