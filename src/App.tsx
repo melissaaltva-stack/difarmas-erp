@@ -13,7 +13,7 @@ const Finance = lazy(() => import('./components/Finance').then(m => ({ default: 
 const GoalsSettings = lazy(() => import('./components/ManagementSuite').then(m => ({ default: m.GoalsSettings })));
 const ManagementSuite = lazy(() => import('./components/ManagementSuite').then(m => ({ default: m.ManagementSuite })));
 const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
-import { Activity, Boxes, LayoutDashboard, ShoppingCart, ClipboardList, Wallet, Calculator, Truck, Settings as SettingsIcon, HandCoins, CreditCard, Printer, BrainCircuit, UsersRound, MessagesSquare, Menu, X } from 'lucide-react';
+import { Activity, Boxes, LayoutDashboard, ShoppingCart, ClipboardList, Wallet, Calculator, Truck, Settings as SettingsIcon, HandCoins, CreditCard, Printer, BrainCircuit, UsersRound, MessagesSquare, Menu, X, MessageCircle } from 'lucide-react';
 const Settings = lazy(() => import('./components/Settings').then(m => ({ default: m.Settings })));
 const Customers = lazy(() => import('./components/Customers').then(m => ({ default: m.Customers })));
 const Quotes = lazy(() => import('./components/Quotes').then(m => ({ default: m.Quotes })));
@@ -64,6 +64,7 @@ function App({ userId, userEmail, userAppMetadata, signOut }: { userId: string; 
   const canSee=(module:string)=>module==='pedidos'?permissions.includes('ventas'):module==='contabilidad'&&['Administrador','Supervisor','Finanzas','Solo lectura'].includes(metadataRole??'')?true:permissions.includes(module as Module);
   const visibleNav=nav.filter(([id])=>id!=='proveedores'&&id!=='cuentas_cobrar'&&id!=='cuentas_pagar'&&(id==='compras'?(canSee('compras')||canSee('proveedores')):canSee(id)));
   const [mobileMenuOpen,setMobileMenuOpen]=useState(false);
+  const [floatingAssistantOpen,setFloatingAssistantOpen]=useState(false);
   const [selectedOrder,setSelectedOrder]=useState<import('./domain/types').OrderRecord|null>(null);
   const [selectedOrderAction,setSelectedOrderAction]=useState<'invoice'|'edit'|null>(null);
   const [newProductOrigin,setNewProductOrigin]=useState<'inventory'|'purchase'>('inventory');
@@ -113,6 +114,13 @@ function App({ userId, userEmail, userAppMetadata, signOut }: { userId: string; 
         }
       }} onDelete={id=>{deleteProduct(id);setEditing(null);setShowForm(false);setNewProductOrigin('inventory')}}/>}
     </main>
+    {active!=='asistente_ia'&&<div className="farmi-floating-assistant">
+      {floatingAssistantOpen&&<section className="farmi-assistant-popover" role="dialog" aria-modal="false" aria-label="Asistente IA FARMI">
+        <header><div><span><BrainCircuit size={18}/></span><div><strong>Asistente FARMI</strong><small>Disponible en cualquier módulo</small></div></div><button type="button" aria-label="Cerrar asistente" onClick={()=>setFloatingAssistantOpen(false)}><X size={19}/></button></header>
+        <div className="farmi-assistant-popover-body"><Suspense fallback={<div className="content"><div className="card">Cargando asistente…</div></div>}><AiAssistant userId={userId} products={products} sales={sales} purchases={purchases} expenses={expenses} receivables={receivables} payables={payables} movements={inventoryMovements} variant="floating"/></Suspense></div>
+      </section>}
+      <button type="button" className={'farmi-assistant-fab'+(floatingAssistantOpen?' is-open':'')} aria-label={floatingAssistantOpen?'Cerrar asistente FARMI':'Abrir asistente FARMI'} aria-expanded={floatingAssistantOpen} onClick={()=>setFloatingAssistantOpen(open=>!open)}><MessageCircle size={22}/><span>{floatingAssistantOpen?'Cerrar':'Asistente IA'}</span></button>
+    </div>}
   </div>;
 }
 
