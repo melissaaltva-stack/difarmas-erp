@@ -695,6 +695,7 @@ export function useErpState(userId: string) {
     if (editing) {
       const previous = products.find(p=>p.id===editing.id);
       if(previous&&!previous.unitInventoryEnabled&&product.unitInventoryEnabled&&(fefoProductIds.includes(previous.id)||inventoryLots.some(lot=>lot.productId===previous.id)||orders.some(order=>order.status==='Pendiente'&&order.items.some(item=>item.id===previous.id))))return null;
+      if(previous?.unitInventoryEnabled&&!product.unitInventoryEnabled&&(fefoProductIds.includes(previous.id)||inventoryLots.some(lot=>lot.productId===previous.id)||orders.some(order=>order.status==='Pendiente'&&order.items.some(item=>item.id===previous.id))))return null;
       if(!validUnitInventoryProduct(product))return null;
       saved = {...product,id:editing.id};
       if(previous&&previous.stock!==saved.stock&&(fefoProductIds.includes(previous.id)||previous.unitInventoryEnabled))return null;
