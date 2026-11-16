@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { CartItem, CashClosure, CashMovement, Customer, ErpSettings, Expense, InventoryMovement, Module, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseItem, PurchaseRecord, Receivable, SaleRecord, OrderRecord, Supplier, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord, QuoteRecord, StandardInvoiceDetails, AccountingAccount, AccountingEntry, HrEmployee, HrAttendanceRecord, HrLeaveRequest } from '../domain/types';
+import type { CartItem, CashClosure, CashMovement, Customer, ErpSettings, Expense, InventoryMovement, Module, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseItem, PurchaseRecord, Receivable, SaleRecord, OrderRecord, Supplier, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord, QuoteRecord, StandardInvoiceDetails, AccountingAccount, AccountingEntry, HrEmployee, HrAttendanceRecord, HrLeaveRequest, InventoryLot, LotKardexMovement, LotAllocation } from '../domain/types';
 import { loadJson, saveJson, loadNumber, saveNumber } from '../utils/storage';
 import { applyPurchaseToInventory, applySaleToInventory } from '../services/inventoryService';
 import { buildSaleRecord, createReceivableFromSale } from '../services/salesService';
@@ -99,6 +99,9 @@ export function useErpState(userId: string) {
     return nextId;
   };
   const [inventoryMovements, setInventoryMovements] = useState<InventoryMovement[]>(()=>loadJson<InventoryMovement[]>('difarmas_inventory_movements',[]));
+  const [inventoryLots,setInventoryLots]=useState<InventoryLot[]>(()=>loadJson<InventoryLot[]>('farmi_inventory_lots',[]));
+  const [lotKardex,setLotKardex]=useState<LotKardexMovement[]>(()=>loadJson<LotKardexMovement[]>('farmi_lot_kardex',[]));
+  const [fefoProductIds,setFefoProductIds]=useState<number[]>(()=>loadJson<number[]>('farmi_fefo_product_ids',[]));
   const lastInventoryMovementId = useRef(0);
   const nextInventoryMovementId = () => {
     const highestStoredId = inventoryMovements.reduce((highest,movement)=>Math.max(highest,Number(movement.id)||0),0);
@@ -164,6 +167,9 @@ export function useErpState(userId: string) {
   useEffect(()=>{saveJson('difarmas_receivables',receivables)},[receivables]);
   useEffect(()=>{saveJson('difarmas_payables',payables)},[payables]);
   useEffect(()=>{saveJson('difarmas_inventory_movements',inventoryMovements)},[inventoryMovements]);
+  useEffect(()=>{saveJson('farmi_inventory_lots',inventoryLots)},[inventoryLots]);
+  useEffect(()=>{saveJson('farmi_lot_kardex',lotKardex)},[lotKardex]);
+  useEffect(()=>{saveJson('farmi_fefo_product_ids',fefoProductIds)},[fefoProductIds]);
   useEffect(()=>{saveJson('difarmas_cash_closures',cashClosures)},[cashClosures]);
   useEffect(()=>{saveJson('difarmas_cash_movements',cashMovements)},[cashMovements]);
   useEffect(()=>{saveJson('difarmas_payment_transactions',paymentTransactions)},[paymentTransactions]);
@@ -173,8 +179,8 @@ export function useErpState(userId: string) {
 
   const snapshot = useMemo<ErpSnapshot>(() => ({
     customers, quotes, suppliers, products, sales, orders, purchases, purchaseCostHistory, settings, expenses, receivables, payables,
-    inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests, supplierReturns, saleAdjustments, accountingAccounts, accountingEntries, hrEmployees, hrAttendance, hrLeaveRequests,
-  }), [customers, quotes, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables, inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests, supplierReturns, saleAdjustments, orders, accountingAccounts, accountingEntries, hrEmployees, hrAttendance, hrLeaveRequests]);
+    inventoryMovements, inventoryLots, lotKardex, fefoProductIds, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests, supplierReturns, saleAdjustments, accountingAccounts, accountingEntries, hrEmployees, hrAttendance, hrLeaveRequests,
+  }), [customers, quotes, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables, inventoryMovements, inventoryLots, lotKardex, fefoProductIds, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests, supplierReturns, saleAdjustments, orders, accountingAccounts, accountingEntries, hrEmployees, hrAttendance, hrLeaveRequests]);
 
   // Load the signed-in user's snapshot before allowing remote writes. A first login
   // seeds the cloud record from this browser's existing local data.
@@ -207,6 +213,7 @@ export function useErpState(userId: string) {
       setReceivables([]);
       setPayables([]);
       setInventoryMovements([]);
+      setInventoryLots([]);setLotKardex([]);setFefoProductIds([]);
       setCashClosures([]);
       setCashMovements([]);
       setPaymentTransactions([]);
@@ -238,6 +245,7 @@ export function useErpState(userId: string) {
         setReceivables(remote.receivables);
         setPayables(remote.payables);
         setInventoryMovements(remote.inventoryMovements);
+        setInventoryLots(remote.inventoryLots??[]);setLotKardex(remote.lotKardex??[]);setFefoProductIds(remote.fefoProductIds??[]);
         if (remote.cashClosures !== undefined) setCashClosures(remote.cashClosures);
         if (remote.cashMovements !== undefined) setCashMovements(remote.cashMovements);
         if (remote.paymentTransactions !== undefined) setPaymentTransactions(remote.paymentTransactions);
