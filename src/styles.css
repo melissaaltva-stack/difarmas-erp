@@ -5347,3 +5347,21 @@ button.icon-btn:focus-visible svg,
   .hr-employee-modal,.hr-leave-modal{padding:15px}
   .hr-employee-modal .modal-actions,.hr-leave-modal .modal-actions{display:grid;grid-template-columns:1fr 1fr}
 }
+
+
+.inventory-lots-kardex{margin-top:18px;padding:16px;display:grid;gap:14px}
+.inventory-lots-kardex .card-title h3{display:flex;align-items:center;gap:8px}
+.inventory-lot-toolbar{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.inventory-lot-toolbar label,.inventory-lot-form label{display:grid;gap:5px;font-size:12px;font-weight:600;min-width:180px}
+.inventory-lot-toolbar select,.inventory-lot-form input{min-height:36px;border:1px solid var(--border,#d8e1e1);border-radius:8px;padding:7px 10px;background:var(--surface,#fff);color:inherit}
+.inventory-lot-status{display:grid;gap:5px}
+.inventory-lot-status small,.inventory-lot-activation span{color:var(--muted,#64748b);font-size:12px}
+.inventory-lot-form{display:grid;grid-template-columns:repeat(3,minmax(140px,1fr));gap:10px;align-items:end;padding:12px;border:1px solid var(--border,#d8e1e1);border-radius:10px}
+.inventory-lot-form button{min-height:36px;justify-content:center}
+.inventory-lot-activation{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.inventory-kardex-heading{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
+.inventory-kardex-heading small{color:var(--muted,#64748b)}
+.inventory-lots-kardex .table-wrap{overflow:auto}
+.inventory-lots-kardex table{min-width:720px}
+@media(max-width:720px){.inventory-lot-form{grid-template-columns:1fr 1fr}.inventory-lot-toolbar{align-items:stretch}.inventory-lot-toolbar label{width:100%}}
+@media(max-width:480px){.inventory-lot-form{grid-template-columns:1fr}.inventory-lot-activation{align-items:stretch;flex-direction:column}.inventory-lot-activation button{width:100%}}
