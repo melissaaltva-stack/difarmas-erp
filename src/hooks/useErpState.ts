@@ -612,7 +612,26 @@ export function useErpState(userId: string) {
     for(const productId of returnedByProduct.keys()){
       if(!products.some(product=>product.id===productId))return false;
     }
-    const movementDate=new Date().toISOString();
+    const movementDate=new Date().toISOString();let returnedLots=inventoryLots;const lotReturnMovements:LotKardexMovement[]=[];
+    const adjustedItems=adjustment.items.map(line=>{
+      if(!line.returnToStock||!fefoProductIds.includes(line.productId))return line;
+      if(!originalSale.lotAllocations?.length)return null;
+      const previousReturned=new Map<string,number>();
+      saleAdjustments.filter(record=>record.saleId===adjustment.saleId).flatMap(record=>record.items).forEach(item=>(item.lotAllocations??[]).forEach(allocation=>previousReturned.set(allocation.lotId,(previousReturned.get(allocation.lotId)??0)+allocation.quantity)));
+      let remaining=line.quantity;const allocations:LotAllocation[]=[];
+      for(const soldAllocation of originalSale.lotAllocations.filter(allocation=>allocation.lotId&&inventoryLots.some(lot=>lot.id===allocation.lotId&&lot.productId===line.productId))){
+        const already=previousReturned.get(soldAllocation.lotId)??0;const available=Math.max(0,soldAllocation.quantity-already);const take=Math.min(remaining,available);if(!take)continue;
+        const lot=returnedLots.find(item=>item.id===soldAllocation.lotId);if(!lot)continue;
+        returnedLots=returnedLots.map(item=>item.id===lot.id?{...item,quantityRemaining:item.quantityRemaining+take}:item);
+        allocations.push({...soldAllocation,quantity:take});
+        lotReturnMovements.push({id:crypto.randomUUID(),lotId:lot.id,productId:line.productId,productName:line.productName,lotCode:lot.lotCode,expiry:lot.expiry,type:'Devolución',quantity:take,stockBefore:lot.quantityRemaining,stockAfter:lot.quantityRemaining+take,unitCost:lot.unitCost,reference:adjustment.invoiceNumber,date:movementDate,note:'Devolución reincorporada al lote original'});
+        remaining-=take;if(remaining===0)break;
+      }
+      if(remaining>0)return null;
+      return {...line,lotAllocations:allocations};
+    });
+    if(adjustedItems.some(item=>item===null))return false;
+    const savedAdjustment:SaleAdjustmentRecord={...adjustment,items:adjustedItems as SaleAdjustmentRecord['items']};
     const movements:InventoryMovement[]=[...returnedByProduct].map(([productId,lines])=>{
       const product=products.find(item=>item.id===productId)!;
       const quantity=lines.reduce((sum,line)=>sum+line.quantity,0);
@@ -633,6 +652,7 @@ export function useErpState(userId: string) {
       : 0;
     setProducts(updated);
     setInventoryMovements(current=>[...current,...movements]);
+    if(lotReturnMovements.length){setInventoryLots(returnedLots);setLotKardex(current=>[...current,...lotReturnMovements]);}
     if(receivable&&creditReduction>0){
       setReceivables(current=>current.map(item=>item.saleId===adjustment.saleId
         ? {...item,total:Math.max(item.paid,item.total-creditReduction)}
@@ -641,7 +661,7 @@ export function useErpState(userId: string) {
     if(adjustment.paymentMethod.toLowerCase().includes('efectivo')){
       setCashMovements(current=>[{id:adjustment.id,type:'Salida',description:'Reembolso por '+adjustment.type+' '+adjustment.invoiceNumber,amount:adjustment.amount,category:'Devoluciones de ventas',date:new Date().toISOString()},...current]);
     }
-    setSaleAdjustments(current=>[adjustment,...current]);
+    setSaleAdjustments(current=>[savedAdjustment,...current]);
     return true;
   };
 
