@@ -289,11 +289,11 @@
 }
 
 /* Ajustes de apariencia y temas globales FARMI */
-:root[data-farmi-theme="emerald"]{--farmi-accent:#16856b;--farmi-accent-dark:#116a56;--farmi-accent-soft:#e7f4ef}
-:root[data-farmi-theme="blue"]{--farmi-accent:#2867b2;--farmi-accent-dark:#1e4f8c;--farmi-accent-soft:#eaf1fb}
-:root[data-farmi-theme="violet"]{--farmi-accent:#7653b5;--farmi-accent-dark:#5e4094;--farmi-accent-soft:#f0ebf8}
-:root[data-farmi-theme="slate"]{--farmi-accent:#526477;--farmi-accent-dark:#3d4d5e;--farmi-accent-soft:#edf1f4}
-:root[data-farmi-theme="rose"]{--farmi-accent:#b65370;--farmi-accent-dark:#93415a;--farmi-accent-soft:#faedf1}
+:root[data-farmi-theme="emerald"]{--farmi-accent:#16856b;--farmi-accent-dark:#116a56;--farmi-accent-soft:#e7f4ef;--login-page-background:linear-gradient(135deg,#082b28 0%,#115247 52%,#16856b 100%);--login-overlay-rgb:5,28,27}
+:root[data-farmi-theme="blue"]{--farmi-accent:#2867b2;--farmi-accent-dark:#1e4f8c;--farmi-accent-soft:#eaf1fb;--login-page-background:linear-gradient(135deg,#0b1c34 0%,#194675 52%,#2867b2 100%);--login-overlay-rgb:8,19,38}
+:root[data-farmi-theme="violet"]{--farmi-accent:#7653b5;--farmi-accent-dark:#5e4094;--farmi-accent-soft:#f0ebf8;--login-page-background:linear-gradient(135deg,#1a142d 0%,#49316f 52%,#7653b5 100%);--login-overlay-rgb:22,14,38}
+:root[data-farmi-theme="slate"]{--farmi-accent:#526477;--farmi-accent-dark:#3d4d5e;--farmi-accent-soft:#edf1f4;--login-page-background:linear-gradient(135deg,#17232e 0%,#394b5d 52%,#526477 100%);--login-overlay-rgb:16,25,35}
+:root[data-farmi-theme="rose"]{--farmi-accent:#b65370;--farmi-accent-dark:#93415a;--farmi-accent-soft:#faedf1;--login-page-background:linear-gradient(135deg,#2d1721 0%,#71364d 52%,#b65370 100%);--login-overlay-rgb:34,14,23}
 :root[data-farmi-theme] .primary{background:var(--farmi-accent);border-color:var(--farmi-accent)}
 :root[data-farmi-theme] .primary:hover{background:var(--farmi-accent-dark);border-color:var(--farmi-accent-dark)}
 :root[data-farmi-theme] .brand-mark{background:var(--farmi-accent)}
@@ -336,6 +336,11 @@
   place-items:center;
   color:var(--farmi-accent,#16856b);
   background:var(--farmi-accent-soft,#e7f4ef);
+}
+/* Evita que la regla global .auth-logo pinte el fondo y el icono del mismo color. */
+:root[data-farmi-theme] .auth-login-card .auth-login-symbol.auth-logo{
+  color:var(--farmi-ui-primary,var(--farmi-accent,#16856b));
+  background:var(--farmi-ui-primary-soft,var(--farmi-accent-soft,#e7f4ef));
 }
 .auth-login-card .auth-login-symbol svg{
   display:block;
