@@ -5412,3 +5412,82 @@ button.icon-btn:focus-visible svg,
     font-size: 0;
   }
 }
+
+
+/* Alineación centrada e iconografía combinada del ERP */
+#root .app .content{
+  width:100%;
+  margin-inline:auto;
+}
+#root .app :where(
+  .primary,.secondary,.type,.nav,.hr-tabs button,
+  .inventory-actions button,.modal-actions button,
+  .purchase-logistics-actions button
+){
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  text-align:center;
+}
+#root .app :where(
+  .primary,.secondary,.type,.nav,.hr-tabs button,
+  .inventory-actions button,.modal-actions button,
+  .purchase-logistics-actions button
+) svg{
+  width:16px;
+  height:16px;
+  flex:0 0 16px;
+  display:block;
+}
+#root .app :where(.icon-btn,.hr-row-actions .icon-btn){
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+#root .app :where(.icon-btn,.hr-row-actions .icon-btn) svg{
+  width:17px;
+  height:17px;
+  flex:0 0 17px;
+}
+#root .app :where(.page-head,.card-title,.modal-head,.hr-panel-heading,.purchase-logistics-head,.inventory-kardex-heading){
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  flex-wrap:wrap;
+}
+#root .app :where(.page-head,.card-title,.modal-head,.hr-panel-heading,.purchase-logistics-head,.inventory-kardex-heading) :where(h1,h2,h3,p){
+  text-align:center;
+}
+#root .app :where(.page-head,.modal-actions,.hr-header-actions,.inventory-actions){
+  justify-content:center;
+}
+#root .app :where(.form-grid,.hr-form-grid,.purchase-logistics-fields,.purchase-logistics-actions) label{
+  text-align:center;
+}
+#root .app :where(.form-grid,.hr-form-grid) input,
+#root .app :where(.form-grid,.hr-form-grid) select,
+#root .app :where(.form-grid,.hr-form-grid) textarea{
+  text-align:center;
+}
+#root .app :where(.hero,.empty,.hr-empty,.purchase-logistics-empty){
+  text-align:center;
+}
+#root .app :where(.hero){
+  justify-content:center;
+}
+#root .app :where(.hero-goal){
+  text-align:center;
+}
+#root .app :where(.hero-goal span,.hero-goal small){
+  text-align:center;
+}
+@media(max-width:700px){
+  #root .app :where(.page-head,.card-title,.modal-head,.hr-panel-heading,.purchase-logistics-head,.inventory-kardex-heading){
+    justify-content:center;
+    text-align:center;
+  }
+  #root .app :where(.page-head,.hr-header-actions,.inventory-actions){
+    width:100%;
+  }
+}
