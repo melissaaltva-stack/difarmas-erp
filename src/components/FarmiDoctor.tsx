@@ -31,7 +31,7 @@ export function FarmiDoctor() {
       });
       const result=await response.json() as {answer?:string;error?:string};
       if(!response.ok||!result.answer)throw new Error(result.error||'No se pudo consultar a Farmi.');
-      setMessages(current=>[...current,{role:'assistant',content:result.answer!}].slice(-12));
+      setMessages(current=>[...current,{role:'assistant' as const,content:result.answer!}].slice(-12));
     }catch(e){
       setError(e instanceof Error?e.message:'No se pudo completar la consulta.');
     }finally{
