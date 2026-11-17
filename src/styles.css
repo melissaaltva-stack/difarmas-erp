@@ -5700,3 +5700,72 @@ button.icon-btn:focus-visible svg,
     max-width: 100% !important;
   }
 }
+
+
+/* Segunda precisión de medidas solicitada para Facturación estándar */
+@media (min-width: 901px) {
+  .standard-invoice .invoice-header-grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+  }
+  .standard-invoice .invoice-header-grid > .invoice-field-number {
+    grid-column: span 2 !important;
+    width: 185px !important;
+  }
+  .standard-invoice .invoice-header-grid > .invoice-field-seller {
+    grid-column: span 2 !important;
+    width: 160px !important;
+  }
+  .standard-invoice .invoice-header-grid > .invoice-field-date,
+  .standard-invoice .invoice-header-grid > .invoice-field-max-date {
+    grid-column: span 2 !important;
+    width: 135px !important;
+  }
+  .standard-invoice .invoice-header-grid > .invoice-field-number input {
+    width: 185px !important;
+  }
+  .standard-invoice .invoice-header-grid > .invoice-field-price {
+    grid-column: span 2 !important;
+    width: 150px !important;
+  }
+  .standard-invoice .invoice-header-grid > .invoice-field-address {
+    grid-column: span 4 !important;
+    width: 360px !important;
+  }
+  .standard-invoice .invoice-header-grid > .invoice-field-phone {
+    grid-column: span 2 !important;
+    width: 170px !important;
+  }
+  .standard-invoice .invoice-header-grid > .invoice-field-rtn {
+    grid-column: span 3 !important;
+    width: 248px !important;
+  }
+  .standard-invoice .invoice-header-grid > .invoice-field-price select { width:150px !important; }
+  .standard-invoice .invoice-header-grid > .invoice-field-address input { width:360px !important; }
+  .standard-invoice .invoice-header-grid > .invoice-field-phone input { width:170px !important; }
+  .standard-invoice .invoice-header-grid > .invoice-field-rtn input { width:248px !important; }
+  .standard-invoice .invoice-customer-select-row .invoice-payment-inline,
+  .standard-invoice .invoice-customer-select-row .invoice-payment-inline select {
+    width:190px !important;
+    flex-basis:190px !important;
+  }
+  .standard-invoice .invoice-header-grid > .invoice-field-number input,
+  .standard-invoice .invoice-customer-select-row .invoice-payment-inline select {
+    height:32px !important;
+    min-height:32px !important;
+    box-sizing:border-box !important;
+  }
+}
+@media (max-width: 900px) {
+  .standard-invoice .invoice-header-grid > .invoice-field-number,
+  .standard-invoice .invoice-header-grid > .invoice-field-address,
+  .standard-invoice .invoice-header-grid > .invoice-field-phone,
+  .standard-invoice .invoice-header-grid > .invoice-field-rtn {
+    width:100% !important;
+  }
+  .standard-invoice .invoice-header-grid > .invoice-field-number input,
+  .standard-invoice .invoice-header-grid > .invoice-field-address input,
+  .standard-invoice .invoice-header-grid > .invoice-field-phone input,
+  .standard-invoice .invoice-header-grid > .invoice-field-rtn input {
+    width:100% !important;
+  }
+}
