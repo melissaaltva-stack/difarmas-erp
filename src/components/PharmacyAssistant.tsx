@@ -11,7 +11,7 @@ export function PharmacyAssistant({products,context}:{products:Product[];context
    const catalog=products.slice(0,80).map(p=>({name:p.name,presentation:p.presentation,category:p.category,activeIngredients:p.activeIngredients??[],warnings:p.drugInfo?.warnings??''}));
    const response=await fetch('/api/pharmacy-assistant',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({context,messages:next,catalog})});
    const result=await response.json() as {answer?:string;error?:string};if(!response.ok||!result.answer)throw new Error(result.error||'No se pudo consultar al asistente.');
-   setMessages(current=>[...current,{role:'assistant',content:result.answer!}].slice(-12));
+   setMessages(current=>[...current,{role:'assistant' as const,content:result.answer!}].slice(-12));
   }catch(e){setError(e instanceof Error?e.message:'No se pudo completar la consulta.');}finally{setBusy(false);}
  };
  return <section className="pharmacy-ai-card"><div className="pharmacy-ai-heading"><div><span className="pharmacy-ai-icon"><BrainCircuit size={19}/></span><div><strong>Asistente farmacéutico IA</strong><small>Orientación segura para clientes · {context}</small></div></div><button className="secondary" type="button" onClick={()=>setOpen(v=>!v)}><MessageCircle size={16}/>{open?'Ocultar asistente':'Consultar al asistente'}</button></div>
