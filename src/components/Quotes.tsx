@@ -33,326 +33,356 @@ setCreating(false);setSelected(q);setEditingId(null);setLines([]);setClient('');
 setSaveError(error instanceof Error?error.message:'No se pudo guardar la cotización. Inténtalo de nuevo.');
 }finally{setSaving(false);}
 }; const startNew=()=>{setSaveError('');setSelected(null);setEditingId(null);setLines([]);setClient('');setClientSearch('');setClientOpen(false);setDiscount('0');setNotes('');setSeller('');setDeliveryTime('1 - 3 días');setIncludeNotes(true);setValid(new Date(Date.now()+15*86400000).toISOString().slice(0,10));setShowList(false);setCreating(true)};
-return <div className="content standard-invoice quotes-page"><style>{`.quotes-page .invoice-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
-.quotes-page .quote-summary{margin-top:12px;padding:16px 18px;border:1px solid #e2ebe9;border-radius:12px;background:#fff;display:flex;flex-direction:column;gap:0;color:#17252a;box-shadow:0 3px 12px #173e3e08}
-.quotes-page .quote-summary-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:9px 0;border-bottom:1px solid #edf2f1;font-size:13px;line-height:1.45}
-.quotes-page .quote-summary-row>span:first-child{color:#637d78}
-.quotes-page .quote-summary-row strong{color:#17252a;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
-.quotes-page .quote-summary-isv{align-items:flex-start;flex-wrap:wrap}
-.quotes-page .quote-summary-isv>span:last-child{flex:1 1 220px;min-width:0;text-align:right;color:#637d78;font-size:12px}
-.quotes-page .quote-summary-total{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 0 2px;margin-top:4px;border-top:1px solid #d7e7e2}
-.quotes-page .quote-summary-total>span{font-size:14px;font-weight:800;letter-spacing:.04em;color:#102f2f;text-transform:uppercase}
-.quotes-page .quote-summary-total strong{font-size:24px;line-height:1.2;color:#167b61;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
-@media(max-width:560px){.quotes-page .quote-summary{padding:12px}.quotes-page .quote-summary-row{gap:10px}.quotes-page .quote-summary-isv>span:last-child{text-align:left;flex-basis:100%}.quotes-page .quote-summary-total strong{font-size:21px}}
-.quotes-page .quote-notes-switch{display:inline-flex;align-items:center;gap:10px;margin-top:12px;font-weight:500;cursor:pointer;user-select:none}
-.quotes-page .quote-notes-switch input[type="checkbox"]{appearance:none;-webkit-appearance:none;position:relative;display:inline-block;flex:0 0 42px;width:42px!important;min-width:42px;height:24px!important;min-height:24px!important;max-height:24px;margin:0!important;padding:0;border:0;border-radius:999px;background:#cbd5e1;cursor:pointer;box-sizing:border-box;transition:background .18s ease}
-.quotes-page .quote-notes-switch input[type="checkbox"]::before{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.25);transition:transform .18s ease}
-.quotes-page .quote-notes-switch input[type="checkbox"]:checked{background:#0f766e}
-.quotes-page .quote-notes-switch input[type="checkbox"]:checked::before{transform:translateX(18px)}
-.quotes-page .quote-notes-switch input[type="checkbox"]:focus-visible{outline:2px solid #0f766e;outline-offset:3px}
-
-.quotes-page .quote-field-number{grid-area:number!important;flex:none!important;width:160px!important;min-width:160px!important;max-width:160px!important;box-sizing:border-box}.quotes-page .quote-field-client{grid-area:client!important}.quotes-page .quote-field-rtn{grid-area:rtn!important}.quotes-page .quote-field-phone{grid-area:phone!important}.quotes-page .quote-field-date{grid-area:date!important}.quotes-page .quote-field-valid{grid-area:valid!important}.quotes-page .quote-field-address{grid-area:address!important}.quotes-page .quote-field-seller{grid-area:seller!important}.quotes-page .quote-field-price-list{grid-area:price!important}
-.quotes-page #quote-number{display:block;width:160px!important;min-width:160px!important;max-width:160px!important;height:39px!important;min-height:39px!important;max-height:39px!important;box-sizing:border-box}
-.quotes-page .invoice-header-grid{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:9px!important;margin:0!important}.quotes-page .quote-header-row{display:flex;align-items:flex-start;flex-wrap:nowrap;gap:12px;min-width:0;max-width:100%}
-.quotes-page .invoice-field{min-width:0!important;width:100%!important;max-width:100%!important;margin:0!important;padding:0!important;box-sizing:border-box;flex:none!important;grid-column:auto}
-.quotes-page .inv-span-2,.quotes-page .inv-span-4,.quotes-page .inv-span-8{grid-column:auto}
-.quotes-page .invoice-field input,.quotes-page .invoice-field select,.quotes-page .invoice-field textarea{width:100%;box-sizing:border-box;margin:0!important}
-.quotes-page .inventory-toolbar .search{display:flex!important;align-items:center;gap:10px;width:100%;max-width:560px;min-height:42px;padding:0 13px;border:1px solid #dbe7e2;border-radius:10px;background:#f8fbfa;box-shadow:none;box-sizing:border-box;color:#7a918c}
-.quotes-page .inventory-toolbar .search:focus-within{border-color:#87b9a9;background:#fff}
-.quotes-page .quote-editable-row{cursor:pointer;transition:background-color .15s ease}.quotes-page .quote-editable-row:hover{background:#f2faf7}.quotes-page .quote-editable-row:focus-visible{outline:2px solid #0f766e;outline-offset:-2px}
-.quotes-page .inventory-toolbar .search input,.quotes-page .inventory-toolbar .search input:focus{flex:1;min-width:0;width:100%;height:100%;margin:0!important;padding:0!important;border:0!important;outline:0!important;box-shadow:none!important;border-radius:0!important;background:transparent!important;color:#243c38;font:inherit;box-sizing:border-box}
-.quotes-page .quote-product-results{margin-top:0!important}.quotes-page .quote-product-result-row{cursor:pointer}.quotes-page .quote-product-result-row:hover{background:#f0faf6!important}.quotes-page .quote-product-result-row:focus-visible{outline:2px solid #0f766e;outline-offset:-2px;background:#f0faf6}
-.quotes-page .quote-editor-card{padding:12px!important}
-.quotes-page .invoice-field:has(#quote-client-search){grid-area:client!important;flex:none!important;width:516px!important;min-width:0!important;max-width:516px!important;box-sizing:border-box}
-.quotes-page .invoice-field:has(#quote-client-search) .invoice-customer-select-row{display:block!important;width:100%!important;max-width:100%!important;min-width:0;box-sizing:border-box}
-.quotes-page .invoice-field:has(#quote-client-search) .invoice-search{display:flex!important;flex:0 0 516px!important;width:516px!important;min-width:0!important;max-width:516px!important;height:39px!important;min-height:39px!important;max-height:39px!important;box-sizing:border-box}
-.quotes-page #quote-client-search{display:block!important;width:516px!important;min-width:0!important;max-width:516px!important;height:39px!important;min-height:39px!important;max-height:39px!important;box-sizing:border-box}
-.quotes-page .invoice-field:has(#quote-rtn){grid-area:rtn!important;flex:none!important;width:266px!important;min-width:0!important;max-width:266px!important;box-sizing:border-box}
-.quotes-page #quote-rtn{width:266px!important;min-width:0!important;max-width:266px!important;height:39px!important;min-height:39px!important;max-height:39px!important;box-sizing:border-box}
-.quotes-page .invoice-field:has(#quote-phone){grid-area:phone!important;flex:none!important;width:159px!important;min-width:159px!important;max-width:159px!important;box-sizing:border-box}.quotes-page #quote-phone{display:block;width:159px!important;min-width:159px!important;max-width:159px!important;height:39px!important;min-height:39px!important;max-height:39px!important;box-sizing:border-box}
-.quotes-page .invoice-field:has(#quote-date){grid-area:date!important}.quotes-page .invoice-field:has(#quote-valid){grid-area:valid!important;width:138px!important;min-width:138px!important;max-width:138px!important;box-sizing:border-box}
-.quotes-page .invoice-field.quote-field-date{width:138px!important;min-width:138px!important;max-width:138px!important;box-sizing:border-box}
-.quotes-page #quote-date{width:138px!important;min-width:138px!important;max-width:138px!important;height:39px!important;min-height:39px!important;max-height:39px!important;box-sizing:border-box}
-.quotes-page #quote-valid{width:138px!important;min-width:138px!important;max-width:138px!important;height:39px!important;min-height:39px!important;max-height:39px!important;box-sizing:border-box}
-.quotes-page .invoice-field:has(#quote-address){grid-area:address!important;flex:none!important;width:475px!important;min-width:475px!important;max-width:475px!important;box-sizing:border-box}.quotes-page #quote-address{display:block;width:475px!important;min-width:475px!important;max-width:475px!important;height:39px!important;min-height:39px!important;max-height:39px!important;box-sizing:border-box}
-.quotes-page .invoice-field:has(#quote-seller){grid-area:seller!important;flex:none!important;width:169px!important;min-width:169px!important;max-width:169px!important;box-sizing:border-box}
-.quotes-page #quote-seller{display:block;width:169px!important;min-width:169px!important;max-width:169px!important;height:39px!important;min-height:39px!important;max-height:39px!important;box-sizing:border-box}
-.quotes-page .invoice-field:has(#quote-price-list){grid-area:price!important;flex:none!important;width:159px!important;min-width:159px!important;max-width:159px!important;box-sizing:border-box}.quotes-page #quote-price-list{display:block;width:159px!important;min-width:159px!important;max-width:159px!important;height:39px!important;min-height:39px!important;max-height:39px!important;box-sizing:border-box}
-/* Compactar el encabezado: menos separación entre campos y filas */
-/* Alinear etiquetas y eliminar huecos laterales del encabezado */
-/* Unificar los campos en filas compactas y eliminar columnas vacías */
-.quotes-page .invoice-header-grid{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:7px!important;width:100%!important}
-.quotes-page .quote-header-row{display:flex!important;flex-flow:row wrap!important;align-items:flex-end!important;justify-content:flex-start!important;gap:7px!important;width:100%!important;max-width:100%!important;margin:0!important}
-.quotes-page .quote-header-row .invoice-field{flex:0 0 auto!important;align-self:flex-end!important}
-.quotes-page .quote-header-row .field-label{display:block!important;text-align:left!important;margin:0 0 3px!important;line-height:1.15!important}
-.quotes-page .quote-field-number{width:160px!important;min-width:160px!important;max-width:160px!important}
-.quotes-page .quote-field-seller{width:169px!important;min-width:169px!important;max-width:169px!important}
-.quotes-page .quote-field-date,.quotes-page .quote-field-valid{width:138px!important;min-width:138px!important;max-width:138px!important}
-.quotes-page .quote-field-client{width:516px!important;min-width:0!important;max-width:min(516px,100%)!important}
-.quotes-page .quote-field-rtn{width:266px!important;min-width:0!important;max-width:min(266px,100%)!important}
-.quotes-page .quote-field-price-list{width:159px!important;min-width:0!important;max-width:min(159px,100%)!important}
-.quotes-page .quote-field-address{width:475px!important;min-width:0!important;max-width:min(475px,100%)!important}
-.quotes-page .quote-field-phone{width:159px!important;min-width:0!important;max-width:min(159px,100%)!important}
-.quotes-page .quote-editor-card{width:100%!important;max-width:100%!important;padding:10px!important}
-.quotes-page .quote-products-card{margin-top:8px!important}
-@media(max-width:560px){
- .quotes-page .quote-header-row{gap:6px!important}
- .quotes-page .quote-header-row .invoice-field{width:100%!important;min-width:0!important;max-width:100%!important;flex:1 1 100%!important}
- .quotes-page .quote-header-row input,.quotes-page .quote-header-row select,.quotes-page #quote-client-search,.quotes-page .invoice-field:has(#quote-client-search) .invoice-search{width:100%!important;min-width:0!important;max-width:100%!important}
+return <div className="content standard-invoice quotes-page"><style>{`
+.quotes-page .quote-summary {
+  margin-top: 8px;
+  padding: 8px 0 2px;
+  border-top: 1px solid #e5ece8;
 }
-.quotes-page .quote-header-row{width:max-content!important;max-width:100%!important;justify-content:flex-start!important;gap:8px!important}
-.quotes-page .quote-header-row-main{align-items:flex-end!important}
-.quotes-page .quote-header-row .invoice-field{align-self:flex-end!important}
-.quotes-page .quote-header-row .field-label{width:100%!important;text-align:left!important;margin:0 0 4px!important;padding:0!important}
-.quotes-page .quote-field-number .field-label{display:block!important;text-align:left!important}
-.quotes-page .quote-header-row-client,.quotes-page .quote-header-row-details{margin:0!important}
-.quotes-page .invoice-header-grid{align-items:flex-start!important;gap:5px!important}
-.quotes-page .quote-editor-card{width:fit-content!important;max-width:100%!important}
-@media(max-width:560px){
-.quotes-page .quote-header-row{width:100%!important;max-width:100%!important}
-.quotes-page .quote-editor-card{width:100%!important}
+.quotes-page .quote-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 5px 0;
+  font-size: 12px;
 }
-.quotes-page .quote-editor-card{padding:9px!important}
-.quotes-page .invoice-header-grid{gap:5px!important}
-.quotes-page .quote-header-row{gap:8px!important}
-.quotes-page .invoice-field .field-label{display:block;margin:0 0 3px!important;line-height:1.2}
-.quotes-page .quote-header-row input,.quotes-page .quote-header-row select{height:36px!important;min-height:36px!important;max-height:36px!important}
-.quotes-page .quote-header-row #quote-client-search{height:36px!important;min-height:36px!important;max-height:36px!important}
-.quotes-page .invoice-field:has(#quote-client-search) .invoice-search{height:36px!important;min-height:36px!important;max-height:36px!important}
-.quotes-page .quote-products-card{margin-top:9px!important;padding:10px!important}
-@media(max-width:560px){.quotes-page .invoice-header-grid,.quotes-page .quote-header-row{gap:5px!important}.quotes-page .quote-products-card{margin-top:8px!important}}
-@media(max-width:560px){
-.quotes-page .quote-field-number{width:100%!important;min-width:0!important;max-width:100%!important}.quotes-page #quote-number{width:100%!important;min-width:0!important;max-width:100%!important}
-.quotes-page .invoice-header-grid{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:9px!important}.quotes-page .quote-header-row{flex-direction:column!important;align-items:stretch!important;gap:9px!important;width:100%!important;max-width:100%!important}
-.quotes-page .invoice-field:has(#quote-client-search),.quotes-page .invoice-field:has(#quote-rtn),.quotes-page .invoice-field:has(#quote-phone),.quotes-page .invoice-field:has(#quote-date),.quotes-page .invoice-field:has(#quote-valid),.quotes-page .invoice-field:has(#quote-address),.quotes-page .invoice-field:has(#quote-seller),.quotes-page .invoice-field:has(#quote-price-list){flex:0 1 100%!important;width:100%!important;min-width:0!important;max-width:100%!important}
-.quotes-page .invoice-field:has(#quote-client-search) .invoice-search{flex:1 1 100%!important;width:100%!important;max-width:100%!important}
-.quotes-page #quote-date,.quotes-page #quote-valid,.quotes-page #quote-phone{width:100%!important;min-width:0!important;max-width:100%!important}
-.quotes-page #quote-seller,.quotes-page #quote-price-list,.quotes-page #quote-address{width:100%!important;min-width:0!important;max-width:100%!important}
-.quotes-page #quote-client-search,.quotes-page #quote-rtn{width:100%!important;min-width:0!important;max-width:100%!important;height:39px!important;min-height:39px!important;max-height:39px!important}
-.quotes-page .quote-editor-card{padding:10px!important}
-.quotes-page .quote-products-card{padding:10px!important}
-.quotes-page.standard-invoice .standard-invoice-lines input.quote-line-quantity{display:block;width:76px!important;min-width:76px!important;max-width:76px!important;height:39px!important;min-height:39px!important;max-height:39px!important;padding:5px 4px!important;box-sizing:border-box;text-align:center;flex:0 0 76px}
-.quotes-page.standard-invoice .standard-invoice-lines input.invoice-line-price{display:block;width:69px!important;min-width:69px!important;max-width:69px!important;height:39px!important;min-height:39px!important;max-height:39px!important;padding:5px 4px!important;box-sizing:border-box;flex:0 0 69px}
-.quotes-page .standard-invoice-lines th,.quotes-page .standard-invoice-lines td{vertical-align:middle}
-.quotes-page .standard-invoice-lines thead th{text-align:center!important;vertical-align:middle}
-.quotes-page .standard-invoice-lines th:nth-child(1),.quotes-page .standard-invoice-lines td:nth-child(1),.quotes-page .standard-invoice-lines th:nth-child(2),.quotes-page .standard-invoice-lines td:nth-child(2){text-align:left}
-.quotes-page .standard-invoice-lines th:nth-child(3),.quotes-page .standard-invoice-lines td:nth-child(3),.quotes-page .standard-invoice-lines th:nth-child(4),.quotes-page .standard-invoice-lines td:nth-child(4),.quotes-page .standard-invoice-lines th:nth-child(5),.quotes-page .standard-invoice-lines td:nth-child(5),.quotes-page .standard-invoice-lines th:nth-child(6),.quotes-page .standard-invoice-lines td:nth-child(6){text-align:center}
-.quotes-page .standard-invoice-lines td:nth-child(3) .quote-quantity-controls{justify-content:center!important;width:100%;min-width:0}
-.quotes-page .standard-invoice-lines td:nth-child(4) .invoice-line-price{display:block;margin-left:auto!important;margin-right:auto!important}
-.quotes-page .standard-invoice-lines th:nth-child(7),.quotes-page .standard-invoice-lines td:nth-child(7){text-align:center}
-.quotes-page .standard-invoice-lines th:nth-child(8),.quotes-page .standard-invoice-lines td:nth-child(8){text-align:right}
-.quotes-page .standard-invoice-lines td:nth-child(8)>strong{display:block;text-align:right}
-.quotes-page .standard-invoice-lines th:nth-child(9),.quotes-page .standard-invoice-lines td:nth-child(9){text-align:center}
-.quotes-page table thead th{text-align:center!important;vertical-align:middle}
-.quotes-page .standard-invoice-lines thead th:nth-child(n){text-align:center!important}
-.quotes-page table.standard-invoice-lines th:nth-child(3),.quotes-page table.standard-invoice-lines td:nth-child(3){text-align:center!important}
-.quotes-page table.standard-invoice-lines td:nth-child(3)>div{justify-content:center!important;width:100%;min-width:0}
-.quotes-page table.standard-invoice-lines th:nth-child(4),.quotes-page table.standard-invoice-lines td:nth-child(4){text-align:center!important}
-.quotes-page.standard-invoice table.standard-invoice-lines input.invoice-line-price{margin-left:auto!important;margin-right:auto!important}
-.quotes-page table.standard-invoice-lines th:nth-child(5),.quotes-page table.standard-invoice-lines td:nth-child(5),.quotes-page table.standard-invoice-lines th:nth-child(6),.quotes-page table.standard-invoice-lines td:nth-child(6){text-align:center!important}
-.quotes-page table.standard-invoice-lines th:nth-child(7),.quotes-page table.standard-invoice-lines td:nth-child(7){text-align:center!important}
-.quotes-page table.standard-invoice-lines th:nth-child(8),.quotes-page table.standard-invoice-lines td:nth-child(8){text-align:right!important}
-.quotes-page table.standard-invoice-lines th:nth-child(9),.quotes-page table.standard-invoice-lines td:nth-child(9){text-align:center!important}
+.quotes-page .quote-summary-row > span:first-child { color: #637d78; }
+.quotes-page .quote-summary-row strong {
+  color: #17252a;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
-.quotes-page.quotes-page.standard-invoice table.standard-invoice-lines thead th:nth-child(n){text-align:center!important;vertical-align:middle!important}
-.quotes-page .quotes-list-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:4px 0 12px}.quotes-page .quotes-list-heading h2{margin:5px 0;color:#1c3c32;font-size:20px}.quotes-page .quotes-list-heading p{margin:0;color:#75877f;font-size:12px}.quotes-page .quotes-list-kicker{font-size:10px;font-weight:800;letter-spacing:1.2px;color:#21845c}.quotes-page .quotes-list-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}.quotes-page .quotes-list-metrics>div{min-width:0;padding:13px 15px;border:1px solid #e0e9e4;border-radius:10px;background:#fff}.quotes-page .quotes-list-metrics span,.quotes-page .quotes-list-metrics strong{display:block}.quotes-page .quotes-list-metrics span{font-size:10px;color:#75877f}.quotes-page .quotes-list-metrics strong{margin-top:7px;font-size:19px;color:#1c4436;overflow-wrap:anywhere}.quotes-page .quotes-list-table table{min-width:760px}.quotes-page .quotes-list-table th{white-space:nowrap}.quotes-page .quote-status{display:inline-flex;padding:5px 9px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}.quotes-page .quote-status.active{background:#eaf6ef;color:#23734e}.quotes-page .quote-status.expired{background:#fff1ed;color:#a94f3e}@media(max-width:850px){.quotes-page .quotes-list-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.quotes-page .quotes-list-heading{align-items:flex-start;flex-direction:column}.quotes-page .quotes-list-heading>.primary{width:100%}.quotes-page .quotes-list-metrics>div{padding:10px}.quotes-page .quotes-list-metrics strong{font-size:16px}}
-/* Cotizaciones: mismo orden y medidas que Facturación estándar */
-.quotes-page .quote-editor-card .invoice-header-grid {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: stretch !important;
-  gap: 10px !important;
-  width: 100% !important;
-  min-width: 0 !important;
+.quotes-page .quote-summary-isv > span:last-child {
+  color: #637d78;
+  font-size: 11px;
+  text-align: right;
 }
-.quotes-page .quote-top-fields-row,
-.quotes-page .quote-client-fields-row,
-.quotes-page .quote-bottom-fields-row {
+.quotes-page .quote-notes-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+}
+.quotes-page .quote-notes-switch input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  display: inline-block;
+  flex: 0 0 42px;
+  width: 42px !important;
+  min-width: 42px;
+  height: 24px !important;
+  min-height: 24px !important;
+  margin: 0 !important;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #cbd5e1;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background .18s ease;
+}
+.quotes-page .quote-notes-switch input[type="checkbox"]::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15,23,42,.25);
+  transition: transform .18s ease;
+}
+.quotes-page .quote-notes-switch input[type="checkbox"]:checked { background: #0f766e; }
+.quotes-page .quote-notes-switch input[type="checkbox"]:checked::before { transform: translateX(18px); }
+.quotes-page .quote-notes-switch input[type="checkbox"]:focus-visible {
+  outline: 2px solid #0f766e;
+  outline-offset: 3px;
+}
+.quotes-page .invoice-customer-field .invoice-customer-select-row {
   display: grid !important;
-  align-items: end !important;
-  gap: 10px !important;
+  grid-template-columns: minmax(0, 1fr) !important;
   width: 100% !important;
   min-width: 0 !important;
-  max-width: 100% !important;
-  margin: 0 !important;
 }
-.quotes-page .quote-top-fields-row {
-  grid-template-columns: 185px 160px 135px 135px !important;
+.quotes-page .quote-client-picker { position: relative; width: 100%; min-width: 0; }
+.quotes-page .quote-client-picker .invoice-search {
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+  min-height: 32px;
+  box-sizing: border-box;
 }
-.quotes-page .quote-client-fields-row {
-  grid-template-columns: minmax(0, 1fr) 248px !important;
+.quotes-page #quote-client-search {
+  width: 100%;
+  min-width: 0;
+  height: 30px;
+  min-height: 30px;
+  box-sizing: border-box;
 }
-.quotes-page .quote-bottom-fields-row {
-  grid-template-columns: 150px 360px 170px !important;
+.quotes-page .quote-client-matches {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 5px);
+  left: 0;
+  right: 0;
+  max-height: 230px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(15,23,42,.14);
 }
-.quotes-page .quote-top-fields-row > .invoice-field,
-.quotes-page .quote-client-fields-row > .invoice-field,
-.quotes-page .quote-bottom-fields-row > .invoice-field {
-  display: flex !important;
-  flex-direction: column !important;
-  flex: none !important;
-  width: 100% !important;
-  min-width: 0 !important;
-  max-width: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  box-sizing: border-box !important;
-  align-self: end !important;
+.quotes-page .quote-client-matches button {
+  display: block;
+  width: 100%;
+  padding: 10px 13px;
+  text-align: left;
+  background: #fff;
+  border: 0;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  color: #0f172a;
 }
-.quotes-page .quote-top-fields-row .field-label,
-.quotes-page .quote-client-fields-row .field-label,
-.quotes-page .quote-bottom-fields-row .field-label {
-  display: block !important;
-  width: 100% !important;
-  margin: 0 0 5px !important;
-  padding: 0 !important;
-  text-align: left !important;
-  line-height: 1.2 !important;
+.quotes-page .quote-client-matches button:hover,
+.quotes-page .quote-client-matches button[aria-selected="true"] { background: #f0fdfa; }
+.quotes-page .quote-client-matches-empty { padding: 14px; font-size: 13px; color: #64748b; }
+.quotes-page .quote-product-add .quote-product-copy small { display: block; }
+.quotes-page .quote-product-add .quote-product-copy strong { display: block; }
+.quotes-page .quotes-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 4px 0 12px;
 }
-.quotes-page .quote-top-fields-row input,
-.quotes-page .quote-top-fields-row select,
-.quotes-page .quote-client-fields-row input,
-.quotes-page .quote-client-fields-row select,
-.quotes-page .quote-bottom-fields-row input,
-.quotes-page .quote-bottom-fields-row select {
-  box-sizing: border-box !important;
-  height: 32px !important;
-  min-height: 32px !important;
-  max-height: 32px !important;
-  padding: 4px 8px !important;
+.quotes-page .quotes-list-heading h2 { margin: 5px 0; color: #1c3c32; font-size: 20px; }
+.quotes-page .quotes-list-heading p { margin: 0; color: #75877f; font-size: 12px; }
+.quotes-page .quotes-list-kicker { font-size: 10px; font-weight: 800; letter-spacing: 1.2px; color: #21845c; }
+.quotes-page .quotes-list-metrics {
+  display: grid;
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  gap: 10px;
+  margin-bottom: 12px;
 }
-.quotes-page .quote-top-fields-row #quote-number,
-.quotes-page .quote-top-fields-row .quote-field-number {
-  width: 185px !important;
-  min-width: 185px !important;
-  max-width: 185px !important;
+.quotes-page .quotes-list-metrics > div {
+  min-width: 0;
+  padding: 13px 15px;
+  border: 1px solid #e0e9e4;
+  border-radius: 10px;
+  background: #fff;
 }
-.quotes-page .quote-top-fields-row #quote-seller,
-.quotes-page .quote-top-fields-row .quote-field-seller {
-  width: 160px !important;
-  min-width: 160px !important;
-  max-width: 160px !important;
+.quotes-page .quotes-list-metrics span,
+.quotes-page .quotes-list-metrics strong { display: block; }
+.quotes-page .quotes-list-metrics span { font-size: 10px; color: #75877f; }
+.quotes-page .quotes-list-metrics strong {
+  margin-top: 7px;
+  font-size: 19px;
+  color: #1c4436;
+  overflow-wrap: anywhere;
 }
-.quotes-page .quote-top-fields-row #quote-date,
-.quotes-page .quote-top-fields-row #quote-valid,
-.quotes-page .quote-top-fields-row .quote-field-date,
-.quotes-page .quote-top-fields-row .quote-field-valid {
-  width: 135px !important;
-  min-width: 135px !important;
-  max-width: 135px !important;
+.quotes-page .quotes-list-table table { min-width: 760px; }
+.quotes-page .quotes-list-table th { white-space: nowrap; }
+.quotes-page .quote-editable-row { cursor: pointer; transition: background-color .15s ease; }
+.quotes-page .quote-editable-row:hover { background: #f2faf7; }
+.quotes-page .quote-editable-row:focus-visible { outline: 2px solid #0f766e; outline-offset: -2px; }
+.quotes-page .quote-status {
+  display: inline-flex;
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
 }
-.quotes-page .quote-client-fields-row .invoice-field:has(#quote-client-search) {
-  width: 100% !important;
-  min-width: 0 !important;
-  max-width: 100% !important;
+.quotes-page .quote-status.active { background: #eaf6ef; color: #23734e; }
+.quotes-page .quote-status.expired { background: #fff1ed; color: #a94f3e; }
+@media (max-width: 850px) {
+  .quotes-page .quotes-list-metrics { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
-.quotes-page .quote-client-fields-row .invoice-field:has(#quote-client-search) .invoice-search {
-  display: flex !important;
-  flex: 1 1 auto !important;
-  width: 100% !important;
-  min-width: 0 !important;
-  max-width: 100% !important;
-  height: 32px !important;
-  min-height: 32px !important;
-  max-height: 32px !important;
-  box-sizing: border-box !important;
-  padding: 0 10px !important;
-}
-.quotes-page .quote-client-fields-row #quote-client-search {
-  flex: 1 1 auto !important;
-  width: 100% !important;
-  min-width: 0 !important;
-  max-width: 100% !important;
-  height: 30px !important;
-  min-height: 30px !important;
-  max-height: 30px !important;
-  padding: 0 !important;
-  box-sizing: border-box !important;
-}
-.quotes-page .quote-client-fields-row #quote-rtn,
-.quotes-page .quote-client-fields-row .invoice-field:has(#quote-rtn) {
-  width: 248px !important;
-  min-width: 248px !important;
-  max-width: 248px !important;
-}
-.quotes-page .quote-bottom-fields-row #quote-price-list,
-.quotes-page .quote-bottom-fields-row .quote-field-price-list {
-  width: 150px !important;
-  min-width: 150px !important;
-  max-width: 150px !important;
-}
-.quotes-page .quote-bottom-fields-row #quote-address,
-.quotes-page .quote-bottom-fields-row .quote-field-address {
-  width: 360px !important;
-  min-width: 360px !important;
-  max-width: 360px !important;
-}
-.quotes-page .quote-bottom-fields-row #quote-phone,
-.quotes-page .quote-bottom-fields-row .quote-field-phone {
-  width: 170px !important;
-  min-width: 170px !important;
-  max-width: 170px !important;
-}
-@media (max-width: 1200px) {
-  .quotes-page .quote-top-fields-row,
-  .quotes-page .quote-bottom-fields-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
-  .quotes-page .quote-client-fields-row {
-    grid-template-columns: minmax(0, 1fr) 248px !important;
-  }
-  .quotes-page .quote-top-fields-row .invoice-field,
-  .quotes-page .quote-bottom-fields-row .invoice-field,
-  .quotes-page .quote-client-fields-row .invoice-field {
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-  }
-  .quotes-page .quote-top-fields-row input,
-  .quotes-page .quote-top-fields-row select,
-  .quotes-page .quote-bottom-fields-row input,
-  .quotes-page .quote-bottom-fields-row select {
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-  }
-}
-@media (max-width: 650px) {
-  .quotes-page .quote-top-fields-row,
-  .quotes-page .quote-client-fields-row,
-  .quotes-page .quote-bottom-fields-row {
-    grid-template-columns: minmax(0, 1fr) !important;
-  }
-  .quotes-page .quote-top-fields-row .invoice-field,
-  .quotes-page .quote-client-fields-row .invoice-field,
-  .quotes-page .quote-bottom-fields-row .invoice-field,
-  .quotes-page .quote-top-fields-row input,
-  .quotes-page .quote-top-fields-row select,
-  .quotes-page .quote-client-fields-row input,
-  .quotes-page .quote-bottom-fields-row input,
-  .quotes-page .quote-bottom-fields-row select {
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-  }
+@media (max-width: 560px) {
+  .quotes-page .quote-summary { padding: 8px 0 2px; }
+  .quotes-page .quote-summary-row { gap: 10px; }
+  .quotes-page .quote-summary-isv > span:last-child { text-align: left; }
+  .quotes-page .quote-summary-total strong { font-size: 21px; }
+  .quotes-page .quotes-list-heading { align-items: flex-start; flex-direction: column; }
+  .quotes-page .quotes-list-heading > .primary { width: 100%; }
+  .quotes-page .quotes-list-metrics > div { padding: 10px; }
+  .quotes-page .quotes-list-metrics strong { font-size: 16px; }
 }
 `}</style><div className="page-head quote-page-head-compact" style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}>{!creating&&<div style={{display:"flex",gap:10,flexWrap:"wrap"}}>{!selected&&<button className="secondary" onClick={()=>{setSelected(null);setCreating(false);setEditingId(null);setShowList(v=>!v)}}><FileText size={16}/> {showList?"Volver al formulario":"Ver cotizaciones"}</button>}</div>}</div>
 {selected&&!creating?<div className="card quote-document"><style>{`@media print{@page{size:${printFormat.paperSize==='ticket'?'80mm auto':printFormat.paperSize};margin:${printFormat.marginsMm}mm}body *{visibility:hidden!important}.quote-document,.quote-document *{visibility:visible!important}.quote-document{position:absolute!important;left:0!important;top:0!important;width:100%!important;box-shadow:none!important;border:0!important;padding:0!important;background:white!important}.quote-document .no-print{display:none!important}.quote-document .quote-total{background:white!important;border-top:1px solid #ddd!important;border-radius:0!important} .quote-document table{width:100%!important;border-collapse:collapse!important}.quote-document th,.quote-document td{border-bottom:1px solid #ddd!important;padding:7px 5px!important;text-align:left!important}}`}</style><div className="page-head"><div>{printFormat.showLogo&&(settings.logoDataUrl?<img src={settings.logoDataUrl} alt="Logotipo DIFARMÁS" style={{maxWidth:150,maxHeight:65,objectFit:'contain',marginBottom:8}}/>:<strong style={{color:settings.primaryColor,fontSize:22}}>DIFARMÁS</strong>)}<h2>{settings.businessName||'DIFARMÁS'}</h2>{printFormat.showBusinessData&&<p>{[settings.businessSubtitle,settings.phone,settings.email,settings.address,settings.rtn?'RTN: '+settings.rtn:''].filter(Boolean).join(' · ')}</p>}<h2>{printFormat.title} {selected.number}</h2>{printFormat.subtitle&&<p>{printFormat.subtitle}</p>}{printFormat.showClientData&&<p>Cliente: {selected.client} · Fecha: {selected.date} · Válida hasta: {selected.valid}</p>}</div><button className="primary no-print" onClick={printQuote}><Printer size={16}/> Imprimir</button></div><div className="quote-detail-overview" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(170px,1fr))",gap:12,margin:"18px 0"}}><div style={{padding:15,border:"1px solid #dbe7ee",borderRadius:12,background:"#f8fafc"}}><div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"#64748b"}}>Cliente</div><div style={{fontWeight:700,color:"#102c43",marginTop:6,overflowWrap:"anywhere"}}>{selected.client}</div></div><div style={{padding:15,border:"1px solid #dbe7ee",borderRadius:12,background:"#f8fafc"}}><div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"#64748b"}}>Fecha de emisión</div><div style={{fontWeight:700,color:"#102c43",marginTop:6}}>{selected.date}</div></div><div style={{padding:15,border:"1px solid #dbe7ee",borderRadius:12,background:"#f8fafc"}}><div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"#64748b"}}>Vigencia</div><div style={{fontWeight:700,color:"#102c43",marginTop:6}}>{selected.valid||"No definida"}</div></div><div style={{padding:15,border:"1px solid #dbe7ee",borderRadius:12,background:"#f0fdfa"}}><div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"#0f766e"}}>Productos</div><div style={{fontWeight:700,fontSize:20,color:"#0f766e",marginTop:3}}>{selected.lines.reduce((s,l)=>s+l.qty,0)} <span style={{fontSize:12,fontWeight:500}}>unidades · {selected.lines.length} artículos</span></div></div></div><div className="table-wrap"><table><thead><tr><th>Producto</th>{printFormat.showProductCodes&&<th>Código</th>}<th>Cantidad</th><th>Precio unitario</th>{printFormat.showDiscount&&<th>Descuento %</th>}<th>ISV %</th><th>Importe</th></tr></thead><tbody>{selected.lines.map(l=>{const product=products.find(p=>p.id===l.id);const isvPercent=product?.taxEnabled?Number(product.taxRate??settings.billingInfo?.isvRate??15):0;return <tr key={l.id}><td>{l.name}</td>{printFormat.showProductCodes&&<td>{l.code}</td>}<td>{l.qty}</td><td>{money(l.price)}</td>{printFormat.showDiscount&&<td>{Number(l.discountPercent??0)}%</td>}<td>{isvPercent}%</td><td>{money(discountedLineTotal(l))}</td></tr>})}</tbody></table></div><div className="invoice-total quote-total" style={{marginTop:22,padding:22,borderRadius:14,textAlign:"left",display:"flex",flexDirection:"column",alignItems:"stretch",background:"#f8fafc",border:"1px solid #dbe7ee"}}><div style={{fontSize:12,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"#64748b",marginBottom:8}}>Resumen económico</div><p style={{display:"flex",justifyContent:"space-between",gap:12,margin:"7px 0"}}><span>Subtotal de productos</span><strong>{money(selected.lines.reduce((s,l)=>s+l.qty*l.price,0))}</strong></p>{printFormat.showDiscount&&<p>Descuento: {money(selected.discount+selected.lines.reduce((s,l)=>s+lineDiscountAmount(l),0))}</p>}<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,marginTop:12,paddingTop:14,borderTop:"2px solid #0f766e"}}><span style={{fontSize:16,fontWeight:700,color:"#102c43"}}>TOTAL A PAGAR</span><h2 style={{margin:0,textAlign:"right",color:"#0f766e",fontSize:25}}>{money(Math.max(0,selected.lines.reduce((s,l)=>s+discountedLineTotal(l),0)-selected.discount))}</h2></div></div>{printFormat.showNotes&&selected.notes&&<div style={{marginTop:18,padding:16,borderRadius:12,border:"1px solid #dbe7ee",background:"#fff"}}><div style={{fontWeight:700,color:"#102c43",marginBottom:6}}>Observaciones</div><p style={{margin:0,whiteSpace:"pre-wrap",color:"#475569"}}>{selected.notes}</p></div>}<p className="helper">Cotización comercial; no es una factura fiscal.</p>{printFormat.footer&&<p style={{textAlign:'center',marginTop:28}}>{printFormat.footer}</p>}<div className="no-print"><button className="secondary" onClick={()=>setSelected(null)}>Volver a cotizaciones</button> <button className="primary" onClick={()=>startEdit(selected)}>Editar cotización</button></div></div>:null}
 {!selected&&!creating&&showList?<><div className="quotes-list-heading"><div><span className="quotes-list-kicker">GESTIÓN COMERCIAL</span><h2>Historial de cotizaciones</h2><p>Consulta, revisa y administra tus propuestas.</p></div><button className="primary" onClick={startNew}><Plus size={16}/> Nueva cotización</button></div><div className="quotes-list-metrics"><div><span>Total registradas</span><strong>{quotes.length}</strong></div><div><span>Vigentes</span><strong>{quotes.filter(q=>!q.valid||q.valid>=new Date().toISOString().slice(0,10)).length}</strong></div><div><span>Vencidas</span><strong>{quotes.filter(q=>q.valid&&q.valid<new Date().toISOString().slice(0,10)).length}</strong></div><div><span>Valor cotizado</span><strong>{money(quotes.reduce((sum,q)=>sum+Math.max(0,q.lines.reduce((s,l)=>s+discountedLineTotal(l),0)-q.discount),0))}</strong></div></div><div className="inventory-toolbar card"><div className="search"><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar por número o cliente..."/></div><span className="count">{quotes.filter(q=>(q.number+' '+q.client).toLowerCase().includes(search.toLowerCase())).length} resultados</span></div><div className="card table-wrap quotes-list-table"><table><thead><tr><th>Número</th><th>Cliente</th><th>Fecha</th><th>Válida hasta</th><th>Estado</th><th>Total</th><th>Acciones</th></tr></thead><tbody>{quotes.filter(q=>(q.number+' '+q.client).toLowerCase().includes(search.toLowerCase())).map(q=><tr key={q.id} className="quote-editable-row"><td><strong>{q.number}</strong></td><td>{q.client}</td><td>{q.date}</td><td>{q.valid||'—'}</td><td><span className={q.valid&&q.valid<new Date().toISOString().slice(0,10)?'quote-status expired':'quote-status active'}>{q.valid&&q.valid<new Date().toISOString().slice(0,10)?'Vencida':'Vigente'}</span></td><td>{money(Math.max(0,q.lines.reduce((s,l)=>s+discountedLineTotal(l),0)-q.discount))}</td><td><button className="secondary" onClick={()=>setSelected(q)}><Eye size={14}/> Ver</button> <button className="secondary" onClick={()=>startEdit(q)}>Editar</button> <button className="icon-btn" aria-label="Eliminar cotización" onClick={()=>{if(confirm('¿Eliminar esta cotización?'))persist(quotes.filter(x=>x.id!==q.id))}}><Trash2 size={15}/></button></td></tr>)}{quotes.filter(q=>(q.number+' '+q.client).toLowerCase().includes(search.toLowerCase())).length===0&&<tr><td colSpan={7}><div className="empty"><h2>{quotes.length===0?'Aún no hay cotizaciones':'No hay resultados'}</h2><p>{quotes.length===0?'Crea tu primera cotización para empezar.':'Prueba con otro número o cliente.'}</p></div></td></tr>}</tbody></table></div></>:null}
-{(creating||(!selected&&!showList))?<div className="card invoice-header-card quote-editor-card" style={{padding:'16px',boxSizing:'border-box'}}><div className="invoice-header-grid">
-<div className="quote-header-row quote-header-row-main quote-top-fields-row">
-<div className="invoice-field quote-field-number"><label className="field-label" htmlFor="quote-number">N.º de cotización</label><input id="quote-number" value={editingId!==null?(quotes.find(q=>q.id===editingId)?.number??''):''} readOnly placeholder="Se asigna al guardar"/></div>
-<div className="invoice-field inv-span-4 quote-field-seller"><label className="field-label" htmlFor="quote-seller">Vendedor</label><select id="quote-seller" value={seller} onChange={e=>setSeller(e.target.value)}><option value="General">General</option>{(settings.users??[]).filter(u=>u.active).map(u=><option key={u.id} value={u.name}>{u.name}</option>)}</select></div>
-<div className="invoice-field inv-span-2 quote-field-date"><label className="field-label" htmlFor="quote-date">Fecha</label><input id="quote-date" type="date" value={new Date().toISOString().slice(0,10)} readOnly /></div>
-<div className="invoice-field inv-span-2 quote-field-valid"><label className="field-label" htmlFor="quote-valid">Válida hasta</label><input id="quote-valid" type="date" value={valid} onChange={e=>setValid(e.target.value)} /></div>
-</div>
-<div className="quote-header-row quote-header-row-client quote-client-fields-row">
-<div className="invoice-field inv-span-8 quote-field-client"><label className="field-label" htmlFor="quote-client-search">Cliente *</label><div className="invoice-customer-select-row" style={{position:'relative'}}><div className="invoice-search" style={{flex:1,minWidth:0}}><Search size={17}/><input id="quote-client-search" autoComplete="off" value={clientSearch} onFocus={()=>setClientOpen(true)} onChange={e=>{setClientSearch(e.target.value);setClient('');setClientOpen(true)}} placeholder="Buscar cliente por nombre o código"/></div>{clientOpen&&<div style={{position:'absolute',zIndex:20,top:'100%',left:0,right:0,marginTop:5,maxHeight:230,overflowY:'auto',background:'#fff',border:'1px solid #cbd5e1',borderRadius:10,boxShadow:'0 12px 28px rgba(15,23,42,.14)'}}>{matchingCustomers.map(c=><button type="button" key={c.id} onClick={()=>{setClient(String(c.id));setClientSearch(c.name);setClientOpen(false)}} style={{display:'block',width:'100%',padding:'11px 13px',textAlign:'left',background:String(c.id)===client?'#f0fdfa':'#fff',border:0,borderBottom:'1px solid #f1f5f9',cursor:'pointer',color:'#0f172a'}}><span style={{display:'block',fontWeight:600}}>{c.code?c.code+' · ':''}{c.name}</span></button>)}{matchingCustomers.length===0&&<div style={{padding:14,fontSize:13,color:'#64748b'}}>No se encontraron clientes activos.</div>}</div>}</div></div>
-<div className="invoice-field inv-span-2 quote-field-rtn"><label className="field-label" htmlFor="quote-rtn">RTN</label><input id="quote-rtn" value={chosenClient?.rtn??''} readOnly placeholder="RTN del cliente"/></div>
-</div>
-<div className="quote-header-row quote-header-row-details quote-bottom-fields-row">
-<div className="invoice-field inv-span-4 quote-field-price-list"><label className="field-label" htmlFor="quote-price-list">Precio de venta</label><select id="quote-price-list" value={chosenClient?.priceList??"Precio de venta 1"} onChange={()=>{}} disabled><option>{chosenClient?.priceList??"Precio de venta 1"}</option></select></div>
-<div className="invoice-field inv-span-8 quote-field-address"><label className="field-label" htmlFor="quote-address">Dirección</label><input id="quote-address" value={chosenClient?.address??''} readOnly placeholder="Dirección del cliente"/></div>
-<div className="invoice-field inv-span-2 quote-field-phone"><label className="field-label" htmlFor="quote-phone">Teléfono</label><input id="quote-phone" value={chosenClient?.phone??''} readOnly placeholder="Teléfono del cliente"/></div>
-</div>
-</div><section className="card invoice-products-card quote-products-card" style={{marginTop:14,padding:14,borderRadius:12}}><div className="section-heading"><div><h3>Detalle de cotización</h3><p>Busca por nombre, código o principio activo y selecciona los productos para agregarlos.</p></div></div><div id="quote-product-search" className="invoice-search"><Search size={17}/><input value={term} onChange={e=>setTerm(e.target.value)} placeholder="Buscar producto o escanear código"/></div>{term.trim()&&<div className="quote-product-results" style={{marginTop:10,border:'1px solid #dbe7ee',borderRadius:16,overflow:'hidden',background:'#fff',boxShadow:'0 12px 30px rgba(15,23,42,.09)'}}><div style={{padding:'11px 15px',background:'linear-gradient(110deg,#f0fdfa,#f8fafc)',borderBottom:'1px solid #e2e8f0',display:'flex',justifyContent:'space-between',alignItems:'center',gap:12}}><div style={{display:'flex',alignItems:'center',gap:8,color:'#0f766e'}}><Package size={16}/><strong style={{fontSize:13}}>Coincidencias de productos</strong></div><span style={{fontSize:12,color:'#475569',background:'#fff',border:'1px solid #dbe7ee',borderRadius:20,padding:'3px 9px'}}>{results.length} {results.length===1?'resultado':'resultados'}{products.filter(p=>[p.name,p.code,p.category,p.laboratory,p.presentation,...(p.activeIngredients??[])].filter(Boolean).join(' ').toLocaleLowerCase('es').includes(normalizedTerm)).length>8?' · muestra 8':''}</span></div>{results.map((p,i)=><div key={p.id} className="quote-product-result-row" role="button" tabIndex={0} title={`Seleccionar ${p.name}`} aria-label={`Seleccionar producto ${p.name}`} onClick={()=>add(p)} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();add(p)}}} style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:14,padding:'12px 15px',borderBottom:i===results.length-1?'none':'1px solid #edf2f7',transition:'background .15s'}}><div style={{minWidth:0,flex:1,textAlign:'left'}}><div style={{fontWeight:700,color:'#102c43',fontSize:14,lineHeight:1.4,textAlign:'left',overflowWrap:'anywhere'}}>{p.name}</div><div style={{display:'flex',gap:6,alignItems:'center',marginTop:6,flexWrap:'wrap'}}><span style={{fontSize:11,color:'#475569',background:'#f1f5f9',borderRadius:6,padding:'3px 7px'}}>Código: {p.code||'Sin código'}</span>{p.category&&<span style={{fontSize:11,color:'#0f766e',background:'#e7f5f2',borderRadius:6,padding:'3px 7px'}}>{p.category}</span>}{p.presentation&&<span style={{fontSize:11,color:'#64748b'}}>{p.presentation}</span>}<span style={{fontSize:11,color:'#475569',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:6,padding:'3px 7px'}}>Vence: {p.expiry||'Sin fecha'}</span><span style={{fontSize:11,fontWeight:600,color:p.stock<=p.minStock?'#b45309':'#166534',background:p.stock<=p.minStock?'#fff7ed':'#f0fdf4',borderRadius:6,padding:'3px 7px'}}>Existencia: {p.stock}</span></div>{Boolean(p.activeIngredients?.length)&&<div style={{fontSize:11,color:'#64748b',marginTop:5,overflowWrap:'anywhere'}}>Principio activo: {p.activeIngredients?.join(', ')}</div>}</div><div style={{display:'flex',alignItems:'center',gap:10,flexShrink:0}}><strong style={{whiteSpace:'nowrap',fontSize:14,color:'#0f766e'}}>{money(priceWithTax(p))}</strong><button type="button" className="primary" style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:5,whiteSpace:'nowrap',padding:'8px 11px',fontSize:13,borderRadius:9}} onClick={event=>{event.stopPropagation();add(p)}}><Plus size={15}/> Agregar</button></div></div>)}{results.length===0&&<div style={{padding:'24px 16px',textAlign:'center',color:'#64748b',fontSize:14}}><Search size={22} style={{margin:'0 auto 8px',color:'#94a3b8'}}/><div style={{fontWeight:600,color:'#334155'}}>No encontramos ese producto</div><div style={{marginTop:4}}>Prueba con el nombre, código, categoría o principio activo.</div></div>}</div>}<div className="table-wrap" style={{marginTop:12,borderRadius:10,overflowX:"auto"}}><table className="standard-invoice-lines"><thead><tr><th>Código</th><th>Descripción</th><th>Cantidad</th><th>Precio de venta</th><th>Descuento %</th><th>ISV %</th><th>Impuesto</th><th>Total</th><th></th></tr></thead><tbody>{lines.map(l=><tr key={l.id}><td>{l.code||"—"}</td><td>{(()=>{const product=products.find(p=>p.id===l.id);const expanded=Boolean(expandedQuoteProductDetails[l.id]);return <div className="invoice-product-detail"><strong className="invoice-product-detail-name">{l.name}</strong><div className="invoice-product-meta invoice-product-meta-primary">{product?.presentation&&<span>{product.presentation}</span>}<span>Vence: {product?.expiry?formatProductExpiry(product.expiry):"Sin fecha"}</span></div><div className="invoice-product-meta invoice-product-meta-secondary">{product?.laboratory&&<span>{product.laboratory}</span>}<span className={"invoice-product-stock"+(product&&product.stock<=product.minStock?" is-low":"")}>Existencia: {product?.stock??"—"}</span><button type="button" className="invoice-product-details-toggle" aria-expanded={expanded} aria-label={(expanded?"Ocultar":"Ver")+" detalles de "+l.name} onClick={()=>setExpandedQuoteProductDetails(current=>({...current,[l.id]:!current[l.id]}))}>{expanded?"Ocultar detalles":"Ver detalles"}<ChevronDown size={14} style={{transform:expanded?"rotate(180deg)":"none",transition:"transform .18s ease"}}/></button></div>{expanded&&<div className="invoice-product-extra-details">{product?.category&&<span>Categoría:<strong>{product.category}</strong></span>}{Boolean(product?.activeIngredients?.length)&&<span>Principio activo:<strong>{product?.activeIngredients?.join(", ")}</strong></span>}</div>}</div>})()}</td><td><div className="quote-quantity-controls" style={{display:"flex",alignItems:"center",justifyContent:"center",gap:0,width:"100%"}}><button type="button" className="secondary" aria-label="Disminuir cantidad" onClick={()=>setLines(old=>old.map(x=>x.id===l.id?{...x,qty:Math.max(1,x.qty-1)}:x))} style={{padding:"6px 9px"}}><Minus size={14}/></button><input className="quote-line-quantity" aria-label={"Cantidad de "+l.name} type="number" min="1" value={l.qty} onChange={e=>setLines(old=>old.map(x=>x.id===l.id?{...x,qty:Math.max(1,Number(e.target.value)||1)}:x))} style={{width:76,minWidth:76,maxWidth:76,height:39,minHeight:39,maxHeight:39,boxSizing:"border-box",padding:"5px 4px",textAlign:"center"}}/><button type="button" className="secondary" aria-label="Aumentar cantidad" onClick={()=>setLines(old=>old.map(x=>x.id===l.id?{...x,qty:x.qty+1}:x))} style={{padding:"6px 9px"}}><Plus size={14}/></button></div></td><td><input className="invoice-line-price" aria-label={"Precio de "+l.name} type="number" min="0" step=".01" value={l.price} onChange={e=>setLines(old=>old.map(x=>x.id===l.id?{...x,price:Math.max(0,Number(e.target.value)||0)}:x))} style={{width:69,minWidth:69,maxWidth:69,height:39,minHeight:39,maxHeight:39,boxSizing:"border-box",padding:"5px 4px"}}/></td><td><input className="invoice-line-percent" aria-label={"Descuento de "+l.name+" en porcentaje"} type="number" min="0" max="100" step="0.1" value={Math.max(0,Math.min(100,Number(l.discountPercent)||0))} onChange={e=>setLines(old=>old.map(x=>x.id===l.id?{...x,discountPercent:Math.max(0,Math.min(100,Number(e.target.value)||0))}:x))} style={{width:76,minWidth:76,maxWidth:76,height:39,minHeight:39,maxHeight:39,boxSizing:"border-box",padding:"5px 4px",textAlign:"center"}}/></td><td style={{textAlign:"center",whiteSpace:"nowrap"}}>{(()=>{const product=products.find(p=>p.id===l.id);return product?.taxEnabled?`${Number(product.taxRate??settings.billingInfo?.isvRate??15)}%`:'0%';})()}</td><td>{products.find(p=>p.id===l.id)?.taxEnabled?"Según producto":"Exento"}</td><td><strong>{money(discountedLineTotal(l))}</strong></td><td><button className="icon-btn" aria-label={"Eliminar "+l.name} onClick={()=>setLines(old=>old.filter(x=>x.id!==l.id))}><Trash2 size={15}/></button></td></tr>)}{!lines.length&&<tr><td colSpan={9}>Busca un producto arriba y selecciónalo para agregarlo a la cotización.</td></tr>}</tbody></table></div></section><div className="quote-summary" aria-label="Resumen de cotización"><div className="quote-summary-row"><span>Subtotal</span><strong>{money(subtotal)}</strong></div><div className="quote-summary-row"><span>Descuento</span><strong>{money(lineDiscountTotal+quoteDiscount)}</strong></div><div className="quote-summary-row quote-summary-isv"><span>ISV</span><span>Calculado según configuración de los productos</span></div><div className="quote-summary-total"><span>Total</span><strong>{money(Math.max(0,subtotal-lineDiscountTotal-quoteDiscount))}</strong></div></div><section className="card invoice-header-card" style={{padding:14,marginTop:12}}><div className="section-heading"><div><h3>Notas de la cotización</h3></div></div><label style={{display:'block',fontWeight:600}}>Notas<textarea rows={3} value={notes} onChange={e=>setNotes(e.target.value)} maxLength={500} placeholder="Ingresar notas u observaciones (opcional)" style={{display:'block',width:'100%',boxSizing:'border-box',marginTop:8,resize:'vertical',minHeight:72}}/></label><label className="quote-notes-switch"><input type="checkbox" role="switch" checked={includeNotes} onChange={e=>setIncludeNotes(e.target.checked)}/><span>Incluir notas en la cotización</span></label><div style={{fontSize:12,color:"#64748b",textAlign:"right"}}>{notes.length}/500</div></section>{saveError&&<p role="alert" style={{color:"#b91c1c",background:"#fef2f2",border:"1px solid #fecaca",borderRadius:8,padding:"10px 12px",marginTop:16}}>{saveError}</p>}<div className="modal-actions" style={{display:"flex",justifyContent:"flex-end",gap:12,flexWrap:"wrap",marginTop:20,paddingTop:18,borderTop:"1px solid #e2e8f0"}}><button className="secondary" onClick={()=>{setCreating(false);setEditingId(null)}}>Cancelar</button><button className="primary" disabled={saving||(!client&&editingId===null)||!lines.length} onClick={save}><Save size={16}/> {saving?"Guardando...":editingId!==null?"Guardar cambios":"Guardar cotización"}</button></div></div>:null}</div>}
+{(creating||(!selected&&!showList))?<>
+ <div className="invoice-layout">
+  <section className="card invoice-header-card quote-editor-card">
+   <div className="invoice-header-grid">
+    <div className="invoice-top-fields-row">
+     <div className="invoice-field invoice-field-number">
+      <label className="field-label" htmlFor="quote-number">N.º de cotización</label>
+      <input id="quote-number" value={editingId!==null?(quotes.find(q=>q.id===editingId)?.number??''):''} readOnly placeholder="Se asigna al guardar"/>
+     </div>
+     <div className="invoice-field invoice-field-seller">
+      <label className="field-label" htmlFor="quote-seller">Vendedor</label>
+      <select id="quote-seller" value={seller} onChange={e=>setSeller(e.target.value)}>
+       <option value="General">General</option>
+       {(settings.users??[]).filter(u=>u.active).map(u=><option key={u.id} value={u.name}>{u.name}</option>)}
+      </select>
+     </div>
+     <div className="invoice-field invoice-field-date">
+      <label className="field-label" htmlFor="quote-date">Fecha</label>
+      <input id="quote-date" type="date" value={new Date().toISOString().slice(0,10)} readOnly/>
+     </div>
+     <div className="invoice-field invoice-field-max-date">
+      <label className="field-label" htmlFor="quote-valid">Válida hasta</label>
+      <input id="quote-valid" type="date" value={valid} onChange={e=>setValid(e.target.value)}/>
+     </div>
+    </div>
+    <div className="invoice-field invoice-customer-field">
+     <label className="field-label" htmlFor="quote-client-search">Cliente *</label>
+     <div className="invoice-customer-select-row">
+      <div className="quote-client-picker">
+       <div className="invoice-search">
+        <Search size={17}/>
+        <input id="quote-client-search" autoComplete="off" value={clientSearch} onFocus={()=>setClientOpen(true)} onChange={e=>{setClientSearch(e.target.value);setClient('');setClientOpen(true)}} placeholder="Buscar cliente por nombre o código"/>
+       </div>
+       {clientOpen&&<div className="quote-client-matches" role="listbox" aria-label="Clientes encontrados">
+        {matchingCustomers.map(c=><button type="button" role="option" aria-selected={String(c.id)===client} key={c.id} onClick={()=>{setClient(String(c.id));setClientSearch(c.name);setClientOpen(false)}}>
+         <span style={{display:'block',fontWeight:600}}>{c.code?c.code+' · ':''}{c.name}</span>
+        </button>)}
+        {matchingCustomers.length===0&&<div className="quote-client-matches-empty">No se encontraron clientes activos.</div>}
+       </div>}
+      </div>
+     </div>
+    </div>
+    <div className="invoice-bottom-fields-row">
+     <div className="invoice-field invoice-field-price">
+      <label className="field-label" htmlFor="quote-price-list">Precio de venta</label>
+      <select id="quote-price-list" value={chosenClient?.priceList??"Precio de venta 1"} disabled>
+       <option>{chosenClient?.priceList??"Precio de venta 1"}</option>
+      </select>
+     </div>
+     <div className="invoice-field invoice-field-address">
+      <label className="field-label" htmlFor="quote-address">Dirección</label>
+      <input id="quote-address" value={chosenClient?.address??''} readOnly placeholder="Dirección del cliente"/>
+     </div>
+     <div className="invoice-field invoice-field-phone">
+      <label className="field-label" htmlFor="quote-phone">Teléfono</label>
+      <input id="quote-phone" value={chosenClient?.phone??''} readOnly placeholder="Teléfono del cliente"/>
+     </div>
+     <div className="invoice-field invoice-field-rtn">
+      <label className="field-label" htmlFor="quote-rtn">RTN</label>
+      <input id="quote-rtn" value={chosenClient?.rtn??''} readOnly placeholder="RTN del cliente"/>
+     </div>
+    </div>
+   </div>
+  </section>
+  <section className="card invoice-products-card">
+   <div className="section-heading">
+    <div>
+     <h3>Detalle de productos</h3>
+     <p>Busca por nombre, código o principio activo; luego selecciona los productos para agregarlos a la cotización.</p>
+    </div>
+   </div>
+   <div className="invoice-search">
+    <Search size={17}/>
+    <input value={term} onChange={e=>setTerm(e.target.value)} placeholder="Buscar producto o escanear código"/>
+   </div>
+   {term.trim()&&<div className="invoice-product-results">
+    {results.map(p=><div className="invoice-product" key={p.id}>
+     <button type="button" className="invoice-product-add" onClick={()=>add(p)}>
+      <span className="invoice-product-copy">
+       <strong>{p.name}</strong>
+       {p.laboratory?.trim()&&<small>Laboratorio: {p.laboratory.trim()}</small>}
+       {p.expiry&&<small>Vencimiento: {formatProductExpiry(p.expiry)}</small>}
+       <small>{p.code} · {p.presentation||p.category} · Existencia: {p.stock}</small>
+      </span>
+      <span className="invoice-product-price">{money(priceWithTax(p))}</span>
+      <Plus size={16}/>
+     </button>
+    </div>)}
+    {!results.length&&<p className="muted">No se encontraron productos disponibles.</p>}
+   </div>}
+  </section>
+ </div>
+ <section className="card invoice-cart">
+  <div className="section-heading">
+   <div>
+    <h3>Detalle de cotización</h3>
+    <p>{lines.length} producto(s) en la cotización</p>
+   </div>
+  </div>
+  {!lines.length?<p className="muted">Busca un producto arriba y selecciónalo para agregarlo a la cotización.</p>:<div className="table-wrap">
+   <table className="standard-invoice-lines">
+    <thead>
+     <tr><th>Código</th><th>Descripción</th><th>Cantidad</th><th>Precio de venta</th><th>Descuento %</th><th>ISV %</th><th>Total</th><th></th></tr>
+    </thead>
+    <tbody>
+     {lines.map(l=>{
+      const product=products.find(p=>p.id===l.id);
+      const expanded=Boolean(expandedQuoteProductDetails[l.id]);
+      return <tr key={l.id}>
+       <td>{l.code||"—"}</td>
+       <td>
+        <div className="invoice-product-detail">
+         <strong className="invoice-product-detail-name">{l.name}</strong>
+         <div className="invoice-product-meta invoice-product-meta-primary">
+          {product?.presentation&&<span>{product.presentation}</span>}
+          <span>Vence: {product?.expiry?formatProductExpiry(product.expiry):"Sin fecha"}</span>
+         </div>
+         <div className="invoice-product-meta invoice-product-meta-secondary">
+          {product?.laboratory?.trim()&&<span>{product.laboratory.trim()}</span>}
+          <span className={"invoice-product-stock"+(product&&product.stock<=product.minStock?" is-low":"")}>Existencia: {product?.stock??"—"}</span>
+          <button type="button" className="invoice-product-details-toggle" aria-expanded={expanded} aria-label={(expanded?"Ocultar":"Ver")+" detalles de "+l.name} onClick={()=>setExpandedQuoteProductDetails(current=>({...current,[l.id]:!current[l.id]}))}>
+           {expanded?"Ocultar detalles":"Ver detalles"}<ChevronDown size={14} style={{transform:expanded?"rotate(180deg)":"none",transition:"transform .18s ease"}}/>
+          </button>
+         </div>
+         {expanded&&<div className="invoice-product-extra-details">
+          {product?.category&&<span>Categoría:<strong>{product.category}</strong></span>}
+          {Boolean(product?.activeIngredients?.length)&&<span>Principio activo:<strong>{product?.activeIngredients?.join(", ")}</strong></span>}
+         </div>}
+        </div>
+       </td>
+       <td><input className="invoice-qty" aria-label={"Cantidad de "+l.name} type="number" min="1" value={l.qty} onChange={e=>setLines(old=>old.map(x=>x.id===l.id?{...x,qty:Math.max(1,Number(e.target.value)||1)}:x))}/></td>
+       <td><input className="invoice-line-price" aria-label={"Precio de venta de "+l.name} type="number" min="0" step="0.01" value={l.price} onChange={e=>setLines(old=>old.map(x=>x.id===l.id?{...x,price:Math.max(0,Number(e.target.value)||0)}:x))}/></td>
+       <td><input className="invoice-line-percent" aria-label={"Descuento de "+l.name+" en porcentaje"} type="number" min="0" max="100" step="0.1" value={Math.max(0,Math.min(100,Number(l.discountPercent)||0))} onChange={e=>setLines(old=>old.map(x=>x.id===l.id?{...x,discountPercent:Math.max(0,Math.min(100,Number(e.target.value)||0))}:x))}/></td>
+       <td style={{textAlign:"center",whiteSpace:"nowrap"}}>{product?.taxEnabled?Number(product.taxRate??settings.billingInfo?.isvRate??15)+"%":"0%"}</td>
+       <td><strong>{money(discountedLineTotal(l))}</strong></td>
+       <td><button className="icon-button" aria-label={"Quitar "+l.name} onClick={()=>setLines(old=>old.filter(x=>x.id!==l.id))}><Trash2 size={16}/></button></td>
+      </tr>;
+     })}
+    </tbody>
+   </table>
+  </div>}
+  <div className="quote-summary" aria-label="Resumen de cotización">
+   <div className="quote-summary-row"><span>Subtotal</span><strong>{money(subtotal)}</strong></div>
+   <div className="quote-summary-row"><span>Descuento</span><strong>{money(lineDiscountTotal+quoteDiscount)}</strong></div>
+   <div className="quote-summary-row quote-summary-isv"><span>ISV</span><span>Incluido según la configuración de precio de cada producto</span></div>
+  </div>
+  <div className="invoice-total"><span>Total de la cotización</span><strong>{money(Math.max(0,subtotal-lineDiscountTotal-quoteDiscount))}</strong></div>
+  {saveError&&<p className="error-text" role="alert">{saveError}</p>}
+  <div className="invoice-actions">
+   <button className="secondary" onClick={()=>{setLines([]);setDiscount('0');}} disabled={!lines.length}>Vaciar detalle</button>
+   <button className="secondary" onClick={()=>{setCreating(false);setEditingId(null);setClientOpen(false);}}>Cancelar</button>
+   <button className="primary" disabled={saving||(!client&&editingId===null)||!lines.length} onClick={save}>
+    <Save size={16}/> {saving?"Guardando...":editingId!==null?"Guardar cambios":"Guardar cotización"}
+   </button>
+  </div>
+ </section>
+ <section className="card invoice-header-card invoice-notes-card">
+  <div className="invoice-field">
+   <label className="field-label" htmlFor="quote-notes">Notas de la cotización</label>
+   <textarea id="quote-notes" rows={2} value={notes} onChange={e=>setNotes(e.target.value)} maxLength={500} placeholder="Ingresar notas u observaciones (opcional)"/>
+  </div>
+  <label className="quote-notes-switch">
+   <input type="checkbox" role="switch" checked={includeNotes} onChange={e=>setIncludeNotes(e.target.checked)}/>
+   <span>Incluir notas en la cotización</span>
+  </label>
+  <div className="invoice-code" style={{textAlign:"right"}}>{notes.length}/500</div>
+ </section>
+ </>:null}</div>}
