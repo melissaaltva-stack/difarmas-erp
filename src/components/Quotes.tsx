@@ -35,7 +35,8 @@ setSaveError(error instanceof Error?error.message:'No se pudo guardar la cotizac
 }; const startNew=()=>{setSaveError('');setSelected(null);setEditingId(null);setLines([]);setClient('');setClientSearch('');setClientOpen(false);setDiscount('0');setNotes('');setSeller('');setDeliveryTime('1 - 3 días');setIncludeNotes(true);setValid(new Date(Date.now()+15*86400000).toISOString().slice(0,10));setShowList(false);setCreating(true)};
 return <div className="content standard-invoice quotes-page"><style>{`
 .quotes-page .quote-summary {
-  margin-top: 8px;
+  width: min(100%, 360px);
+  margin: 8px 0 0 auto;
   padding: 8px 0 2px;
   border-top: 1px solid #e5ece8;
 }
