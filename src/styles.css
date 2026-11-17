@@ -5584,188 +5584,111 @@ button.icon-btn:focus-visible svg,
 }
 
 
-/* Ajuste solicitado: proporciones y ubicación de campos en Facturación estándar */
-@media (min-width: 901px) {
-  .standard-invoice .invoice-header-grid {
-    grid-template-columns:
-      minmax(170px, 1.05fr)
-      minmax(220px, 1.65fr)
-      minmax(140px, .9fr)
-      minmax(140px, .9fr) !important;
-    column-gap: 12px !important;
-    row-gap: 8px !important;
+
+/* Facturación estándar: distribución ordenada y dimensiones exactas de los campos */
+.standard-invoice .invoice-header-grid {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.standard-invoice .invoice-top-fields-row,
+.standard-invoice .invoice-bottom-fields-row {
+  display: grid !important;
+  align-items: end !important;
+  gap: 10px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.standard-invoice .invoice-top-fields-row .invoice-field,
+.standard-invoice .invoice-bottom-fields-row .invoice-field {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.standard-invoice .invoice-top-fields-row .invoice-field input,
+.standard-invoice .invoice-top-fields-row .invoice-field select,
+.standard-invoice .invoice-bottom-fields-row .invoice-field input,
+.standard-invoice .invoice-bottom-fields-row .invoice-field select,
+.standard-invoice .invoice-layout > .card:first-child .invoice-customer-field .invoice-customer-select-row > select,
+.standard-invoice .invoice-layout > .card:first-child .invoice-customer-field .invoice-payment-inline select {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 4px 8px !important;
+}
+.standard-invoice .invoice-layout > .card:first-child .invoice-customer-field {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.standard-invoice .invoice-layout > .card:first-child .invoice-customer-field .invoice-customer-select-row {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto 190px !important;
+  align-items: end !important;
+  gap: 10px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+.standard-invoice .invoice-layout > .card:first-child .invoice-customer-field .register-customer-button {
+  align-self: end !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+}
+.standard-invoice .invoice-layout > .card:first-child .invoice-customer-field .invoice-payment-inline {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+  width: 190px !important;
+  min-width: 0 !important;
+  grid-column: auto !important;
+}
+.standard-invoice .invoice-layout > .card:first-child .invoice-customer-field .invoice-payment-inline .field-label {
+  margin: 0 !important;
+}
+@media (min-width: 1201px) {
+  .standard-invoice .invoice-top-fields-row {
+    grid-template-columns: 185px 160px 135px 135px !important;
   }
-  .standard-invoice .invoice-header-grid > .invoice-field-number,
-  .standard-invoice .invoice-header-grid > .invoice-field-seller,
-  .standard-invoice .invoice-header-grid > .invoice-field-date,
-  .standard-invoice .invoice-header-grid > .invoice-field-max-date {
-    grid-column: auto !important;
-    min-width: 0;
-  }
-  .standard-invoice .invoice-header-grid > .invoice-field.inv-span-12 {
-    grid-column: 1 / -1 !important;
+  .standard-invoice .invoice-bottom-fields-row {
+    grid-template-columns: 150px minmax(220px, 360px) 170px 248px !important;
   }
 }
-@media (min-width: 651px) and (max-width: 900px) {
-  .standard-invoice .invoice-header-grid {
+@media (max-width: 1200px) {
+  .standard-invoice .invoice-top-fields-row,
+  .standard-invoice .invoice-bottom-fields-row {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
-  .standard-invoice .invoice-header-grid > .invoice-field-number,
-  .standard-invoice .invoice-header-grid > .invoice-field-seller,
-  .standard-invoice .invoice-header-grid > .invoice-field-date,
-  .standard-invoice .invoice-header-grid > .invoice-field-max-date {
-    grid-column: auto !important;
-  }
-  .standard-invoice .invoice-header-grid > .invoice-field.inv-span-12 {
-    grid-column: 1 / -1 !important;
+  .standard-invoice .invoice-layout > .card:first-child .invoice-customer-field .invoice-customer-select-row {
+    grid-template-columns: minmax(0, 1fr) auto 190px !important;
   }
 }
-/* En estado correcto se conserva el indicador verde, pero se oculta su leyenda */
+@media (max-width: 650px) {
+  .standard-invoice .invoice-top-fields-row,
+  .standard-invoice .invoice-bottom-fields-row,
+  .standard-invoice .invoice-layout > .card:first-child .invoice-customer-field .invoice-customer-select-row {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .standard-invoice .invoice-layout > .card:first-child .invoice-customer-field .register-customer-button,
+  .standard-invoice .invoice-layout > .card:first-child .invoice-customer-field .invoice-payment-inline {
+    width: 100% !important;
+    grid-column: 1 !important;
+  }
+  .standard-invoice .invoice-layout > .card:first-child .invoice-customer-field .register-customer-button {
+    white-space: normal !important;
+  }
+}
+/* Se oculta solo la leyenda de sincronización correcta; el indicador y los errores permanecen visibles */
 .topbar .status:not(.status-error):not(.status-pending) {
   font-size: 0 !important;
   gap: 0 !important;
 }
 .topbar .status:not(.status-error):not(.status-pending) > span {
   flex: 0 0 8px;
-}
-
-
-/* Medidas solicitadas para campos específicos de Facturación estándar */
-@media (min-width: 901px) {
-  .standard-invoice .invoice-header-grid {
-    grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
-    column-gap: 10px !important;
-    row-gap: 8px !important;
-  }
-  .standard-invoice .invoice-header-grid > .invoice-field-number { grid-column: span 4 !important; }
-  .standard-invoice .invoice-header-grid > .invoice-field-seller { grid-column: span 2 !important; width: 160px; }
-  .standard-invoice .invoice-header-grid > .invoice-field-date,
-  .standard-invoice .invoice-header-grid > .invoice-field-max-date { grid-column: span 2 !important; width: 135px; }
-  .standard-invoice .invoice-header-grid > .invoice-field.inv-span-12 { grid-column: 1 / -1 !important; }
-  .standard-invoice .invoice-header-grid > .invoice-field.inv-span-3:nth-last-child(4) { grid-column: span 2 !important; width: 150px; }
-  .standard-invoice .invoice-header-grid > .invoice-field.inv-span-3:nth-last-child(3) { grid-column: span 3 !important; }
-  .standard-invoice .invoice-header-grid > .invoice-field.inv-span-3:nth-last-child(2) { grid-column: span 2 !important; width: 170px; }
-  .standard-invoice .invoice-header-grid > .invoice-field.inv-span-3:last-of-type { grid-column: span 3 !important; width: 248px; }
-}
-.standard-invoice .invoice-header-grid > .invoice-field-seller select {
-  width: 160px !important; max-width: 100% !important;
-}
-.standard-invoice .invoice-header-grid > .invoice-field-date input,
-.standard-invoice .invoice-header-grid > .invoice-field-max-date input {
-  width: 135px !important; max-width: 100% !important;
-}
-.standard-invoice .invoice-customer-select-row .invoice-payment-inline {
-  flex: 0 0 170px !important; width: 170px !important; max-width: 100% !important;
-}
-.standard-invoice .invoice-customer-select-row .invoice-payment-inline select {
-  width: 170px !important; max-width: 100% !important;
-}
-.standard-invoice .invoice-header-grid > .invoice-field.inv-span-3:nth-last-child(4) select {
-  width: 150px !important; max-width: 100% !important;
-}
-.standard-invoice .invoice-header-grid > .invoice-field.inv-span-3:nth-last-child(2) input {
-  width: 170px !important; max-width: 100% !important;
-}
-.standard-invoice .invoice-header-grid > .invoice-field.inv-span-3:last-of-type input {
-  width: 248px !important; max-width: 100% !important;
-}
-.standard-invoice .invoice-header-grid > .invoice-field-seller select,
-.standard-invoice .invoice-header-grid > .invoice-field-date input,
-.standard-invoice .invoice-header-grid > .invoice-field-max-date input,
-.standard-invoice .invoice-header-grid > .invoice-field.inv-span-3:nth-last-child(4) select,
-.standard-invoice .invoice-header-grid > .invoice-field.inv-span-3:nth-last-child(2) input,
-.standard-invoice .invoice-header-grid > .invoice-field.inv-span-3:last-of-type input,
-.standard-invoice .invoice-customer-select-row .invoice-payment-inline select {
-  box-sizing: border-box !important;
-  height: 32px !important;
-  min-height: 32px !important;
-  padding-top: 4px !important;
-  padding-bottom: 4px !important;
-}
-@media (max-width: 900px) {
-  .standard-invoice .invoice-header-grid > .invoice-field-seller,
-  .standard-invoice .invoice-header-grid > .invoice-field-date,
-  .standard-invoice .invoice-header-grid > .invoice-field-max-date,
-  .standard-invoice .invoice-header-grid > .invoice-field.inv-span-3 {
-    width: 100% !important;
-  }
-  .standard-invoice .invoice-header-grid > .invoice-field-seller select,
-  .standard-invoice .invoice-header-grid > .invoice-field-date input,
-  .standard-invoice .invoice-header-grid > .invoice-field-max-date input,
-  .standard-invoice .invoice-header-grid > .invoice-field.inv-span-3 select,
-  .standard-invoice .invoice-header-grid > .invoice-field.inv-span-3 input,
-  .standard-invoice .invoice-customer-select-row .invoice-payment-inline,
-  .standard-invoice .invoice-customer-select-row .invoice-payment-inline select {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-}
-
-
-/* Segunda precisión de medidas solicitada para Facturación estándar */
-@media (min-width: 901px) {
-  .standard-invoice .invoice-header-grid {
-    grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
-  }
-  .standard-invoice .invoice-header-grid > .invoice-field-number {
-    grid-column: span 2 !important;
-    width: 185px !important;
-  }
-  .standard-invoice .invoice-header-grid > .invoice-field-seller {
-    grid-column: span 2 !important;
-    width: 160px !important;
-  }
-  .standard-invoice .invoice-header-grid > .invoice-field-date,
-  .standard-invoice .invoice-header-grid > .invoice-field-max-date {
-    grid-column: span 2 !important;
-    width: 135px !important;
-  }
-  .standard-invoice .invoice-header-grid > .invoice-field-number input {
-    width: 185px !important;
-  }
-  .standard-invoice .invoice-header-grid > .invoice-field-price {
-    grid-column: span 2 !important;
-    width: 150px !important;
-  }
-  .standard-invoice .invoice-header-grid > .invoice-field-address {
-    grid-column: span 4 !important;
-    width: 360px !important;
-  }
-  .standard-invoice .invoice-header-grid > .invoice-field-phone {
-    grid-column: span 2 !important;
-    width: 170px !important;
-  }
-  .standard-invoice .invoice-header-grid > .invoice-field-rtn {
-    grid-column: span 3 !important;
-    width: 248px !important;
-  }
-  .standard-invoice .invoice-header-grid > .invoice-field-price select { width:150px !important; }
-  .standard-invoice .invoice-header-grid > .invoice-field-address input { width:360px !important; }
-  .standard-invoice .invoice-header-grid > .invoice-field-phone input { width:170px !important; }
-  .standard-invoice .invoice-header-grid > .invoice-field-rtn input { width:248px !important; }
-  .standard-invoice .invoice-customer-select-row .invoice-payment-inline,
-  .standard-invoice .invoice-customer-select-row .invoice-payment-inline select {
-    width:190px !important;
-    flex-basis:190px !important;
-  }
-  .standard-invoice .invoice-header-grid > .invoice-field-number input,
-  .standard-invoice .invoice-customer-select-row .invoice-payment-inline select {
-    height:32px !important;
-    min-height:32px !important;
-    box-sizing:border-box !important;
-  }
-}
-@media (max-width: 900px) {
-  .standard-invoice .invoice-header-grid > .invoice-field-number,
-  .standard-invoice .invoice-header-grid > .invoice-field-address,
-  .standard-invoice .invoice-header-grid > .invoice-field-phone,
-  .standard-invoice .invoice-header-grid > .invoice-field-rtn {
-    width:100% !important;
-  }
-  .standard-invoice .invoice-header-grid > .invoice-field-number input,
-  .standard-invoice .invoice-header-grid > .invoice-field-address input,
-  .standard-invoice .invoice-header-grid > .invoice-field-phone input,
-  .standard-invoice .invoice-header-grid > .invoice-field-rtn input {
-    width:100% !important;
-  }
 }
