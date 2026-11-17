@@ -5716,17 +5716,8 @@ button.icon-btn:focus-visible svg,
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.standard-invoice .invoice-summary-note {
-  padding: 0 0 4px;
-  color: #637d78;
-  font-size: 11px;
-  text-align: right;
-}
 @media (max-width: 560px) {
   .standard-invoice .invoice-summary {
     width: 100%;
-  }
-  .standard-invoice .invoice-summary-note {
-    text-align: right;
   }
 }
