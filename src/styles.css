@@ -5535,3 +5535,50 @@ button.icon-btn:focus-visible svg,
 .pharmacy-ai-form{display:flex;align-items:flex-end;gap:8px}.pharmacy-ai-form textarea{flex:1;min-width:0;resize:vertical;border:1px solid #cbd9d5;border-radius:9px;padding:10px;font:inherit;font-size:13px;background:#fff}
 .pharmacy-ai-form button{min-height:40px}.pharmacy-ai-footer{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:8px;color:#71827e;font-size:11px}.pharmacy-ai-footer button{white-space:nowrap}
 @media(max-width:600px){.pharmacy-ai-heading{align-items:flex-start}.pharmacy-ai-heading>div{flex:1}.pharmacy-ai-heading>button{width:100%}.pharmacy-ai-form{align-items:stretch;flex-direction:column}.pharmacy-ai-form button{width:100%}.pharmacy-ai-footer{align-items:flex-start;flex-direction:column}}
+
+/* Farmi: módulo independiente de orientación de salud */
+.farmi-doctor-page{display:grid;gap:14px;max-width:1120px}
+.farmi-doctor-hero{display:grid;gap:14px;padding:19px}
+.farmi-doctor-brand{display:flex;align-items:center;gap:14px;min-width:0}
+.farmi-doctor-mark{display:grid;place-items:center;flex:0 0 54px;width:54px;height:54px;border-radius:15px;background:var(--farmi-ui-primary-soft,#e7f4ef);color:var(--farmi-ui-primary,#16856b)}
+.farmi-doctor-brand .eyebrow{margin:0 0 4px;color:var(--farmi-ui-primary,#16856b);font-size:10px;font-weight:800;letter-spacing:.08em}
+.farmi-doctor-brand h2{margin:0;color:var(--farmi-ui-primary-dark,#155b4b);font-size:23px;line-height:1.15}
+.farmi-doctor-brand p:last-child{margin:4px 0 0;color:var(--muted,#718a85);font-size:12px}
+.farmi-doctor-disclaimer{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border:1px solid var(--farmi-ui-border,#dce8e3);border-radius:10px;background:var(--surface-muted,#f7faf9);color:var(--text,#29443b);font-size:11px;line-height:1.55}
+.farmi-doctor-disclaimer svg{flex:0 0 auto;color:var(--farmi-ui-primary,#16856b)}
+.farmi-doctor-chat{display:grid;gap:13px;padding:18px}
+.farmi-doctor-chat-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.farmi-doctor-chat-head>div{display:flex;align-items:center;gap:9px;color:var(--farmi-ui-primary,#16856b)}
+.farmi-doctor-chat-head strong,.farmi-doctor-chat-head small{display:block}
+.farmi-doctor-chat-head strong{color:var(--text,#29443b);font-size:13px}
+.farmi-doctor-chat-head small{margin-top:3px;color:var(--muted,#718a85);font-size:10px}
+.farmi-doctor-chat-head button{display:inline-flex;align-items:center;gap:6px;font-size:11px}
+.farmi-doctor-emergency{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border:1px solid #f0d7ad;border-radius:10px;background:#fff9ef;color:#704b18;font-size:11px;line-height:1.55}
+.farmi-doctor-emergency svg{flex:0 0 auto;margin-top:1px}
+.farmi-doctor-messages{display:flex;flex-direction:column;gap:10px;min-height:340px;max-height:56vh;overflow:auto;padding:14px;border:1px solid var(--farmi-ui-border,#e2ebe6);border-radius:12px;background:var(--surface-muted,#f8fbf9)}
+.farmi-doctor-welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;max-width:540px;min-height:290px;margin:auto;text-align:center;color:var(--farmi-ui-primary,#16856b)}
+.farmi-doctor-welcome strong{margin-top:10px;color:var(--text,#29443b);font-size:16px}
+.farmi-doctor-welcome p{margin:7px 0;color:var(--text,#40564e);font-size:12px;line-height:1.65}
+.farmi-doctor-welcome small{color:var(--muted,#718a85);font-size:10px;line-height:1.6}
+.farmi-doctor-message{max-width:min(82%,760px);padding:10px 12px;border:1px solid var(--farmi-ui-border,#e1eae5);border-radius:12px;background:var(--farmi-ui-surface,#fff);overflow-wrap:anywhere}
+.farmi-doctor-message.user{align-self:flex-end;border-color:var(--farmi-ui-primary-soft,#d7ebe2);background:var(--farmi-ui-primary-soft,#eaf5ef)}
+.farmi-doctor-message.assistant{align-self:flex-start}
+.farmi-doctor-message strong{display:block;margin-bottom:4px;color:var(--farmi-ui-primary-dark,#155b4b);font-size:10px}
+.farmi-doctor-message p{margin:0;color:var(--text,#29443b);font-size:12px;line-height:1.65;white-space:pre-wrap}
+.farmi-doctor-loading{display:flex;align-items:center;gap:8px;color:var(--muted,#718a85);font-size:11px}
+.farmi-doctor-loading svg{animation:farmi-doctor-spin 1s linear infinite}
+@keyframes farmi-doctor-spin{to{transform:rotate(360deg)}}
+.farmi-doctor-form{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:9px}
+.farmi-doctor-form textarea{width:100%;min-height:66px;max-height:160px;resize:vertical;padding:11px 12px;border:1px solid var(--farmi-ui-border,#dce8e3);border-radius:10px;background:var(--farmi-ui-surface,#fff);color:var(--text,#29443b);font:inherit;font-size:12px;line-height:1.5}
+.farmi-doctor-form textarea:focus{outline:0;border-color:var(--farmi-ui-primary,#16856b);box-shadow:0 0 0 3px var(--farmi-ui-focus,rgba(22,133,107,.13))}
+.farmi-doctor-form button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;white-space:nowrap}
+.farmi-doctor-footnote{color:var(--muted,#718a85);font-size:10px;line-height:1.55}
+@media(max-width:640px){
+  .farmi-doctor-hero,.farmi-doctor-chat{padding:13px}
+  .farmi-doctor-chat-head{align-items:flex-start}
+  .farmi-doctor-chat-head small{max-width:210px}
+  .farmi-doctor-messages{min-height:300px;max-height:58vh;padding:9px}
+  .farmi-doctor-message{max-width:94%}
+  .farmi-doctor-form{grid-template-columns:1fr}
+  .farmi-doctor-form button{width:100%}
+}
