@@ -5692,3 +5692,41 @@ button.icon-btn:focus-visible svg,
 .topbar .status:not(.status-error):not(.status-pending) > span {
   flex: 0 0 8px;
 }
+
+
+/* Resumen económico de Facturación estándar: alineado a la derecha antes del total */
+.standard-invoice .invoice-summary {
+  width: min(360px, 100%);
+  margin: 12px 0 0 auto;
+  padding: 8px 0 2px;
+  border-top: 1px solid #e5ece8;
+}
+.standard-invoice .invoice-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 5px 0;
+  color: #637d78;
+  font-size: 13px;
+}
+.standard-invoice .invoice-summary-row strong {
+  color: #17252a;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.standard-invoice .invoice-summary-note {
+  padding: 0 0 4px;
+  color: #637d78;
+  font-size: 11px;
+  text-align: right;
+}
+@media (max-width: 560px) {
+  .standard-invoice .invoice-summary {
+    width: 100%;
+  }
+  .standard-invoice .invoice-summary-note {
+    text-align: right;
+  }
+}
