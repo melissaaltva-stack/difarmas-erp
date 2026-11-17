@@ -10,9 +10,9 @@ import type { SupplierReturnRecord } from '../domain/types';
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
 const percent = (value:number) => `${value.toLocaleString('es-HN',{maximumFractionDigits:1,minimumFractionDigits:1})}%`;
 
-export function Purchases({products,sales,purchases,cart,setCart,search,setSearch,supplier,setSupplier,suppliers=[],setSuppliers,records=[],setRecords,onDispatch,onResolve,showSuppliers=true,costHistory=[],onReceive,onOpenNewProduct,onEditProduct,sectionRequest=0,requestedSection='compras'}:{products:Product[];sales:SaleRecord[];purchases:PurchaseRecord[];cart:PurchaseItem[];setCart:(c:PurchaseItem[])=>void;search:string;setSearch:(v:string)=>void;supplier:string;setSupplier:(v:string)=>void;suppliers?:Supplier[];setSuppliers:Dispatch<SetStateAction<Supplier[]>>;records?:SupplierReturnRecord[];setRecords:Dispatch<SetStateAction<SupplierReturnRecord[]>>;onDispatch:(record:SupplierReturnRecord)=>boolean;onResolve:(record:SupplierReturnRecord,status:SupplierReturnRecord['status'])=>boolean;showSuppliers?:boolean;costHistory?:PurchaseCostHistoryEntry[];onReceive:(items:PurchaseItem[],paymentMethod:'Efectivo'|'Transferencia'|'Crédito',dueDate:string,invoiceNumber:string,invoiceDate:string,notes:string,purchaseTotal?:number,paymentTerms?:string,supplierOverride?:string)=>boolean;onOpenNewProduct:()=>void;onEditProduct:(product:Product)=>void;sectionRequest?:number;requestedSection?:'compras'|'proveedores'|'nueva-compra'}) {
-  const [section,setSection]=useState<'compras'|'proveedores'>('compras');
-  useEffect(()=>{setSection(requestedSection==='proveedores'?'proveedores':'compras');if(requestedSection==='nueva-compra'){setPurchaseHeaderError('');setShowPurchaseModal(true);}},[sectionRequest,requestedSection]);
+export function Purchases({products,sales,purchases,cart,setCart,search,setSearch,supplier,setSupplier,suppliers=[],setSuppliers,records=[],setRecords,onDispatch,onResolve,showSuppliers=true,costHistory=[],onReceive,onOpenNewProduct,onEditProduct,sectionRequest=0,requestedSection='compras'}:{products:Product[];sales:SaleRecord[];purchases:PurchaseRecord[];cart:PurchaseItem[];setCart:(c:PurchaseItem[])=>void;search:string;setSearch:(v:string)=>void;supplier:string;setSupplier:(v:string)=>void;suppliers?:Supplier[];setSuppliers:Dispatch<SetStateAction<Supplier[]>>;records?:SupplierReturnRecord[];setRecords:Dispatch<SetStateAction<SupplierReturnRecord[]>>;onDispatch:(record:SupplierReturnRecord)=>boolean;onResolve:(record:SupplierReturnRecord,status:SupplierReturnRecord['status'])=>boolean;showSuppliers?:boolean;costHistory?:PurchaseCostHistoryEntry[];onReceive:(items:PurchaseItem[],paymentMethod:'Efectivo'|'Transferencia'|'Crédito',dueDate:string,invoiceNumber:string,invoiceDate:string,notes:string,purchaseTotal?:number,paymentTerms?:string,supplierOverride?:string)=>boolean;onOpenNewProduct:()=>void;onEditProduct:(product:Product)=>void;sectionRequest?:number;requestedSection?:'compras'|'proveedores'|'nueva-compra'|'lista-compras'}) {
+  const [section,setSection]=useState<'compras'|'proveedores'|'lista-compras'>('compras');
+  useEffect(()=>{setSection(requestedSection==='proveedores'?'proveedores':requestedSection==='lista-compras'?'lista-compras':'compras');if(requestedSection==='nueva-compra'){setPurchaseHeaderError('');setShowPurchaseModal(true);}},[sectionRequest,requestedSection]);
   const [showSuggestedPurchases,setShowSuggestedPurchases]=useState(false);
   const [showPurchaseHistory,setShowPurchaseHistory]=useState(false);
   const [showCostComparison,setShowCostComparison]=useState(false);
@@ -101,6 +101,16 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
     setSearch('');
     setError('');
   };
+  if(section==='lista-compras') {
+    const sortedPurchases=[...purchases].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+    return <div className="content"><div id="purchases-panel">
+      <div className="purchase-page-heading purchase-list-heading"><div><h2>Lista de compras</h2><p>Consulta las compras registradas y sus datos de factura.</p></div><button type="button" className="primary" onClick={()=>{setSection('compras');setPurchaseHeaderError('');setShowPurchaseModal(true);}}><Plus size={16}/> Nueva compra</button></div>
+      <section className="card purchase-record-list">
+        {sortedPurchases.length===0?<div className="purchase-detail-empty"><ShoppingCart size={24}/><strong>No hay compras registradas</strong><span>Las compras aparecerán aquí después de confirmar su recepción.</span></div>:<div className="purchase-record-table-wrap"><table className="purchase-record-table"><thead><tr><th>Fecha</th><th>Proveedor</th><th>N.º de factura</th><th>Forma de pago</th><th>Total</th></tr></thead><tbody>{sortedPurchases.map(record=><tr key={record.id}><td>{record.date?new Date(record.date+'T12:00:00').toLocaleDateString('es-HN'):'—'}</td><td>{record.supplier||'—'}</td><td>{record.invoiceNumber||'—'}</td><td>{record.paymentTerms||record.paymentMethod||'—'}</td><td><strong>{money(record.total)}</strong></td></tr>)}</tbody></table></div>}
+      </section>
+    </div></div>;
+  }
+
   return <div className="content">
   <div id="purchases-panel">
   <div className="purchase-page-heading"><button type="button" className="primary" onClick={()=>{setPurchaseHeaderError('');setShowPurchaseModal(true);}}><Plus size={16}/> Nueva compra</button></div>
