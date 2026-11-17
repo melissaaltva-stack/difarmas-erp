@@ -32,6 +32,7 @@ export default async function handler(req:Req,res:Res){
  const openAiKey=process.env.OPENAI_API_KEY;
  if(!url||!key)return reply(res,503,{error:'Falta configurar la autenticación segura del servidor.'});
  if(!openAiKey)return reply(res,503,{error:'El asistente aún no está habilitado. El administrador debe configurar OPENAI_API_KEY en Vercel.'});
+ let stage='supabase_auth';
  try{
   const authClient=createClient(url,key,{auth:{autoRefreshToken:false,persistSession:false,detectSessionInUrl:false}});
   const {data,error}=await authClient.auth.getUser(token);
@@ -41,11 +42,14 @@ export default async function handler(req:Req,res:Res){
   const catalog=(Array.isArray(body.catalog)?body.catalog.slice(0,80):[]).map(item=>{if(!item||typeof item!=='object')return null;const p=item as Record<string,unknown>;return{name:clean(p.name,100),presentation:clean(p.presentation,80),category:clean(p.category,80),activeIngredients:Array.isArray(p.activeIngredients)?p.activeIngredients.slice(0,8).map(v=>clean(v,80)).filter(Boolean):[],warnings:clean(p.warnings,350)};}).filter((p):p is NonNullable<typeof p>=>Boolean(p?.name));
   const context=clean(body.context,60)||'Atención en farmacia';
   const input=[{role:'system',content:SYSTEM_PROMPT+'\nContexto: '+context+'\nCatálogo disponible (referencia, no garantiza stock): '+JSON.stringify(catalog)},...messages.map(m=>({role:m.role,content:m.content}))];
+  stage='openai_request';
   const response=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:'Bearer '+openAiKey,'Content-Type':'application/json'},body:JSON.stringify({model:process.env.OPENAI_MODEL||'gpt-4.1-mini',input,max_output_tokens:650,store:false})});
-  const result=await response.json() as {output_text?:string;error?:{message?:string};output?:Array<{content?:Array<{text?:string}>}>};
-  if(!response.ok)return reply(res,502,{error:'No se pudo obtener respuesta del servicio de IA. Intenta nuevamente más tarde.'});
+  stage='openai_response';
+  let result:{output_text?:string;error?:{message?:string;code?:string;type?:string};output?:Array<{content?:Array<{text?:string}>}>};
+  try{result=await response.json() as typeof result;}catch{console.error('[pharmacy-assistant] invalid_openai_response',{status:response.status,requestId:response.headers.get('x-request-id')});return reply(res,502,{error:'El servicio de IA devolvió una respuesta no válida. Intenta nuevamente.'});}
+  if(!response.ok){const code=result.error?.code??result.error?.type??'unknown';console.error('[pharmacy-assistant] openai_error',{status:response.status,code,requestId:response.headers.get('x-request-id')});if(response.status===401||response.status===403)return reply(res,502,{error:'La clave de OpenAI no tiene autorización para responder. El administrador debe revisar los permisos de la clave API en OpenAI Platform.'});if(response.status===429)return reply(res,503,{error:'El servicio de IA alcanzó su límite o no tiene crédito disponible. Revisa la facturación y los límites de OpenAI Platform.'});return reply(res,502,{error:'OpenAI rechazó la consulta. Revisa el modelo y los permisos de la clave API.'});}
   const answer=result.output_text||result.output?.flatMap(item=>item.content??[]).map(part=>part.text??'').join('\n').trim();
   if(!answer)return reply(res,502,{error:'El asistente no generó una respuesta. Intenta reformular la pregunta.'});
   return reply(res,200,{answer});
- }catch{return reply(res,502,{error:'No se pudo completar la consulta. Verifica tu conexión e intenta nuevamente.'});}
+ }catch(error){const detail=error instanceof Error?error.message:String(error);console.error('[pharmacy-assistant] request_failed',{stage,name:error instanceof Error?error.name:'UnknownError',message:detail.slice(0,240)});if(stage==='supabase_auth')return reply(res,502,{error:'No se pudo validar la sesión con Supabase. Verifica la conexión e inicia sesión nuevamente.'});return reply(res,502,{error:'No se pudo conectar con el servicio de IA. Intenta nuevamente en unos momentos.'});}
 }
