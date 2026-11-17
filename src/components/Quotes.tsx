@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { Customer, Product, ErpSettings, QuoteRecord, QuoteLine } from '../domain/types';
-import { Plus, Search, Printer, Trash2, FileText, Package, CreditCard, Eye, Minus, Truck, Save, ChevronDown } from 'lucide-react';
+import { Plus, Search, Printer, Trash2, FileText, Eye, Save, ChevronDown } from 'lucide-react';
 const money=(n:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL'}).format(n);
 const lineDiscountAmount=(line:QuoteLine)=>line.qty*line.price*Math.max(0,Math.min(100,Number(line.discountPercent)||0))/100;
 const discountedLineTotal=(line:QuoteLine)=>Math.max(0,line.qty*line.price-lineDiscountAmount(line));
@@ -105,7 +105,7 @@ return <div className="content standard-invoice quotes-page"><style>{`
   outline: 2px solid #0f766e;
   outline-offset: 3px;
 }
-.quotes-page .invoice-customer-field .invoice-customer-select-row {
+.quotes-page .invoice-layout > .card:first-child .invoice-customer-field .invoice-customer-select-row {
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) !important;
   width: 100% !important;
