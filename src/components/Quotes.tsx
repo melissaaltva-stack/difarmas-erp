@@ -55,11 +55,6 @@ return <div className="content standard-invoice quotes-page"><style>{`
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.quotes-page .quote-summary-isv > span:last-child {
-  color: #637d78;
-  font-size: 11px;
-  text-align: right;
-}
 .quotes-page .quote-notes-switch {
   display: inline-flex;
   align-items: center;
@@ -209,7 +204,6 @@ return <div className="content standard-invoice quotes-page"><style>{`
 @media (max-width: 560px) {
   .quotes-page .quote-summary { padding: 8px 0 2px; }
   .quotes-page .quote-summary-row { gap: 10px; }
-  .quotes-page .quote-summary-isv > span:last-child { text-align: left; }
   .quotes-page .quote-summary-total strong { font-size: 21px; }
   .quotes-page .quotes-list-heading { align-items: flex-start; flex-direction: column; }
   .quotes-page .quotes-list-heading > .primary { width: 100%; }
@@ -363,7 +357,7 @@ return <div className="content standard-invoice quotes-page"><style>{`
   <div className="quote-summary" aria-label="Resumen de cotización">
    <div className="quote-summary-row"><span>Subtotal</span><strong>{money(subtotal)}</strong></div>
    <div className="quote-summary-row"><span>Descuento</span><strong>{money(lineDiscountTotal+quoteDiscount)}</strong></div>
-   <div className="quote-summary-row quote-summary-isv"><span>ISV</span><span>Incluido según la configuración de precio de cada producto</span></div>
+   <div className="quote-summary-row quote-summary-isv"><span>ISV</span></div>
   </div>
   <div className="invoice-total"><span>Total de la cotización</span><strong>{money(Math.max(0,subtotal-lineDiscountTotal-quoteDiscount))}</strong></div>
   {saveError&&<p className="error-text" role="alert">{saveError}</p>}
