@@ -93,7 +93,6 @@ export function StandardInvoice({products,customers,sales,settings,payment,setPa
    <div className="invoice-summary-row"><span>Subtotal</span><strong>{money(calculatedLines.reduce((sum,line)=>sum+line.subtotal,0))}</strong></div>
    <div className="invoice-summary-row"><span>Descuento</span><strong>{money(discountTotal)}</strong></div>
    <div className="invoice-summary-row invoice-summary-isv"><span>ISV</span><strong>{money(taxTotal)}</strong></div>
-   <div className="invoice-summary-note">Incluido según la configuración de precio de cada producto</div>
   </div>
   <div className="invoice-total"><span>Total de la factura</span><strong>{money(total)}</strong></div>
   <div className="invoice-actions"><button className="secondary" onClick={()=>{setCart([]);setLineAdjustments({});}} disabled={!cart.length}>Vaciar detalle</button>{orderEditId===null&&!invoiceOrderId&&!editingInvoice&&<button type="button" className="secondary" onClick={saveAsOrder} disabled={!cart.length}>Guardar pedido</button>}<button className="primary" onClick={submit} disabled={!cart.length}>{orderEditId!==null?'Guardar cambios del pedido':editingInvoice?'Guardar cambios':invoiceOrderId?'Facturar pedido':'Guardar factura'}</button><button type="button" className="secondary" disabled={!lastInvoice} onClick={()=>window.print()}><Printer size={15}/> Imprimir</button></div>
