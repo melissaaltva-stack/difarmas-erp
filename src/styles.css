@@ -5518,3 +5518,20 @@ button.icon-btn:focus-visible svg,
     margin:auto;
   }
 }
+
+/* Asistente farmacéutico IA en Facturación estándar y POS */
+.pharmacy-ai-card{margin:0 0 14px;padding:14px 16px;border:1px solid #cbded9;border-radius:12px;background:#f7fbfa}
+.pharmacy-ai-heading,.pharmacy-ai-heading>div{display:flex;align-items:center;gap:11px}
+.pharmacy-ai-heading{justify-content:space-between;flex-wrap:wrap}.pharmacy-ai-heading>div{min-width:0}
+.pharmacy-ai-heading strong,.pharmacy-ai-heading small{display:block}.pharmacy-ai-heading small{margin-top:3px;color:#647b77;font-size:12px}
+.pharmacy-ai-icon{display:grid;place-items:center;width:36px;height:36px;flex:0 0 36px;border-radius:10px;background:#e2f0ec;color:#17665b}
+.pharmacy-ai-heading button,.pharmacy-ai-form button{display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.pharmacy-ai-panel{margin-top:14px;padding-top:13px;border-top:1px solid #dce8e5}
+.pharmacy-ai-warning{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border-radius:8px;background:#fff7e8;color:#80551b;font-size:12px;line-height:1.5}.pharmacy-ai-warning svg{flex:0 0 16px;margin-top:1px}
+.pharmacy-ai-messages{display:flex;flex-direction:column;gap:10px;max-height:340px;overflow:auto;padding:12px 2px}.pharmacy-ai-empty{margin:0;color:#6b7e7a;font-size:13px}
+.pharmacy-ai-message{max-width:94%;padding:10px 12px;border-radius:10px;background:#fff;border:1px solid #e1e9e7}.pharmacy-ai-message.user{align-self:flex-end;background:#eaf4f1}
+.pharmacy-ai-message strong{font-size:11px;color:#52716a}.pharmacy-ai-message p{margin:5px 0 0;white-space:pre-wrap;font-size:13px;line-height:1.55}
+.pharmacy-ai-loading{display:flex;align-items:center;gap:8px;color:#55736c;font-size:12px}
+.pharmacy-ai-form{display:flex;align-items:flex-end;gap:8px}.pharmacy-ai-form textarea{flex:1;min-width:0;resize:vertical;border:1px solid #cbd9d5;border-radius:9px;padding:10px;font:inherit;font-size:13px;background:#fff}
+.pharmacy-ai-form button{min-height:40px}.pharmacy-ai-footer{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:8px;color:#71827e;font-size:11px}.pharmacy-ai-footer button{white-space:nowrap}
+@media(max-width:600px){.pharmacy-ai-heading{align-items:flex-start}.pharmacy-ai-heading>div{flex:1}.pharmacy-ai-heading>button{width:100%}.pharmacy-ai-form{align-items:stretch;flex-direction:column}.pharmacy-ai-form button{width:100%}.pharmacy-ai-footer{align-items:flex-start;flex-direction:column}}
