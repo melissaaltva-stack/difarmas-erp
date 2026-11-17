@@ -6555,3 +6555,123 @@ button.icon-btn:focus-visible svg,
   border-color: #3c6654 !important;
   color: #e1eee7 !important;
 }
+
+
+/* FARMI — unificación final del color de botones de acción */
+:root[data-farmi-theme] .app :is(
+  .register-customer-button,
+  .customer-save-button,
+  .active-ingredient-add-btn,
+  .drug-info-consult-btn,
+  .pos-returns-btn,
+  .purchase-history-button,
+  .cost-comparison-button,
+  .purchase-product-add,
+  .purchase-add-product,
+  .inventory-detail-edit-btn,
+  .received-quick-actions button,
+  .pos-drug-mini,
+  .settings-notice .secondary,
+  #purchases-panel .ai-purchase-launch>button
+){
+  background:var(--farmi-ui-primary)!important;
+  border-color:var(--farmi-ui-primary)!important;
+  color:#fff!important;
+}
+:root[data-farmi-theme] .app :is(
+  .register-customer-button,
+  .customer-save-button,
+  .active-ingredient-add-btn,
+  .drug-info-consult-btn,
+  .pos-returns-btn,
+  .purchase-history-button,
+  .cost-comparison-button,
+  .purchase-product-add,
+  .purchase-add-product,
+  .inventory-detail-edit-btn,
+  .received-quick-actions button,
+  .pos-drug-mini,
+  .settings-notice .secondary,
+  #purchases-panel .ai-purchase-launch>button
+):hover:not(:disabled){
+  background:var(--farmi-ui-primary-dark)!important;
+  border-color:var(--farmi-ui-primary-dark)!important;
+  color:#fff!important;
+}
+:root[data-farmi-theme] .app :is(
+  .register-customer-button,
+  .customer-save-button,
+  .active-ingredient-add-btn,
+  .drug-info-consult-btn,
+  .pos-returns-btn,
+  .purchase-history-button,
+  .cost-comparison-button,
+  .purchase-product-add,
+  .purchase-add-product,
+  .inventory-detail-edit-btn,
+  .received-quick-actions button,
+  .pos-drug-mini,
+  .settings-notice .secondary,
+  #purchases-panel .ai-purchase-launch>button
+):focus-visible{
+  outline:2px solid var(--farmi-ui-primary)!important;
+  outline-offset:2px;
+}
+:root[data-farmi-theme] .app :is(
+  .register-customer-button,
+  .customer-save-button,
+  .active-ingredient-add-btn,
+  .drug-info-consult-btn,
+  .pos-returns-btn,
+  .purchase-history-button,
+  .cost-comparison-button,
+  .purchase-product-add,
+  .purchase-add-product,
+  .inventory-detail-edit-btn,
+  .received-quick-actions button,
+  .pos-drug-mini,
+  .settings-notice .secondary,
+  #purchases-panel .ai-purchase-launch>button
+):disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+.app[data-theme="dark"] :is(
+  .register-customer-button,
+  .customer-save-button,
+  .active-ingredient-add-btn,
+  .drug-info-consult-btn,
+  .pos-returns-btn,
+  .purchase-history-button,
+  .cost-comparison-button,
+  .purchase-product-add,
+  .purchase-add-product,
+  .inventory-detail-edit-btn,
+  .received-quick-actions button,
+  .pos-drug-mini,
+  .settings-notice .secondary,
+  #purchases-panel .ai-purchase-launch>button
+){
+  background:var(--farmi-ui-primary,#16856b)!important;
+  border-color:var(--farmi-ui-primary,#16856b)!important;
+  color:#fff!important;
+}
+.app[data-theme="dark"] :is(
+  .register-customer-button,
+  .customer-save-button,
+  .active-ingredient-add-btn,
+  .drug-info-consult-btn,
+  .pos-returns-btn,
+  .purchase-history-button,
+  .cost-comparison-button,
+  .purchase-product-add,
+  .purchase-add-product,
+  .inventory-detail-edit-btn,
+  .received-quick-actions button,
+  .pos-drug-mini,
+  .settings-notice .secondary,
+  #purchases-panel .ai-purchase-launch>button
+):hover:not(:disabled){
+  background:var(--farmi-ui-primary-dark,#116a56)!important;
+  border-color:var(--farmi-ui-primary-dark,#116a56)!important;
+}
