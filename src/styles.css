@@ -6520,3 +6520,38 @@ button.icon-btn:focus-visible svg,
 .app[data-theme="dark"] [role="dialog"][aria-label="Cuentas por cobrar"] :is(h1,h2,h3,h4,strong,label) {
   color: #e2ece7 !important;
 }
+
+
+/* Mantener visibles los estados activos y las selecciones en modo nocturno */
+.app[data-theme="dark"] .type.active {
+  background-color: #167b61 !important;
+  border-color: #238b6d !important;
+  color: #ffffff !important;
+}
+.app[data-theme="dark"] :is(
+  .settings-tabs button.active,
+  .settings-document-list > button.selected,
+  .admin-account-mode button.active,
+  .accounting-tabs button.active,
+  .hr-tabs button.active,
+  .social-lead.selected,
+  .label-picker-item.is-selected
+) {
+  background-color: #1b493a !important;
+  border-color: #39745c !important;
+  color: #e5f3eb !important;
+}
+.app[data-theme="dark"] :is(
+  .inventory-product-row:hover,
+  .inventory-product-row:focus-visible,
+  .customer-clickable-row:hover,
+  .customer-create-option:hover,
+  .invoice-product:hover,
+  .purchase-product-option:hover,
+  .purchase-product-option:focus-visible,
+  .social-product:hover
+) {
+  background-color: #203a30 !important;
+  border-color: #3c6654 !important;
+  color: #e1eee7 !important;
+}
