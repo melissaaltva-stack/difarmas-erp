@@ -6026,3 +6026,497 @@ button.icon-btn:focus-visible svg,
 @media(max-width:700px) {
   .theme-switch { align-self: flex-end; }
 }
+
+/* Tema nocturno exhaustivo: superficies claras detectadas en todos los módulos */
+.app[data-theme="dark"] :is(
+  .topbar,
+  .hero-goal,
+  .card,
+  .secondary,
+  th,
+  .icon-btn,
+  .modal,
+  .type,
+  .results button,
+  .results button:hover,
+  .qty button,
+  .checkout select,
+  .purchase-head input,
+  .progress-track,
+  .invoice-meta,
+  .invoice-total,
+  .form-grid select,
+  .form-grid textarea,
+  .purchase-history-stats>div,
+  .purchase-history-table-head,
+  .purchase-history-empty,
+  .settings-tabs button,
+  .settings-document-list>button,
+  .document-preview,
+  .preview-lines i,
+  .settings-form-grid input,
+  .settings-form-grid select,
+  .settings-form-grid textarea,
+  .access-user-controls select,
+  .settings-add-field input,
+  .settings-hint,
+  .access-permissions,
+  .product-image-editor,
+  .product-image-search input,
+  .image-url-label input
+) {
+  background-color: #1b2a27 !important;
+  border-color: #354941 !important;
+  color: #dce8e2 !important;
+}
+
+.app[data-theme="dark"] :is(
+  .product-image-results button,
+  .account-payment input,
+  .account-payment select,
+  .toolbar>select,
+  .toolbar select,
+  .catalog-product-image,
+  .ai-hero,
+  .invoice-format-card,
+  .ai-purchase-recommendations,
+  .ai-purchase-row,
+  .ai-priority,
+  .social-links-grid input,
+  .social-detail-fields select,
+  .social-notes-label textarea,
+  .social-message-label textarea,
+  .social-modal select,
+  .social-modal textarea,
+  .social-filters select,
+  .social-lead,
+  .social-stage,
+  .social-stage.stage-cerrado,
+  .social-product,
+  .social-product:hover,
+  .social-modal .form-grid select,
+  .social-modal .form-grid textarea,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):hover,
+  select:hover,
+  textarea:hover,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+  select:focus,
+  textarea:focus,
+  .search,
+  .search-pos,
+  .social-search,
+  .search:focus-within
+) {
+  background-color: #1b2a27 !important;
+  border-color: #354941 !important;
+  color: #dce8e2 !important;
+}
+
+.app[data-theme="dark"] :is(
+  .search-pos:focus-within,
+  .social-search:focus-within,
+  .expiry-summary>div,
+  .sales-return-detail th,
+  .sales-return-history th,
+  .business-logo-editor,
+  .business-logo-preview,
+  .customer-search-results,
+  .customer-search-hint,
+  .customer-picker .checkout-label input,
+  .customer-create-option,
+  .customer-create-option:hover,
+  .checkout-rtn-field input,
+  .checkout-rtn-field input:focus,
+  .checkout-received-field input,
+  .checkout-received-field input:focus,
+  .received-quick-actions button,
+  .invoice-search-control,
+  .invoice-search-control:focus-within,
+  .invoice-search-clear,
+  .invoice-results-heading,
+  .invoice-return-results .invoice-result-row:hover,
+  .label-picker,
+  .label-picker-search,
+  .label-picker-item,
+  .invoice-product,
+  .invoice-product:hover,
+  .standard-invoice input:not(.invoice-qty),
+  .standard-invoice select,
+  .new-invoice-customer,
+  #purchases-panel .purchase-head input,
+  #purchases-panel .purchase-invoice-summary,
+  #purchases-panel .purchase-notes-label,
+  .mobile-menu-toggle,
+  .customer-modal
+) {
+  background-color: #1b2a27 !important;
+  border-color: #354941 !important;
+  color: #dce8e2 !important;
+}
+
+.app[data-theme="dark"] :is(
+  .standard-invoice .invoice-header-grid input,
+  .standard-invoice .invoice-header-grid select,
+  .standard-invoice .invoice-header-grid textarea,
+  .inventory-product-row:hover,
+  .inventory-product-row:focus-visible,
+  .inventory-detail-modal,
+  .inventory-detail-image,
+  .inventory-detail-footer,
+  .drug-assistant-product,
+  .customer-modal input[readonly],
+  .customer-form-section,
+  .customer-form-field input,
+  .customer-form-field select,
+  .customer-form-field textarea,
+  .customer-form-top input,
+  .customer-form-field input[readonly],
+  .customer-form-top input[readonly],
+  .customer-form-field input:disabled,
+  .customer-term,
+  .admin-form-label input,
+  .admin-account-mode button,
+  .admin-permission-editor,
+  .admin-managed-user .access-user-controls select,
+  .product-edit-modal .product-tax-card,
+  .product-edit-modal .product-tax-toggle,
+  .product-edit-modal .product-tax-toggle input[type="checkbox"],
+  .product-edit-modal .product-prices-section .product-tax-card,
+  .product-edit-modal .product-prices-section .product-tax-card > strong,
+  .product-edit-modal .product-prices-section .product-unit-cost-field,
+  .product-edit-modal .product-prices-section > .card:has(> strong) > strong,
+  .product-edit-modal .product-prices-section > div[style*="justify-content: space-between"],
+  .product-edit-modal .product-prices-section > .card:has(> div > strong),
+  .product-edit-modal .product-prices-section > .card:has(> strong),
+  .product-edit-modal .price-profit-field,
+  .product-edit-modal .pricing-table-card
+) {
+  background-color: #1b2a27 !important;
+  border-color: #354941 !important;
+  color: #dce8e2 !important;
+}
+
+.app[data-theme="dark"] :is(
+  .product-edit-modal .product-name-pricing,
+  .product-edit-modal .pricing-cost-card,
+  .product-edit-modal .pricing-stock-card,
+  .product-edit-modal .product-pricing-table th,
+  .product-edit-modal .product-pricing-table input,
+  .product-edit-modal .product-pricing-table select,
+  .product-edit-modal .pricing-stock-card input[readonly],
+  .inventory-utility-section,
+  .inventory-utility-toggle,
+  .inventory-utility-toggle:hover,
+  .goal-setting-input,
+  .goal-setting-input:focus-within,
+  .inventory-detail-backdrop .inventory-detail-image,
+  .invoice-product-stock,
+  .invoice-product-extra-details,
+  #purchase-order .purchase-product-results,
+  #purchase-order .purchase-product-option,
+  #purchase-order .purchase-product-option:hover,
+  #purchase-order .purchase-product-option:focus-visible,
+  #purchase-order .purchase-product-code,
+  .purchase-data-launch,
+  .purchase-header-form input,
+  .purchase-header-form select,
+  .purchase-supplier-field input,
+  .purchase-new-supplier-form input,
+  .purchase-new-supplier-form select,
+  .purchase-total-input-label,
+  #purchase-detail.purchase-detail-card,
+  #purchase-detail .purchase-add-product,
+  #purchase-detail .purchase-detail-columns,
+  #purchase-detail .purchase-row-expiry,
+  #purchase-detail .purchase-row-expiry:hover,
+  #purchase-detail .purchase-row-expiry .purchase-expiry-label input,
+  #purchase-detail .purchase-row-expiry .purchase-cost-label input,
+  #purchase-detail .purchase-row-expiry .purchase-isv-label select
+) {
+  background-color: #1b2a27 !important;
+  border-color: #354941 !important;
+  color: #dce8e2 !important;
+}
+
+.app[data-theme="dark"] :is(
+  #purchase-detail .purchase-detail-qty button,
+  #purchase-detail .purchase-remove-item,
+  #purchase-detail .purchase-detail-notes textarea,
+  #purchase-detail .purchase-detail-footer,
+  #purchase-detail .purchase-detail-empty,
+  .product-edit-modal .active-ingredients-panel,
+  .product-edit-modal .active-ingredient-row,
+  .product-edit-modal .active-ingredient-row input,
+  .product-edit-modal .active-ingredient-row select,
+  .product-edit-modal .active-ingredient-row > button,
+  .product-edit-modal .active-ingredient-add-icon,
+  .product-edit-modal .drug-info-consult-btn,
+  .pos-toolbar .pos-returns-btn,
+  .cash-closing-date,
+  .cash-closing-metric,
+  .cash-closing-metric.expected,
+  .cash-closing-formula,
+  .cash-field input,
+  .cash-field textarea,
+  .purchase-history-button,
+  .cost-comparison-button,
+  #purchases-panel .purchase-inline-header-form input,
+  #purchases-panel .purchase-inline-header-form select,
+  .medication-customer-summary,
+  .medication-entry,
+  .medication-history-drugs span,
+  .customer-clickable-row:hover,
+  .accounting-tabs,
+  .accounting-tabs button.active,
+  .accounting-period,
+  .accounting-period input,
+  .accounting-form-grid input,
+  .accounting-new-account input,
+  .accounting-new-account select,
+  .accounting-major-select select
+) {
+  background-color: #1b2a27 !important;
+  border-color: #354941 !important;
+  color: #dce8e2 !important;
+}
+
+.app[data-theme="dark"] :is(
+  .accounting-metrics article,
+  .accounting-source-grid>div,
+  .accounting-entry-totals,
+  .accounting-disclaimer,
+  .customer-section-dropdown select,
+  .receivables-toolbar,
+  .receivables-search-control,
+  .receivables-clear,
+  .receivables-status-field select,
+  .settings-notice .secondary,
+  .settings-notice .secondary:hover,
+  .receivables-history-toggle,
+  .receivables-history-toggle:hover,
+  .receivables-customer-results,
+  .receivables-customer-results button,
+  .receivables-customer-results button:hover,
+  .receivables-ledger-summary>div,
+  .receivables-payment-fields input,
+  .receivables-payment-fields select,
+  .receivables-selected-balance,
+  .ai-product-rank>span,
+  .farmi-assistant-popover,
+  .farmi-assistant-popover>header,
+  .search-box,
+  .product-image-search,
+  .hr-private-note,
+  .hr-tabs,
+  .hr-tabs button.active,
+  .hr-toolbar>select,
+  .hr-date-filter input,
+  .hr-table th,
+  .hr-status,
+  .hr-inline-notice,
+  .hr-attendance-form,
+  .hr-attendance-form input
+) {
+  background-color: #1b2a27 !important;
+  border-color: #354941 !important;
+  color: #dce8e2 !important;
+}
+
+.app[data-theme="dark"] :is(
+  .hr-attendance-form select,
+  .hr-form-grid input,
+  .hr-form-grid select,
+  .hr-form-grid textarea,
+  .hr-attendance-form input:disabled,
+  .hr-leave-row,
+  .inventory-lot-toolbar select,
+  .inventory-lot-form input,
+  .inventory-lot-adjust-form input,
+  .inventory-lot-adjust-form select,
+  .pos-unit-picker select,
+  .invoice-unit-picker select,
+  .purchase-logistics-status,
+  .purchase-logistics-items span,
+  .inventory-view-switch,
+  .inventory-view-switch select,
+  .pharmacy-ai-card,
+  .pharmacy-ai-message,
+  .pharmacy-ai-form textarea,
+  .farmi-doctor-disclaimer,
+  .farmi-doctor-messages,
+  .farmi-doctor-message,
+  .farmi-doctor-form textarea
+) {
+  background-color: #1b2a27 !important;
+  border-color: #354941 !important;
+  color: #dce8e2 !important;
+}
+
+.app[data-theme="dark"] :is(
+  .pill,
+  .hero .pill,
+  .stock,
+  .icon-btn:hover,
+  .change-line,
+  .expiry-policy,
+  .purchase-history-heading>span,
+  .settings-save-state,
+  .settings-notice,
+  .settings-document-list>button.selected,
+  .settings-field-chips span,
+  .access-avatar,
+  .customer-avatar,
+  .ai-purchase-icon,
+  .ai-purchase-count,
+  .social-sales .social-notice,
+  .social-lead.selected,
+  .social-channel-icon,
+  .social-stage.stage-pedido-confirmado,
+  .received-quick-actions button:hover,
+  .payment-modal-total,
+  .payment-modal-change,
+  .invoice-search-clear:hover,
+  .invoice-results-heading span,
+  .invoice-selected-banner,
+  .label-picker-item.is-selected,
+  .invoice-notice,
+  .standard-invoice .invoice-layout > .card:first-child .invoice-customer-select-row .text-button,
+  .standard-invoice .invoice-total-panel,
+  .inventory-detail-edit-btn,
+  .pos-drug-mini,
+  .pos-drug-mini:hover,
+  .customer-code,
+  .customer-form-title-icon,
+  .customer-active-panel
+) {
+  background-color: #1d3b30 !important;
+  border-color: #354941 !important;
+  color: #c6ead7 !important;
+}
+
+.app[data-theme="dark"] :is(
+  .admin-account-mode button.active,
+  .goal-settings-icon,
+  #purchase-order .purchase-product-category,
+  #purchase-order .purchase-stock-ok,
+  #purchase-order .purchase-product-add,
+  .purchase-invoice-total-panel,
+  #purchase-detail .purchase-add-product:hover,
+  #purchase-detail .purchase-detail-qty button:hover,
+  #purchase-detail .purchase-detail-line-total,
+  #purchase-detail .purchase-detail-totals .purchase-detail-grand-total strong,
+  .product-edit-modal .drug-info-consult-btn:hover:not(:disabled),
+  .pos-toolbar .pos-returns-btn:hover,
+  .cash-closing-status,
+  .cash-difference.balanced,
+  .purchase-history-button:hover,
+  .purchase-history-button span,
+  .cost-comparison-button:hover,
+  .cost-comparison-button span,
+  .medication-history-count,
+  .customer-detail-avatar,
+  .customer-create-instruction,
+  .customer-create-instruction:hover,
+  .accounting-result-total,
+  .customer-receivable-paid,
+  .receivables-clear:hover,
+  .receivables-results,
+  .receivables-credit-tag,
+  .receivables-invoice-option.selected,
+  .ai-view-tabs button.active,
+  .agent-alert-icon,
+  .farmi-assistant-popover>header>div>span,
+  .hr-metric-icon,
+  .hr-tab-count,
+  .hr-avatar,
+  .hr-status.activo
+) {
+  background-color: #1d3b30 !important;
+  border-color: #354941 !important;
+  color: #c6ead7 !important;
+}
+
+.app[data-theme="dark"] :is(
+  .hr-status.presente,
+  .hr-status.aprobado,
+  .hr-leave-icon,
+  .hr-days-preview,
+  .purchase-logistics-status.is-received,
+  .pharmacy-ai-icon,
+  .pharmacy-ai-message.user,
+  .farmi-doctor-mark,
+  .farmi-doctor-message.user
+) {
+  background-color: #1d3b30 !important;
+  border-color: #354941 !important;
+  color: #c6ead7 !important;
+}
+
+.app[data-theme="dark"] :is(
+  .stock.low,
+  .expiry-recommendations,
+  .cost-count,
+  .cost-alert,
+  .settings-security-warning,
+  .ai-warning,
+  .ai-priority.high,
+  .ai-priority.medium,
+  .social-stage.stage-nuevo,
+  .social-hint,
+  .invoice-fiscal-note,
+  .invoice-product-stock.is-low,
+  #purchase-order .purchase-stock-low,
+  .receivables-debit-tag,
+  .ai-view-tabs button span,
+  .agent-alert-summary>strong,
+  .agent-alert-symbol,
+  .agent-alert-meta b,
+  .hr-status.tardanza,
+  .hr-status.pendiente,
+  .hr-status.permiso,
+  .purchase-logistics-status.has-incident,
+  .pharmacy-ai-warning,
+  .farmi-doctor-emergency
+) {
+  background-color: #403725 !important;
+  border-color: #354941 !important;
+  color: #f5dfad !important;
+}
+
+.app[data-theme="dark"] :is(
+  .form-error,
+  .cost-alert-danger,
+  #purchase-detail .purchase-remove-item:hover,
+  .cash-difference.shortage,
+  .severity-critical .agent-alert-symbol,
+  .severity-critical .agent-alert-meta b,
+  .hr-status.inactivo,
+  .hr-status.rechazado,
+  .hr-status.ausente
+) {
+  background-color: #472a29 !important;
+  border-color: #354941 !important;
+  color: #ffd0cc !important;
+}
+
+.app[data-theme="dark"] :is(
+  .social-stage.stage-esperando-cliente,
+  .payment-modal-note,
+  .product-edit-modal .active-ingredients-icon,
+  .cash-difference.surplus,
+  .severity-info .agent-alert-symbol,
+  .severity-info .agent-alert-meta b
+) {
+  background-color: #26394c !important;
+  border-color: #354941 !important;
+  color: #c9ddf4 !important;
+}
+
+.app[data-theme="dark"] [role="dialog"][aria-label="Cuentas por cobrar"] {
+  background-color: #15211f !important;
+  color: #dce8e2 !important;
+  border: 1px solid #354941 !important;
+}
+.app[data-theme="dark"] [role="dialog"][aria-label="Cuentas por cobrar"] :is(h1,h2,h3,h4,strong,label) {
+  color: #e2ece7 !important;
+}
