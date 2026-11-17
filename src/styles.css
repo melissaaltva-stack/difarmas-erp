@@ -5628,3 +5628,75 @@ button.icon-btn:focus-visible svg,
 .topbar .status:not(.status-error):not(.status-pending) > span {
   flex: 0 0 8px;
 }
+
+
+/* Medidas solicitadas para campos específicos de Facturación estándar */
+@media (min-width: 901px) {
+  .standard-invoice .invoice-header-grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+    column-gap: 10px !important;
+    row-gap: 8px !important;
+  }
+  .standard-invoice .invoice-header-grid > .invoice-field-number { grid-column: span 4 !important; }
+  .standard-invoice .invoice-header-grid > .invoice-field-seller { grid-column: span 2 !important; width: 160px; }
+  .standard-invoice .invoice-header-grid > .invoice-field-date,
+  .standard-invoice .invoice-header-grid > .invoice-field-max-date { grid-column: span 2 !important; width: 135px; }
+  .standard-invoice .invoice-header-grid > .invoice-field.inv-span-12 { grid-column: 1 / -1 !important; }
+  .standard-invoice .invoice-header-grid > .invoice-field.inv-span-3:nth-last-child(4) { grid-column: span 2 !important; width: 150px; }
+  .standard-invoice .invoice-header-grid > .invoice-field.inv-span-3:nth-last-child(3) { grid-column: span 3 !important; }
+  .standard-invoice .invoice-header-grid > .invoice-field.inv-span-3:nth-last-child(2) { grid-column: span 2 !important; width: 170px; }
+  .standard-invoice .invoice-header-grid > .invoice-field.inv-span-3:last-of-type { grid-column: span 3 !important; width: 248px; }
+}
+.standard-invoice .invoice-header-grid > .invoice-field-seller select {
+  width: 160px !important; max-width: 100% !important;
+}
+.standard-invoice .invoice-header-grid > .invoice-field-date input,
+.standard-invoice .invoice-header-grid > .invoice-field-max-date input {
+  width: 135px !important; max-width: 100% !important;
+}
+.standard-invoice .invoice-customer-select-row .invoice-payment-inline {
+  flex: 0 0 170px !important; width: 170px !important; max-width: 100% !important;
+}
+.standard-invoice .invoice-customer-select-row .invoice-payment-inline select {
+  width: 170px !important; max-width: 100% !important;
+}
+.standard-invoice .invoice-header-grid > .invoice-field.inv-span-3:nth-last-child(4) select {
+  width: 150px !important; max-width: 100% !important;
+}
+.standard-invoice .invoice-header-grid > .invoice-field.inv-span-3:nth-last-child(2) input {
+  width: 170px !important; max-width: 100% !important;
+}
+.standard-invoice .invoice-header-grid > .invoice-field.inv-span-3:last-of-type input {
+  width: 248px !important; max-width: 100% !important;
+}
+.standard-invoice .invoice-header-grid > .invoice-field-seller select,
+.standard-invoice .invoice-header-grid > .invoice-field-date input,
+.standard-invoice .invoice-header-grid > .invoice-field-max-date input,
+.standard-invoice .invoice-header-grid > .invoice-field.inv-span-3:nth-last-child(4) select,
+.standard-invoice .invoice-header-grid > .invoice-field.inv-span-3:nth-last-child(2) input,
+.standard-invoice .invoice-header-grid > .invoice-field.inv-span-3:last-of-type input,
+.standard-invoice .invoice-customer-select-row .invoice-payment-inline select {
+  box-sizing: border-box !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+@media (max-width: 900px) {
+  .standard-invoice .invoice-header-grid > .invoice-field-seller,
+  .standard-invoice .invoice-header-grid > .invoice-field-date,
+  .standard-invoice .invoice-header-grid > .invoice-field-max-date,
+  .standard-invoice .invoice-header-grid > .invoice-field.inv-span-3 {
+    width: 100% !important;
+  }
+  .standard-invoice .invoice-header-grid > .invoice-field-seller select,
+  .standard-invoice .invoice-header-grid > .invoice-field-date input,
+  .standard-invoice .invoice-header-grid > .invoice-field-max-date input,
+  .standard-invoice .invoice-header-grid > .invoice-field.inv-span-3 select,
+  .standard-invoice .invoice-header-grid > .invoice-field.inv-span-3 input,
+  .standard-invoice .invoice-customer-select-row .invoice-payment-inline,
+  .standard-invoice .invoice-customer-select-row .invoice-payment-inline select {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
