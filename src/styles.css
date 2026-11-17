@@ -5401,3 +5401,14 @@ button.icon-btn:focus-visible svg,
 .inventory-view-switch select{flex:1;min-width:0;height:36px;padding:0 34px 0 10px;border:1px solid var(--border-color,#d9e5e2);border-radius:8px;background:var(--input-bg,#fff);color:var(--text-color,inherit);font:inherit;font-size:12px;outline:none}
 .inventory-view-switch select:focus{border-color:var(--accent-color,#167b61)}
 @media(max-width:560px){.inventory-view-switch{max-width:none;align-items:stretch;flex-direction:column;gap:6px}.inventory-view-switch select{width:100%}}
+
+
+/* Tipografía estándar global del ERP */
+#root .app :where(*) {
+  font-size: 14px;
+}
+@media (max-width: 900px) {
+  #root .app .nav {
+    font-size: 0;
+  }
+}
