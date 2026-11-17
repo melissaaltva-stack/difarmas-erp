@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { FileText, Printer, Search, Trash2, Plus, CheckCircle2, UserPlus, X, ChevronDown } from 'lucide-react';
 import type { CartItem, Customer, ErpSettings, Product, SaleRecord, StandardInvoiceDetails, OrderRecord } from '../domain/types';
 import { RegisterCustomerModal } from './Customers';
+import { PharmacyAssistant } from './PharmacyAssistant';
 
 const money=(value:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL',maximumFractionDigits:2}).format(value);
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
@@ -48,6 +49,7 @@ export function StandardInvoice({products,customers,sales,settings,payment,setPa
   setInvoiceNumber(nextInvoiceNumber([...sales.filter(s=>s.type==='factura_estandar').map(s=>s.invoiceNumber??''),number]));setNotes('');
  };
  return <div className="content standard-invoice">
+ <PharmacyAssistant products={products} context="Facturación estándar"/>
  <div className="page-intro"><div className="invoice-page-heading"></div><button className="secondary" onClick={()=>{setShowHistory(v=>!v);setNotice('');}}><FileText size={16}/>{showHistory?' Nueva factura':' Historial de facturas'}</button></div>
  {notice&&<div className="invoice-notice"><CheckCircle2 size={18}/><span>{notice}</span>{lastInvoice&&<button className="secondary" onClick={()=>{setLastInvoice(selectedInvoice??lastInvoice);window.setTimeout(()=>window.print(),50);}}><Printer size={15}/> Imprimir factura</button>}</div>}
  {error&&<p className="error-text" role="alert">{error}</p>}
