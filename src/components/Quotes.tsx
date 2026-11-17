@@ -155,21 +155,202 @@ return <div className="content standard-invoice quotes-page"><style>{`.quotes-pa
 .quotes-page table.standard-invoice-lines th:nth-child(9),.quotes-page table.standard-invoice-lines td:nth-child(9){text-align:center!important}
 }
 .quotes-page.quotes-page.standard-invoice table.standard-invoice-lines thead th:nth-child(n){text-align:center!important;vertical-align:middle!important}
-.quotes-page .quotes-list-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:4px 0 12px}.quotes-page .quotes-list-heading h2{margin:5px 0;color:#1c3c32;font-size:20px}.quotes-page .quotes-list-heading p{margin:0;color:#75877f;font-size:12px}.quotes-page .quotes-list-kicker{font-size:10px;font-weight:800;letter-spacing:1.2px;color:#21845c}.quotes-page .quotes-list-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}.quotes-page .quotes-list-metrics>div{min-width:0;padding:13px 15px;border:1px solid #e0e9e4;border-radius:10px;background:#fff}.quotes-page .quotes-list-metrics span,.quotes-page .quotes-list-metrics strong{display:block}.quotes-page .quotes-list-metrics span{font-size:10px;color:#75877f}.quotes-page .quotes-list-metrics strong{margin-top:7px;font-size:19px;color:#1c4436;overflow-wrap:anywhere}.quotes-page .quotes-list-table table{min-width:760px}.quotes-page .quotes-list-table th{white-space:nowrap}.quotes-page .quote-status{display:inline-flex;padding:5px 9px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}.quotes-page .quote-status.active{background:#eaf6ef;color:#23734e}.quotes-page .quote-status.expired{background:#fff1ed;color:#a94f3e}@media(max-width:850px){.quotes-page .quotes-list-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.quotes-page .quotes-list-heading{align-items:flex-start;flex-direction:column}.quotes-page .quotes-list-heading>.primary{width:100%}.quotes-page .quotes-list-metrics>div{padding:10px}.quotes-page .quotes-list-metrics strong{font-size:16px}}`}</style><div className="page-head quote-page-head-compact" style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}>{!creating&&<div style={{display:"flex",gap:10,flexWrap:"wrap"}}>{!selected&&<button className="secondary" onClick={()=>{setSelected(null);setCreating(false);setEditingId(null);setShowList(v=>!v)}}><FileText size={16}/> {showList?"Volver al formulario":"Ver cotizaciones"}</button>}</div>}</div>
+.quotes-page .quotes-list-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:4px 0 12px}.quotes-page .quotes-list-heading h2{margin:5px 0;color:#1c3c32;font-size:20px}.quotes-page .quotes-list-heading p{margin:0;color:#75877f;font-size:12px}.quotes-page .quotes-list-kicker{font-size:10px;font-weight:800;letter-spacing:1.2px;color:#21845c}.quotes-page .quotes-list-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}.quotes-page .quotes-list-metrics>div{min-width:0;padding:13px 15px;border:1px solid #e0e9e4;border-radius:10px;background:#fff}.quotes-page .quotes-list-metrics span,.quotes-page .quotes-list-metrics strong{display:block}.quotes-page .quotes-list-metrics span{font-size:10px;color:#75877f}.quotes-page .quotes-list-metrics strong{margin-top:7px;font-size:19px;color:#1c4436;overflow-wrap:anywhere}.quotes-page .quotes-list-table table{min-width:760px}.quotes-page .quotes-list-table th{white-space:nowrap}.quotes-page .quote-status{display:inline-flex;padding:5px 9px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}.quotes-page .quote-status.active{background:#eaf6ef;color:#23734e}.quotes-page .quote-status.expired{background:#fff1ed;color:#a94f3e}@media(max-width:850px){.quotes-page .quotes-list-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.quotes-page .quotes-list-heading{align-items:flex-start;flex-direction:column}.quotes-page .quotes-list-heading>.primary{width:100%}.quotes-page .quotes-list-metrics>div{padding:10px}.quotes-page .quotes-list-metrics strong{font-size:16px}}
+/* Cotizaciones: mismo orden y medidas que Facturación estándar */
+.quotes-page .quote-editor-card .invoice-header-grid {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 10px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.quotes-page .quote-top-fields-row,
+.quotes-page .quote-client-fields-row,
+.quotes-page .quote-bottom-fields-row {
+  display: grid !important;
+  align-items: end !important;
+  gap: 10px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+}
+.quotes-page .quote-top-fields-row {
+  grid-template-columns: 185px 160px 135px 135px !important;
+}
+.quotes-page .quote-client-fields-row {
+  grid-template-columns: minmax(0, 1fr) 248px !important;
+}
+.quotes-page .quote-bottom-fields-row {
+  grid-template-columns: 150px 360px 170px !important;
+}
+.quotes-page .quote-top-fields-row > .invoice-field,
+.quotes-page .quote-client-fields-row > .invoice-field,
+.quotes-page .quote-bottom-fields-row > .invoice-field {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: none !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  align-self: end !important;
+}
+.quotes-page .quote-top-fields-row .field-label,
+.quotes-page .quote-client-fields-row .field-label,
+.quotes-page .quote-bottom-fields-row .field-label {
+  display: block !important;
+  width: 100% !important;
+  margin: 0 0 5px !important;
+  padding: 0 !important;
+  text-align: left !important;
+  line-height: 1.2 !important;
+}
+.quotes-page .quote-top-fields-row input,
+.quotes-page .quote-top-fields-row select,
+.quotes-page .quote-client-fields-row input,
+.quotes-page .quote-client-fields-row select,
+.quotes-page .quote-bottom-fields-row input,
+.quotes-page .quote-bottom-fields-row select {
+  box-sizing: border-box !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  padding: 4px 8px !important;
+}
+.quotes-page .quote-top-fields-row #quote-number,
+.quotes-page .quote-top-fields-row .quote-field-number {
+  width: 185px !important;
+  min-width: 185px !important;
+  max-width: 185px !important;
+}
+.quotes-page .quote-top-fields-row #quote-seller,
+.quotes-page .quote-top-fields-row .quote-field-seller {
+  width: 160px !important;
+  min-width: 160px !important;
+  max-width: 160px !important;
+}
+.quotes-page .quote-top-fields-row #quote-date,
+.quotes-page .quote-top-fields-row #quote-valid,
+.quotes-page .quote-top-fields-row .quote-field-date,
+.quotes-page .quote-top-fields-row .quote-field-valid {
+  width: 135px !important;
+  min-width: 135px !important;
+  max-width: 135px !important;
+}
+.quotes-page .quote-client-fields-row .invoice-field:has(#quote-client-search) {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+.quotes-page .quote-client-fields-row .invoice-field:has(#quote-client-search) .invoice-search {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  box-sizing: border-box !important;
+  padding: 0 10px !important;
+}
+.quotes-page .quote-client-fields-row #quote-client-search {
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  height: 30px !important;
+  min-height: 30px !important;
+  max-height: 30px !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+.quotes-page .quote-client-fields-row #quote-rtn,
+.quotes-page .quote-client-fields-row .invoice-field:has(#quote-rtn) {
+  width: 248px !important;
+  min-width: 248px !important;
+  max-width: 248px !important;
+}
+.quotes-page .quote-bottom-fields-row #quote-price-list,
+.quotes-page .quote-bottom-fields-row .quote-field-price-list {
+  width: 150px !important;
+  min-width: 150px !important;
+  max-width: 150px !important;
+}
+.quotes-page .quote-bottom-fields-row #quote-address,
+.quotes-page .quote-bottom-fields-row .quote-field-address {
+  width: 360px !important;
+  min-width: 360px !important;
+  max-width: 360px !important;
+}
+.quotes-page .quote-bottom-fields-row #quote-phone,
+.quotes-page .quote-bottom-fields-row .quote-field-phone {
+  width: 170px !important;
+  min-width: 170px !important;
+  max-width: 170px !important;
+}
+@media (max-width: 1200px) {
+  .quotes-page .quote-top-fields-row,
+  .quotes-page .quote-bottom-fields-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .quotes-page .quote-client-fields-row {
+    grid-template-columns: minmax(0, 1fr) 248px !important;
+  }
+  .quotes-page .quote-top-fields-row .invoice-field,
+  .quotes-page .quote-bottom-fields-row .invoice-field,
+  .quotes-page .quote-client-fields-row .invoice-field {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  .quotes-page .quote-top-fields-row input,
+  .quotes-page .quote-top-fields-row select,
+  .quotes-page .quote-bottom-fields-row input,
+  .quotes-page .quote-bottom-fields-row select {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
+@media (max-width: 650px) {
+  .quotes-page .quote-top-fields-row,
+  .quotes-page .quote-client-fields-row,
+  .quotes-page .quote-bottom-fields-row {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .quotes-page .quote-top-fields-row .invoice-field,
+  .quotes-page .quote-client-fields-row .invoice-field,
+  .quotes-page .quote-bottom-fields-row .invoice-field,
+  .quotes-page .quote-top-fields-row input,
+  .quotes-page .quote-top-fields-row select,
+  .quotes-page .quote-client-fields-row input,
+  .quotes-page .quote-bottom-fields-row input,
+  .quotes-page .quote-bottom-fields-row select {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
+`}</style><div className="page-head quote-page-head-compact" style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}>{!creating&&<div style={{display:"flex",gap:10,flexWrap:"wrap"}}>{!selected&&<button className="secondary" onClick={()=>{setSelected(null);setCreating(false);setEditingId(null);setShowList(v=>!v)}}><FileText size={16}/> {showList?"Volver al formulario":"Ver cotizaciones"}</button>}</div>}</div>
 {selected&&!creating?<div className="card quote-document"><style>{`@media print{@page{size:${printFormat.paperSize==='ticket'?'80mm auto':printFormat.paperSize};margin:${printFormat.marginsMm}mm}body *{visibility:hidden!important}.quote-document,.quote-document *{visibility:visible!important}.quote-document{position:absolute!important;left:0!important;top:0!important;width:100%!important;box-shadow:none!important;border:0!important;padding:0!important;background:white!important}.quote-document .no-print{display:none!important}.quote-document .quote-total{background:white!important;border-top:1px solid #ddd!important;border-radius:0!important} .quote-document table{width:100%!important;border-collapse:collapse!important}.quote-document th,.quote-document td{border-bottom:1px solid #ddd!important;padding:7px 5px!important;text-align:left!important}}`}</style><div className="page-head"><div>{printFormat.showLogo&&(settings.logoDataUrl?<img src={settings.logoDataUrl} alt="Logotipo DIFARMÁS" style={{maxWidth:150,maxHeight:65,objectFit:'contain',marginBottom:8}}/>:<strong style={{color:settings.primaryColor,fontSize:22}}>DIFARMÁS</strong>)}<h2>{settings.businessName||'DIFARMÁS'}</h2>{printFormat.showBusinessData&&<p>{[settings.businessSubtitle,settings.phone,settings.email,settings.address,settings.rtn?'RTN: '+settings.rtn:''].filter(Boolean).join(' · ')}</p>}<h2>{printFormat.title} {selected.number}</h2>{printFormat.subtitle&&<p>{printFormat.subtitle}</p>}{printFormat.showClientData&&<p>Cliente: {selected.client} · Fecha: {selected.date} · Válida hasta: {selected.valid}</p>}</div><button className="primary no-print" onClick={printQuote}><Printer size={16}/> Imprimir</button></div><div className="quote-detail-overview" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(170px,1fr))",gap:12,margin:"18px 0"}}><div style={{padding:15,border:"1px solid #dbe7ee",borderRadius:12,background:"#f8fafc"}}><div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"#64748b"}}>Cliente</div><div style={{fontWeight:700,color:"#102c43",marginTop:6,overflowWrap:"anywhere"}}>{selected.client}</div></div><div style={{padding:15,border:"1px solid #dbe7ee",borderRadius:12,background:"#f8fafc"}}><div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"#64748b"}}>Fecha de emisión</div><div style={{fontWeight:700,color:"#102c43",marginTop:6}}>{selected.date}</div></div><div style={{padding:15,border:"1px solid #dbe7ee",borderRadius:12,background:"#f8fafc"}}><div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"#64748b"}}>Vigencia</div><div style={{fontWeight:700,color:"#102c43",marginTop:6}}>{selected.valid||"No definida"}</div></div><div style={{padding:15,border:"1px solid #dbe7ee",borderRadius:12,background:"#f0fdfa"}}><div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"#0f766e"}}>Productos</div><div style={{fontWeight:700,fontSize:20,color:"#0f766e",marginTop:3}}>{selected.lines.reduce((s,l)=>s+l.qty,0)} <span style={{fontSize:12,fontWeight:500}}>unidades · {selected.lines.length} artículos</span></div></div></div><div className="table-wrap"><table><thead><tr><th>Producto</th>{printFormat.showProductCodes&&<th>Código</th>}<th>Cantidad</th><th>Precio unitario</th>{printFormat.showDiscount&&<th>Descuento %</th>}<th>ISV %</th><th>Importe</th></tr></thead><tbody>{selected.lines.map(l=>{const product=products.find(p=>p.id===l.id);const isvPercent=product?.taxEnabled?Number(product.taxRate??settings.billingInfo?.isvRate??15):0;return <tr key={l.id}><td>{l.name}</td>{printFormat.showProductCodes&&<td>{l.code}</td>}<td>{l.qty}</td><td>{money(l.price)}</td>{printFormat.showDiscount&&<td>{Number(l.discountPercent??0)}%</td>}<td>{isvPercent}%</td><td>{money(discountedLineTotal(l))}</td></tr>})}</tbody></table></div><div className="invoice-total quote-total" style={{marginTop:22,padding:22,borderRadius:14,textAlign:"left",display:"flex",flexDirection:"column",alignItems:"stretch",background:"#f8fafc",border:"1px solid #dbe7ee"}}><div style={{fontSize:12,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"#64748b",marginBottom:8}}>Resumen económico</div><p style={{display:"flex",justifyContent:"space-between",gap:12,margin:"7px 0"}}><span>Subtotal de productos</span><strong>{money(selected.lines.reduce((s,l)=>s+l.qty*l.price,0))}</strong></p>{printFormat.showDiscount&&<p>Descuento: {money(selected.discount+selected.lines.reduce((s,l)=>s+lineDiscountAmount(l),0))}</p>}<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,marginTop:12,paddingTop:14,borderTop:"2px solid #0f766e"}}><span style={{fontSize:16,fontWeight:700,color:"#102c43"}}>TOTAL A PAGAR</span><h2 style={{margin:0,textAlign:"right",color:"#0f766e",fontSize:25}}>{money(Math.max(0,selected.lines.reduce((s,l)=>s+discountedLineTotal(l),0)-selected.discount))}</h2></div></div>{printFormat.showNotes&&selected.notes&&<div style={{marginTop:18,padding:16,borderRadius:12,border:"1px solid #dbe7ee",background:"#fff"}}><div style={{fontWeight:700,color:"#102c43",marginBottom:6}}>Observaciones</div><p style={{margin:0,whiteSpace:"pre-wrap",color:"#475569"}}>{selected.notes}</p></div>}<p className="helper">Cotización comercial; no es una factura fiscal.</p>{printFormat.footer&&<p style={{textAlign:'center',marginTop:28}}>{printFormat.footer}</p>}<div className="no-print"><button className="secondary" onClick={()=>setSelected(null)}>Volver a cotizaciones</button> <button className="primary" onClick={()=>startEdit(selected)}>Editar cotización</button></div></div>:null}
 {!selected&&!creating&&showList?<><div className="quotes-list-heading"><div><span className="quotes-list-kicker">GESTIÓN COMERCIAL</span><h2>Historial de cotizaciones</h2><p>Consulta, revisa y administra tus propuestas.</p></div><button className="primary" onClick={startNew}><Plus size={16}/> Nueva cotización</button></div><div className="quotes-list-metrics"><div><span>Total registradas</span><strong>{quotes.length}</strong></div><div><span>Vigentes</span><strong>{quotes.filter(q=>!q.valid||q.valid>=new Date().toISOString().slice(0,10)).length}</strong></div><div><span>Vencidas</span><strong>{quotes.filter(q=>q.valid&&q.valid<new Date().toISOString().slice(0,10)).length}</strong></div><div><span>Valor cotizado</span><strong>{money(quotes.reduce((sum,q)=>sum+Math.max(0,q.lines.reduce((s,l)=>s+discountedLineTotal(l),0)-q.discount),0))}</strong></div></div><div className="inventory-toolbar card"><div className="search"><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar por número o cliente..."/></div><span className="count">{quotes.filter(q=>(q.number+' '+q.client).toLowerCase().includes(search.toLowerCase())).length} resultados</span></div><div className="card table-wrap quotes-list-table"><table><thead><tr><th>Número</th><th>Cliente</th><th>Fecha</th><th>Válida hasta</th><th>Estado</th><th>Total</th><th>Acciones</th></tr></thead><tbody>{quotes.filter(q=>(q.number+' '+q.client).toLowerCase().includes(search.toLowerCase())).map(q=><tr key={q.id} className="quote-editable-row"><td><strong>{q.number}</strong></td><td>{q.client}</td><td>{q.date}</td><td>{q.valid||'—'}</td><td><span className={q.valid&&q.valid<new Date().toISOString().slice(0,10)?'quote-status expired':'quote-status active'}>{q.valid&&q.valid<new Date().toISOString().slice(0,10)?'Vencida':'Vigente'}</span></td><td>{money(Math.max(0,q.lines.reduce((s,l)=>s+discountedLineTotal(l),0)-q.discount))}</td><td><button className="secondary" onClick={()=>setSelected(q)}><Eye size={14}/> Ver</button> <button className="secondary" onClick={()=>startEdit(q)}>Editar</button> <button className="icon-btn" aria-label="Eliminar cotización" onClick={()=>{if(confirm('¿Eliminar esta cotización?'))persist(quotes.filter(x=>x.id!==q.id))}}><Trash2 size={15}/></button></td></tr>)}{quotes.filter(q=>(q.number+' '+q.client).toLowerCase().includes(search.toLowerCase())).length===0&&<tr><td colSpan={7}><div className="empty"><h2>{quotes.length===0?'Aún no hay cotizaciones':'No hay resultados'}</h2><p>{quotes.length===0?'Crea tu primera cotización para empezar.':'Prueba con otro número o cliente.'}</p></div></td></tr>}</tbody></table></div></>:null}
 {(creating||(!selected&&!showList))?<div className="card invoice-header-card quote-editor-card" style={{padding:'16px',boxSizing:'border-box'}}><div className="invoice-header-grid">
-<div className="quote-header-row quote-header-row-main">
+<div className="quote-header-row quote-header-row-main quote-top-fields-row">
 <div className="invoice-field quote-field-number"><label className="field-label" htmlFor="quote-number">N.º de cotización</label><input id="quote-number" value={editingId!==null?(quotes.find(q=>q.id===editingId)?.number??''):''} readOnly placeholder="Se asigna al guardar"/></div>
 <div className="invoice-field inv-span-4 quote-field-seller"><label className="field-label" htmlFor="quote-seller">Vendedor</label><select id="quote-seller" value={seller} onChange={e=>setSeller(e.target.value)}><option value="General">General</option>{(settings.users??[]).filter(u=>u.active).map(u=><option key={u.id} value={u.name}>{u.name}</option>)}</select></div>
 <div className="invoice-field inv-span-2 quote-field-date"><label className="field-label" htmlFor="quote-date">Fecha</label><input id="quote-date" type="date" value={new Date().toISOString().slice(0,10)} readOnly /></div>
 <div className="invoice-field inv-span-2 quote-field-valid"><label className="field-label" htmlFor="quote-valid">Válida hasta</label><input id="quote-valid" type="date" value={valid} onChange={e=>setValid(e.target.value)} /></div>
 </div>
-<div className="quote-header-row quote-header-row-client">
+<div className="quote-header-row quote-header-row-client quote-client-fields-row">
 <div className="invoice-field inv-span-8 quote-field-client"><label className="field-label" htmlFor="quote-client-search">Cliente *</label><div className="invoice-customer-select-row" style={{position:'relative'}}><div className="invoice-search" style={{flex:1,minWidth:0}}><Search size={17}/><input id="quote-client-search" autoComplete="off" value={clientSearch} onFocus={()=>setClientOpen(true)} onChange={e=>{setClientSearch(e.target.value);setClient('');setClientOpen(true)}} placeholder="Buscar cliente por nombre o código"/></div>{clientOpen&&<div style={{position:'absolute',zIndex:20,top:'100%',left:0,right:0,marginTop:5,maxHeight:230,overflowY:'auto',background:'#fff',border:'1px solid #cbd5e1',borderRadius:10,boxShadow:'0 12px 28px rgba(15,23,42,.14)'}}>{matchingCustomers.map(c=><button type="button" key={c.id} onClick={()=>{setClient(String(c.id));setClientSearch(c.name);setClientOpen(false)}} style={{display:'block',width:'100%',padding:'11px 13px',textAlign:'left',background:String(c.id)===client?'#f0fdfa':'#fff',border:0,borderBottom:'1px solid #f1f5f9',cursor:'pointer',color:'#0f172a'}}><span style={{display:'block',fontWeight:600}}>{c.code?c.code+' · ':''}{c.name}</span></button>)}{matchingCustomers.length===0&&<div style={{padding:14,fontSize:13,color:'#64748b'}}>No se encontraron clientes activos.</div>}</div>}</div></div>
 <div className="invoice-field inv-span-2 quote-field-rtn"><label className="field-label" htmlFor="quote-rtn">RTN</label><input id="quote-rtn" value={chosenClient?.rtn??''} readOnly placeholder="RTN del cliente"/></div>
 </div>
-<div className="quote-header-row quote-header-row-details">
+<div className="quote-header-row quote-header-row-details quote-bottom-fields-row">
 <div className="invoice-field inv-span-4 quote-field-price-list"><label className="field-label" htmlFor="quote-price-list">Precio de venta</label><select id="quote-price-list" value={chosenClient?.priceList??"Precio de venta 1"} onChange={()=>{}} disabled><option>{chosenClient?.priceList??"Precio de venta 1"}</option></select></div>
 <div className="invoice-field inv-span-8 quote-field-address"><label className="field-label" htmlFor="quote-address">Dirección</label><input id="quote-address" value={chosenClient?.address??''} readOnly placeholder="Dirección del cliente"/></div>
 <div className="invoice-field inv-span-2 quote-field-phone"><label className="field-label" htmlFor="quote-phone">Teléfono</label><input id="quote-phone" value={chosenClient?.phone??''} readOnly placeholder="Teléfono del cliente"/></div>
