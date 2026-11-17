@@ -5491,3 +5491,30 @@ button.icon-btn:focus-visible svg,
     width:100%;
   }
 }
+
+
+/* Restaurar el menú lateral a su distribución original */
+#root .app .sidebar .nav{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:11px;
+  text-align:left;
+  padding:12px 13px;
+  border-radius:10px;
+}
+#root .app .sidebar .nav svg{
+  width:16px;
+  height:16px;
+  flex:0 0 16px;
+  margin:0;
+}
+@media(max-width:900px){
+  #root .app .sidebar .nav{
+    justify-content:center;
+    padding:12px 13px;
+  }
+  #root .app .sidebar .nav svg{
+    margin:auto;
+  }
+}
