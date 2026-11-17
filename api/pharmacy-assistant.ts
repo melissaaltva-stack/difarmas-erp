@@ -29,7 +29,7 @@ export default async function handler(req:Req,res:Res){
  if(!token)return reply(res,401,{error:'Inicia sesión para usar el asistente.'});
  const url=process.env.SUPABASE_URL??process.env.VITE_SUPABASE_URL;
  const key=process.env.SUPABASE_ANON_KEY??process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
- const openAiKey=process.env.OPENAI_API_KEY;
+ const openAiKey=process.env.OPENAI_API_KEY?.trim();
  if(!url||!key)return reply(res,503,{error:'Falta configurar la autenticación segura del servidor.'});
  if(!openAiKey)return reply(res,503,{error:'El asistente aún no está habilitado. El administrador debe configurar OPENAI_API_KEY en Vercel.'});
  let stage='supabase_auth';
