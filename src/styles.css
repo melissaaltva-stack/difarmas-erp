@@ -7065,3 +7065,7 @@ button.icon-btn:focus-visible svg,
 
 .app[data-theme="dark"] #suppliers-panel .form-grid input{background:#1b2a27!important;border-color:#354941!important;color:#dce8e2!important}
 .app[data-theme="dark"] #suppliers-panel .form-grid input::placeholder{color:#8fa79e!important}
+
+.supplier-status-filter{min-width:145px;height:38px;padding:0 10px;border:1px solid #d9e5e2;border-radius:8px;background:#fff;color:#36534d;font:inherit;font-size:12px}
+@media(max-width:760px){.supplier-status-filter{width:100%;min-width:0}}
+.app[data-theme="dark"] .supplier-status-filter{background:#1b2a27!important;border-color:#354941!important;color:#dce8e2!important}
