@@ -62,10 +62,10 @@ export function useErpState(userId: string, demoMode = false) {
   const scopedKey = (key: string) => demoMode ? `farmi_demo_${key}` : key;
   const loadJson = <T,>(key: string, fallback: T): T => {
     const demoFallback = demoMode
-      ? key === 'difarmas_products' ? demoProducts as T
-      : key === 'difarmas_customers' ? demoCustomers as T
-      : key === 'difarmas_suppliers' ? demoSuppliers as T
-      : key === 'difarmas_settings' ? demoSettings as T
+      ? key === 'difarmas_products' ? demoProducts as unknown as T
+      : key === 'difarmas_customers' ? demoCustomers as unknown as T
+      : key === 'difarmas_suppliers' ? demoSuppliers as unknown as T
+      : key === 'difarmas_settings' ? demoSettings as unknown as T
       : fallback
       : fallback;
     return loadStoredJson<T>(scopedKey(key), demoFallback);
