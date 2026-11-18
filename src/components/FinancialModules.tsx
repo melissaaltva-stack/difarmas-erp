@@ -59,7 +59,7 @@ export function ReceivablesModule({receivables,setReceivables,transactions,setTr
     accounts.forEach(account=>{
       movements.push({date:account.date,sort:0,id:account.id,reference:'Venta #'+account.saleId,description:'Venta a crédito · Vence '+day(account.dueDate),debit:account.total,credit:0});
       const paymentsForAccount=customerTransactions.filter(t=>t.accountId===account.id);
-      paymentsForAccount.forEach(m=>movements.push({date:m.date,sort:1,id:m.id,reference:m.reference||((m.type==='Cobro'?'RC-':'NC-')+m.id),description:m.type==='Cobro'?'Abono a venta #'+account.saleId+' · '+(m.paymentMethod||'Pago')+(m.reference?' · Ref. '+m.reference:''):m.type+' aplicada a venta #'+account.saleId,debit:m.type==='Nota de débito'?m.amount:0,credit:m.type==='Cobro'||m.type==='Nota de crédito'?m.amount:0}));
+      paymentsForAccount.forEach(m=>movements.push({date:m.date,sort:1,id:m.id,reference:m.reference||((m.type==='Cobro'?'RC-':m.type==='Nota de crédito'?'NC-':'ND-')+m.id),description:m.type==='Cobro'?'Abono a venta #'+account.saleId+' · '+(m.paymentMethod||'Pago')+(m.reference?' · Ref. '+m.reference:''):m.type+' aplicada a venta #'+account.saleId,debit:m.type==='Nota de débito'?m.amount:0,credit:m.type==='Cobro'||m.type==='Nota de crédito'?m.amount:0}));
       const paymentsForAccountCash=paymentsForAccount.filter(p=>p.type==='Cobro');
       const recorded=paymentsForAccountCash.reduce((sum,p)=>sum+p.amount,0);
       const untracked=Math.max(0,account.paid-recorded);
@@ -93,7 +93,7 @@ export function ReceivablesModule({receivables,setReceivables,transactions,setTr
       const debit=t.type==='Nota de débito'?t.amount:0;
       const credit=t.type==='Cobro'||t.type==='Nota de crédito'?t.amount:0;
       runningBalance=Math.max(0,runningBalance+debit-credit);
-      accountRows.push({key:'movement-'+t.id,date:t.date,kind:t.type==='Cobro'?'Abono':t.type,reference:t.reference||((t.type==='Cobro'?'RC-':'NC-')+t.id),description:t.type==='Cobro'?(t.paymentMethod||'Pago')+(t.reference?' · Ref. '+t.reference:''):t.type,debit,credit,accountId:r.id,balance:runningBalance,sortOrder:t.id});
+      accountRows.push({key:'movement-'+t.id,date:t.date,kind:t.type==='Cobro'?'Abono':t.type,reference:t.reference||((t.type==='Cobro'?'RC-':t.type==='Nota de crédito'?'NC-':'ND-')+t.id),description:t.type==='Cobro'?(t.paymentMethod||'Pago')+(t.reference?' · Ref. '+t.reference:''):t.type,debit,credit,accountId:r.id,balance:runningBalance,sortOrder:t.id});
     });
     return accountRows;
   });
