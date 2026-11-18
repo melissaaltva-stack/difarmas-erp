@@ -28,11 +28,11 @@ export function Inventory({products, allProducts, search, setSearch, movements, 
   const productExpiryDays = (p: Product) => {
     if (usesLotExpiry(p)) {
       const activeLots = productLotsForExpiry(p);
-      return activeLots.length ? Math.min(...activeLots.map(lot => daysUntil(lot.expiry))) : Number.POSITIVE_INFINITY;
+      const validDays = activeLots.map(lot => daysUntil(lot.expiry)).filter(Number.isFinite);\n      return validDays.length ? Math.min(...validDays) : Number.POSITIVE_INFINITY;
     }
     return daysUntil(p.expiry);
   };
-  const hasExpiredLot = (p: Product) => usesLotExpiry(p)
+  const hasMissingLotExpiry = (p: Product) => usesLotExpiry(p) ? productLotsForExpiry(p).length === 0 || productLotsForExpiry(p).some(lot => !lot.expiry || !Number.isFinite(daysUntil(lot.expiry))) : !p.expiry || !Number.isFinite(daysUntil(p.expiry));\n  const hasExpiredLot = (p: Product) => usesLotExpiry(p)
     ? productLotsForExpiry(p).some(lot => daysUntil(lot.expiry) < 0)
     : daysUntil(p.expiry) < 0;
   const hasExpiringLot = (p: Product, limit: number) => usesLotExpiry(p)
@@ -54,12 +54,12 @@ export function Inventory({products, allProducts, search, setSearch, movements, 
   const expiryDays = (p:Product) => productExpiryDays(p);
   const labelProducts = useMemo(() => products.filter(p => (p.name+' '+p.laboratory+' '+p.code+' '+p.category+' '+p.presentation).toLowerCase().includes(labelSearch.trim().toLowerCase())), [products, labelSearch]);
   const selectLabelVisible = (checked:boolean) => setSelected(current => checked ? [...new Set([...current,...labelProducts.map(p=>p.id)])] : current.filter(id => !labelProducts.some(p=>p.id===id)));
-  const missingExpiry = products.filter(p => usesLotExpiry(p) ? productLotsForExpiry(p).length === 0 : !p.expiry || !Number.isFinite(expiryDays(p)));
+  const missingExpiry = products.filter(hasMissingLotExpiry);
   const expiredValue = products.reduce((sum,p)=>sum+(usesLotExpiry(p) ? productLotsForExpiry(p).filter(lot=>daysUntil(lot.expiry)<0).reduce((value,lot)=>value+Math.max(0,lot.quantityRemaining)*Math.max(0,lot.unitCost),0) : (daysUntil(p.expiry)<0 ? Math.max(0,p.stock)*Math.max(0,p.cost) : 0)),0);
   const upcomingValue = products.reduce((sum,p)=>sum+(usesLotExpiry(p) ? productLotsForExpiry(p).filter(lot=>daysUntil(lot.expiry)>=0&&daysUntil(lot.expiry)<=180).reduce((value,lot)=>value+Math.max(0,lot.quantityRemaining)*Math.max(0,lot.unitCost),0) : (daysUntil(p.expiry)>=0&&daysUntil(p.expiry)<=180 ? Math.max(0,p.stock)*Math.max(0,p.cost) : 0)),0);
   const visibleProducts = products.filter(p => {
     if(expiryFilter==='all') return true;
-    if(expiryFilter==='missing') return usesLotExpiry(p) ? productLotsForExpiry(p).length === 0 : !p.expiry || !Number.isFinite(expiryDays(p));
+    if(expiryFilter==='missing') return hasMissingLotExpiry(p);
     if(expiryFilter==='expired') return hasExpiredLot(p);
     return hasExpiringLot(p, Number(expiryFilter));
   });
