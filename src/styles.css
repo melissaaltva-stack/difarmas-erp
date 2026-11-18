@@ -6723,6 +6723,11 @@ button.icon-btn:focus-visible svg,
 [data-theme="dark"] .billing-sales-tabs button.active{background:var(--farmi-ui-primary,#176b5b);border-color:var(--farmi-ui-primary,#176b5b);color:#fff}
 @media(max-width:560px){.billing-sales-tabs button{flex:1 1 auto}}
 
-/* Menú lateral plegable en escritorio */
-.sidebar-toggle{width:36px;height:36px;flex:0 0 36px;display:grid;place-items:center;border:1px solid #dce7e4;border-radius:9px;background:transparent;color:#315d56;cursor:pointer;margin-right:12px}.sidebar-toggle:hover{background:#edf5f2}.app.sidebar-collapsed .sidebar{width:0;min-width:0;padding-left:0;padding-right:0;overflow:hidden;border:0}.app.sidebar-collapsed .sidebar>*{visibility:hidden}.topbar-title{min-width:0;flex:1}
+/* Menú lateral con salida deslizante completa en escritorio */
+.sidebar{flex:0 0 248px;margin-left:0;transition:margin-left .26s ease,width .26s ease,min-width .26s ease,padding .26s ease}
+.app.sidebar-collapsed .sidebar{margin-left:-248px}
+.sidebar-toggle{width:36px;height:36px;flex:0 0 36px;display:grid;place-items:center;border:1px solid #dce7e4;border-radius:9px;background:transparent;color:#315d56;cursor:pointer;margin-right:12px}
+.sidebar-toggle:hover{background:#edf5f2}
+.topbar-title{min-width:0;flex:1}
+@media(min-width:761px) and (max-width:900px){.sidebar{flex-basis:72px}.app.sidebar-collapsed .sidebar{margin-left:-72px}}
 @media(max-width:760px){.sidebar-toggle{display:none}}
