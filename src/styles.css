@@ -7204,3 +7204,20 @@ button.icon-btn:focus-visible svg,
   .print-invoice-ticket .invoice-print-signatures{gap:8mm!important;margin:10mm 1mm 5mm!important}
   .print-invoice-ticket .invoice-print-signatures span{font-size:7px!important}
 }
+
+.invoice-history-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.invoice-history-actions .secondary{display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+.invoice-detail-backdrop{z-index:120;backdrop-filter:blur(2px)}
+.invoice-detail-modal{width:min(980px,100%);padding:20px;max-height:88vh}
+.invoice-detail-modal .modal-head{align-items:center;margin-bottom:14px}
+.invoice-detail-modal .modal-head h2{font-size:18px;color:var(--text-primary,#243c38)}
+.invoice-detail-meta{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px;padding:12px;background:var(--surface-subtle,#f7faf9);border:1px solid var(--border,#e3ece9);border-radius:10px}
+.invoice-detail-meta>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.invoice-detail-meta small{font-size:10px;color:var(--muted,#718a85);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.invoice-detail-meta strong{font-size:12px;overflow-wrap:anywhere}
+.invoice-detail-address{grid-column:span 2}
+.invoice-detail-table{max-height:42vh;overflow:auto}
+.invoice-detail-totals{width:min(300px,100%);margin:14px 0 0 auto}
+.invoice-detail-totals p{display:flex;justify-content:space-between;gap:16px;margin:0;padding:5px 0;font-size:12px}
+.invoice-detail-grand-total{border-top:1px solid var(--border,#dce7e3);margin-top:5px!important;padding-top:10px!important;font-size:15px!important;font-weight:800}
+@media(max-width:640px){.invoice-history-actions{align-items:stretch;flex-direction:column}.invoice-history-actions .secondary{width:100%}.invoice-detail-modal{padding:14px;max-height:92vh}.invoice-detail-meta{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.invoice-detail-address{grid-column:span 2}.invoice-detail-table{max-height:38vh}.invoice-detail-table table{min-width:650px}.invoice-detail-modal .modal-actions{position:sticky;bottom:-14px;background:var(--surface,#fff);padding:12px 0 2px}}
