@@ -6711,3 +6711,14 @@ button.icon-btn:focus-visible svg,
 .app[data-theme="dark"] .purchase-list-filter-search input{background:transparent;color:#dce8e2}
 @media(max-width:1100px){.purchase-list-filters{grid-template-columns:repeat(3,minmax(0,1fr))}.purchase-list-filter-search{grid-column:span 2}}
 @media(max-width:640px){.purchase-list-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.purchase-list-filter-search{grid-column:1/-1}.purchase-list-clear{grid-column:1/-1}.purchase-list-summary{flex-direction:column;gap:3px}}
+
+
+/* Pestañas internas de la opción Redes sociales / Ventas dentro de Facturación */
+.billing-sales-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px;padding:0 0 10px;border-bottom:1px solid var(--border,#e5e7eb)}
+.billing-sales-tabs button{min-height:34px;padding:7px 13px;border:1px solid var(--border,#d1d5db);border-radius:8px;background:var(--surface,#fff);color:var(--text,#334155);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.billing-sales-tabs button.active{background:var(--farmi-ui-primary,#176b5b);border-color:var(--farmi-ui-primary,#176b5b);color:#fff}
+.billing-sales-tabs button:focus-visible{outline:2px solid var(--farmi-ui-primary,#176b5b);outline-offset:2px}
+[data-theme="dark"] .billing-sales-tabs{border-bottom-color:#334155}
+[data-theme="dark"] .billing-sales-tabs button{background:#172a28;border-color:#38534e;color:#dce9e6}
+[data-theme="dark"] .billing-sales-tabs button.active{background:var(--farmi-ui-primary,#176b5b);border-color:var(--farmi-ui-primary,#176b5b);color:#fff}
+@media(max-width:560px){.billing-sales-tabs button{flex:1 1 auto}}
