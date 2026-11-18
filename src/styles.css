@@ -7192,3 +7192,10 @@ button.icon-btn:focus-visible svg,
   .invoice-print-footer strong{font-size:8pt!important;color:#31594c!important}
   .invoice-print-sheet *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 }
+
+@media print{
+  .invoice-print-signatures{display:grid!important;grid-template-columns:1fr 1fr!important;gap:22mm!important;margin:16mm 5mm 7mm!important;break-inside:avoid!important}
+  .invoice-print-signatures span{display:block!important;padding-top:2mm!important;border-top:1px solid #71827b!important;text-align:center!important;font-size:8pt!important;color:#40534b!important}
+  .print-invoice-ticket .invoice-print-signatures{gap:8mm!important;margin:10mm 1mm 5mm!important}
+  .print-invoice-ticket .invoice-print-signatures span{font-size:7px!important}
+}
