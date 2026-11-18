@@ -1,5 +1,5 @@
 import { AlertTriangle, CalendarDays, DollarSign, Package, ShoppingCart, TrendingUp, Wallet } from 'lucide-react';
-import type { Product, SaleRecord, Expense } from '../domain/types';
+import type { Product, SaleRecord, Expense, InventoryLot } from '../domain/types';
 import { dateKey, localDateKey } from '../utils/dates';
 
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
@@ -11,7 +11,7 @@ const calendarDays = (count: number, end = new Date()) => Array.from({ length: c
   return { key: localDateKey(day), label: day.toLocaleDateString('es-HN', { weekday: 'short' }).replace('.', '').slice(0, 2).toUpperCase() };
 });
 
-export function Dashboard({ products, sales, expenses, monthlyGoal, fixedExpenses }: { products: Product[]; sales: SaleRecord[]; expenses: Expense[]; monthlyGoal: number; fixedExpenses: number }) {
+export function Dashboard({ products, sales, expenses, monthlyGoal, fixedExpenses, lots, fefoProductIds }: { products: Product[]; sales: SaleRecord[]; expenses: Expense[]; monthlyGoal: number; fixedExpenses: number; lots: InventoryLot[]; fefoProductIds: number[] }) {
   const now = new Date();
   const monthKey = currentMonthKey(now);
   const monthSales = sales.filter(s => isCurrentMonth(s.date, monthKey));
@@ -43,14 +43,28 @@ export function Dashboard({ products, sales, expenses, monthlyGoal, fixedExpense
   const maxChart = Math.max(...chartValues, 1);
   const recentSales = [...sales].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 7);
 
-  const expired = products.filter(product => /^\d{4}-\d{2}-\d{2}$/.test(product.expiry) && product.expiry < todayKey);
-  const expiringSoon = products.filter(product => {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(product.expiry) || product.expiry < todayKey) return false;
-    const expiryDate = new Date(Number(product.expiry.slice(0, 4)), Number(product.expiry.slice(5, 7)) - 1, Number(product.expiry.slice(8, 10)));
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const daysUntilExpiry = Math.round((expiryDate.getTime() - today.getTime()) / 86400000);
-    return daysUntilExpiry <= 90;
-  });
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const activeFefoIds = new Set(fefoProductIds);
+  const activeLotsByProduct = new Map<number, InventoryLot[]>();
+  for (const lot of lots) {
+    if (lot.quantityRemaining <= 0 || !activeFefoIds.has(lot.productId)) continue;
+    const current = activeLotsByProduct.get(lot.productId) ?? [];
+    current.push(lot);
+    activeLotsByProduct.set(lot.productId, current);
+  }
+  const validExpiry = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value);
+  const daysUntil = (value: string) => {
+    const expiryDate = new Date(Number(value.slice(0, 4)), Number(value.slice(5, 7)) - 1, Number(value.slice(8, 10)));
+    return Math.round((expiryDate.getTime() - today.getTime()) / 86400000);
+  };
+  const hasExpiredStock = (product: Product) => activeFefoIds.has(product.id)
+    ? (activeLotsByProduct.get(product.id) ?? []).some(lot => validExpiry(lot.expiry) && lot.expiry < todayKey)
+    : product.stock > 0 && validExpiry(product.expiry) && product.expiry < todayKey;
+  const hasSoonExpiry = (product: Product) => activeFefoIds.has(product.id)
+    ? (activeLotsByProduct.get(product.id) ?? []).some(lot => validExpiry(lot.expiry) && daysUntil(lot.expiry) >= 0 && daysUntil(lot.expiry) <= 90)
+    : product.stock > 0 && validExpiry(product.expiry) && daysUntil(product.expiry) >= 0 && daysUntil(product.expiry) <= 90;
+  const expired = products.filter(hasExpiredStock);
+  const expiringSoon = products.filter(hasSoonExpiry);
 
   return <div className="content dashboard-content">
     <section className="hero dashboard-hero">
