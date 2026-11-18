@@ -7069,3 +7069,48 @@ button.icon-btn:focus-visible svg,
 .supplier-status-filter{min-width:145px;height:38px;padding:0 10px;border:1px solid #d9e5e2;border-radius:8px;background:#fff;color:#36534d;font:inherit;font-size:12px}
 @media(max-width:760px){.supplier-status-filter{width:100%;min-width:0}}
 .app[data-theme="dark"] .supplier-status-filter{background:#1b2a27!important;border-color:#354941!important;color:#dce8e2!important}
+
+/* Purchase logistics */
+.purchase-logistics-page{display:grid;gap:12px;min-width:0}
+.purchase-logistics-create{padding:14px}
+.purchase-logistics-create-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.purchase-logistics-create-heading>div{display:grid;gap:3px}
+.purchase-logistics-create-heading>div strong{font-size:14px;color:#29443d}
+.purchase-logistics-create-heading small,.purchase-logistics-create-heading>span{font-size:11px;color:#718780}
+.purchase-logistics-form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.purchase-logistics-form label,.purchase-logistics-order footer label{display:grid;gap:5px;min-width:0;font-size:11px;font-weight:700;color:#607a74}
+.purchase-logistics-form input,.purchase-logistics-order footer select{width:100%;min-width:0;height:36px;padding:7px 9px;border:1px solid #d9e5e2;border-radius:8px;background:#fff;color:#233c37;font:inherit;font-size:12px;box-sizing:border-box}
+.purchase-logistics-draft{display:grid;gap:7px;margin-top:12px;padding:10px;border:1px solid #e2ebe7;border-radius:9px}
+.purchase-logistics-draft>strong{font-size:12px;color:#39564e}
+.purchase-logistics-draft>div{display:grid;grid-template-columns:minmax(0,1fr) 100px 120px;gap:10px;align-items:center;font-size:12px}
+.purchase-logistics-draft>div strong{text-align:right}
+.purchase-logistics-create-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.purchase-logistics-summary{display:flex;flex-wrap:wrap;gap:8px}
+.purchase-logistics-summary span{padding:7px 10px;border:1px solid #e0eae5;border-radius:8px;background:#f8fbf9;color:#526b63;font-size:11px;font-weight:600}
+.purchase-logistics-list{display:grid;gap:10px;padding:12px}
+.purchase-logistics-order{display:grid;gap:10px;padding:12px;border:1px solid #e2ebe7;border-radius:10px;min-width:0}
+.purchase-logistics-order>header{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.purchase-logistics-order>header>div{display:grid;gap:3px;min-width:0}
+.purchase-logistics-order>header>div strong{font-size:13px;color:#29443d}
+.purchase-logistics-order>header small{font-size:10px;color:#758a83}
+.purchase-logistics-order-meta{display:flex;flex-wrap:wrap;gap:8px 18px;color:#718780;font-size:11px}
+.purchase-logistics-order-meta strong{color:#405c53}
+.purchase-logistics-progress{display:grid;gap:6px}
+.purchase-logistics-progress>div:first-child{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#718780}
+.purchase-logistics-progress>div:first-child strong{color:#405c53}
+.purchase-logistics-progress-track{height:6px;overflow:hidden;border-radius:99px;background:#e7efeb}
+.purchase-logistics-progress-track i{display:block;height:100%;border-radius:inherit;background:#269574}
+.purchase-logistics-progress>small{font-size:10px;color:#758a83}
+.purchase-logistics-order-items{display:grid;gap:5px}
+.purchase-logistics-order-items>div{display:flex;justify-content:space-between;gap:10px;font-size:11px;color:#536c64}
+.purchase-logistics-order>footer{display:flex;justify-content:space-between;align-items:end;gap:12px;padding-top:9px;border-top:1px solid #e7efeb}
+.purchase-logistics-order>footer>strong{font-size:13px;color:#29443d;white-space:nowrap}
+@media(max-width:900px){.purchase-logistics-form{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.purchase-logistics-form{grid-template-columns:1fr}.purchase-logistics-create-heading{align-items:flex-start;flex-direction:column}.purchase-logistics-draft>div{grid-template-columns:minmax(0,1fr) auto}.purchase-logistics-draft>div strong{grid-column:2}.purchase-logistics-create-actions{flex-direction:column-reverse}.purchase-logistics-create-actions button{width:100%}.purchase-logistics-order-meta{display:grid;gap:5px}.purchase-logistics-order>footer{align-items:stretch;flex-direction:column}.purchase-logistics-order>footer>strong{text-align:right}}
+.app[data-theme="dark"] .purchase-logistics-create-heading>div strong,.app[data-theme="dark"] .purchase-logistics-draft>strong,.app[data-theme="dark"] .purchase-logistics-order>header>div strong,.app[data-theme="dark"] .purchase-logistics-order>footer>strong{color:#dce8e2}
+.app[data-theme="dark"] .purchase-logistics-create-heading small,.app[data-theme="dark"] .purchase-logistics-create-heading>span,.app[data-theme="dark"] .purchase-logistics-order>header small,.app[data-theme="dark"] .purchase-logistics-order-meta,.app[data-theme="dark"] .purchase-logistics-progress>div:first-child,.app[data-theme="dark"] .purchase-logistics-progress>small,.app[data-theme="dark"] .purchase-logistics-order-items>div{color:#a5b9ae}
+.app[data-theme="dark"] .purchase-logistics-form input,.app[data-theme="dark"] .purchase-logistics-order footer select{background:#1b2a27;border-color:#354941;color:#dce8e2}
+.app[data-theme="dark"] .purchase-logistics-draft,.app[data-theme="dark"] .purchase-logistics-order{background:#172a27;border-color:#354941}
+.app[data-theme="dark"] .purchase-logistics-summary span{background:#1b2a27;border-color:#354941;color:#c6d8ce}
+.app[data-theme="dark"] .purchase-logistics-order>footer{border-top-color:#354941}
+.app[data-theme="dark"] .purchase-logistics-progress-track{background:#293b37}
