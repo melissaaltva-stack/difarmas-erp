@@ -168,7 +168,7 @@ export function Customers({customers,setCustomers,receivables,setReceivables,tra
     {medicationCustomer&&<MedicationInstructions customers={customers} setCustomers={setCustomers} initialCustomerId={medicationCustomer.id} onClose={()=>setMedicationCustomer(null)}/>}
     {showForm&&<div className="modal-backdrop customer-form-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)closeForm();}}><div className="modal customer-modal customer-form-modal" role="dialog" aria-modal="true" aria-label={editing?'Editar cliente':'Registrar nuevo cliente'}>
       <div className="customer-form-header"><div className="customer-form-title-icon"><UserRound size={22}/></div><div><h2>{editing?'Editar cliente':'Registrar nuevo cliente'}</h2><p>Administra datos de contacto, información fiscal y condiciones de pago.</p></div><button className="icon-btn" type="button" onClick={closeForm} aria-label="Cerrar"><X size={18}/></button></div>
-      <CustomerEditorFields form={form} setForm={setForm} customers={customers} editing={editing}/>
+      <CustomerEditorFields form={form} setForm={setForm} customers={customers} editing={editing} showFiscal={Boolean(editing)}/>
       {error&&<p className="form-error" role="alert">{error}</p>}
       <div className="customer-form-footer"><button className="secondary" type="button" onClick={closeForm}>Cancelar</button><button className="primary" type="button" onClick={save}><Save size={16}/> Guardar</button></div>
     </div></div>}
