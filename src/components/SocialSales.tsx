@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { MessageCircle, Instagram, Facebook, Music2, Plus, Search, Send, ShoppingBag, CheckCircle2, Clock3, UserRound, ExternalLink, Copy, Trash2 } from 'lucide-react';
+import { MessageCircle, Camera, Users, Music2, Plus, Search, Send, ShoppingBag, CheckCircle2, Clock3, UserRound, ExternalLink, Copy, Trash2 } from 'lucide-react';
 import type { Customer, ErpSettings, Product } from '../domain/types';
 
 type Channel = 'WhatsApp' | 'Instagram' | 'Facebook' | 'TikTok' | 'Otro';
@@ -15,7 +15,7 @@ const defaultLinks:SocialLinks={whatsapp:'',instagram:'',facebook:'',tiktok:''};
 const money=(n:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL',maximumFractionDigits:2}).format(n);
 const safeLoad=<T,>(key:string,fallback:T):T=>{try{const value=localStorage.getItem(key);return value?JSON.parse(value) as T:fallback;}catch{return fallback;}};
 const phoneDigits=(phone:string)=>phone.replace(/\D/g,'');
-const channelIcon=(channel:Channel)=>channel==='WhatsApp'?MessageCircle:channel==='Instagram'?Instagram:channel==='Facebook'?Facebook:channel==='TikTok'?Music2:ShoppingBag;
+const channelIcon=(channel:Channel)=>channel==='WhatsApp'?MessageCircle:channel==='Instagram'?Camera:channel==='Facebook'?Users:channel==='TikTok'?Music2:ShoppingBag;
 
 export function SocialSales({products,customers,settings}:{products:Product[];customers:Customer[];settings:ErpSettings}) {
   const [leads,setLeads]=useState<Lead[]>(()=>safeLoad<Lead[]>(STORE_KEY,[]));
@@ -64,7 +64,7 @@ export function SocialSales({products,customers,settings}:{products:Product[];cu
         <label>Facebook (URL de la página)<input value={links.facebook} onChange={e=>setLinks({...links,facebook:e.target.value})} placeholder="https://facebook.com/tu_pagina"/></label>
         <label>TikTok (URL del perfil)<input value={links.tiktok} onChange={e=>setLinks({...links,tiktok:e.target.value})} placeholder="https://tiktok.com/@tu_perfil"/></label>
       </div>
-      <div className="social-profile-actions">{(links.whatsapp||settings.phone) ? <a className="secondary" href={'https://wa.me/'+whatsappNumber} target="_blank" rel="noreferrer"><MessageCircle size={15}/> Abrir WhatsApp</a>:null}{links.instagram&&<a className="secondary" href={links.instagram} target="_blank" rel="noreferrer"><Instagram size={15}/> Instagram</a>}{links.facebook&&<a className="secondary" href={links.facebook} target="_blank" rel="noreferrer"><Facebook size={15}/> Facebook</a>}{links.tiktok&&<a className="secondary" href={links.tiktok} target="_blank" rel="noreferrer"><Music2 size={15}/> TikTok</a>}</div>
+      <div className="social-profile-actions">{(links.whatsapp||settings.phone) ? <a className="secondary" href={'https://wa.me/'+whatsappNumber} target="_blank" rel="noreferrer"><MessageCircle size={15}/> Abrir WhatsApp</a>:null}{links.instagram&&<a className="secondary" href={links.instagram} target="_blank" rel="noreferrer"><Camera size={15}/> Instagram</a>}{links.facebook&&<a className="secondary" href={links.facebook} target="_blank" rel="noreferrer"><Users size={15}/> Facebook</a>}{links.tiktok&&<a className="secondary" href={links.tiktok} target="_blank" rel="noreferrer"><Music2 size={15}/> TikTok</a>}</div>
     </section>
     <div className="social-workspace">
       <section className="card social-inbox">
