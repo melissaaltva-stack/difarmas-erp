@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
-import { Plus, Search, Pencil, UserRound, UsersRound, X, Save, Ban, CheckCircle2, FileText, CreditCard, Receipt, Building2, Pill, Printer, History, Trash2, CalendarDays, ClipboardPlus } from 'lucide-react';
+import { Plus, Search, Pencil, UserRound, UsersRound, X, Save, Ban, CheckCircle2, FileText, CreditCard, Receipt, Pill, Printer, History, Trash2, CalendarDays, ClipboardPlus } from 'lucide-react';
 import type { Customer, MedicationInstructionItem, MedicationInstructionRecord, Receivable, PaymentTransaction } from '../domain/types';
 import { nextCustomerCode } from '../services/customerCodeService';
 
@@ -49,7 +49,7 @@ function CustomerReceivablesOverview({customers,receivables,setReceivables,trans
   return <div className="customer-ar-overview"><div className="inventory-alerts"><div className="card alert-card"><CreditCard size={18}/><div><strong>{money(total)}</strong><small>Saldo total pendiente</small></div></div><div className="card alert-card"><Receipt size={18}/><div><strong>{open.length}</strong><small>Ventas pendientes</small></div></div><div className="card alert-card"><CalendarDays size={18}/><div><strong>{overdue}</strong><small>Ventas vencidas</small></div></div></div>
     {list.length===0?<div className="card customer-ar-empty">No hay cuentas por cobrar para mostrar{query?' con esa búsqueda.':'.'}</div>:<div className="customer-ar-customer-list">{list.map(customer=><section className="card customer-ar-customer" key={customer.id}><header><div><strong>{customer.name}</strong><small>{customer.code||'Sin código'} · {customer.phone||'Sin teléfono'}</small></div><span>{money(receivables.filter(item=>item.customer.trim().toLocaleLowerCase()===customer.name.trim().toLocaleLowerCase()).reduce((sum,item)=>sum+receivableBalance(item),0))}</span></header><CustomerReceivablesSection customer={customer} receivables={receivables} setReceivables={setReceivables} transactions={transactions} setTransactions={setTransactions} canWrite={canWrite}/></section>)}</div>}</div>;
 }
-function CustomerEditorFields({form,setForm,customers,editing,showFiscal=true}:{form:CustomerForm;setForm:Dispatch<SetStateAction<CustomerForm>>;customers:Customer[];editing:Customer|null;showFiscal?:boolean}) {
+function CustomerEditorFields({form,setForm,customers,editing}:{form:CustomerForm;setForm:Dispatch<SetStateAction<CustomerForm>>;customers:Customer[];editing:Customer|null}) {
   const code=editing?.code??nextCustomerCode(customers);
   return <>
     <div className="customer-form-top">
@@ -69,17 +69,7 @@ function CustomerEditorFields({form,setForm,customers,editing,showFiscal=true}:{
             <label className="customer-form-field"><span>Correo electrónico</span><input type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder="cliente@correo.com" autoComplete="email" maxLength={160}/></label>
           </div>
         </section>
-        {showFiscal&&(
-          <section className="customer-form-section">
-            <h3><Building2 size={17}/> Datos fiscales <small>(opcional)</small></h3>
-            <div className="customer-form-grid">
-              <label className="customer-form-field"><span>RTN</span><input value={form.rtn} onChange={e=>setForm(f=>({...f,rtn:e.target.value}))} placeholder="RTN fiscal" maxLength={40}/></label>
-              <label className="customer-form-field"><span>Nombre o razón social</span><input value={form.legalName} onChange={e=>setForm(f=>({...f,legalName:e.target.value}))} placeholder="Nombre fiscal" maxLength={160}/></label>
-              <label className="customer-form-field"><span>Régimen fiscal</span><select value={form.taxRegime} onChange={e=>setForm(f=>({...f,taxRegime:e.target.value}))}><option>Persona Natural</option><option>Régimen General</option><option>Régimen Simplificado</option><option>Exento</option><option>No especificado</option></select></label>
-              <label className="customer-form-field"><span>Correo para facturación</span><input type="email" value={form.billingEmail} onChange={e=>setForm(f=>({...f,billingEmail:e.target.value}))} placeholder="facturacion@correo.com" maxLength={160}/></label>
-            </div>
-          </section>
-        )}
+
         <section className="customer-form-section customer-form-observations">
           <h3><FileText size={17}/> Observaciones</h3>
           <label className="customer-form-field"><span>Notas internas del cliente</span><textarea rows={3} value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} placeholder="Notas internas o información adicional del cliente..." maxLength={1000}/></label>
@@ -168,7 +158,7 @@ export function Customers({customers,setCustomers,receivables,setReceivables,tra
     {medicationCustomer&&<MedicationInstructions customers={customers} setCustomers={setCustomers} initialCustomerId={medicationCustomer.id} onClose={()=>setMedicationCustomer(null)}/>}
     {showForm&&<div className="modal-backdrop customer-form-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)closeForm();}}><div className="modal customer-modal customer-form-modal" role="dialog" aria-modal="true" aria-label={editing?'Editar cliente':'Registrar nuevo cliente'}>
       <div className="customer-form-header"><div className="customer-form-title-icon"><UserRound size={22}/></div><div><h2>{editing?'Editar cliente':'Registrar nuevo cliente'}</h2><p>Administra datos de contacto, información fiscal y condiciones de pago.</p></div><button className="icon-btn" type="button" onClick={closeForm} aria-label="Cerrar"><X size={18}/></button></div>
-      <CustomerEditorFields form={form} setForm={setForm} customers={customers} editing={editing} showFiscal={Boolean(editing)}/>
+      <CustomerEditorFields form={form} setForm={setForm} customers={customers} editing={editing}/>
       {error&&<p className="form-error" role="alert">{error}</p>}
       <div className="customer-form-footer"><button className="secondary" type="button" onClick={closeForm}>Cancelar</button><button className="primary" type="button" onClick={save}><Save size={16}/> Guardar</button></div>
     </div></div>}
@@ -244,7 +234,7 @@ export function RegisterCustomerModal({customers,onClose,onSave}:{customers:Cust
   };
   return <div className="modal-backdrop customer-form-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onClose();}}><div className="modal customer-modal customer-form-modal" role="dialog" aria-modal="true" aria-label="Registrar nuevo cliente">
     <div className="customer-form-header"><div className="customer-form-title-icon"><UserRound size={22}/></div><div><h2>Registrar nuevo cliente</h2><p>Completa los datos y condiciones de pago del cliente.</p></div><button className="icon-btn" type="button" onClick={onClose} aria-label="Cerrar"><X size={18}/></button></div>
-    <CustomerEditorFields form={form} setForm={setForm} customers={customers} editing={null} showFiscal={false}/>
+    <CustomerEditorFields form={form} setForm={setForm} customers={customers} editing={null}/>
     {error&&<p className="form-error" role="alert">{error}</p>}
     <div className="customer-form-footer"><button className="secondary" type="button" onClick={onClose}>Cancelar</button><button className="primary" type="button" onClick={save}><Save size={16}/> Guardar cliente</button></div>
   </div></div>;
