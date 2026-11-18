@@ -8,7 +8,8 @@ export function InventoryLotsKardex({view,products,lots,kardex,fefoProductIds,on
   const selected=products.find(p=>p.id===Number(productId));
   const productLots=useMemo(()=>lots.filter(lot=>lot.productId===Number(productId)).sort((a,b)=>a.expiry.localeCompare(b.expiry)),[lots,productId]);
   const openingQty=productLots.filter(lot=>lot.opening).reduce((sum,lot)=>sum+lot.quantityReceived,0);
-  const remaining=productLots.reduce((sum,lot)=>sum+lot.quantityRemaining,0);\n  const reconciliation=selected ? selected.stock-openingQty : 0;\n  const filteredKardex=kardex.filter(m=>m.productId===Number(productId)&&(movementType==='all'||m.type===movementType)&&(!dateFrom||m.date.slice(0,10)>=dateFrom)&&(!dateTo||m.date.slice(0,10)<=dateTo)).slice().sort((a,b)=>b.date.localeCompare(a.date));
+  const remaining=productLots.reduce((sum,lot)=>sum+lot.quantityRemaining,0);
+  const reconciliation=selected ? selected.stock-openingQty : 0;\n  const filteredKardex=kardex.filter(m=>m.productId===Number(productId)&&(movementType==='all'||m.type===movementType)&&(!dateFrom||m.date.slice(0,10)>=dateFrom)&&(!dateTo||m.date.slice(0,10)<=dateTo)).slice().sort((a,b)=>b.date.localeCompare(a.date));
   const isActive=fefoProductIds.includes(Number(productId));
   const save=()=>{setError('');if(!selected){setError('Selecciona un producto.');return;}const ok=onAddOpeningLot(selected.id,lotCode,expiry,Number(quantity),Number(unitCost),supplier);if(!ok){setError('No se pudo registrar. Verifica lote, vencimiento, cantidad y que la suma no supere el stock actual.');return;}setLotCode('');setExpiry('');setQuantity('');setUnitCost('');setSupplier('');};
   return <section className="card inventory-lots-kardex">
