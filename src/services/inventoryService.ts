@@ -23,7 +23,6 @@ export function applySaleToInventory(products: Product[], sold: CartItem[]): Pro
 
 export function applyPurchaseToInventory(products: Product[], items: PurchaseItem[], supplier: string): Product[] {
   if (!items.length) throw new Error('La compra debe contener al menos un producto.');
-  if (new Set(items.map(item => item.id)).size !== items.length) throw new Error('La compra contiene productos duplicados.');
   if (items.some(item => !products.some(product => product.id === item.id))) throw new Error('No se encontró un producto de la compra en el inventario.');
   const invalid = items.find(item => !Number.isFinite(item.qty) || item.qty <= 0 || !Number.isFinite(item.unitCost) || item.unitCost < 0 || !Number.isFinite(item.qty * item.unitCost));
   if (invalid) throw new Error('Cantidad y costo de compra deben ser válidos.');
@@ -31,17 +30,28 @@ export function applyPurchaseToInventory(products: Product[], items: PurchaseIte
   if (invalidExpiry) throw new Error(`No se puede recibir “${invalidExpiry.name}”: el vencimiento debe ser de al menos seis meses desde hoy.`);
   purchaseTotal(items);
   if (products.some(product => !Number.isFinite(product.stock) || product.stock < 0 || !Number.isFinite(product.cost) || product.cost < 0)) throw new Error('El inventario contiene una existencia o costo inválido.');
+  const receivedByProduct = new Map<number,{quantity:number;value:number;expiries:string[]}>();
+  items.forEach(item => {
+    const current=receivedByProduct.get(item.id)??{quantity:0,value:0,expiries:[]};
+    current.quantity+=item.qty;
+    current.value+=item.unitCost*item.qty;
+    if(item.expiry)current.expiries.push(item.expiry);
+    receivedByProduct.set(item.id,current);
+  });
   return products.map(product => {
-    const item = items.find(line => line.id === product.id);
-    if (!item) return product;
-    const newStock = product.stock + item.qty;
+    const received=receivedByProduct.get(product.id);
+    if (!received) return product;
+    const newStock = product.stock + received.quantity;
     const previousInventoryValue = product.cost * product.stock;
-    const purchaseValue = item.unitCost * item.qty;
+    const purchaseValue = received.value;
     const averageCost = (previousInventoryValue + purchaseValue) / newStock;
     if (!Number.isFinite(newStock) || newStock <= 0 || !Number.isFinite(previousInventoryValue) || !Number.isFinite(purchaseValue) || !Number.isFinite(averageCost)) throw new Error('La compra produciría una existencia o costo fuera de rango. Verifica los datos.');
     const roundedCost = Number(averageCost.toFixed(2));
     if (!Number.isFinite(roundedCost)) throw new Error('El costo promedio calculado no es válido.');
-    const expiry = product.expiry && product.stock > 0 ? (product.expiry < item.expiry ? product.expiry : item.expiry) : item.expiry;
+    const earliestReceivedExpiry=received.expiries.sort()[0];
+    const expiry=product.expiry&&product.stock>0&&earliestReceivedExpiry
+      ? (product.expiry<earliestReceivedExpiry?product.expiry:earliestReceivedExpiry)
+      : earliestReceivedExpiry||product.expiry;
     return { ...product, stock: newStock, cost: roundedCost, expiry, supplier: supplier.trim() || product.supplier };
   });
 }
