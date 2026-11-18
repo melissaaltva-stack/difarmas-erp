@@ -28,7 +28,8 @@ export function Inventory({products, allProducts, search, setSearch, movements, 
   const productExpiryDays = (p: Product) => {
     if (usesLotExpiry(p)) {
       const activeLots = productLotsForExpiry(p);
-      const validDays = activeLots.map(lot => daysUntil(lot.expiry)).filter(Number.isFinite);\n      return validDays.length ? Math.min(...validDays) : Number.POSITIVE_INFINITY;
+      const validDays = activeLots.map(lot => daysUntil(lot.expiry)).filter(Number.isFinite);
+      return validDays.length ? Math.min(...validDays) : Number.POSITIVE_INFINITY;
     }
     return daysUntil(p.expiry);
   };
