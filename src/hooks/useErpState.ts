@@ -741,13 +741,13 @@ export function useErpState(userId: string) {
     setInventoryMovements(current=>[...current,...createInventoryMovementsForPurchase(products,inventoryItems,referenceId,nextInventoryMovementId)]);
     const calculatedTotal=items.reduce((sum,item)=>sum+item.qty*item.unitCost,0);
     const total=typeof enteredTotal==='number'&&Number.isFinite(enteredTotal)&&enteredTotal>=0?enteredTotal:calculatedTotal;
-    setPurchases(current=>[{id:referenceId,supplier:purchaseSupplier,total,paymentMethod:paymentMethod as 'Efectivo'|'Transferencia'|'Crédito',date:receivedAt,invoiceNumber,invoiceDate,notes,paymentTerms,dueDate:paymentMethod==='Crédito'?dueDate:undefined},...current]);
+    setPurchases(current=>[{id:referenceId,supplier:receivingSupplier,total,paymentMethod:paymentMethod as 'Efectivo'|'Transferencia'|'Crédito',date:receivedAt,invoiceNumber,invoiceDate,notes,paymentTerms,dueDate:paymentMethod==='Crédito'?dueDate:undefined},...current]);
     if(newLots.length){setInventoryLots(current=>[...current,...newLots]);setLotKardex(current=>[...current,...newLotMovements]);}
     setPurchaseCostHistory(current=>[
       ...inventoryItems.map((item):PurchaseCostHistoryEntry=>({id:nextPurchaseCostHistoryId(),purchaseId:referenceId,productId:item.id,productCode:item.code,productName:item.name,supplier:receivingSupplier,unitCost:item.unitCost,quantity:item.qty,date:receivedAt})),
       ...current,
     ]);
-    if(paymentMethod==='Crédito'){const payable=createPayableFromPurchase(items,purchaseSupplier,dueDate,new Date(),referenceId,invoiceNumber,nextPayableId());setPayables(current=>[...current,{...payable,total}]);}
+    if(paymentMethod==='Crédito'){const payable=createPayableFromPurchase(items,receivingSupplier,dueDate,new Date(),referenceId,invoiceNumber,nextPayableId());setPayables(current=>[...current,{...payable,total}]);}
     return true;
   };
 
