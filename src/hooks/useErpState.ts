@@ -148,6 +148,7 @@ export function useErpState(userId: string) {
   useEffect(()=>{saleInProgress.current=false},[sales]);
   useEffect(()=>{orderSaveInProgress.current=false;orderMutationInProgress.current.clear();},[orders]);
   useEffect(()=>{purchaseInProgress.current=false},[purchases]);
+  useEffect(()=>{logisticsReceiptInProgress.current.clear()},[purchaseLogistics]);
 
   useEffect(()=>{saveJson('difarmas_customers',customers)},[customers]);
   useEffect(()=>{saveJson('difarmas_quotes',quotes)},[quotes]);
@@ -826,7 +827,6 @@ export function useErpState(userId: string) {
     const updatedReceived=[...(order.receivedItems??[]),...items.map(item=>({...item}))];
     const remaining=order.items.some(ordered=>ordered.qty>(updatedReceived.filter(item=>lineKey(item)===lineKey(ordered)).reduce((sum,item)=>sum+item.qty,0)+0.000001));
     setPurchaseLogistics(current=>current.map(record=>record.id===orderId?{...record,purchaseId,receivedItems:updatedReceived,status:remaining?'Recepción parcial':'Recibida',receivedAt:remaining?record.receivedAt:receivedAt}:record));
-    logisticsReceiptInProgress.current.delete(orderId);
     return true;
   };
 
