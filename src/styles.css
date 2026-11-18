@@ -6776,3 +6776,47 @@ button.icon-btn:focus-visible svg,
   border-radius:0!important;
   background:transparent!important;
 }
+
+
+/* Dashboard refinements */
+.dashboard-content{width:100%}
+.dashboard-hero{margin-bottom:18px}
+.dashboard-kpis{margin:0 0 18px}
+.dashboard-kpis .metric{min-width:0}
+.dashboard-kpis .metric-top{align-items:center;gap:10px}
+.dashboard-kpis .metric-top svg{color:#21866a;flex:none}
+.dashboard-goals .metrics{margin:14px 0 0}
+.dashboard-goals .metric{box-shadow:none;background:#f8fbfa}
+.dashboard-goals .metric strong{font-size:21px;margin:10px 0 5px}
+.dashboard-progress .goal-head>strong{font-size:16px;text-align:right}
+.dashboard-progress .progress-fill{background:#21866a;transition:width .25s ease}
+.dashboard-progress-label{display:block;margin-top:7px;color:#66817b;font-size:11px;text-align:right}
+.dashboard-content .card-title{gap:12px}
+.dashboard-content .card-title>svg{color:#21866a;flex:none}
+.dashboard-content .mini-sale{gap:12px}
+.dashboard-content .mini-sale small{font-size:11px}
+.dashboard-content .mini-sale>span{white-space:nowrap;color:#21866a}
+.dashboard-content .live-bars{align-items:end}
+.dashboard-content .live-bars .bar{min-height:0}
+.dashboard-content .days{padding-top:8px}
+.dashboard-content .finance-summary strong{font-size:14px}
+@media(max-width:900px){
+  .dashboard-content{padding:20px}
+  .dashboard-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:560px){
+  .dashboard-content{padding:14px}
+  .dashboard-hero{padding:20px}
+  .dashboard-kpis{grid-template-columns:1fr}
+  .dashboard-kpis .metric strong{font-size:22px}
+  .dashboard-progress .goal-head>strong{text-align:left}
+  .dashboard-goals .metric strong{font-size:20px}
+}
+[data-theme="dark"] .dashboard-goals .metric{background:#172d2a;border-color:#29423d}
+[data-theme="dark"] .dashboard-progress .progress-track{background:#293b37}
+[data-theme="dark"] .dashboard-content .mini-sale{border-color:#2a403b}
+[data-theme="dark"] .dashboard-content .finance-summary>div{border-color:#2a403b}
+[data-theme="dark"] .dashboard-content .mini-sale>span,
+[data-theme="dark"] .dashboard-kpis .metric-top svg,
+[data-theme="dark"] .dashboard-content .card-title>svg{color:#62c6a2}
+[data-theme="dark"] .dashboard-progress-label{color:#a0bdb4}
