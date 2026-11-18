@@ -120,7 +120,6 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
   };
 
   if(section==='logistica') {
-    const [unused]=[0];
     const activeOrders=[...purchaseLogistics].sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
     const orderUnits=(items:PurchaseItem[])=>items.reduce((sum,item)=>sum+item.qty*(item.baseUnitsPerPurchase??1),0);
     const orderReceivedUnits=(record:PurchaseLogisticsRecord)=>orderUnits(record.receivedItems??[]);
@@ -158,7 +157,7 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
           <div className="purchase-logistics-order-meta"><span>Entrega estimada: <strong>{formatPurchaseDate(record.expectedDate)}</strong></span><span>Transportista: <strong>{record.carrier||'No indicado'}</strong></span><span>Seguimiento: <strong>{record.trackingNumber||'No indicado'}</strong></span></div>
           <div className="purchase-logistics-progress"><div><span>Recibido</span><strong>{orderReceivedUnits(record)} / {orderTotalUnits(record)} unidades</strong></div><div className="purchase-logistics-progress-track"><i style={{width:`${orderTotalUnits(record)>0?Math.min(100,orderReceivedUnits(record)/orderTotalUnits(record)*100):0}%`}}/></div><small>Pendientes: {remainingUnits(record)} unidades</small></div>
           <div className="purchase-logistics-order-items">{record.items.map((item,index)=><div key={item.purchaseLineId||`${item.id}-${index}`}><span>{item.name}</span><strong>{item.qty} {item.purchaseUnit||'unidades'}</strong></div>)}</div>
-          <footer><label>Actualizar estado<select value={record.status} onChange={event=>updateLogisticsStatus(record,event.target.value as PurchaseLogisticsRecord['status'])}><option value="Solicitada">Solicitada</option><option value="Confirmada">Confirmada</option><option value="En tránsito">En tránsito</option><option value="Incidencia">Incidencia</option><option value="Recepción parcial" disabled={remainingUnits(record)===orderTotalUnits(record)}>Recepción parcial</option><option value="Recibida" disabled={remainingUnits(record)>0}>Recibida</option></select></label><strong>{money(record.total)}</strong></footer>
+          <footer><label>Actualizar estado<select value={record.status} onChange={event=>updateLogisticsStatus(record,event.target.value as PurchaseLogisticsRecord['status'])}><option value="Solicitada">Solicitada</option><option value="Confirmada">Confirmada</option><option value="En tránsito">En tránsito</option><option value="Incidencia">Incidencia</option></select></label><strong>{money(record.total)}</strong></footer>
         </article>)}
       </section>
     </div></div>;
