@@ -6909,3 +6909,46 @@ button.icon-btn:focus-visible svg,
   .dashboard-goals .metric>small{min-height:0}
   .dashboard-content .finance-summary strong{white-space:normal}
 }
+
+
+/* Inventario: tablas, filtros y conciliación FEFO */
+.inventory-page .table-wrap{width:100%;min-width:0;overflow-x:auto}
+.inventory-page .table-wrap table{min-width:1080px}
+.inventory-page .card-title h3{line-height:1.3}
+.inventory-page .card-title p{line-height:1.45}
+.inventory-alerts .alert-card{min-width:0;align-items:flex-start}
+.inventory-alerts .alert-card>div{min-width:0;flex:1}
+.inventory-alerts .alert-card small{display:block;line-height:1.4;overflow-wrap:anywhere}
+.inventory-utility-content{min-width:0}
+.expiry-filter-row{display:flex;flex-wrap:wrap;gap:8px}
+.expiry-filter-row button{min-height:32px}
+.inventory-lot-toolbar{display:grid;grid-template-columns:minmax(220px,1fr) minmax(220px,1fr);gap:14px;align-items:end}
+.inventory-lot-toolbar>label,.inventory-lot-form>label,.inventory-lot-adjust-form>label,.inventory-kardex-filters>label{display:grid;gap:5px;min-width:0;color:var(--farmi-muted,#718078);font-size:11px;font-weight:700}
+.inventory-lot-toolbar select,.inventory-lot-form input,.inventory-lot-adjust-form input,.inventory-lot-adjust-form select,.inventory-kardex-filters input,.inventory-kardex-filters select{width:100%;min-width:0;box-sizing:border-box}
+.inventory-lot-status{display:grid;gap:7px;min-width:0}
+.inventory-lot-status small{line-height:1.45;overflow-wrap:anywhere}
+.inventory-lot-activation{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.inventory-lot-activation>span{min-width:0;flex:1;line-height:1.45}
+.inventory-kardex-filters{display:grid;grid-template-columns:minmax(180px,1.4fr) repeat(2,minmax(140px,1fr)) auto;gap:10px;align-items:end;margin:12px 0 14px;padding:12px;border:1px solid var(--border-color,#dce7e1);border-radius:10px;background:var(--surface-soft,#f8fbf9)}
+.inventory-kardex-filters button{min-height:34px;white-space:nowrap}
+.inventory-kardex-in,.inventory-kardex-out{display:inline-flex;align-items:center;max-width:100%;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;line-height:1.3}
+.inventory-kardex-in{background:#e8f5ee;color:#176b4d}
+.inventory-kardex-out{background:#fff0ed;color:#a43d32}
+.app[data-theme="dark"] .inventory-kardex-filters{background:#172a27;border-color:#354941}
+.app[data-theme="dark"] .inventory-kardex-in{background:#1d3b30;color:#bfe8d2}
+.app[data-theme="dark"] .inventory-kardex-out{background:#472a29;color:#ffd0cc}
+.app[data-theme="dark"] .inventory-kardex-filters input,.app[data-theme="dark"] .inventory-kardex-filters select{background:#1b2a27;color:#dce8e2;border-color:#354941}
+@media(max-width:900px){
+  .inventory-lot-toolbar{grid-template-columns:1fr}
+  .inventory-kardex-filters{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .inventory-kardex-filters>label:first-child{grid-column:1/-1}
+}
+@media(max-width:560px){
+  .inventory-page .table-wrap table{min-width:1000px}
+  .inventory-lot-form,.inventory-lot-adjust-form{grid-template-columns:1fr!important}
+  .inventory-kardex-filters{grid-template-columns:1fr}
+  .inventory-kardex-filters>label:first-child{grid-column:auto}
+  .inventory-kardex-filters button{width:100%}
+  .inventory-lot-activation{align-items:stretch;flex-direction:column}
+  .inventory-lot-activation button{width:100%}
+}
