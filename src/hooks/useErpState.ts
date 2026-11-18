@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CartItem, CashClosure, CashMovement, Customer, ErpSettings, Expense, InventoryMovement, Module, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseItem, PurchaseRecord, PurchaseLogisticsRecord, Receivable, SaleRecord, OrderRecord, Supplier, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord, QuoteRecord, StandardInvoiceDetails, AccountingAccount, AccountingEntry, HrEmployee, HrAttendanceRecord, HrLeaveRequest, InventoryLot, LotKardexMovement, LotAllocation } from '../domain/types';
-import { loadJson, saveJson, loadNumber, saveNumber } from '../utils/storage';
+import { loadJson as loadStoredJson, saveJson as saveStoredJson, loadNumber as loadStoredNumber, saveNumber as saveStoredNumber } from '../utils/storage';
 import { applyPurchaseToInventory, applySaleToInventory } from '../services/inventoryService';
 import { buildSaleRecord, createReceivableFromSale } from '../services/salesService';
 import { createPayableFromPurchase } from '../services/purchaseService';
@@ -36,8 +36,44 @@ paymentMethods:[
 billingInfo:{cai:'',authorizedRangeStart:'',authorizedRangeEnd:'',authorizationExpiry:'',establishmentCode:'',emissionPoint:'',documentTypeCode:'01',isvRate:15,fiscalLegend:'Documento interno. Configure la autorización fiscal vigente del SAR antes de emitir comprobantes fiscales.'}
 };
 
-export function useErpState(userId: string) {
+const demoProducts: Product[] = [
+  ...initialProducts,
+  { id: 5, code: '750100000005', name: 'Paracetamol 500 mg', category: 'Medicamentos', laboratory: 'Genfar', presentation: 'Caja x 20 tabletas', cost: 28, retail: 45, wholesale: 39, stock: 65, minStock: 15, lot: 'PAR-2611', expiry: '2028-06-30', supplier: 'Droguería Central' },
+  { id: 6, code: '750100000006', name: 'Omeprazol 20 mg', category: 'Medicamentos', laboratory: 'MK', presentation: 'Caja x 30 cápsulas', cost: 42, retail: 68, wholesale: 59, stock: 42, minStock: 12, lot: 'OME-2609', expiry: '2028-03-31', supplier: 'Distribuidora Nacional' },
+  { id: 7, code: '750100000007', name: 'Vitamina C 1 g', category: 'Vitaminas', laboratory: 'Genérico', presentation: 'Tubo x 10 tabletas', cost: 38, retail: 60, wholesale: 52, stock: 28, minStock: 10, lot: 'VIC-2610', expiry: '2027-12-31', supplier: 'Droguería Central' },
+  { id: 8, code: '750100000008', name: 'Alcohol 70%', category: 'Cuidado personal', laboratory: 'Farma', presentation: 'Frasco x 500 ml', cost: 32, retail: 52, wholesale: 45, stock: 31, minStock: 8, lot: 'ALC-2608', expiry: '2028-08-31', supplier: 'Suministros Médicos' },
+  { id: 9, code: '750100000009', name: 'Suero oral', category: 'Bienestar', laboratory: 'Electrolit', presentation: 'Frasco 625 ml', cost: 24, retail: 38, wholesale: 33, stock: 50, minStock: 12, lot: 'SUE-2610', expiry: '2027-10-31', supplier: 'Distribuidora Nacional' },
+  { id: 10, code: '750100000010', name: 'Acetaminofén jarabe', category: 'Medicamentos', laboratory: 'Genérico', presentation: 'Frasco 120 ml', cost: 36, retail: 58, wholesale: 50, stock: 19, minStock: 6, lot: 'ACE-2607', expiry: '2027-07-31', supplier: 'Suministros Médicos' },
+];
+const demoCustomers: Customer[] = [
+  { id: 1, code: 'CLI-0001', name: 'María López', phone: '9999-1001', creditLimit: 1500, active: true, notes: 'Cliente de demostración', address: 'San Pedro Sula' },
+  { id: 2, code: 'CLI-0002', name: 'Clínica Santa Elena', phone: '9999-1002', creditLimit: 8000, active: true, notes: 'Cliente institucional de prueba', address: 'San Pedro Sula' },
+  { id: 3, code: 'CLI-0003', name: 'Carlos Martínez', phone: '9999-1003', creditLimit: 2500, active: true, notes: 'Cliente de demostración', address: 'Choloma' },
+];
+const demoSuppliers: Supplier[] = [
+  { id: 1, name: 'Distribuidora Nacional', contact: 'Ana Reyes', phone: '2550-1001', email: 'ventas@demo-farmi.local', rtn: '', address: 'San Pedro Sula', paymentTerms: '30 días', notes: 'Proveedor ficticio', active: true },
+  { id: 2, name: 'Droguería Central', contact: 'Luis Gómez', phone: '2550-1002', email: 'pedidos@demo-farmi.local', rtn: '', address: 'San Pedro Sula', paymentTerms: 'Contado', notes: 'Proveedor ficticio', active: true },
+  { id: 3, name: 'Suministros Médicos', contact: 'Elena Cruz', phone: '2550-1003', email: 'contacto@demo-farmi.local', rtn: '', address: 'La Lima', paymentTerms: '15 días', notes: 'Proveedor ficticio', active: true },
+];
+const demoSettings: ErpSettings = { ...initialSettings, businessName: 'FARMI · EMPRESA DE PRUEBA', businessSubtitle: 'Datos ficticios para capacitación', rtn: '', phone: '', address: 'Empresa de demostración · Honduras', email: '' };
+
+export function useErpState(userId: string, demoMode = false) {
   const [active, setActive] = useState<Module>('dashboard');
+  const scopedKey = (key: string) => demoMode ? `farmi_demo_${key}` : key;
+  const loadJson = <T,>(key: string, fallback: T): T => {
+    const demoFallback = demoMode
+      ? key === 'difarmas_products' ? demoProducts as T
+      : key === 'difarmas_customers' ? demoCustomers as T
+      : key === 'difarmas_suppliers' ? demoSuppliers as T
+      : key === 'difarmas_settings' ? demoSettings as T
+      : fallback
+      : fallback;
+    return loadStoredJson<T>(scopedKey(key), demoFallback);
+  };
+  const saveJson = <T,>(key: string, value: T) => saveStoredJson(scopedKey(key), value);
+  const loadNumber = (key: string, fallback: number) => loadStoredNumber(scopedKey(key), fallback);
+  const saveNumber = (key: string, value: number) => saveStoredNumber(scopedKey(key), value);
+
   const [customers,setCustomersRaw]=useState<Customer[]>(()=>ensureCustomerCodes(loadJson<Customer[]>('difarmas_customers',[])));
   const setCustomers=(value:Customer[]|((current:Customer[])=>Customer[]))=>setCustomersRaw(current=>ensureCustomerCodes(typeof value==='function'?value(current):value,current));
   const [quotes,setQuotes]=useState<QuoteRecord[]>(()=>loadJson<QuoteRecord[]>('difarmas_quotes',[]));
@@ -189,6 +225,7 @@ export function useErpState(userId: string) {
   // Load the signed-in user's snapshot before allowing remote writes. A first login
   // seeds the cloud record from this browser's existing local data.
   useEffect(() => {
+    if (demoMode) { setRemoteReady(true); setSyncStatus('synced'); setSyncError(null); return; }
     let activeRequest = true;
     setRemoteReady(false);
     setSyncStatus('loading');
@@ -273,10 +310,10 @@ export function useErpState(userId: string) {
       setSyncError(error instanceof Error ? error.message : 'No se pudieron leer los datos de Supabase. Verifica la conexión y la configuración.');
     });
     return () => { activeRequest = false; };
-  }, [userId]);
+  }, [userId, demoMode]);
 
   useEffect(() => {
-    if (!remoteReady) return;
+    if (!remoteReady || demoMode) return;
     setSyncStatus('saving');
     setSyncError(null);
     const timer = window.setTimeout(() => {
@@ -293,9 +330,10 @@ export function useErpState(userId: string) {
       window.clearTimeout(timer);
       if (autoSaveTimerRef.current === timer) autoSaveTimerRef.current = null;
     };
-  }, [remoteReady, userId, snapshot]);
+  }, [remoteReady, userId, snapshot, demoMode]);
 
   const saveQuotes = async (nextQuotes: QuoteRecord[]): Promise<void> => {
+    if (demoMode) { setQuotes(nextQuotes); return; }
     if (!canWriteSnapshot(remoteReady, syncStatus)) throw new Error('El sistema no está sincronizado. Espera a que termine la sincronización e inténtalo de nuevo.');
     // Cancel a delayed autosave captured before this edit. Any save already
     // queued completes first; the quote update then merges only the quotes field.
