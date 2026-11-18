@@ -350,3 +350,32 @@
   stroke:currentColor;
   color:inherit;
 }
+
+
+/* Acceso independiente a la empresa de prueba. */
+.auth-login-card .auth-submit.secondary{border:1px solid #d7e5df;background:#f5faf7;color:#23634f}
+.auth-login-card .auth-submit.secondary:hover{background:#eaf5ef}
+.demo-mode-banner{
+  position:fixed;
+  z-index:1200;
+  top:10px;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  width:min(520px,calc(100vw - 24px));
+  padding:8px 12px;
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:12px;
+  background:#173f35;
+  color:#fff;
+  box-shadow:0 8px 28px rgba(0,0,0,.2);
+}
+.demo-mode-banner span{display:grid;gap:2px}
+.demo-mode-banner strong{font-size:10px;letter-spacing:.8px}
+.demo-mode-banner small{font-size:10px;color:#c8e5d9}
+.demo-mode-banner button{flex:0 0 auto;padding:7px 10px;border:1px solid #80bca5;border-radius:8px;background:transparent;color:#fff;font:inherit;font-size:11px;font-weight:700;cursor:pointer}
+.demo-mode-banner button:hover{background:#ffffff18}
+@media(max-width:480px){.demo-mode-banner{top:6px;gap:8px;padding:7px 9px}.demo-mode-banner small{font-size:9px}.demo-mode-banner button{font-size:10px}}
