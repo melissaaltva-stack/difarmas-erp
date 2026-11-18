@@ -11,9 +11,16 @@ export function createInventoryMovementsForSale(products: Product[], productIds:
 }
 
 export function createInventoryMovementsForPurchase(products: Product[], items: { id:number; qty:number; unitCost:number }[], referenceId:number, nextId:()=>number = () => Date.now(), now = new Date()): InventoryMovement[] {
-  return items.flatMap(({id,qty,unitCost}) => {
-    const product = products.find(p => p.id === id);
-    if (!product || qty <= 0) return [];
-    return [{ id: nextId(), productId:id, productName:product.name, type:'Compra', quantity:qty, stockBefore:product.stock, stockAfter:product.stock + qty, unitCost, referenceId, date:now.toISOString() }];
+  const receivedByProduct=new Map<number,{quantity:number;value:number}>();
+  items.forEach(({id,qty,unitCost})=>{
+    const current=receivedByProduct.get(id)??{quantity:0,value:0};
+    current.quantity+=qty;
+    current.value+=qty*unitCost;
+    receivedByProduct.set(id,current);
+  });
+  return [...receivedByProduct.entries()].flatMap(([id,received])=>{
+    const product=products.find(p=>p.id===id);
+    if(!product||received.quantity<=0)return [];
+    return [{id:nextId(),productId:id,productName:product.name,type:'Compra',quantity:received.quantity,stockBefore:product.stock,stockAfter:product.stock+received.quantity,unitCost:received.value/received.quantity,referenceId,date:now.toISOString()}];
   });
 }
