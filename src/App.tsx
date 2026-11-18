@@ -47,12 +47,13 @@ const preloadModule = (id: string) => {
 };
 
 function App({ userId, userEmail, userAppMetadata, signOut }: { userId: string; userEmail:string; userAppMetadata:Record<string, unknown>; signOut: () => Promise<void> }) {
+  const demoMode = userAppMetadata.farmi_demo === true;
   const {
     active,setActive,quotes,setQuotes,saveQuotes,products,search,setSearch,suppliers,setSuppliers,customers,setCustomers,inventoryMovements,cashMovements,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,
     showForm,setShowForm,editing,setEditing,cart,setCart,orders,saveOrder,updateOrder,deleteOrder,saleType,setSaleType,payment,setPayment,
     saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,
     sales,purchases,purchaseCostHistory,expenses,setExpenses,accountingAccounts,setAccountingAccounts,accountingEntries,setAccountingEntries,hrEmployees,setHrEmployees,hrAttendance,setHrAttendance,hrLeaveRequests,setHrLeaveRequests,receivables,setReceivables,payables,setPayables,cashClosures,setCashClosures,setCashMovements,paymentTransactions,setPaymentTransactions,missingProductRequests,setMissingProductRequests,supplierReturns,setSupplierReturns,saleAdjustments,recordSupplierDispatch,resolveSupplierReturn,recordSaleAdjustment,recordMissingProduct,settings,setSettings,filtered,recordSale,updateStandardInvoice,saveProduct,deleteProduct,receivePurchase,syncStatus,syncError,remoteReady,inventoryLots,lotKardex,fefoProductIds,registerOpeningLot,activateFefo,adjustInventoryLot
-  } = useErpState(userId);
+  } = useErpState(userId, demoMode);
 
   const nav = [
     ['dashboard', 'Dashboard', LayoutDashboard], ['facturacion', 'Facturación', Printer], ['facturacion_estandar', 'Facturación estándar', Printer], ['ventas', 'Ventas / POS', ShoppingCart], ['pedidos', 'Pedidos', ClipboardList], ['redes_sociales', 'Redes sociales / Ventas', MessagesSquare],
@@ -105,6 +106,7 @@ function App({ userId, userEmail, userAppMetadata, signOut }: { userId: string; 
   const goToPurchaseSection=(target:'nueva-compra'|'lista-compras')=>{setPurchaseRequestedSection(target);setPurchaseSectionRequest(n=>n+1);startTransition(()=>setActive('compras'));setPurchasesExpanded(true);setMobileMenuOpen(false);window.setTimeout(()=>document.getElementById(target==='nueva-compra'?'purchase-order':'purchases-panel')?.scrollIntoView({behavior:'smooth',block:'start'}),180);};
 
   return <div className={`app${mobileMenuOpen?" mobile-menu-open":""}${sidebarCollapsed?" sidebar-collapsed":""}`} data-theme={theme}>
+    {demoMode&&<div className="demo-mode-banner"><span><strong>EMPRESA DE PRUEBA</strong><small>Datos ficticios · Guardado solo en este navegador</small></span><button type="button" onClick={()=>void signOut()}>Salir de prueba</button></div>}
     {mobileMenuOpen&&<button type="button" className="mobile-menu-backdrop" aria-label="Cerrar menú" onClick={()=>setMobileMenuOpen(false)}/>}
     <aside className="sidebar">
       <button type="button" className="mobile-menu-close" aria-label="Cerrar menú" onClick={()=>setMobileMenuOpen(false)}><X size={21}/></button>
