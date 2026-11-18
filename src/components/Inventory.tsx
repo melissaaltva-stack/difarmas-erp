@@ -23,8 +23,23 @@ const makeBarcode = (products: Product[]) => {
 
 export function Inventory({products, allProducts, search, setSearch, movements, lots, lotKardex, fefoProductIds, onAddOpeningLot, onActivateFefo, onAdjustLot, onNew, onEdit}:{products:Product[];allProducts:Product[];search:string;setSearch:(v:string)=>void;movements:InventoryMovement[];lots:InventoryLot[];lotKardex:LotKardexMovement[];fefoProductIds:number[];onAddOpeningLot:(productId:number,lotCode:string,expiry:string,quantity:number,unitCost:number,supplier:string)=>boolean;onActivateFefo:(productId:number)=>boolean;onAdjustLot:(lotId:string,delta:number,note:string)=>boolean;onNew:()=>void;onEdit:(p:Product)=>void}) {
   const lowStock = products.filter(p => p.itemType !== 'Servicio' && p.stock <= p.minStock);
-  const expiring = products.filter(p => daysUntil(p.expiry) >= 0 && daysUntil(p.expiry) <= 90);
-  const expired = products.filter(p => daysUntil(p.expiry) < 0);
+  const usesLotExpiry = (p: Product) => fefoProductIds.includes(p.id);
+  const productLotsForExpiry = (p: Product) => lots.filter(lot => lot.productId === p.id && lot.quantityRemaining > 0);
+  const productExpiryDays = (p: Product) => {
+    if (usesLotExpiry(p)) {
+      const activeLots = productLotsForExpiry(p);
+      return activeLots.length ? Math.min(...activeLots.map(lot => daysUntil(lot.expiry))) : Number.POSITIVE_INFINITY;
+    }
+    return daysUntil(p.expiry);
+  };
+  const hasExpiredLot = (p: Product) => usesLotExpiry(p)
+    ? productLotsForExpiry(p).some(lot => daysUntil(lot.expiry) < 0)
+    : daysUntil(p.expiry) < 0;
+  const hasExpiringLot = (p: Product, limit: number) => usesLotExpiry(p)
+    ? productLotsForExpiry(p).some(lot => daysUntil(lot.expiry) >= 0 && daysUntil(lot.expiry) <= limit)
+    : daysUntil(p.expiry) >= 0 && daysUntil(p.expiry) <= limit;
+  const expiring = products.filter(p => hasExpiringLot(p, 90));
+  const expired = products.filter(hasExpiredLot);
   const lowMargin = products.filter(p => margin(p.retail, p.cost) < 15);
   const [inventoryView, setInventoryView] = useState<'products'|'lots'|'kardex'>('products');
   const [expiryFilter, setExpiryFilter] = useState<'all'|'expired'|'30'|'60'|'90'|'180'|'missing'>('all');
@@ -36,18 +51,17 @@ export function Inventory({products, allProducts, search, setSearch, movements, 
   const [labelsOpen, setLabelsOpen] = useState(false);
   const [labelSearch, setLabelSearch] = useState('');
   const selectedProducts = useMemo(() => products.filter(p => selected.includes(p.id) && p.code.trim()), [products, selected]);
-  const expiryDays = (p:Product) => daysUntil(p.expiry);
+  const expiryDays = (p:Product) => productExpiryDays(p);
   const labelProducts = useMemo(() => products.filter(p => (p.name+' '+p.laboratory+' '+p.code+' '+p.category+' '+p.presentation).toLowerCase().includes(labelSearch.trim().toLowerCase())), [products, labelSearch]);
   const selectLabelVisible = (checked:boolean) => setSelected(current => checked ? [...new Set([...current,...labelProducts.map(p=>p.id)])] : current.filter(id => !labelProducts.some(p=>p.id===id)));
-  const missingExpiry = products.filter(p => !p.expiry || !Number.isFinite(expiryDays(p)));
-  const expiredValue = expired.reduce((sum,p)=>sum+Math.max(0,p.stock)*Math.max(0,p.cost),0);
-  const upcomingValue = products.filter(p=>expiryDays(p)>=0&&expiryDays(p)<=180).reduce((sum,p)=>sum+Math.max(0,p.stock)*Math.max(0,p.cost),0);
+  const missingExpiry = products.filter(p => usesLotExpiry(p) ? productLotsForExpiry(p).length === 0 : !p.expiry || !Number.isFinite(expiryDays(p)));
+  const expiredValue = products.reduce((sum,p)=>sum+(usesLotExpiry(p) ? productLotsForExpiry(p).filter(lot=>daysUntil(lot.expiry)<0).reduce((value,lot)=>value+Math.max(0,lot.quantityRemaining)*Math.max(0,lot.unitCost),0) : (daysUntil(p.expiry)<0 ? Math.max(0,p.stock)*Math.max(0,p.cost) : 0)),0);
+  const upcomingValue = products.reduce((sum,p)=>sum+(usesLotExpiry(p) ? productLotsForExpiry(p).filter(lot=>daysUntil(lot.expiry)>=0&&daysUntil(lot.expiry)<=180).reduce((value,lot)=>value+Math.max(0,lot.quantityRemaining)*Math.max(0,lot.unitCost),0) : (daysUntil(p.expiry)>=0&&daysUntil(p.expiry)<=180 ? Math.max(0,p.stock)*Math.max(0,p.cost) : 0)),0);
   const visibleProducts = products.filter(p => {
-    const days=expiryDays(p);
-    if(expiryFilter==='expired') return days<0;
-    if(expiryFilter==='missing') return !p.expiry || !Number.isFinite(days);
     if(expiryFilter==='all') return true;
-    return days>=0 && days<=Number(expiryFilter);
+    if(expiryFilter==='missing') return usesLotExpiry(p) ? productLotsForExpiry(p).length === 0 : !p.expiry || !Number.isFinite(expiryDays(p));
+    if(expiryFilter==='expired') return hasExpiredLot(p);
+    return hasExpiringLot(p, Number(expiryFilter));
   });
   const toggle = (id:number, checked:boolean) => setSelected(current => checked ? [...new Set([...current,id])] : current.filter(x => x !== id));
   const selectVisible = (checked:boolean) => setSelected(current => checked ? [...new Set([...current,...visibleProducts.map(p=>p.id)])] : current.filter(id => !visibleProducts.some(p=>p.id===id)));
@@ -62,7 +76,7 @@ export function Inventory({products, allProducts, search, setSearch, movements, 
       {expiring.length > 0 && <div className="card alert-card"><AlertTriangle size={18}/><div><strong>{expiring.length} vence(n) en 90 días</strong><small>{expiring.slice(0,3).map(p=>p.name).join(', ')}</small></div></div>}
       {lowMargin.length > 0 && <div className="card alert-card"><AlertTriangle size={18}/><div><strong>{lowMargin.length} con margen minorista menor a 15%</strong><small>Revisa precio o costo antes de modificarlo.</small></div></div>}
     </div>
-    <div className="card table-wrap"><div className="card-title"><div><h3>Inventario por vencimiento</h3><p>{visibleProducts.length} producto(s) · usa Editar para corregir lote o fecha.</p></div><CalendarClock size={20}/></div><table><thead><tr><th><input aria-label="Seleccionar todos los productos visibles" type="checkbox" checked={visibleProducts.length>0&&visibleProducts.every(p=>selected.includes(p.id))} onChange={e=>selectVisible(e.target.checked)}/></th><th>Producto</th><th>Categoría</th><th>Costo promedio</th><th>Minorista</th><th>Margen</th><th>Mayorista</th><th>Margen</th><th>Stock</th><th>Vencimiento</th><th></th></tr></thead><tbody>{visibleProducts.map(p=>{const days=daysUntil(p.expiry);const retailMargin=margin(p.retail,p.cost);const wholesaleMargin=margin(p.wholesale,p.cost);return <tr key={p.id} className="inventory-product-row" tabIndex={0} role="button" aria-label={"Ver información de "+productDisplayName(p)} title="Haz clic para ver la información del producto" onClick={e=>{if((e.target as HTMLElement).closest("button,input,select,a,label"))return;if(detailClickTimer.current)clearTimeout(detailClickTimer.current);detailClickTimer.current=setTimeout(()=>setDetailProduct(p),260);}} onDoubleClick={e=>{if((e.target as HTMLElement).closest("button,input,select,a,label"))return;if(detailClickTimer.current)clearTimeout(detailClickTimer.current);detailClickTimer.current=null;onEdit(p);}} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setDetailProduct(p);}}}><td onClick={e=>e.stopPropagation()}><input aria-label={"Seleccionar "+p.name} type="checkbox" checked={selected.includes(p.id)} onChange={e=>toggle(p.id,e.target.checked)}/></td><td><div className="product-cell">{p.imageUrl&&<img src={p.imageUrl} alt="" loading="lazy"/>}<div><strong>{productDisplayName(p)}</strong><small>{p.code||'Sin código'} · {p.presentation}</small></div></div></td><td>{p.category}</td><td>{money(p.cost)}</td><td>{money(p.retail)}</td><td><span className={retailMargin<15?'stock low':'stock'}>{retailMargin.toFixed(1)}%</span></td><td>{money(p.wholesale)}</td><td><span className={wholesaleMargin<15?'stock low':'stock'}>{wholesaleMargin.toFixed(1)}%</span></td><td><span className={p.stock<=p.minStock?'stock low':'stock'}>{p.stock}{p.unitInventoryEnabled?' '+(p.baseUnitName||'unidades'):''}</span><small>Mín. {p.minStock}{p.unitInventoryEnabled?' '+(p.baseUnitName||'unidades'):''}</small></td><td><span className={days<0?'stock low':days<=90?'stock low':'stock'}>{p.expiry?new Date(p.expiry+'T00:00:00').toLocaleDateString('es-HN'):'Sin fecha'}</span></td><td onClick={e=>e.stopPropagation()}><button className="icon-btn" title="Editar" aria-label={"Editar "+p.name} onClick={()=>onEdit(p)}><Pencil size={16}/></button></td></tr>})}</tbody></table></div>
+    <div className="card table-wrap"><div className="card-title"><div><h3>Productos en inventario</h3><p>{visibleProducts.length} producto(s) · vencimientos calculados por lote cuando FEFO está activo.</p></div><CalendarClock size={20}/></div><table><thead><tr><th><input aria-label="Seleccionar todos los productos visibles" type="checkbox" checked={visibleProducts.length>0&&visibleProducts.every(p=>selected.includes(p.id))} onChange={e=>selectVisible(e.target.checked)}/></th><th>Producto</th><th>Categoría</th><th>Costo promedio</th><th>Minorista</th><th>Margen minorista</th><th>Mayorista</th><th>Margen mayorista</th><th>Stock</th><th>Vencimiento</th><th></th></tr></thead><tbody>{visibleProducts.map(p=>{const days=daysUntil(p.expiry);const retailMargin=margin(p.retail,p.cost);const wholesaleMargin=margin(p.wholesale,p.cost);return <tr key={p.id} className="inventory-product-row" tabIndex={0} role="button" aria-label={"Ver información de "+productDisplayName(p)} title="Haz clic para ver la información del producto" onClick={e=>{if((e.target as HTMLElement).closest("button,input,select,a,label"))return;if(detailClickTimer.current)clearTimeout(detailClickTimer.current);detailClickTimer.current=setTimeout(()=>setDetailProduct(p),260);}} onDoubleClick={e=>{if((e.target as HTMLElement).closest("button,input,select,a,label"))return;if(detailClickTimer.current)clearTimeout(detailClickTimer.current);detailClickTimer.current=null;onEdit(p);}} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setDetailProduct(p);}}}><td onClick={e=>e.stopPropagation()}><input aria-label={"Seleccionar "+p.name} type="checkbox" checked={selected.includes(p.id)} onChange={e=>toggle(p.id,e.target.checked)}/></td><td><div className="product-cell">{p.imageUrl&&<img src={p.imageUrl} alt="" loading="lazy"/>}<div><strong>{productDisplayName(p)}</strong><small>{p.code||'Sin código'} · {p.presentation}</small></div></div></td><td>{p.category}</td><td>{money(p.cost)}</td><td>{money(p.retail)}</td><td><span className={retailMargin<15?'stock low':'stock'}>{retailMargin.toFixed(1)}%</span></td><td>{money(p.wholesale)}</td><td><span className={wholesaleMargin<15?'stock low':'stock'}>{wholesaleMargin.toFixed(1)}%</span></td><td><span className={p.stock<=p.minStock?'stock low':'stock'}>{p.stock}{p.unitInventoryEnabled?' '+(p.baseUnitName||'unidades'):''}</span><small>Mín. {p.minStock}{p.unitInventoryEnabled?' '+(p.baseUnitName||'unidades'):''}</small></td><td><span className={hasExpiredLot(p)?'stock low':hasExpiringLot(p,90)?'stock low':'stock'}>{usesLotExpiry(p) ? (productLotsForExpiry(p).length ? (productLotsForExpiry(p).length===1 ? new Date(productLotsForExpiry(p)[0].expiry+'T00:00:00').toLocaleDateString('es-HN') : 'Varios lotes') : 'Sin lotes activos') : (p.expiry?new Date(p.expiry+'T00:00:00').toLocaleDateString('es-HN'):'Sin fecha')}</span></td><td onClick={e=>e.stopPropagation()}><button className="icon-btn" title="Editar" aria-label={"Editar "+p.name} onClick={()=>onEdit(p)}><Pencil size={16}/></button></td></tr>})}</tbody></table></div>
 
 
     <section className="inventory-utility-section">
@@ -70,10 +84,10 @@ export function Inventory({products, allProducts, search, setSearch, movements, 
         <span><CalendarClock size={18}/><span><strong>Control de vencimientos</strong><small>Filtros, productos próximos a vencer y valor comprometido</small></span></span><span className="inventory-utility-toggle-end"><small>{products.length} productos</small><ChevronDown size={18} className={showExpiryControl?'is-open':''}/></span>
       </button>
       {showExpiryControl && <div className="inventory-utility-content">    <section className="card expiry-control-panel">
-      <div className="expiry-control-heading"><div><h3>Control de vencimientos</h3><p>Filtra los productos por fecha y revisa el valor de inventario comprometido. Los cálculos usan el costo registrado y las existencias actuales.</p></div><CalendarClock size={20}/></div>
+      <div className="expiry-control-heading"><div><h3>Control de vencimientos</h3><p>Filtra los productos por fecha y revisa el valor de inventario comprometido. Cuando FEFO está activo, los importes y alertas se calculan con la cantidad disponible y el costo de cada lote.</p></div><CalendarClock size={20}/></div>
       <div className="expiry-summary">
         <div><small>Valor al costo vencido</small><strong>{money(expiredValue)}</strong><span>{expired.length} producto(s)</span></div>
-        <div><small>Valor al costo que vence en 180 días</small><strong>{money(upcomingValue)}</strong><span>{products.filter(p=>expiryDays(p)>=0&&expiryDays(p)<=180).length} producto(s)</span></div>
+        <div><small>Valor al costo que vence en 180 días</small><strong>{money(upcomingValue)}</strong><span>{products.filter(p=>hasExpiringLot(p,180)).length} producto(s)</span></div>
         <div><small>Sin vencimiento registrado</small><strong>{missingExpiry.length}</strong><span>Revisar ficha del producto</span></div>
       </div>
       <div className="expiry-filter-row" aria-label="Filtrar inventario por vencimiento">
