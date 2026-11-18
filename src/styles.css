@@ -6991,3 +6991,6 @@ button.icon-btn:focus-visible svg,
   .dashboard-content .card{padding:14px}
   .dashboard-content .dashboard-grid{gap:10px;margin-top:10px}
 }
+
+/* Facturación estándar: botón de historial alineado sin reservar un encabezado vacío. */
+.standard-invoice .page-intro { justify-content: flex-end; }
