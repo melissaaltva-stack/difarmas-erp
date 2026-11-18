@@ -33,7 +33,8 @@ export function Inventory({products, allProducts, search, setSearch, movements, 
     }
     return daysUntil(p.expiry);
   };
-  const hasMissingLotExpiry = (p: Product) => usesLotExpiry(p) ? productLotsForExpiry(p).length === 0 || productLotsForExpiry(p).some(lot => !lot.expiry || !Number.isFinite(daysUntil(lot.expiry))) : !p.expiry || !Number.isFinite(daysUntil(p.expiry));\n  const hasExpiredLot = (p: Product) => usesLotExpiry(p)
+  const hasMissingLotExpiry = (p: Product) => usesLotExpiry(p) ? productLotsForExpiry(p).length === 0 || productLotsForExpiry(p).some(lot => !lot.expiry || !Number.isFinite(daysUntil(lot.expiry))) : !p.expiry || !Number.isFinite(daysUntil(p.expiry));
+  const hasExpiredLot = (p: Product) => usesLotExpiry(p)
     ? productLotsForExpiry(p).some(lot => daysUntil(lot.expiry) < 0)
     : daysUntil(p.expiry) < 0;
   const hasExpiringLot = (p: Product, limit: number) => usesLotExpiry(p)
