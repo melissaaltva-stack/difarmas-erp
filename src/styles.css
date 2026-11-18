@@ -6977,3 +6977,17 @@ button.icon-btn:focus-visible svg,
   color: #a8c0b4 !important;
   flex: 0 0 auto;
 }
+
+
+/* Dashboard: ritmo compacto y uniforme entre secciones */
+.dashboard-content > section{margin-bottom:12px}
+.dashboard-content > section:last-child{margin-bottom:0}
+.dashboard-content .dashboard-grid{gap:12px;margin-top:12px}
+.dashboard-content .card{padding:16px}
+.dashboard-content .metrics{gap:12px}
+.dashboard-content .dashboard-goals .metrics{margin-top:12px}
+@media(max-width:560px){
+  .dashboard-content > section{margin-bottom:10px}
+  .dashboard-content .card{padding:14px}
+  .dashboard-content .dashboard-grid{gap:10px;margin-top:10px}
+}
