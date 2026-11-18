@@ -7138,3 +7138,10 @@ button.icon-btn:focus-visible svg,
 .purchase-logistics-incident textarea{width:100%;min-height:54px;resize:vertical;padding:8px;border:1px solid #d9e5e2;border-radius:8px;background:#fff;color:#233c37;font:inherit;font-size:11px;box-sizing:border-box}
 .app[data-theme="dark"] .purchase-logistics-incident{color:#a5b9ae}
 .app[data-theme="dark"] .purchase-logistics-incident textarea{background:#1b2a27;border-color:#354941;color:#dce8e2}
+
+.purchase-logistics-filters{display:grid;grid-template-columns:minmax(220px,1fr) minmax(150px,220px) auto;gap:9px;align-items:end;padding:10px}
+.purchase-logistics-filters label{display:grid;gap:4px;font-size:10px;font-weight:700;color:#607a74}
+.purchase-logistics-filters select{height:36px;min-width:0;padding:7px 9px;border:1px solid #d9e5e2;border-radius:8px;background:#fff;color:#233c37;font:inherit;font-size:11px}
+@media(max-width:620px){.purchase-logistics-filters{grid-template-columns:1fr}.purchase-logistics-filters>button{width:100%}}
+.app[data-theme="dark"] .purchase-logistics-filters label{color:#a5b9ae}
+.app[data-theme="dark"] .purchase-logistics-filters select{background:#1b2a27;border-color:#354941;color:#dce8e2}
