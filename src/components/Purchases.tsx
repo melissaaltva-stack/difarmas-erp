@@ -28,6 +28,8 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
   const [receivingOrderId,setReceivingOrderId]=useState<string|null>(null);
   const [receiptDraft,setReceiptDraft]=useState<PurchaseItem[]>([]);
   const [receiptError,setReceiptError]=useState('');
+  const [logisticsSearch,setLogisticsSearch]=useState('');
+  const [logisticsStatusFilter,setLogisticsStatusFilter]=useState('');
   const [showSuggestedPurchases,setShowSuggestedPurchases]=useState(false);
   const [showPurchaseHistory,setShowPurchaseHistory]=useState(false);
   const [showCostComparison,setShowCostComparison]=useState(false);
@@ -124,6 +126,8 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
 
   if(section==='logistica') {
     const activeOrders=[...purchaseLogistics].sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+    const normalizedLogisticsSearch=logisticsSearch.trim().toLocaleLowerCase('es-HN');
+    const visibleLogisticsOrders=activeOrders.filter(record=>(!logisticsStatusFilter||record.status===logisticsStatusFilter)&&(!normalizedLogisticsSearch||[record.supplier,record.carrier,record.trackingNumber,record.invoiceNumber,record.id,record.incident].join(' ').toLocaleLowerCase('es-HN').includes(normalizedLogisticsSearch)));
     const orderUnits=(items:PurchaseItem[])=>items.reduce((sum,item)=>sum+item.qty*(item.baseUnitsPerPurchase??1),0);
     const orderReceivedUnits=(record:PurchaseLogisticsRecord)=>orderUnits(record.receivedItems??[]);
     const orderTotalUnits=(record:PurchaseLogisticsRecord)=>orderUnits(record.items);
@@ -158,8 +162,9 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
         <div className="purchase-logistics-create-actions"><button type="button" className="secondary" onClick={()=>setSection('compras')}>Volver a productos</button><button type="button" className="primary" disabled={!cart.length||!supplier.trim()||!logisticsExpectedDate} onClick={createLogisticsOrder}>Registrar orden logística</button></div>
       </section>
       <div className="purchase-logistics-summary"><span>{activeOrders.length} órdenes registradas</span><span>{activeOrders.filter(item=>item.status==='En tránsito').length} en tránsito</span><span>{activeOrders.filter(item=>item.status==='Incidencia').length} con incidencia</span></div>
+      <section className="card purchase-logistics-filters" aria-label="Filtros de logística"><div className="purchase-list-filter-search"><Search size={16}/><input value={logisticsSearch} onChange={event=>setLogisticsSearch(event.target.value)} placeholder="Buscar proveedor, transportista o guía..." aria-label="Buscar órdenes logísticas"/></div><label>Estado<select value={logisticsStatusFilter} onChange={event=>setLogisticsStatusFilter(event.target.value)}><option value="">Todos los estados</option><option value="Solicitada">Solicitada</option><option value="Confirmada">Confirmada</option><option value="En tránsito">En tránsito</option><option value="Incidencia">Incidencia</option><option value="Recepción parcial">Recepción parcial</option><option value="Recibida">Recibida</option></select></label><button type="button" className="secondary" onClick={()=>{setLogisticsSearch('');setLogisticsStatusFilter('');}}>Limpiar filtros</button></section>
       <section className="card purchase-logistics-list">
-        {activeOrders.length===0?<div className="purchase-detail-empty"><Boxes size={25}/><strong>No hay órdenes logísticas</strong><span>Prepara productos en Compras y regístralos aquí para darles seguimiento.</span></div>:activeOrders.map(record=><article className="purchase-logistics-order" key={record.id}>
+        {visibleLogisticsOrders.length===0?<div className="purchase-detail-empty"><Boxes size={25}/><strong>No hay órdenes logísticas</strong><span>Prepara productos en Compras y regístralos aquí para darles seguimiento.</span></div>:visibleLogisticsOrders.map(record=><article className="purchase-logistics-order" key={record.id}>
           <header><div><strong>{record.supplier}</strong><small>Orden {record.id.slice(0,8).toUpperCase()} · {formatPurchaseDate(record.createdAt)}</small></div><span className={'purchase-logistics-status '+statusTone(record.status)}>{record.status}</span></header>
           <div className="purchase-logistics-order-meta"><span>Entrega estimada: <strong>{formatPurchaseDate(record.expectedDate)}</strong></span><span>Transportista: <strong>{record.carrier||'No indicado'}</strong></span><span>Seguimiento: <strong>{record.trackingNumber||'No indicado'}</strong></span></div>
           {record.status==='Incidencia'&&<label className="purchase-logistics-incident">Detalle de la incidencia<textarea rows={2} value={record.incident} onChange={event=>setPurchaseLogistics(current=>current.map(item=>item.id===record.id?{...item,incident:event.target.value}:item))} placeholder="Describe el retraso, faltante o problema de transporte..."/></label>}
