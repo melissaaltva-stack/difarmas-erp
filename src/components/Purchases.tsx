@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { ShoppingCart, Search, Boxes, CalendarClock, History, TrendingUp, TrendingDown, Minus, AlertTriangle, Sparkles, Plus, Trash2 } from 'lucide-react';
-import type { PurchaseItem, Product, Supplier, PurchaseCostHistoryEntry, SaleRecord, PurchaseRecord, PurchaseLogisticsRecord } from '../domain/types';
+import type { PurchaseItem, Product, Supplier, PurchaseCostHistoryEntry, SaleRecord, PurchaseRecord } from '../domain/types';
 import { buildPurchaseRecommendations } from '../services/purchaseRecommendationService';
-import { localDateKey } from '../utils/dates';
 import { isExpiryAtLeastSixMonths, sixMonthExpiryThreshold } from '../services/expiryService';
 import { Suppliers } from './Suppliers';
 import type { SupplierReturnRecord } from '../domain/types';
@@ -12,8 +11,8 @@ const percent = (value:number) => `${value.toLocaleString('es-HN',{maximumFracti
 const purchaseDateKey=(record:Pick<PurchaseRecord,'date'|'invoiceDate'>)=>String(record.invoiceDate||record.date||'').slice(0,10);
 const formatPurchaseDate=(value?:string)=>{if(!value)return '—';const datePart=value.slice(0,10);const parsed=/^\d{4}-\d{2}-\d{2}$/.test(datePart)?new Date(`${datePart}T12:00:00`):new Date(value);return Number.isNaN(parsed.getTime())?'—':parsed.toLocaleDateString('es-HN')};
 
-export function Purchases({products,sales,purchases,cart,setCart,search,setSearch,supplier,setSupplier,suppliers=[],setSuppliers,records=[],setRecords,onDispatch,onResolve,showSuppliers=true,costHistory=[],fefoProductIds=[],onReceive,onOpenNewProduct,onEditProduct,sectionRequest=0,requestedSection='compras',purchaseLogistics=[],setPurchaseLogistics,onReceiveLogistics}:{products:Product[];sales:SaleRecord[];purchases:PurchaseRecord[];cart:PurchaseItem[];setCart:(c:PurchaseItem[])=>void;search:string;setSearch:(v:string)=>void;supplier:string;setSupplier:(v:string)=>void;suppliers?:Supplier[];setSuppliers:Dispatch<SetStateAction<Supplier[]>>;records?:SupplierReturnRecord[];setRecords:Dispatch<SetStateAction<SupplierReturnRecord[]>>;onDispatch:(record:SupplierReturnRecord)=>boolean;onResolve:(record:SupplierReturnRecord,status:SupplierReturnRecord['status'])=>boolean;showSuppliers?:boolean;costHistory?:PurchaseCostHistoryEntry[];fefoProductIds?:number[];onReceive:(items:PurchaseItem[],paymentMethod:'Efectivo'|'Transferencia'|'Crédito',dueDate:string,invoiceNumber:string,invoiceDate:string,notes:string,purchaseTotal?:number,paymentTerms?:string,supplierOverride?:string)=>boolean;onOpenNewProduct:()=>void;onEditProduct:(product:Product)=>void;sectionRequest?:number;requestedSection?:'compras'|'proveedores'|'nueva-compra'|'lista-compras'|'logistica';purchaseLogistics?:PurchaseLogisticsRecord[];setPurchaseLogistics:Dispatch<SetStateAction<PurchaseLogisticsRecord[]>>;onReceiveLogistics:(orderId:string,items:PurchaseItem[])=>boolean}) {
-  const [section,setSection]=useState<'compras'|'proveedores'|'lista-compras'|'logistica'>('compras');
+export function Purchases({products,sales,purchases,cart,setCart,search,setSearch,supplier,setSupplier,suppliers=[],setSuppliers,records=[],setRecords,onDispatch,onResolve,showSuppliers=true,costHistory=[],fefoProductIds=[],onReceive,onOpenNewProduct,onEditProduct,sectionRequest=0 ,requestedSection='compras'}:{products:Product[];sales:SaleRecord[];purchases:PurchaseRecord[];cart:PurchaseItem[];setCart:(c:PurchaseItem[])=>void;search:string;setSearch:(v:string)=>void;supplier:string;setSupplier:(v:string)=>void;suppliers?:Supplier[];setSuppliers:Dispatch<SetStateAction<Supplier[]>>;records?:SupplierReturnRecord[];setRecords:Dispatch<SetStateAction<SupplierReturnRecord[]>>;onDispatch:(record:SupplierReturnRecord)=>boolean;onResolve:(record:SupplierReturnRecord,status:SupplierReturnRecord['status'])=>boolean;showSuppliers?:boolean;costHistory?:PurchaseCostHistoryEntry[];fefoProductIds?:number[];onReceive:(items:PurchaseItem[],paymentMethod:'Efectivo'|'Transferencia'|'Crédito',dueDate:string,invoiceNumber:string,invoiceDate:string,notes:string,purchaseTotal?:number,paymentTerms?:string,supplierOverride?:string)=>boolean;onOpenNewProduct:()=>void;onEditProduct:(product:Product)=>void;sectionRequest?:number;requestedSection?:'compras'|'proveedores'|'nueva-compra'|'lista-compras'}) {
+  const [section,setSection]=useState<'compras'|'proveedores'|'lista-compras'>('compras');
   const [purchaseListSearch,setPurchaseListSearch]=useState('');
   const [purchaseListSupplier,setPurchaseListSupplier]=useState('');
   const [purchaseListPayment,setPurchaseListPayment]=useState('');
@@ -21,15 +20,8 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
   const [purchaseListTo,setPurchaseListTo]=useState('');
   const [purchaseListPage,setPurchaseListPage]=useState(1);
   const purchaseListPageSize=10;
-  useEffect(()=>{setSection(requestedSection==='proveedores'?'proveedores':requestedSection==='lista-compras'?'lista-compras':requestedSection==='logistica'?'logistica':'compras');if(requestedSection==='nueva-compra'){setPurchaseHeaderError('');setShowPurchaseModal(true);}},[sectionRequest,requestedSection]);
+  useEffect(()=>{setSection(requestedSection==='proveedores'?'proveedores':requestedSection==='lista-compras'?'lista-compras':'compras');if(requestedSection==='nueva-compra'){setPurchaseHeaderError('');setShowPurchaseModal(true);}},[sectionRequest,requestedSection]);
   const [logisticsExpectedDate,setLogisticsExpectedDate]=useState(()=>{const date=new Date();date.setDate(date.getDate()+7);return localDateKey(date);});
-  const [logisticsCarrier,setLogisticsCarrier]=useState('');
-  const [logisticsTracking,setLogisticsTracking]=useState('');
-  const [receivingOrderId,setReceivingOrderId]=useState<string|null>(null);
-  const [receiptDraft,setReceiptDraft]=useState<PurchaseItem[]>([]);
-  const [receiptError,setReceiptError]=useState('');
-  const [logisticsSearch,setLogisticsSearch]=useState('');
-  const [logisticsStatusFilter,setLogisticsStatusFilter]=useState('');
   const [showSuggestedPurchases,setShowSuggestedPurchases]=useState(false);
   const [showPurchaseHistory,setShowPurchaseHistory]=useState(false);
   const [showCostComparison,setShowCostComparison]=useState(false);
@@ -124,64 +116,6 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
     setError('');
   };
 
-  if(section==='logistica') {
-    const activeOrders=[...purchaseLogistics].sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
-    const normalizedLogisticsSearch=logisticsSearch.trim().toLocaleLowerCase('es-HN');
-    const visibleLogisticsOrders=activeOrders.filter(record=>(!logisticsStatusFilter||record.status===logisticsStatusFilter)&&(!normalizedLogisticsSearch||[record.supplier,record.carrier,record.trackingNumber,record.invoiceNumber,record.id,record.incident].join(' ').toLocaleLowerCase('es-HN').includes(normalizedLogisticsSearch)));
-    const orderUnits=(items:PurchaseItem[])=>items.reduce((sum,item)=>sum+item.qty*(item.baseUnitsPerPurchase??1),0);
-    const orderReceivedUnits=(record:PurchaseLogisticsRecord)=>orderUnits(record.receivedItems??[]);
-    const orderTotalUnits=(record:PurchaseLogisticsRecord)=>orderUnits(record.items);
-    const remainingUnits=(record:PurchaseLogisticsRecord)=>Math.max(0,orderTotalUnits(record)-orderReceivedUnits(record));
-    const remainingForLine=(record:PurchaseLogisticsRecord,line:PurchaseItem)=>Math.max(0,line.qty-(record.receivedItems??[]).filter(item=>purchaseLineId(item)===purchaseLineId(line)).reduce((sum,item)=>sum+item.qty,0));
-    const openLogisticsReceipt=(record:PurchaseLogisticsRecord)=>{setReceivingOrderId(record.id);setReceiptError('');setReceiptDraft(record.items.map(item=>({...item,qty:remainingForLine(record,item),lot:'',expiry:''})).filter(item=>item.qty>0));};
-    const selectedReceivingOrder=purchaseLogistics.find(record=>record.id===receivingOrderId);
-    const submitLogisticsReceipt=()=>{if(!receivingOrderId||!receiptDraft.some(item=>item.qty>0)){setReceiptError('Ingresa la cantidad recibida de al menos un producto.');return;}const valid=receiptDraft.filter(item=>item.qty>0);if(valid.some(item=>!isExpiryAtLeastSixMonths(item.expiry))){setReceiptError('Verifica las fechas: todos los productos deben tener al menos seis meses antes de vencer.');return;}if(valid.some(item=>fefoProductIds.includes(item.id)&&!item.lot.trim())){setReceiptError('Completa el número de lote de cada producto con control FEFO.');return;}if(onReceiveLogistics(receivingOrderId,valid)){setReceivingOrderId(null);setReceiptDraft([]);setReceiptError('');}else setReceiptError('No se pudo registrar la recepción. Verifica cantidades pendientes, lotes, vencimientos y sincronización.');};
-    const statusTone=(status:PurchaseLogisticsRecord['status'])=>status==='Recibida'?'is-received':status==='Incidencia'?'has-incident':'';
-    const createLogisticsOrder=()=>{
-      if(!supplier.trim()){setError('Selecciona un proveedor antes de crear la orden.');return;}
-      if(!cart.length){setError('Agrega al menos un producto a la orden.');return;}
-      if(cart.some(item=>!Number.isFinite(item.qty)||item.qty<=0||!Number.isFinite(item.unitCost)||item.unitCost<0)){setError('Revisa las cantidades y costos de los productos.');return;}
-      const record:PurchaseLogisticsRecord={id:crypto.randomUUID(),supplier:supplier.trim(),createdAt:new Date().toISOString(),expectedDate:logisticsExpectedDate,carrier:logisticsCarrier.trim(),trackingNumber:logisticsTracking.trim(),status:'Solicitada',items:cart.map(item=>({...item,purchaseLineId:item.purchaseLineId??crypto.randomUUID()})),receivedItems:[],paymentMethod,paymentTerms,dueDate:creditTerm?dueDate:'',invoiceNumber:invoiceNumber.trim(),invoiceDate,notes:purchaseNotes.trim(),total,incident:''};
-      setPurchaseLogistics(current=>[record,...current]);
-      setCart([]);setError('');setSupplier('');setLogisticsCarrier('');setLogisticsTracking('');
-      setSection('logistica');
-    };
-    const updateLogisticsStatus=(record:PurchaseLogisticsRecord,status:PurchaseLogisticsRecord['status'])=>setPurchaseLogistics(current=>current.map(item=>item.id===record.id?{...item,status,incident:status==='Incidencia'?(item.incident||'Pendiente de documentar'):item.incident}:item));
-    return <div className="content"><div id="purchases-panel" className="purchase-logistics-page">
-      <div className="purchase-page-heading purchase-list-heading"><div><h2>Logística de compras</h2><p>Controla órdenes, fechas de entrega, transportistas y seguimiento de mercancía.</p></div><button type="button" className="primary" onClick={()=>{setSection('compras');setError('');}}>Crear orden desde productos</button></div>
-      <section className="card purchase-logistics-create">
-        <div className="purchase-logistics-create-heading"><div><strong>Nueva orden de compra</strong><small>Utiliza el carrito de Compras para preparar los productos y sus costos.</small></div><span>{cart.length} líneas · {orderUnits(cart)} unidades</span></div>
-        <div className="purchase-logistics-form">
-          <label>Proveedor<input value={supplier} onChange={event=>setSupplier(event.target.value)} placeholder="Nombre del proveedor"/></label>
-          <label>Fecha estimada de entrega<input type="date" min={localDateKey(new Date())} value={logisticsExpectedDate} onChange={event=>setLogisticsExpectedDate(event.target.value)}/></label>
-          <label>Transportista<input value={logisticsCarrier} onChange={event=>setLogisticsCarrier(event.target.value)} placeholder="Empresa o responsable"/></label>
-          <label>N.º de seguimiento<input value={logisticsTracking} onChange={event=>setLogisticsTracking(event.target.value)} placeholder="Guía o referencia"/></label>
-        </div>
-        {cart.length>0&&<div className="purchase-logistics-draft"><strong>Productos preparados</strong>{cart.map(item=><div key={purchaseLineId(item)}><span>{item.name}</span><span>{item.qty} {item.purchaseUnit||'unidades'}</span><strong>{money(item.qty*item.unitCost)}</strong></div>)}</div>}
-        {error&&<p className="form-error" role="alert">{error}</p>}
-        <div className="purchase-logistics-create-actions"><button type="button" className="secondary" onClick={()=>setSection('compras')}>Volver a productos</button><button type="button" className="primary" disabled={!cart.length||!supplier.trim()||!logisticsExpectedDate} onClick={createLogisticsOrder}>Registrar orden logística</button></div>
-      </section>
-      <div className="purchase-logistics-summary"><span>{activeOrders.length} órdenes registradas</span><span>{activeOrders.filter(item=>item.status==='En tránsito').length} en tránsito</span><span>{activeOrders.filter(item=>item.status==='Incidencia').length} con incidencia</span></div>
-      <section className="card purchase-logistics-filters" aria-label="Filtros de logística"><div className="purchase-list-filter-search"><Search size={16}/><input value={logisticsSearch} onChange={event=>setLogisticsSearch(event.target.value)} placeholder="Buscar proveedor, transportista o guía..." aria-label="Buscar órdenes logísticas"/></div><label>Estado<select value={logisticsStatusFilter} onChange={event=>setLogisticsStatusFilter(event.target.value)}><option value="">Todos los estados</option><option value="Solicitada">Solicitada</option><option value="Confirmada">Confirmada</option><option value="En tránsito">En tránsito</option><option value="Incidencia">Incidencia</option><option value="Recepción parcial">Recepción parcial</option><option value="Recibida">Recibida</option></select></label><button type="button" className="secondary" onClick={()=>{setLogisticsSearch('');setLogisticsStatusFilter('');}}>Limpiar filtros</button></section>
-      <section className="card purchase-logistics-list">
-        {visibleLogisticsOrders.length===0?<div className="purchase-detail-empty"><Boxes size={25}/><strong>No hay órdenes logísticas</strong><span>Prepara productos en Compras y regístralos aquí para darles seguimiento.</span></div>:visibleLogisticsOrders.map(record=><article className="purchase-logistics-order" key={record.id}>
-          <header><div><strong>{record.supplier}</strong><small>Orden {record.id.slice(0,8).toUpperCase()} · {formatPurchaseDate(record.createdAt)}</small></div><span className={'purchase-logistics-status '+statusTone(record.status)}>{record.status}</span></header>
-          <div className="purchase-logistics-order-meta"><span>Entrega estimada: <strong>{formatPurchaseDate(record.expectedDate)}</strong></span><span>Transportista: <strong>{record.carrier||'No indicado'}</strong></span><span>Seguimiento: <strong>{record.trackingNumber||'No indicado'}</strong></span></div>
-          {record.status==='Incidencia'&&<label className="purchase-logistics-incident">Detalle de la incidencia<textarea rows={2} value={record.incident} onChange={event=>setPurchaseLogistics(current=>current.map(item=>item.id===record.id?{...item,incident:event.target.value}:item))} placeholder="Describe el retraso, faltante o problema de transporte..."/></label>}
-          <div className="purchase-logistics-progress"><div><span>Recibido</span><strong>{orderReceivedUnits(record)} / {orderTotalUnits(record)} unidades</strong></div><div className="purchase-logistics-progress-track"><i style={{width:`${orderTotalUnits(record)>0?Math.min(100,orderReceivedUnits(record)/orderTotalUnits(record)*100):0}%`}}/></div><small>Pendientes: {remainingUnits(record)} unidades</small></div>
-          <div className="purchase-logistics-order-items">{record.items.map((item,index)=><div key={item.purchaseLineId||`${item.id}-${index}`}><span>{item.name}</span><strong>{item.qty} {item.purchaseUnit||'unidades'}</strong></div>)}</div>
-          <footer><label>Actualizar estado<select value={record.status} disabled={Boolean(record.receivedItems?.length)} onChange={event=>updateLogisticsStatus(record,event.target.value as PurchaseLogisticsRecord['status'])}><option value="Solicitada">Solicitada</option><option value="Confirmada">Confirmada</option><option value="En tránsito">En tránsito</option><option value="Incidencia">Incidencia</option></select></label><div className="purchase-logistics-order-actions">{remainingUnits(record)>0&&<button type="button" className="primary" onClick={()=>openLogisticsReceipt(record)}>Registrar recepción</button>}<strong>{money(record.total)}</strong></div></footer>
-        </article>)}
-      </section>
-      {selectedReceivingOrder&&<div className="modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)setReceivingOrderId(null);}}><section className="modal purchase-logistics-receive-modal" role="dialog" aria-modal="true" aria-labelledby="purchase-logistics-receive-title">
-        <div className="modal-head"><div><h2 id="purchase-logistics-receive-title">Recepción de mercancía</h2><p>{selectedReceivingOrder.supplier} · Orden {selectedReceivingOrder.id.slice(0,8).toUpperCase()}</p></div><button type="button" className="icon-btn" onClick={()=>setReceivingOrderId(null)} aria-label="Cerrar">×</button></div>
-        <p className="purchase-logistics-receive-note">Registra solo las cantidades que llegaron en esta entrega. Las siguientes recepciones se acumularán en la misma orden y no duplicarán la factura ni la cuenta por pagar.</p>
-        <div className="purchase-logistics-receive-lines">{receiptDraft.map((item,index)=>{const ordered=selectedReceivingOrder.items.find(line=>purchaseLineId(line)===purchaseLineId(item));const remaining=ordered?remainingForLine(selectedReceivingOrder,ordered):0;return <div className="purchase-logistics-receive-line" key={purchaseLineId(item)}><strong>{item.name}</strong><small>Pendiente: {remaining} {item.purchaseUnit||'unidades'}</small><div className="purchase-logistics-receive-fields"><label>Cantidad recibida<input type="number" min="0" max={remaining} step="0.01" value={item.qty} onChange={event=>setReceiptDraft(current=>current.map((line,i)=>i===index?{...line,qty:Math.min(remaining,Math.max(0,Number(event.target.value)||0))}:line))}/></label><label>Costo por unidad de compra<input type="number" min="0" step="0.01" value={item.unitCost} onChange={event=>setReceiptDraft(current=>current.map((line,i)=>i===index?{...line,unitCost:Math.max(0,Number(event.target.value)||0)}:line))}/></label><label>Lote {fefoProductIds.includes(item.id)?'*':''}<input value={item.lot} onChange={event=>setReceiptDraft(current=>current.map((line,i)=>i===index?{...line,lot:event.target.value}:line))} placeholder="N.º de lote"/></label><label>Vencimiento<input type="date" value={item.expiry} onChange={event=>setReceiptDraft(current=>current.map((line,i)=>i===index?{...line,expiry:event.target.value}:line))}/></label></div></div>;})}</div>
-        {receiptError&&<p className="form-error" role="alert">{receiptError}</p>}
-        <div className="modal-actions"><button type="button" className="secondary" onClick={()=>setReceivingOrderId(null)}>Cancelar</button><button type="button" className="primary" onClick={submitLogisticsReceipt}>Confirmar recepción</button></div>
-      </section></div>}
-    </div></div>;
-  }
   if(section==='lista-compras') {
     const suppliersInList=[...new Set(purchases.map(record=>record.supplier).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
     const normalizedSearch=purchaseListSearch.trim().toLocaleLowerCase('es-HN');
@@ -218,7 +152,7 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
 
   return <div className="content">
   <div id="purchases-panel">
-  <div className="purchase-page-heading purchase-main-actions"><button type="button" className="primary" onClick={()=>{setPurchaseHeaderError('');setShowPurchaseModal(true);}}><Plus size={16}/> Nueva compra</button><button type="button" className="secondary" disabled={!cart.length||!supplier.trim()} onClick={()=>setSection('logistica')}>Preparar orden logística</button></div>
+  <div className="purchase-page-heading purchase-main-actions"><button type="button" className="primary" onClick={()=>{setPurchaseHeaderError('');setShowPurchaseModal(true);}}><Plus size={16}/> Nueva compra</button></div>
   
   <div className="ai-purchase-launch" id="purchase-ai"><button className="primary" type="button" onClick={()=>setShowSuggestedPurchases(open=>!open)}><Sparkles size={17}/>{showSuggestedPurchases?'Ocultar compras sugeridas con IA':'Compras sugeridas con IA'}</button></div>
   {showSuggestedPurchases&&<section className="card ai-purchase-recommendations">
