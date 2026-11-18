@@ -3,6 +3,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { ShoppingCart, Search, Boxes, CalendarClock, History, TrendingUp, TrendingDown, Minus, AlertTriangle, Sparkles, Plus, Trash2 } from 'lucide-react';
 import type { PurchaseItem, Product, Supplier, PurchaseCostHistoryEntry, SaleRecord, PurchaseRecord } from '../domain/types';
 import { buildPurchaseRecommendations } from '../services/purchaseRecommendationService';
+import { localDateKey } from '../utils/dates';
 import { isExpiryAtLeastSixMonths, sixMonthExpiryThreshold } from '../services/expiryService';
 import { Suppliers } from './Suppliers';
 import type { SupplierReturnRecord } from '../domain/types';
@@ -21,7 +22,6 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
   const [purchaseListPage,setPurchaseListPage]=useState(1);
   const purchaseListPageSize=10;
   useEffect(()=>{setSection(requestedSection==='proveedores'?'proveedores':requestedSection==='lista-compras'?'lista-compras':'compras');if(requestedSection==='nueva-compra'){setPurchaseHeaderError('');setShowPurchaseModal(true);}},[sectionRequest,requestedSection]);
-  const [logisticsExpectedDate,setLogisticsExpectedDate]=useState(()=>{const date=new Date();date.setDate(date.getDate()+7);return localDateKey(date);});
   const [showSuggestedPurchases,setShowSuggestedPurchases]=useState(false);
   const [showPurchaseHistory,setShowPurchaseHistory]=useState(false);
   const [showCostComparison,setShowCostComparison]=useState(false);
