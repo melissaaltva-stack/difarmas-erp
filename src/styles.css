@@ -6952,3 +6952,28 @@ button.icon-btn:focus-visible svg,
   .inventory-lot-activation{align-items:stretch;flex-direction:column}
   .inventory-lot-activation button{width:100%}
 }
+
+/* Facturación estándar: mantener el buscador oscuro también al recibir foco. */
+.app[data-theme="dark"] .standard-invoice .invoice-search,
+.app[data-theme="dark"] .standard-invoice .invoice-search:focus-within {
+  background-color: #1b2a27 !important;
+  border-color: #49645a !important;
+  color: #b7cbc1 !important;
+}
+.app[data-theme="dark"] .standard-invoice .invoice-search input,
+.app[data-theme="dark"] .standard-invoice .invoice-search input:focus,
+.app[data-theme="dark"] .standard-invoice .invoice-search input:focus-visible {
+  background: transparent !important;
+  color: #e2eee7 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+.app[data-theme="dark"] .standard-invoice .invoice-search input::placeholder {
+  color: #91a99d !important;
+  opacity: 1;
+}
+.app[data-theme="dark"] .standard-invoice .invoice-search > svg {
+  color: #a8c0b4 !important;
+  flex: 0 0 auto;
+}
