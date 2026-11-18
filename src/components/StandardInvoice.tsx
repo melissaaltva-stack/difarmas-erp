@@ -115,7 +115,7 @@ export function StandardInvoice({products,customers,sales,settings,payment,setPa
      <div><small>TELÉFONO</small><strong>{printed.customerPhone||'—'}</strong></div>
      <div><small>VENDEDOR</small><strong>{printed.seller||'General'}</strong></div>
      <div className="invoice-print-address"><small>DIRECCIÓN</small><strong>{printed.customerAddress||'—'}</strong></div>
-     <div><small>FECHA MÁXIMA DE PAGO</small><strong>{dateText(printed.maxDate)}</strong></div>
+     <div><small>FECHA MÁXIMA DE PAGO</small><strong>{printed.terms==='Crédito'?dateText(printed.maxDate):'—'}</strong></div>
    </section>
    <table className="invoice-print-lines"><thead><tr><th>Descripción</th><th>Cant.</th><th>Unidad</th><th>Precio unit.</th><th>Desc.</th><th>ISV</th><th>Importe</th></tr></thead>
      <tbody>{(printed.items??[]).map((item,index)=><tr key={`${item.productId}-${index}`}><td><strong>{item.productName}</strong>{item.laboratory&&<small>{item.laboratory}</small>}</td><td>{item.qty}</td><td>{item.unit||'Unidad'}</td><td>{money(item.baseUnitPrice??item.unitPrice)}</td><td>{Number(item.discountPercent??0).toLocaleString('es-HN')}%</td><td>{Number(item.taxPercent??0).toLocaleString('es-HN')}%</td><td>{money(item.lineTotal??item.revenue)}</td></tr>)}</tbody>
