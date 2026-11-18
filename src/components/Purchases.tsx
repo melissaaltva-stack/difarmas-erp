@@ -73,6 +73,10 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
     if(suppliers.some(item=>item.name.trim().toLocaleLowerCase()===name.toLocaleLowerCase())){
       setSupplierFormError('Ya existe un proveedor con ese nombre.');return;
     }
+    const normalizedRtn=Array.from(newSupplierForm.rtn).filter(char=>char>='0'&&char<='9').join('');
+    if(normalizedRtn&&suppliers.some(item=>Array.from(String(item.rtn??'')).filter(char=>char>='0'&&char<='9').join('')===normalizedRtn)){
+      setSupplierFormError('Este RTN ya está registrado en otro proveedor.');return;
+    }
     const created:Supplier={...newSupplierForm,id:nextSupplierId(),name};
     setSuppliers(current=>[created,...current]);
     setSupplier(created.name);
