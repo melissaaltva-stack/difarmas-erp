@@ -7011,3 +7011,8 @@ button.icon-btn:focus-visible svg,
   .content:has(.pos-grid){padding:14px 12px}
   .pos-grid .pos-toolbar{margin-bottom:7px!important}
 }
+
+.pos-receivables-modal{background:#f7f9f8;color:#17252a}
+.pos-receivables-modal-close{background:#fff;box-shadow:0 1px 5px rgba(0,0,0,.15)}
+.app[data-theme="dark"] .pos-receivables-modal{background:#17231f;color:#dce8e2;border:1px solid #354940}
+.app[data-theme="dark"] .pos-receivables-modal-close{background:#263831;color:#dce8e2;box-shadow:0 1px 5px rgba(0,0,0,.3)}
