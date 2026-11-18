@@ -14,12 +14,12 @@ export function Orders({orders,products,onUpdate,onDelete,onInvoice,onEdit}:{ord
  const editQty=(id:number,value:number)=>setDraft(current=>current.map(item=>item.id===id?{...item,qty:Math.max(1,Math.floor(value)||1)}:item));
  return <div className="content orders-page">
   <div className="page-intro"><span className="pill">{pending.length} pendientes</span></div>
-  <div className="card" style={{display:'grid',gridTemplateColumns:'minmax(220px,1.6fr) repeat(2,minmax(145px,.7fr)) auto',gap:10,alignItems:'end',marginBottom:14}}>
-   <label style={{fontSize:11}}>Buscar pedido, cliente o producto<div className="search" style={{marginTop:5}}><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="N.º de pedido, cliente, producto..."/></div></label>
-   <label style={{fontSize:11}}>Desde<input type="date" value={dateFrom} onChange={e=>setDateFrom(e.target.value)} style={{display:'block',width:'100%',marginTop:5}}/></label>
-   <label style={{fontSize:11}}>Hasta<input type="date" value={dateTo} onChange={e=>setDateTo(e.target.value)} style={{display:'block',width:'100%',marginTop:5}}/></label>
+  <div className="card" style={{display:'flex',flexWrap:'wrap',gap:10,alignItems:'end',marginBottom:14}}>
+   <label style={{fontSize:11,flex:'2 1 240px'}}>Buscar pedido, cliente o producto<div className="search" style={{marginTop:5}}><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="N.º de pedido, cliente, producto..."/></div></label>
+   <label style={{fontSize:11,flex:'1 1 140px'}}>Desde<input type="date" value={dateFrom} onChange={e=>setDateFrom(e.target.value)} style={{display:'block',width:'100%',marginTop:5}}/></label>
+   <label style={{fontSize:11,flex:'1 1 140px'}}>Hasta<input type="date" value={dateTo} onChange={e=>setDateTo(e.target.value)} style={{display:'block',width:'100%',marginTop:5}}/></label>
    <button type="button" className="secondary" onClick={()=>{setQuery('');setDateFrom('');setDateTo('');}}>Limpiar</button>
-   <span className="count" style={{gridColumn:'1/-1'}}>{pending.length+invoiced.length} pedidos encontrados · {pending.length} pendientes · {invoiced.length} facturados</span>
+   <span className="count" style={{width:'100%'}}>{pending.length+invoiced.length} pedidos encontrados · {pending.length} pendientes · {invoiced.length} facturados</span>
   </div>
   {notice&&<p className="helper" role="status">{notice}</p>}
   {editing!==null&&<section className="card order-editor"><div className="section-heading"><div><h3>Editar pedido</h3><p>Al guardar, el inventario se ajustará a las cantidades nuevas.</p></div><button className="icon-button" type="button" onClick={()=>setEditing(null)} aria-label="Cerrar edición"><X size={17}/></button></div>
