@@ -77,7 +77,7 @@ export function AuthGate({ children }: Props) {
 
   const enterDemo = () => { try { window.localStorage.setItem('farmi_demo_session', 'active'); } catch {} setError(''); setNotice(''); setDemoMode(true); };
   const exitDemo = async () => { try { window.localStorage.removeItem('farmi_demo_session'); } catch {} setDemoMode(false); };
-  const demoUser = { id: 'farmi-demo-local', email: 'demo@farmi.local', app_metadata: { farmi_demo: true, farmi_active: true, farmi_role: 'Administrador' }, user_metadata: {}, aud: 'authenticated', created_at: new Date(0).toISOString() } as unknown as User;
+  const demoUser = { id: 'farmi-demo-local', email: 'demo@farmi.local', app_metadata: { farmi_demo: true, farmi_active: true, farmi_role: 'Supervisor', farmi_permissions: ['dashboard','facturacion_estandar','ventas','pedidos','redes_sociales','inventario','clientes','compras','finanzas','contabilidad','cuentas_cobrar','cuentas_pagar','reportes','asistente_ia','proveedores','rrhh','configuracion'] }, user_metadata: {}, aud: 'authenticated', created_at: new Date(0).toISOString() } as unknown as User;
 
   const handleBackgroundUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file=event.currentTarget.files?.[0];
