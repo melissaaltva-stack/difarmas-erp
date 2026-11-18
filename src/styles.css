@@ -6731,3 +6731,48 @@ button.icon-btn:focus-visible svg,
 .topbar-title{min-width:0;flex:1}
 @media(min-width:761px) and (max-width:900px){.sidebar{flex-basis:72px}.app.sidebar-collapsed .sidebar{margin-left:-72px}}
 @media(max-width:760px){.sidebar-toggle{display:none}}
+
+/* Buscadores: eliminar el rectángulo interno del campo y conservar solo el contorno exterior. */
+:root[data-farmi-theme] .app :is(
+  .search,
+  .search-pos,
+  .social-search,
+  .search-box,
+  .invoice-search,
+  .invoice-search-control,
+  .receivables-search-control,
+  .product-image-search,
+  .purchase-list-filter-search,
+  .receivables-search-control,
+  .hr-toolbar .search
+) input,
+:root[data-farmi-theme] .app :is(
+  .search,
+  .search-pos,
+  .social-search,
+  .search-box,
+  .invoice-search,
+  .invoice-search-control,
+  .receivables-search-control,
+  .product-image-search,
+  .purchase-list-filter-search,
+  .hr-toolbar .search
+) input:focus,
+:root[data-farmi-theme] .app :is(
+  .search,
+  .search-pos,
+  .social-search,
+  .search-box,
+  .invoice-search,
+  .invoice-search-control,
+  .receivables-search-control,
+  .product-image-search,
+  .purchase-list-filter-search,
+  .hr-toolbar .search
+) input:focus-visible{
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
