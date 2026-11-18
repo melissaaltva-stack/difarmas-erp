@@ -33,7 +33,7 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
   const [paymentMethod,setPaymentMethod]=useState<'Efectivo'|'Transferencia'|'Crédito'>('Efectivo');
   const purchaseOptions=(product:Product)=>[{name:product.baseUnitName||'Unidad',unitsPerPresentation:1,retailPrice:product.retail,wholesalePrice:product.wholesale},...(product.unitInventoryEnabled?(product.unitPresentations??[]):[])];
   const purchaseLineId=(item:PurchaseItem)=>item.purchaseLineId??`legacy-${item.id}`;
-  const changePurchaseUnit=(lineId:string,name:string)=>setCart(cart.map(item=>{if(purchaseLineId(item)!==lineId)return item;const product=products.find(p=>p.id===id)??item;const option=purchaseOptions(product).find(choice=>choice.name===name);if(!option)return item;const oldUnits=item.baseUnitsPerPurchase??1;const nextUnits=option.unitsPerPresentation;const baseCost=item.unitCost/oldUnits;return {...item,purchaseUnit:option.name,baseUnitsPerPurchase:nextUnits,unitCost:Number((baseCost*nextUnits).toFixed(4))};}));
+  const changePurchaseUnit=(lineId:string,name:string)=>setCart(cart.map(item=>{if(purchaseLineId(item)!==lineId)return item;const product=products.find(p=>p.id===item.id)??item;const option=purchaseOptions(product).find(choice=>choice.name===name);if(!option)return item;const oldUnits=item.baseUnitsPerPurchase??1;const nextUnits=option.unitsPerPresentation;const baseCost=item.unitCost/oldUnits;return {...item,purchaseUnit:option.name,baseUnitsPerPurchase:nextUnits,unitCost:Number((baseCost*nextUnits).toFixed(4))};}));
   const [paymentTerms,setPaymentTerms]=useState('Contado - Efectivo');
   const [invoiceTotal,setInvoiceTotal]=useState('');
   const [showPurchaseModal,setShowPurchaseModal]=useState(false);
