@@ -7145,3 +7145,6 @@ button.icon-btn:focus-visible svg,
 @media(max-width:620px){.purchase-logistics-filters{grid-template-columns:1fr}.purchase-logistics-filters>button{width:100%}}
 .app[data-theme="dark"] .purchase-logistics-filters label{color:#a5b9ae}
 .app[data-theme="dark"] .purchase-logistics-filters select{background:#1b2a27;border-color:#354941;color:#dce8e2}
+
+.purchase-main-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+@media(max-width:560px){.purchase-main-actions{display:grid;grid-template-columns:1fr 1fr}.purchase-main-actions button{justify-content:center}}
