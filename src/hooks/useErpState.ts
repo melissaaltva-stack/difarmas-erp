@@ -826,7 +826,7 @@ export function useErpState(userId: string) {
     }
     const updatedReceived=[...(order.receivedItems??[]),...items.map(item=>({...item}))];
     const remaining=order.items.some(ordered=>ordered.qty>(updatedReceived.filter(item=>lineKey(item)===lineKey(ordered)).reduce((sum,item)=>sum+item.qty,0)+0.000001));
-    setPurchaseLogistics(current=>current.map(record=>record.id===orderId?{...record,purchaseId,receivedItems:updatedReceived,status:remaining?'Recepción parcial':'Recibida',receivedAt:remaining?record.receivedAt:receivedAt}:record));
+    setPurchaseLogistics(current=>current.map(record=>record.id===orderId?{...record,purchaseId,receivedItems:updatedReceived,status:remaining?'Recepción parcial':'Recibida',receivedAt}:record));
     return true;
   };
 
