@@ -789,7 +789,7 @@ export function useErpState(userId: string) {
       if(!ordered||ordered.id!==item.id||!Number.isFinite(item.qty)||item.qty<=0||!Number.isFinite(item.unitCost)||item.unitCost<0)return false;
       batchByLine.set(key,(batchByLine.get(key)??0)+item.qty);
       if((batchByLine.get(key)??0)+(receivedByLine.get(key)??0)>ordered.qty+0.000001)return false;
-      if(!item.expiry||!/^\\d{4}-\\d{2}-\\d{2}$/.test(item.expiry))return false;
+      if(!item.expiry||!/^\d{4}-\d{2}-\d{2}$/.test(item.expiry))return false;
       if(fefoProductIds.includes(item.id)&&!item.lot?.trim())return false;
       if(!Number.isInteger(item.baseUnitsPerPurchase??1)||(item.baseUnitsPerPurchase??1)<1||(item.baseUnitsPerPurchase??1)>1000000)return false;
     }
