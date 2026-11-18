@@ -171,16 +171,21 @@
 .report-print{margin-top:16px}
 .report-footnote{margin-top:24px;padding-top:12px;border-top:1px solid #d6e1df;color:#62716f;font-size:12px}
 @media print{
-  @page{size:auto;margin:12mm}
+  @page{size:letter portrait;margin:12mm}
   body{background:#fff!important;color:#111!important}
   .sidebar,.topbar,.page-head button,.no-print,.settings-notice,.toolbar,.account-payment,.signout{display:none!important}
   .app,.main,.content{display:block!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;background:#fff!important;box-shadow:none!important}
-  .card{break-inside:avoid;box-shadow:none!important;border:1px solid #ddd!important;background:#fff!important}
-  .report-print{border:0!important}
+  .card{break-inside:auto;box-shadow:none!important;border:1px solid #ddd!important;background:#fff!important}
+  .report-print{border:0!important;margin:0!important;padding:0!important}
+  .report-print h2,.report-print h3,.report-print .card-title,.report-footnote{break-inside:avoid;page-break-inside:avoid}
+  .report-print table{width:100%!important;border-collapse:collapse!important;table-layout:auto;font-size:9px!important}
+  .report-print th,.report-print td{border:1px solid #ccc!important;padding:5px!important;color:#111!important;overflow-wrap:anywhere}
+  .report-print thead{display:table-header-group}
+  .report-print tr{break-inside:avoid;page-break-inside:avoid}
   table{width:100%!important;border-collapse:collapse!important;font-size:10px!important}
   th,td{border:1px solid #ccc!important;padding:5px!important;color:#111!important}
   thead{display:table-header-group}
-  tr{break-inside:avoid}
+  tr{break-inside:avoid;page-break-inside:avoid}
   .grid.metrics{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important}
   .metric strong{font-size:15px!important}
   .pill{border:1px solid #bbb!important;color:#111!important;background:#fff!important}
