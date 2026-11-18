@@ -795,7 +795,7 @@ export function useErpState(userId: string) {
     }
     const supplierKey=order.supplier.trim().toLocaleLowerCase();
     const invoiceKey=order.invoiceNumber.trim().toLocaleLowerCase();
-    if(!order.purchaseId&&invoiceKey&&purchases.some(p=>p.supplier.trim().toLocaleLowerCase()===supplierKey&&String(p.invoiceNumber??'').trim().toLocaleLowerCase()===invoiceKey))return false;
+    if(!order.purchaseRegistered&&invoiceKey&&purchases.some(p=>p.supplier.trim().toLocaleLowerCase()===supplierKey&&String(p.invoiceNumber??'').trim().toLocaleLowerCase()===invoiceKey))return false;
     const inventoryItems:PurchaseItem[]=items.map(item=>{const units=item.baseUnitsPerPurchase??1;return {...item,qty:item.qty*units,unitCost:item.unitCost/units,purchaseUnit:undefined,baseUnitsPerPurchase:1};});
     let updatedProducts:Product[];
     try{updatedProducts=applyPurchaseToInventory(products,inventoryItems,order.supplier);}catch{return false;}
@@ -808,6 +808,9 @@ export function useErpState(userId: string) {
       newLots.push(lot);
       lotMovements.push({id:crypto.randomUUID(),lotId,productId:item.id,productName:item.name,lotCode:lot.lotCode,expiry:lot.expiry,type:'Compra',quantity:item.qty,stockBefore:0,stockAfter:item.qty,unitCost:item.unitCost,reference:order.invoiceNumber||order.id,date:receivedAt,note:'Recepción de orden logística'});
     }
+    const updatedReceived=[...(order.receivedItems??[]),...items.map(item=>({...item}))];
+    const remaining=order.items.some(ordered=>ordered.qty>(updatedReceived.filter(item=>lineKey(item)===lineKey(ordered)).reduce((sum,item)=>sum+item.qty,0)+0.000001));
+    const shouldRegisterPurchase=!order.purchaseRegistered&&(Boolean(invoiceKey)||!remaining);
     logisticsReceiptInProgress.current.add(orderId);
     const purchaseId=order.purchaseId??nextPurchaseId();
     setProducts(updatedProducts);
@@ -817,16 +820,14 @@ export function useErpState(userId: string) {
       ...inventoryItems.map((item):PurchaseCostHistoryEntry=>({id:nextPurchaseCostHistoryId(),purchaseId,productId:item.id,productCode:item.code,productName:item.name,supplier:order.supplier,unitCost:item.unitCost,quantity:item.qty,date:receivedAt})),
       ...current,
     ]);
-    if(!order.purchaseId){
+    if(shouldRegisterPurchase){
       setPurchases(current=>[{id:purchaseId,supplier:order.supplier,total:order.total,paymentMethod:order.paymentMethod,date:receivedAt,invoiceNumber:order.invoiceNumber,invoiceDate:order.invoiceDate,notes:order.notes,paymentTerms:order.paymentTerms,dueDate:order.paymentMethod==='Crédito'?order.dueDate:undefined},...current]);
       if(order.paymentMethod==='Crédito'){
         const payable=createPayableFromPurchase(order.items,order.supplier,order.dueDate,new Date(),purchaseId,order.invoiceNumber,nextPayableId());
         setPayables(current=>[...current,{...payable,total:order.total}]);
       }
     }
-    const updatedReceived=[...(order.receivedItems??[]),...items.map(item=>({...item}))];
-    const remaining=order.items.some(ordered=>ordered.qty>(updatedReceived.filter(item=>lineKey(item)===lineKey(ordered)).reduce((sum,item)=>sum+item.qty,0)+0.000001));
-    setPurchaseLogistics(current=>current.map(record=>record.id===orderId?{...record,purchaseId,receivedItems:updatedReceived,status:remaining?'Recepción parcial':'Recibida',receivedAt}:record));
+    setPurchaseLogistics(current=>current.map(record=>record.id===orderId?{...record,purchaseId,purchaseRegistered:record.purchaseRegistered||shouldRegisterPurchase,receivedItems:updatedReceived,status:remaining?'Recepción parcial':'Recibida',receivedAt}:record));
     return true;
   };
 
