@@ -174,7 +174,7 @@ export function AuthGate({ children }: Props) {
     setUser(null);
   };
 
-  if (!supabaseConfigured) {
+  if (!supabaseConfigured && !demoMode) {
     return <div className="auth-page"><section className="auth-card"><div className="auth-logo">D</div><h1>Configura DIFARMÁS ERP</h1><p>Antes de iniciar sesión, configura la URL y la clave pública de Supabase en las variables de entorno del proyecto.</p><code>VITE_SUPABASE_URL</code><code>VITE_SUPABASE_PUBLISHABLE_KEY</code><p className="auth-note">No agregues claves secretas ni service_role al navegador.</p></section></div>;
   }
 
