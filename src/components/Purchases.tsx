@@ -218,7 +218,7 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
 
   return <div className="content">
   <div id="purchases-panel">
-  <div className="purchase-page-heading"><button type="button" className="primary" onClick={()=>{setPurchaseHeaderError('');setShowPurchaseModal(true);}}><Plus size={16}/> Nueva compra</button></div>
+  <div className="purchase-page-heading purchase-main-actions"><button type="button" className="primary" onClick={()=>{setPurchaseHeaderError('');setShowPurchaseModal(true);}}><Plus size={16}/> Nueva compra</button><button type="button" className="secondary" disabled={!cart.length||!supplier.trim()} onClick={()=>setSection('logistica')}>Preparar orden logística</button></div>
   
   <div className="ai-purchase-launch" id="purchase-ai"><button className="primary" type="button" onClick={()=>setShowSuggestedPurchases(open=>!open)}><Sparkles size={17}/>{showSuggestedPurchases?'Ocultar compras sugeridas con IA':'Compras sugeridas con IA'}</button></div>
   {showSuggestedPurchases&&<section className="card ai-purchase-recommendations">
