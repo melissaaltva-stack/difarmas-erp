@@ -137,7 +137,7 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
       if(!supplier.trim()){setError('Selecciona un proveedor antes de crear la orden.');return;}
       if(!cart.length){setError('Agrega al menos un producto a la orden.');return;}
       if(cart.some(item=>!Number.isFinite(item.qty)||item.qty<=0||!Number.isFinite(item.unitCost)||item.unitCost<0)){setError('Revisa las cantidades y costos de los productos.');return;}
-      const record:PurchaseLogisticsRecord={id:crypto.randomUUID(),supplier:supplier.trim(),createdAt:new Date().toISOString(),expectedDate:logisticsExpectedDate,carrier:logisticsCarrier.trim(),trackingNumber:logisticsTracking.trim(),status:'Solicitada',items:cart.map(item=>({...item})),receivedItems:[],paymentMethod,paymentTerms,dueDate:creditTerm?dueDate:'',invoiceNumber:invoiceNumber.trim(),invoiceDate,notes:purchaseNotes.trim(),total,incident:''};
+      const record:PurchaseLogisticsRecord={id:crypto.randomUUID(),supplier:supplier.trim(),createdAt:new Date().toISOString(),expectedDate:logisticsExpectedDate,carrier:logisticsCarrier.trim(),trackingNumber:logisticsTracking.trim(),status:'Solicitada',items:cart.map(item=>({...item,purchaseLineId:item.purchaseLineId??crypto.randomUUID()})),receivedItems:[],paymentMethod,paymentTerms,dueDate:creditTerm?dueDate:'',invoiceNumber:invoiceNumber.trim(),invoiceDate,notes:purchaseNotes.trim(),total,incident:''};
       setPurchaseLogistics(current=>[record,...current]);
       setCart([]);setError('');setSupplier('');setLogisticsCarrier('');setLogisticsTracking('');
       setSection('logistica');
