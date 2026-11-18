@@ -1,6 +1,6 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent, type ReactNode, type CSSProperties } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { LogIn, Mail, KeyRound, ShieldAlert, ImagePlus, RotateCcw, Settings, Palette, Check } from 'lucide-react';
+import { LogIn, Mail, KeyRound, ShieldAlert, ImagePlus, RotateCcw, Settings, Palette, Check, FlaskConical } from 'lucide-react';
 import './AuthGate.css';
 import { requireSupabase, supabase, supabaseConfigured } from '../services/supabaseClient';
 
@@ -22,6 +22,7 @@ function getSignInErrorMessage(error: unknown): string {
 
 export function AuthGate({ children }: Props) {
   const [user, setUser] = useState<User | null>(null);
+  const [demoMode, setDemoMode] = useState(() => { try { return window.localStorage.getItem('farmi_demo_session') === 'active'; } catch { return false; } });
   const [checking, setChecking] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,6 +42,7 @@ export function AuthGate({ children }: Props) {
   const [confirmRecoveryPassword,setConfirmRecoveryPassword] = useState('');
 
   useEffect(() => {
+    if (demoMode) { setChecking(false); setUser(null); return; }
     if (!supabase) {
       setChecking(false);
       return;
@@ -71,7 +73,11 @@ export function AuthGate({ children }: Props) {
       mounted = false;
       listener.subscription.unsubscribe();
     };
-  }, []);
+  }, [demoMode]);
+
+  const enterDemo = () => { try { window.localStorage.setItem('farmi_demo_session', 'active'); } catch {} setError(''); setNotice(''); setDemoMode(true); };
+  const exitDemo = async () => { try { window.localStorage.removeItem('farmi_demo_session'); } catch {} setDemoMode(false); };
+  const demoUser = { id: 'farmi-demo-local', email: 'demo@farmi.local', app_metadata: { farmi_demo: true, farmi_active: true, farmi_role: 'Administrador' }, user_metadata: {}, aud: 'authenticated', created_at: new Date(0).toISOString() } as unknown as User;
 
   const handleBackgroundUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file=event.currentTarget.files?.[0];
@@ -185,6 +191,7 @@ export function AuthGate({ children }: Props) {
   }
 
   if (user) return <>{children(user, signOut)}</>;
+  if (demoMode) return <>{children(demoUser, exitDemo)}</>;
 
   return <div className={`auth-page auth-login-page${loginBackground?' has-custom-background':''}`} style={{'--login-overlay-opacity':backgroundOpacity/100} as CSSProperties}>
     {loginBackground&&<div className="auth-login-background-image" style={{backgroundImage:`url("${loginBackground}")`}} aria-hidden="true"/>}
@@ -216,6 +223,7 @@ export function AuthGate({ children }: Props) {
         {error && <p className="auth-error" role="alert">{error}</p>}
         {notice && <p className="auth-note" role="status">{notice}</p>}
         <button className="primary auth-submit" type="submit" disabled={busy}>{busy ? 'Verificando…' : <><LogIn size={17}/> Entrar a FARMI</>}</button>
+        <button className="secondary auth-submit" type="button" onClick={enterDemo} disabled={busy}><FlaskConical size={16}/> Entrar a empresa de prueba</button>
         <button className="secondary auth-submit" type="button" onClick={requestPasswordRecovery} disabled={busy}><Mail size={16}/> Recuperar contraseña</button>
         <p className="auth-note">Las cuentas se administran desde Configuración → Usuarios y permisos.</p>
       </form>
