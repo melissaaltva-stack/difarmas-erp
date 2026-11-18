@@ -6994,3 +6994,20 @@ button.icon-btn:focus-visible svg,
 
 /* Facturación estándar: botón de historial alineado sin reservar un encabezado vacío. */
 .standard-invoice .page-intro { justify-content: flex-end; }
+
+/* POS: compact spacing and readable expiry warnings in both themes. */
+.content:has(.pos-grid){padding-top:18px;padding-bottom:18px}
+.pos-grid{gap:12px}
+.pos-grid .pos-toolbar{gap:8px!important;margin-bottom:8px!important}
+.pos-grid .scan-help{margin:4px 0 8px}
+.pos-grid .results{margin-bottom:8px}
+.pos-grid .cart-card{min-height:0}
+.pos-grid .cart-empty{padding:36px 15px}
+.pos-expiry-alert{border:1px solid #f0c36d!important;background:#fff8e8!important;color:#8a4b08!important;padding:10px 12px!important;margin:0 0 8px!important}
+.pos-expiry-alert p{margin:6px 0 0;color:#8a4b08}
+.app[data-theme="dark"] .pos-expiry-alert{border-color:#805b2b!important;background:#34291b!important;color:#f4c879!important}
+.app[data-theme="dark"] .pos-expiry-alert p{color:#f1d7a8}
+@media(max-width:640px){
+  .content:has(.pos-grid){padding:14px 12px}
+  .pos-grid .pos-toolbar{margin-bottom:7px!important}
+}
