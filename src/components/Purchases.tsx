@@ -12,6 +12,13 @@ const percent = (value:number) => `${value.toLocaleString('es-HN',{maximumFracti
 
 export function Purchases({products,sales,purchases,cart,setCart,search,setSearch,supplier,setSupplier,suppliers=[],setSuppliers,records=[],setRecords,onDispatch,onResolve,showSuppliers=true,costHistory=[],onReceive,onOpenNewProduct,onEditProduct,sectionRequest=0,requestedSection='compras'}:{products:Product[];sales:SaleRecord[];purchases:PurchaseRecord[];cart:PurchaseItem[];setCart:(c:PurchaseItem[])=>void;search:string;setSearch:(v:string)=>void;supplier:string;setSupplier:(v:string)=>void;suppliers?:Supplier[];setSuppliers:Dispatch<SetStateAction<Supplier[]>>;records?:SupplierReturnRecord[];setRecords:Dispatch<SetStateAction<SupplierReturnRecord[]>>;onDispatch:(record:SupplierReturnRecord)=>boolean;onResolve:(record:SupplierReturnRecord,status:SupplierReturnRecord['status'])=>boolean;showSuppliers?:boolean;costHistory?:PurchaseCostHistoryEntry[];onReceive:(items:PurchaseItem[],paymentMethod:'Efectivo'|'Transferencia'|'Crédito',dueDate:string,invoiceNumber:string,invoiceDate:string,notes:string,purchaseTotal?:number,paymentTerms?:string,supplierOverride?:string)=>boolean;onOpenNewProduct:()=>void;onEditProduct:(product:Product)=>void;sectionRequest?:number;requestedSection?:'compras'|'proveedores'|'nueva-compra'|'lista-compras'}) {
   const [section,setSection]=useState<'compras'|'proveedores'|'lista-compras'>('compras');
+  const [purchaseListSearch,setPurchaseListSearch]=useState('');
+  const [purchaseListSupplier,setPurchaseListSupplier]=useState('');
+  const [purchaseListPayment,setPurchaseListPayment]=useState('');
+  const [purchaseListFrom,setPurchaseListFrom]=useState('');
+  const [purchaseListTo,setPurchaseListTo]=useState('');
+  const [purchaseListPage,setPurchaseListPage]=useState(1);
+  const purchaseListPageSize=10;
   useEffect(()=>{setSection(requestedSection==='proveedores'?'proveedores':requestedSection==='lista-compras'?'lista-compras':'compras');if(requestedSection==='nueva-compra'){setPurchaseHeaderError('');setShowPurchaseModal(true);}},[sectionRequest,requestedSection]);
   const [showSuggestedPurchases,setShowSuggestedPurchases]=useState(false);
   const [showPurchaseHistory,setShowPurchaseHistory]=useState(false);
@@ -101,13 +108,38 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
     setSearch('');
     setError('');
   };
+
   if(section==='lista-compras') {
-    const sortedPurchases=[...purchases].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+    const suppliersInList=[...new Set(purchases.map(record=>record.supplier).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
+    const normalizedSearch=purchaseListSearch.trim().toLocaleLowerCase('es-HN');
+    const filteredPurchases=[...purchases].filter(record=>{
+      const searchable=[record.supplier,record.invoiceNumber,record.notes].join(' ').toLocaleLowerCase('es-HN');
+      const date=record.date||record.invoiceDate||'';
+      return (!normalizedSearch||searchable.includes(normalizedSearch))
+        &&(!purchaseListSupplier||record.supplier===purchaseListSupplier)
+        &&(!purchaseListPayment||record.paymentMethod===purchaseListPayment)
+        &&(!purchaseListFrom||date>=purchaseListFrom)
+        &&(!purchaseListTo||date<=purchaseListTo);
+    }).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||b.id-a.id);
+    const pageCount=Math.max(1,Math.ceil(filteredPurchases.length/purchaseListPageSize));
+    const currentPage=Math.min(purchaseListPage,pageCount);
+    const visiblePurchases=filteredPurchases.slice((currentPage-1)*purchaseListPageSize,currentPage*purchaseListPageSize);
+    const resetPurchaseFilters=()=>{setPurchaseListSearch('');setPurchaseListSupplier('');setPurchaseListPayment('');setPurchaseListFrom('');setPurchaseListTo('');setPurchaseListPage(1);};
     return <div className="content"><div id="purchases-panel">
-      <div className="purchase-page-heading purchase-list-heading"><div><h2>Lista de compras</h2><p>Consulta las compras registradas y sus datos de factura.</p></div><button type="button" className="primary" onClick={()=>{setSection('compras');setPurchaseHeaderError('');setShowPurchaseModal(true);}}><Plus size={16}/> Nueva compra</button></div>
-      <section className="card purchase-record-list">
-        {sortedPurchases.length===0?<div className="purchase-detail-empty"><ShoppingCart size={24}/><strong>No hay compras registradas</strong><span>Las compras aparecerán aquí después de confirmar su recepción.</span></div>:<div className="purchase-record-table-wrap"><table className="purchase-record-table"><thead><tr><th>Fecha</th><th>Proveedor</th><th>N.º de factura</th><th>Forma de pago</th><th>Total</th></tr></thead><tbody>{sortedPurchases.map(record=><tr key={record.id}><td>{record.date?new Date(record.date+'T12:00:00').toLocaleDateString('es-HN'):'—'}</td><td>{record.supplier||'—'}</td><td>{record.invoiceNumber||'—'}</td><td>{record.paymentTerms||record.paymentMethod||'—'}</td><td><strong>{money(record.total)}</strong></td></tr>)}</tbody></table></div>}
+      <div className="purchase-page-heading purchase-list-heading"><div><h2>Lista de compras</h2><p>Busca y filtra los registros sin cargar todo el historial en pantalla.</p></div><button type="button" className="primary" onClick={()=>{setSection('compras');setPurchaseHeaderError('');setShowPurchaseModal(true);}}><Plus size={16}/> Nueva compra</button></div>
+      <section className="card purchase-list-filters" aria-label="Filtros de compras">
+        <div className="purchase-list-filter-search"><Search size={16}/><input value={purchaseListSearch} onChange={e=>{setPurchaseListSearch(e.target.value);setPurchaseListPage(1);}} placeholder="Buscar proveedor, factura o nota..." aria-label="Buscar compras"/></div>
+        <label>Proveedor<select value={purchaseListSupplier} onChange={e=>{setPurchaseListSupplier(e.target.value);setPurchaseListPage(1);}}><option value="">Todos los proveedores</option>{suppliersInList.map(name=><option key={name} value={name}>{name}</option>)}</select></label>
+        <label>Forma de pago<select value={purchaseListPayment} onChange={e=>{setPurchaseListPayment(e.target.value);setPurchaseListPage(1);}}><option value="">Todas</option><option value="Efectivo">Efectivo</option><option value="Transferencia">Transferencia</option><option value="Crédito">Crédito</option></select></label>
+        <label>Desde<input type="date" value={purchaseListFrom} max={purchaseListTo||undefined} onChange={e=>{setPurchaseListFrom(e.target.value);setPurchaseListPage(1);}}/></label>
+        <label>Hasta<input type="date" value={purchaseListTo} min={purchaseListFrom||undefined} onChange={e=>{setPurchaseListTo(e.target.value);setPurchaseListPage(1);}}/></label>
+        <button type="button" className="secondary purchase-list-clear" onClick={resetPurchaseFilters}>Limpiar filtros</button>
       </section>
+      <div className="purchase-list-summary"><span>{filteredPurchases.length} {filteredPurchases.length===1?'compra encontrada':'compras encontradas'}</span><span>Mostrando {filteredPurchases.length?((currentPage-1)*purchaseListPageSize+1):0}–{Math.min(currentPage*purchaseListPageSize,filteredPurchases.length)} de {filteredPurchases.length}</span></div>
+      <section className="card purchase-record-list">
+        {visiblePurchases.length===0?<div className="purchase-detail-empty"><ShoppingCart size={24}/><strong>{purchases.length?'No hay resultados para estos filtros':'No hay compras registradas'}</strong><span>{purchases.length?'Cambia los filtros o utiliza «Limpiar filtros».':'Las compras aparecerán aquí después de confirmar su recepción.'}</span></div>:<div className="purchase-record-table-wrap"><table className="purchase-record-table"><thead><tr><th>Fecha</th><th>Proveedor</th><th>N.º de factura</th><th>Forma de pago</th><th>Total</th></tr></thead><tbody>{visiblePurchases.map(record=><tr key={record.id}><td>{record.date?new Date(record.date+'T12:00:00').toLocaleDateString('es-HN'):'—'}</td><td>{record.supplier||'—'}</td><td>{record.invoiceNumber||'—'}</td><td>{record.paymentTerms||record.paymentMethod||'—'}</td><td><strong>{money(record.total)}</strong></td></tr>)}</tbody></table></div>}
+      </section>
+      {filteredPurchases.length>purchaseListPageSize&&<div className="purchase-list-pagination"><button type="button" className="secondary" disabled={currentPage<=1} onClick={()=>setPurchaseListPage(page=>Math.max(1,page-1))}>Anterior</button><span>Página {currentPage} de {pageCount}</span><button type="button" className="secondary" disabled={currentPage>=pageCount} onClick={()=>setPurchaseListPage(page=>Math.min(pageCount,page+1))}>Siguiente</button></div>}
     </div></div>;
   }
 
