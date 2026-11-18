@@ -2,8 +2,9 @@ import { AlertTriangle, CalendarClock } from 'lucide-react';
 import type { CartItem, Product } from '../domain/types';
 import { earlierExpiryAlternatives } from '../services/expiryService';
 
-export function ExpiryRecommendations({products,cart}:{products:Product[];cart:CartItem[]}) {
-  const recommendations = cart.flatMap(item => earlierExpiryAlternatives(item, products).map(candidate => ({current:item, candidate})));
+export function ExpiryRecommendations({products,cart,fefoProductIds=[]}:{products:Product[];cart:CartItem[];fefoProductIds?:number[]}) {
+  // Product-level expiry dates are not authoritative for products managed by FEFO lots.
+  const recommendations = cart.filter(item=>!fefoProductIds.includes(item.id)).flatMap(item => earlierExpiryAlternatives(item, products.filter(product=>!fefoProductIds.includes(product.id))).map(candidate => ({current:item, candidate})));
   if (!recommendations.length) return null;
   return <div className="card expiry-recommendations" role="status">
     <div className="expiry-recommendations-title"><CalendarClock size={18}/><strong>Recomendación FEFO: vender primero lo que vence antes</strong></div>
