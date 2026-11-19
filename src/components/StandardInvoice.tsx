@@ -3,6 +3,7 @@ import { FileText, Printer, Search, Trash2, Plus, CheckCircle2, UserPlus, X, Che
 import type { CartItem, Customer, ErpSettings, Product, SaleRecord, StandardInvoiceDetails, OrderRecord } from '../domain/types';
 import { RegisterCustomerModal } from './Customers';
 import { PharmacyAssistant } from './PharmacyAssistant';
+import { printThermalReceipt } from '../services/thermalPrinter';
 
 const money=(value:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL',maximumFractionDigits:2}).format(value);
 const escapePrintHtml=(value:unknown)=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]??char));
@@ -70,41 +71,12 @@ export function StandardInvoice({products,customers,sales,settings,payment,setPa
   setSelectedInvoice(null);
   setLastInvoice(invoice);
   setError('');
-  let printWindow:Window|null=null;
-  try{
-   printWindow=window.open('','_blank','popup=yes,width=960,height=760');
-   if(!printWindow){setError('El navegador bloqueó la ventana de impresión. Permite las ventanas emergentes para este sitio y vuelve a intentarlo.');return;}
-   let started=false;
-   const startPrint=()=>{
-    if(started||!printWindow||printWindow.closed)return;
-    started=true;
-    const images=Array.from(printWindow.document.images);
-    Promise.all(images.map(image=>image.complete?Promise.resolve():new Promise<void>(resolve=>{image.onload=()=>resolve();image.onerror=()=>resolve();}))).then(()=>{
-     if(!printWindow||printWindow.closed)return;
-     const receipt=printWindow.document.querySelector<HTMLElement>('.receipt');
-     if(receipt){
-      receipt.style.width='72mm';
-      receipt.style.minHeight='0';
-      receipt.style.padding='3mm 0 4mm';
-      receipt.style.boxShadow='none';
-      const pageHeightMm=Math.max(45,Math.ceil(receipt.getBoundingClientRect().height*25.4/96+4));
-      let pageSizeStyle=printWindow.document.getElementById('receipt-page-size') as HTMLStyleElement|null;
-      if(!pageSizeStyle){pageSizeStyle=printWindow.document.createElement('style');pageSizeStyle.id='receipt-page-size';printWindow.document.head.appendChild(pageSizeStyle);}
-      pageSizeStyle.textContent='@page{size:80mm '+pageHeightMm+'mm;margin:0}';
-     }
-     printWindow.focus();
-     printWindow.print();
-    });
-   };
-   printWindow.onload=startPrint;
-   printWindow.document.open();
-   printWindow.document.write(buildInvoicePrintHtml(invoice,settings));
-   printWindow.document.close();
-   window.setTimeout(startPrint,700);
-  }catch(cause){
-   printWindow?.close();
-   setError(cause instanceof Error?'No se pudo abrir la impresión: '+cause.message:'No se pudo abrir la ventana de impresión.');
-  }
+  void printThermalReceipt(buildInvoicePrintHtml(invoice,settings),invoice.invoiceNumber??'').then(({printer,signed})=>{
+   setNotice(`Factura ${invoice.invoiceNumber||''} enviada a ${printer}.${signed?'':' QZ Tray puede solicitar autorización hasta configurar el certificado de impresión silenciosa.'}`);
+  }).catch(cause=>{
+   const detail=cause instanceof Error?cause.message:'Error de conexión con QZ Tray.';
+   setError(`La factura ${invoice.invoiceNumber||''} está guardada, pero no se pudo enviar a la impresora. ${detail}`);
+  });
  };
  const add=(p:Product,option=selectedInvoiceUnit(p))=>{if(invoiceOrderId!==null){setError('Este pedido ya tiene sus existencias reservadas. Factúralo sin cambiar los productos; para modificarlo, vuelve a Pedidos y usa Editar.');return;}const old=cart.find(x=>x.id===p.id);if(old&&old.baseUnitsPerSale!==option.unitsPerPresentation){setError(`Quita la línea actual de ${p.name} antes de cambiar su presentación.`);return;}const baseInCart=cart.filter(x=>x.id===p.id).reduce((sum,item)=>sum+item.qty*(item.baseUnitsPerSale??1),0);const availableBase=p.stock+reservedForCurrentEdit(p.id);if(baseInCart+option.unitsPerPresentation>availableBase){setError(`No hay existencias suficientes para ${option.name} de ${p.name}.`);return;}const price=priceFor(p,priceList,option.unitsPerPresentation,option.name);if(!Number.isFinite(price)||price<=0){setError(`Configura un precio válido para ${option.name} de ${p.name}.`);return;}setCart(current=>old?current.map(x=>x.id===p.id?{...x,qty:x.qty+1}:x):[...current,{...p,cost:p.cost*option.unitsPerPresentation,qty:1,price,saleUnit:option.name,baseUnitsPerSale:option.unitsPerPresentation}]);setLineAdjustments(current=>({...current,[p.id]:current[p.id]??{unit:option.name,discountPercent:0,taxPercent:p.taxEnabled===false?0:(p.taxRate??settings.billingInfo?.isvRate??15)}}));setError('');setSearch('');};
  const updateQty=(id:number,qty:number)=>setCart(current=>current.map(p=>p.id===id?{...p,qty:Math.max(1,Math.min(Math.floor(p.stock/(p.baseUnitsPerSale??1)),Math.floor(qty)||1))}:p));
