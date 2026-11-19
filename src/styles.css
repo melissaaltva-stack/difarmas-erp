@@ -7284,3 +7284,29 @@ button.icon-btn:focus-visible svg,
 .fraction-price-note{margin:10px 0 0;font-size:10px;line-height:1.45;color:var(--muted,#718a85)}
 .fraction-modal .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}
 @media(max-width:620px){.fraction-modal{padding:13px}.fraction-form-grid{grid-template-columns:minmax(0,1fr);gap:9px}.fraction-preview{grid-template-columns:minmax(0,1fr)}.fraction-source{grid-template-columns:minmax(0,1fr)}.inventory-fraction-btn span{display:none}.inventory-fraction-btn{width:29px;justify-content:center;padding:5px}}
+
+/* Tabla compacta de inventario: mantener las acciones siempre accesibles */
+.inventory-products-card{padding:12px;min-width:0;overflow:hidden}
+.inventory-products-card>.card-title{margin-bottom:8px;padding:0 2px}
+.inventory-products-card>.card-title h3{font-size:14px}
+.inventory-products-card>.card-title p{font-size:10px;margin-top:3px}
+.inventory-products-card{overflow-x:auto}
+.inventory-products-table{width:100%;min-width:1080px;table-layout:auto;border-collapse:separate;border-spacing:0}
+.inventory-products-table th,.inventory-products-table td{padding:8px 9px;font-size:11px;line-height:1.25;white-space:nowrap;vertical-align:middle}
+.inventory-products-table th{font-size:9px;letter-spacing:.35px;padding-top:9px;padding-bottom:9px}
+.inventory-products-table td small{font-size:9px;margin-top:2px}
+.inventory-products-table td strong{font-size:11px}
+.inventory-products-table th:first-child,.inventory-products-table td:first-child{width:30px;padding-left:8px;padding-right:5px}
+.inventory-products-table th:last-child,.inventory-products-table td:last-child{position:sticky;right:0;z-index:2;width:116px;min-width:116px;max-width:116px;text-align:right;background:var(--surface,#fff);box-shadow:-7px 0 10px -10px #193d34}
+.inventory-products-table thead th:last-child{z-index:3;background:var(--surface-muted,#f7faf9)}
+.inventory-products-table .inventory-row-actions{gap:4px}
+.inventory-products-table .inventory-fraction-btn{min-height:27px;padding:4px 6px;font-size:9px;gap:4px}
+.inventory-products-table .inventory-fraction-btn svg{width:13px;height:13px}
+.inventory-products-table .icon-btn{width:28px;height:28px;min-width:28px}
+@media(max-width:760px){
+ .inventory-products-card{padding:9px}
+ .inventory-products-table th,.inventory-products-table td{padding:7px 8px}
+ .inventory-products-table th:last-child,.inventory-products-table td:last-child{width:104px;min-width:104px;max-width:104px}
+ .inventory-products-table .inventory-fraction-btn{width:28px;justify-content:center;padding:5px}
+ .inventory-products-table .inventory-fraction-btn span{display:none}
+}
