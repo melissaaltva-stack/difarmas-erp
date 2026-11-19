@@ -1,4 +1,4 @@
-import { authorizeQzRequest, type QzRequest, type QzResponse } from './qz-auth';
+import { authorizeQzRequest, type QzRequest, type QzResponse } from '../server/qz-auth';
 
 export default async function handler(req: QzRequest, res: QzResponse) {
   res.setHeader('Cache-Control', 'no-store');
