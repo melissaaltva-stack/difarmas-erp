@@ -31,7 +31,18 @@ describe('validateFiscalAuthorization', () => {
     expect(validateFiscalAuthorization({ ...validFiscal, establishmentCode: 'A1' }, 1)).toMatch(/4 dígitos/);
   });
 
-  it('normalizes separators and spaces in fiscal codes before validation', () => {\n    const formatted = { ...validFiscal, establishmentCode: '0 1', emissionPoint: '0-1', documentTypeCode: '0-1' };\n    expect(normalizeFiscalCode(formatted.establishmentCode)).toBe('01');\n    expect(validateFiscalAuthorization(formatted, 12, new Date('2026-10-18T12:00:00'))).toBeNull();\n  });\n\n  it('still rejects fiscal codes whose normalized lengths are incorrect', () => {\n    expect(validateFiscalAuthorization({ ...validFiscal, emissionPoint: '1' }, 12, new Date('2026-10-18T12:00:00'))).toMatch(/4 dígitos/);\n    expect(validateFiscalAuthorization({ ...validFiscal, documentTypeCode: '1' }, 12, new Date('2026-10-18T12:00:00'))).toMatch(/2 dígitos/);\n  });\n\n  it('rejects malformed ranges and out-of-range correlativos', () => {
+  it('normalizes separators and spaces in fiscal codes before validation', () => {
+    const formatted = { ...validFiscal, establishmentCode: '0 1', emissionPoint: '0-1', documentTypeCode: '0-1' };
+    expect(normalizeFiscalCode(formatted.establishmentCode)).toBe('01');
+    expect(validateFiscalAuthorization(formatted, 12, new Date('2026-10-18T12:00:00'))).toBeNull();
+  });
+
+  it('still rejects fiscal codes whose normalized lengths are incorrect', () => {
+    expect(validateFiscalAuthorization({ ...validFiscal, emissionPoint: '1' }, 12, new Date('2026-10-18T12:00:00'))).toMatch(/4 dígitos/);
+    expect(validateFiscalAuthorization({ ...validFiscal, documentTypeCode: '1' }, 12, new Date('2026-10-18T12:00:00'))).toMatch(/2 dígitos/);
+  });
+
+  it('rejects malformed ranges and out-of-range correlativos', () => {
     expect(validateFiscalAuthorization({ ...validFiscal, authorizedRangeStart: 'bad' }, 1)).toMatch(/rango autorizado/);
     expect(validateFiscalAuthorization(validFiscal, 1001)).toMatch(/fuera del rango/);
   });
