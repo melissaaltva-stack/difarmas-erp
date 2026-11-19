@@ -5,6 +5,10 @@ import { isValidDateOnly } from '../utils/dates';
  * Validates the configured fiscal authorization before a POS invoice is issued.
  * Returns an actionable error message, or null when the invoice may proceed.
  */
+export function normalizeFiscalCode(value: string | undefined): string {
+  return (value ?? '').replace(/\\D/g, '');
+}
+
 export function validateFiscalAuthorization(
   fiscal: FiscalBillingInfo | undefined,
   invoiceSequence: number,
