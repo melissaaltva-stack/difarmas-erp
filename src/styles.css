@@ -710,7 +710,7 @@ html, body, #root {
 .invoice-history .muted,.invoice-cart .muted{color:#7b8f86;font-size:13px}
 .invoice-print-sheet{display:none}
 @media(max-width:850px){.invoice-layout{grid-template-columns:1fr}.standard-invoice .page-intro{align-items:flex-start;flex-direction:column}.invoice-cart .table-wrap{overflow:auto}}
-@media print{body:has(.invoice-print-sheet) *{visibility:hidden!important}body:has(.invoice-print-sheet) .invoice-print-sheet,body:has(.invoice-print-sheet) .invoice-print-sheet *{visibility:visible!important}.invoice-print-sheet{display:block!important;position:absolute;left:0;top:0;width:100%;padding:8mm;color:#111;background:#fff;font-size:12px}.invoice-print-header{display:flex;justify-content:space-between;gap:20px}.invoice-print-header img{max-width:90px;max-height:55px;object-fit:contain}.invoice-print-sheet h2{font-size:18px}.invoice-print-sheet p{font-size:11px}.invoice-print-sheet .print-total{text-align:right;margin-top:20px}.invoice-print-sheet .invoice-fiscal-note{color:#555;background:#fff;border:1px solid #ccc}}
+@media print{body.standard-invoice-printing *{visibility:hidden!important}body.standard-invoice-printing .invoice-print-sheet,body.standard-invoice-printing .invoice-print-sheet *{visibility:visible!important}.invoice-print-sheet{display:block!important;position:absolute;left:0;top:0;width:100%;padding:8mm;color:#111;background:#fff;font-size:12px}.invoice-print-header{display:flex;justify-content:space-between;gap:20px}.invoice-print-header img{max-width:90px;max-height:55px;object-fit:contain}.invoice-print-sheet h2{font-size:18px}.invoice-print-sheet p{font-size:11px}.invoice-print-sheet .print-total{text-align:right;margin-top:20px}.invoice-print-sheet .invoice-fiscal-note{color:#555;background:#fff;border:1px solid #ccc}}
 
 
 /* Campos del ERP: sombras suaves para distinguir cada control del fondo */
@@ -7158,9 +7158,9 @@ button.icon-btn:focus-visible svg,
 .invoice-print-sheet{display:none}
 @media print{
   @page{size:letter portrait;margin:9mm}
-  body:has(.invoice-print-sheet) *{visibility:hidden!important}
-  body:has(.invoice-print-sheet){background:#fff!important;color:#17252a!important}
-  body:has(.invoice-print-sheet) .invoice-print-sheet,body:has(.invoice-print-sheet) .invoice-print-sheet *{visibility:visible!important}
+  body.standard-invoice-printing *{visibility:hidden!important}
+  body.standard-invoice-printing{background:#fff!important;color:#17252a!important}
+  body.standard-invoice-printing .invoice-print-sheet,body.standard-invoice-printing .invoice-print-sheet *{visibility:visible!important}
   .invoice-print-sheet{display:block!important;position:absolute!important;inset:0 auto auto 0!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;background:#fff!important;color:#17252a!important;font:9pt/1.4 Arial,sans-serif!important}
   .invoice-print-header{display:flex!important;justify-content:space-between!important;align-items:flex-start!important;gap:12mm!important;padding:0 0 5mm!important;border-bottom:2px solid #167b61!important;margin:0 0 5mm!important}
   .invoice-print-business{display:flex!important;align-items:flex-start!important;gap:4mm!important;min-width:0!important}
