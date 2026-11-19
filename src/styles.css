@@ -7297,7 +7297,7 @@ button.icon-btn:focus-visible svg,
 .inventory-products-table td small{font-size:9px;margin-top:2px}
 .inventory-products-table td strong{font-size:11px}
 .inventory-products-table th:first-child,.inventory-products-table td:first-child{width:30px;padding-left:8px;padding-right:5px}
-.inventory-products-table th:last-child,.inventory-products-table td:last-child{position:sticky;right:0;z-index:2;width:116px;min-width:116px;max-width:116px;text-align:right;background:var(--surface,#fff);box-shadow:-7px 0 10px -10px #193d34}
+.inventory-products-table th:last-child,.inventory-products-table td:last-child{position:sticky;right:0;z-index:2;width:116px;min-width:116px;max-width:116px;text-align:right;background:var(--surface,#fff)}
 .inventory-products-table thead th:last-child{z-index:3;background:var(--surface-muted,#f7faf9)}
 .inventory-products-table .inventory-row-actions{gap:4px}
 .inventory-products-table .inventory-fraction-btn{min-height:27px;padding:4px 6px;font-size:9px;gap:4px}
