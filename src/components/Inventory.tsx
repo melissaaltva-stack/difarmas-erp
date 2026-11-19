@@ -13,6 +13,14 @@ const daysUntil = (expiry: string) => {
   today.setHours(0, 0, 0, 0);
   return Math.ceil((new Date(expiry + 'T00:00:00').getTime() - today.getTime()) / 86400000);
 };
+const inferPackageUnits = (presentation:string) => {
+  const match=presentation.match(/(?:x|×)\\s*(\\d+)/i)||presentation.match(/(\\d+)\\s*(?:tabletas?|cápsulas?|capsulas?|unidades?|ml|g|mg)\\b/i);
+  return match?Math.max(1,Number(match[1])):1;
+};
+const inferBaseUnit = (presentation:string) => {
+  const match=presentation.match(/(?:tabletas?|cápsulas?|capsulas?|unidades?|ml|g|mg)\\b/i);
+  return match?match[0].toLowerCase().replace(/s$/,''):'unidad';
+};
 const makeBarcode = (products: Product[]) => {
   const existing = new Set(products.map(p => p.code.trim().toUpperCase()).filter(Boolean));
   let code = '';
@@ -21,7 +29,7 @@ const makeBarcode = (products: Product[]) => {
   return code;
 };
 
-export function Inventory({products, allProducts, search, setSearch, movements, lots, lotKardex, fefoProductIds, onAddOpeningLot, onActivateFefo, onAdjustLot, onNew, onEdit}:{products:Product[];allProducts:Product[];search:string;setSearch:(v:string)=>void;movements:InventoryMovement[];lots:InventoryLot[];lotKardex:LotKardexMovement[];fefoProductIds:number[];onAddOpeningLot:(productId:number,lotCode:string,expiry:string,quantity:number,unitCost:number,supplier:string)=>boolean;onActivateFefo:(productId:number)=>boolean;onAdjustLot:(lotId:string,delta:number,note:string)=>boolean;onNew:()=>void;onEdit:(p:Product)=>void}) {
+export function Inventory({products, allProducts, search, setSearch, movements, lots, lotKardex, fefoProductIds, onAddOpeningLot, onActivateFefo, onAdjustLot, onFraction, onNew, onEdit}:{products:Product[];allProducts:Product[];search:string;setSearch:(v:string)=>void;movements:InventoryMovement[];lots:InventoryLot[];lotKardex:LotKardexMovement[];fefoProductIds:number[];onAddOpeningLot:(productId:number,lotCode:string,expiry:string,quantity:number,unitCost:number,supplier:string)=>boolean;onActivateFefo:(productId:number)=>boolean;onAdjustLot:(lotId:string,delta:number,note:string)=>boolean;onFraction:(sourceId:number,packageQuantity:number,unitsPerPackage:number,presentationName:string,unitsPerPresentation:number,baseUnitName:string)=>boolean;onNew:()=>void;onEdit:(p:Product)=>void}) {
   const lowStock = products.filter(p => p.itemType !== 'Servicio' && p.stock <= p.minStock);
   const usesLotExpiry = (p: Product) => fefoProductIds.includes(p.id);
   const productLotsForExpiry = (p: Product) => lots.filter(lot => lot.productId === p.id && lot.quantityRemaining > 0);
@@ -49,6 +57,7 @@ export function Inventory({products, allProducts, search, setSearch, movements, 
   const [showMovementHistory, setShowMovementHistory] = useState(false);
   const [selected, setSelected] = useState<number[]>([]);
   const [detailProduct, setDetailProduct] = useState<Product | null>(null);
+  const [fractionProduct,setFractionProduct]=useState<Product|null>(null);
   const detailClickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [labelsOpen, setLabelsOpen] = useState(false);
   const [labelSearch, setLabelSearch] = useState('');
@@ -78,7 +87,7 @@ export function Inventory({products, allProducts, search, setSearch, movements, 
       {expiring.length > 0 && <div className="card alert-card"><AlertTriangle size={18}/><div><strong>{expiring.length} vence(n) en 90 días</strong><small>{expiring.slice(0,3).map(p=>p.name).join(', ')}</small></div></div>}
       {lowMargin.length > 0 && <div className="card alert-card"><AlertTriangle size={18}/><div><strong>{lowMargin.length} con margen minorista menor a 15%</strong><small>Revisa precio o costo antes de modificarlo.</small></div></div>}
     </div>
-    <div className="card table-wrap"><div className="card-title"><div><h3>Productos en inventario</h3><p>{visibleProducts.length} producto(s) · {expiryFilter==='all'?'Todos los vencimientos':expiryFilter==='expired'?'Solo vencidos':expiryFilter==='missing'?'Sin fecha registrada':`Próximos ${expiryFilter} días`}.</p></div><CalendarClock size={20}/></div><table><thead><tr><th><input aria-label="Seleccionar todos los productos visibles" type="checkbox" checked={visibleProducts.length>0&&visibleProducts.every(p=>selected.includes(p.id))} onChange={e=>selectVisible(e.target.checked)}/></th><th>Producto</th><th>Categoría</th><th>Costo promedio</th><th>Minorista</th><th>Margen minorista</th><th>Mayorista</th><th>Margen mayorista</th><th>Stock</th><th>Vencimiento</th><th></th></tr></thead><tbody>{visibleProducts.map(p=>{const days=daysUntil(p.expiry);const retailMargin=margin(p.retail,p.cost);const wholesaleMargin=margin(p.wholesale,p.cost);return <tr key={p.id} className="inventory-product-row" tabIndex={0} role="button" aria-label={"Ver información de "+productDisplayName(p)} title="Haz clic para ver la información del producto" onClick={e=>{if((e.target as HTMLElement).closest("button,input,select,a,label"))return;if(detailClickTimer.current)clearTimeout(detailClickTimer.current);detailClickTimer.current=setTimeout(()=>setDetailProduct(p),260);}} onDoubleClick={e=>{if((e.target as HTMLElement).closest("button,input,select,a,label"))return;if(detailClickTimer.current)clearTimeout(detailClickTimer.current);detailClickTimer.current=null;onEdit(p);}} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setDetailProduct(p);}}}><td onClick={e=>e.stopPropagation()}><input aria-label={"Seleccionar "+p.name} type="checkbox" checked={selected.includes(p.id)} onChange={e=>toggle(p.id,e.target.checked)}/></td><td><div className="product-cell">{p.imageUrl&&<img src={p.imageUrl} alt="" loading="lazy"/>}<div><strong>{productDisplayName(p)}</strong><small>{p.code||'Sin código'} · {p.presentation}</small></div></div></td><td>{p.category}</td><td>{money(p.cost)}</td><td>{money(p.retail)}</td><td><span className={retailMargin<15?'stock low':'stock'}>{retailMargin.toFixed(1)}%</span></td><td>{money(p.wholesale)}</td><td><span className={wholesaleMargin<15?'stock low':'stock'}>{wholesaleMargin.toFixed(1)}%</span></td><td><span className={p.stock<=p.minStock?'stock low':'stock'}>{p.stock}{p.unitInventoryEnabled?' '+(p.baseUnitName||'unidades'):''}</span><small>Mín. {p.minStock}{p.unitInventoryEnabled?' '+(p.baseUnitName||'unidades'):''}</small></td><td><span className={hasExpiredLot(p)?'stock low':hasExpiringLot(p,90)?'stock low':'stock'}>{usesLotExpiry(p) ? (productLotsForExpiry(p).length ? (productLotsForExpiry(p).length===1 ? new Date(productLotsForExpiry(p)[0].expiry+'T00:00:00').toLocaleDateString('es-HN') : 'Varios lotes') : 'Sin lotes activos') : (p.expiry?new Date(p.expiry+'T00:00:00').toLocaleDateString('es-HN'):'Sin fecha')}</span></td><td onClick={e=>e.stopPropagation()}><button className="icon-btn" title="Editar" aria-label={"Editar "+p.name} onClick={()=>onEdit(p)}><Pencil size={16}/></button></td></tr>})}</tbody></table></div>
+    <div className="card table-wrap"><div className="card-title"><div><h3>Productos en inventario</h3><p>{visibleProducts.length} producto(s) · {expiryFilter==='all'?'Todos los vencimientos':expiryFilter==='expired'?'Solo vencidos':expiryFilter==='missing'?'Sin fecha registrada':`Próximos ${expiryFilter} días`}.</p></div><CalendarClock size={20}/></div><table><thead><tr><th><input aria-label="Seleccionar todos los productos visibles" type="checkbox" checked={visibleProducts.length>0&&visibleProducts.every(p=>selected.includes(p.id))} onChange={e=>selectVisible(e.target.checked)}/></th><th>Producto</th><th>Categoría</th><th>Costo promedio</th><th>Minorista</th><th>Margen minorista</th><th>Mayorista</th><th>Margen mayorista</th><th>Stock</th><th>Vencimiento</th><th></th></tr></thead><tbody>{visibleProducts.map(p=>{const days=daysUntil(p.expiry);const retailMargin=margin(p.retail,p.cost);const wholesaleMargin=margin(p.wholesale,p.cost);return <tr key={p.id} className="inventory-product-row" tabIndex={0} role="button" aria-label={"Ver información de "+productDisplayName(p)} title="Haz clic para ver la información del producto" onClick={e=>{if((e.target as HTMLElement).closest("button,input,select,a,label"))return;if(detailClickTimer.current)clearTimeout(detailClickTimer.current);detailClickTimer.current=setTimeout(()=>setDetailProduct(p),260);}} onDoubleClick={e=>{if((e.target as HTMLElement).closest("button,input,select,a,label"))return;if(detailClickTimer.current)clearTimeout(detailClickTimer.current);detailClickTimer.current=null;onEdit(p);}} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setDetailProduct(p);}}}><td onClick={e=>e.stopPropagation()}><input aria-label={"Seleccionar "+p.name} type="checkbox" checked={selected.includes(p.id)} onChange={e=>toggle(p.id,e.target.checked)}/></td><td><div className="product-cell">{p.imageUrl&&<img src={p.imageUrl} alt="" loading="lazy"/>}<div><strong>{productDisplayName(p)}</strong><small>{p.code||'Sin código'} · {p.presentation}</small></div></div></td><td>{p.category}</td><td>{money(p.cost)}</td><td>{money(p.retail)}</td><td><span className={retailMargin<15?'stock low':'stock'}>{retailMargin.toFixed(1)}%</span></td><td>{money(p.wholesale)}</td><td><span className={wholesaleMargin<15?'stock low':'stock'}>{wholesaleMargin.toFixed(1)}%</span></td><td><span className={p.stock<=p.minStock?'stock low':'stock'}>{p.stock}{p.unitInventoryEnabled?' '+(p.baseUnitName||'unidades'):''}</span><small>Mín. {p.minStock}{p.unitInventoryEnabled?' '+(p.baseUnitName||'unidades'):''}</small></td><td><span className={hasExpiredLot(p)?'stock low':hasExpiringLot(p,90)?'stock low':'stock'}>{usesLotExpiry(p) ? (productLotsForExpiry(p).length ? (productLotsForExpiry(p).length===1 ? new Date(productLotsForExpiry(p)[0].expiry+'T00:00:00').toLocaleDateString('es-HN') : 'Varios lotes') : 'Sin lotes activos') : (p.expiry?new Date(p.expiry+'T00:00:00').toLocaleDateString('es-HN'):'Sin fecha')}</span></td><td onClick={e=>e.stopPropagation()}><div className="inventory-row-actions"><button type="button" className="inventory-fraction-btn" title={fefoProductIds.includes(p.id)?"Desactiva FEFO antes de fraccionar":"Fraccionar producto"} aria-label={"Fraccionar "+p.name} disabled={fefoProductIds.includes(p.id)||p.itemType==="Servicio"||p.stock<1} onClick={()=>setFractionProduct(p)}><Package size={15}/><span>Fraccionar</span></button><button className="icon-btn" title="Editar" aria-label={"Editar "+p.name} onClick={()=>onEdit(p)}><Pencil size={16}/></button></div></td></tr>})}</tbody></table></div>
 
 
     <section className="inventory-utility-section">
@@ -107,6 +116,7 @@ export function Inventory({products, allProducts, search, setSearch, movements, 
 
     </>}
     {inventoryView!=='products' && <InventoryLotsKardex view={inventoryView} products={allProducts} lots={lots} kardex={lotKardex} fefoProductIds={fefoProductIds} onAddOpeningLot={onAddOpeningLot} onActivate={onActivateFefo} onAdjustLot={onAdjustLot}/>}
+    {fractionProduct&&<FractionInventoryModal product={fractionProduct} onClose={()=>setFractionProduct(null)} onConfirm={(packageQuantity,unitsPerPackage,presentationName,unitsPerPresentation,baseUnitName)=>{const ok=onFraction(fractionProduct.id,packageQuantity,unitsPerPackage,presentationName,unitsPerPresentation,baseUnitName);if(ok)setFractionProduct(null);return ok;}}/>}
     {detailProduct && !labelsOpen && <InventoryProductDetails product={detailProduct} onClose={()=>setDetailProduct(null)} onPrintLabel={(p)=>{setSelected([p.id]);setLabelsOpen(true);}} onEdit={(p)=>{setDetailProduct(null);onEdit(p);}}/>}
     {labelsOpen && <div className="modal-backdrop label-backdrop"><div className="modal labels-modal" style={{width:"min(1180px, calc(100vw - 32px))",maxWidth:"1180px",maxHeight:"calc(100vh - 32px)",overflowY:"auto",boxSizing:"border-box"}}><div className="modal-head no-print"><div><h2>Selección múltiple de productos</h2><p>Marca los productos que deseas incluir en las etiquetas. Puedes buscar y cambiar la selección aquí.</p></div><button className="icon-btn" aria-label="Cerrar ventana" onClick={()=>setLabelsOpen(false)}><X/></button></div>
       <div className="label-picker no-print" style={{display:"grid",gridTemplateColumns:"minmax(0, 1fr) minmax(260px, 0.9fr)",gap:16,alignItems:"start",minWidth:0}}>
@@ -120,6 +130,39 @@ export function Inventory({products, allProducts, search, setSearch, movements, 
   </div>;
 }
 
+
+function FractionInventoryModal({product,onClose,onConfirm}:{product:Product;onClose:()=>void;onConfirm:(packageQuantity:number,unitsPerPackage:number,presentationName:string,unitsPerPresentation:number,baseUnitName:string)=>boolean}) {
+  const inferredUnits=inferPackageUnits(product.presentation);
+  const [packageQuantity,setPackageQuantity]=useState('1');
+  const [unitsPerPackage,setUnitsPerPackage]=useState(String(inferredUnits));
+  const [presentationName,setPresentationName]=useState('Blíster');
+  const [unitsPerPresentation,setUnitsPerPresentation]=useState('10');
+  const [baseUnitName,setBaseUnitName]=useState(inferBaseUnit(product.presentation));
+  const [error,setError]=useState('');
+  const packages=Number(packageQuantity),content=Number(unitsPerPackage),perPresentation=Number(unitsPerPresentation);
+  const totalUnits=packages*content;
+  const output=totalUnits/perPresentation;
+  const unitCost=content>0?product.cost/content*perPresentation:0;
+  const canConfirm=Number.isInteger(packages)&&packages>0&&packages<=product.stock&&Number.isInteger(content)&&content>0&&Number.isInteger(perPresentation)&&perPresentation>0&&Boolean(presentationName.trim())&&Boolean(baseUnitName.trim())&&Number.isInteger(output)&&output>0;
+  const submit=()=>{setError('');if(!canConfirm){setError('Revisa las cantidades. El contenido debe dividirse exactamente entre las presentaciones que deseas crear.');return;}if(!onConfirm(packages,content,presentationName,perPresentation,baseUnitName))setError('No se pudo completar el fraccionamiento. Verifica la sincronización y la existencia disponible.');};
+  return <div className="modal-backdrop fraction-modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)onClose();}}>
+    <section className="modal fraction-modal" role="dialog" aria-modal="true" aria-labelledby="fraction-modal-title">
+      <div className="modal-head"><div><h2 id="fraction-modal-title">Fraccionar producto</h2><p>Convierte existencias del empaque original en una presentación independiente.</p></div><button type="button" className="icon-btn" aria-label="Cerrar" onClick={onClose}><X size={18}/></button></div>
+      <div className="fraction-source"><div><small>Producto original</small><strong>{productDisplayName(product)}</strong><span>{product.presentation} · Existencia: {product.stock}</span></div><div><small>Costo por empaque</small><strong>{money(product.cost)}</strong></div></div>
+      <div className="fraction-form-grid">
+        <label>Empaques a fraccionar<input type="number" min="1" max={product.stock} step="1" value={packageQuantity} onChange={e=>setPackageQuantity(e.target.value)}/><small>Disponible: {product.stock}</small></label>
+        <label>Contenido por empaque<input type="number" min="1" step="1" value={unitsPerPackage} onChange={e=>setUnitsPerPackage(e.target.value)}/><small>Unidades mínimas por caja, frasco o paquete</small></label>
+        <label>Unidad mínima<input value={baseUnitName} onChange={e=>setBaseUnitName(e.target.value)} placeholder="Tableta, cápsula, ml..."/></label>
+        <label>Presentación que se creará<input value={presentationName} onChange={e=>setPresentationName(e.target.value)} placeholder="Blíster, unidad, paquete..."/></label>
+        <label>Unidades por presentación<input type="number" min="1" step="1" value={unitsPerPresentation} onChange={e=>setUnitsPerPresentation(e.target.value)}/></label>
+      </div>
+      <div className="fraction-preview"><div><small>Se descontarán del original</small><strong>{Number.isFinite(packages)&&packages>0?packages:0} empaque(s)</strong></div><div><small>Se crearán</small><strong>{Number.isInteger(output)&&output>0?output:0} {presentationName.trim()||'presentación'}(es)</strong></div><div><small>Costo por nueva presentación</small><strong>{money(Number.isFinite(unitCost)?unitCost:0)}</strong></div></div>
+      <p className="fraction-price-note">Precios sugeridos calculados con los márgenes configurados: 40% minorista y 20% mayorista. El producto fraccionado quedará vinculado al original.</p>
+      {error&&<p className="form-error" role="alert">{error}</p>}
+      <div className="modal-actions"><button type="button" className="secondary" onClick={onClose}>Cancelar</button><button type="button" className="primary" disabled={!canConfirm} onClick={submit}><Package size={15}/> Confirmar fraccionamiento</button></div>
+    </section>
+  </div>;
+}
 
 function InventoryProductDetails({product,onClose,onEdit,onPrintLabel}:{product:Product;onClose:()=>void;onEdit:(p:Product)=>void;onPrintLabel:(p:Product)=>void}) {
   const status = product.stock <= 0 ? 'Agotado' : product.stock <= product.minStock ? 'Stock bajo' : 'En stock';
