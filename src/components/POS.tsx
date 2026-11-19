@@ -7,7 +7,7 @@ import { ReceivablesModule } from './FinancialModules';
 import { ExpiryRecommendations } from './ExpiryRecommendations';
 import { getExpiryAlert } from '../services/expiryAlertService';
 import { localDateKey } from '../utils/dates';
-import { validateFiscalAuthorization } from '../services/fiscalService';
+import { normalizeFiscalCode, validateFiscalAuthorization } from '../services/fiscalService';
 import { nextCustomerCode } from '../services/customerCodeService';
 import { PharmacyAssistant } from './PharmacyAssistant';
 
@@ -166,9 +166,10 @@ export function POS({products,fefoProductIds=[],customers,cart,setCart,saleType,
     const fiscalError=validateFiscalAuthorization(fiscal,invoiceSequence);
     if(fiscalError){setError(fiscalError);return;}
     const fiscalConfigured=Boolean(fiscal?.cai);
-    const fiscalPoint=(fiscal?.establishmentCode??'')+(fiscal?.emissionPoint??'');
+    const fiscalPoint=normalizeFiscalCode(fiscal?.establishmentCode)+normalizeFiscalCode(fiscal?.emissionPoint);
+    const fiscalDocumentType=normalizeFiscalCode(fiscal?.documentTypeCode??'01');
     const invoiceNumber=fiscalConfigured
-      ? `${fiscalPoint.padStart(4,'0')}-${(fiscal?.documentTypeCode??'01').padStart(2,'0')}-${String(invoiceSequence).padStart(8,'0')}`
+      ? `${fiscalPoint.padStart(4,'0')}-${fiscalDocumentType.padStart(2,'0')}-${String(invoiceSequence).padStart(8,'0')}`
       : `${numbering.factura?.prefix??'FAC-'}${String(invoiceSequence).padStart(8,'0')}`;
     const customerName=customer.trim()||'Consumidor final';
     if(onComplete(discountedCart,customerName,dueDate,customerRtn.trim(),invoiceNumber)){
