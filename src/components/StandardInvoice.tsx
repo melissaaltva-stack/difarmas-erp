@@ -100,8 +100,10 @@ export function StandardInvoice({products,customers,sales,settings,payment,setPa
     : onComplete(sold,customer==='Consumidor Final'?'':customer,credit?maxDate:'',rtn,number,details);
   if(!ok){setError('No se pudo guardar. Verifica el inventario, los datos del cliente y la sincronización.');return;}
   const record:SaleRecord={id:editingInvoice?.id??Date.now(),total,cost:cart.reduce((s,p)=>s+p.cost*p.qty,0),profit:calculatedLines.reduce((s,l)=>s+l.netTotal-l.product.cost*l.product.qty,0),payment,type:'factura_estandar',date:new Date(invoiceDate+'T12:00:00').toISOString(),invoiceNumber:number,customer:customer==='Consumidor Final'?undefined:customer,customerRtn:rtn||undefined,customerAddress,customerPhone,terms:effectiveTerms,priceList,seller,invoiceDate,maxDate,notes,discountTotal,taxTotal,items:calculatedLines.map(line=>({productId:line.product.id,productName:line.product.name,category:line.product.category,laboratory:line.product.laboratory,qty:line.product.qty,unitCost:line.product.cost,unitPrice:line.netTotal/line.product.qty,revenue:line.netTotal,cost:line.product.cost*line.product.qty,profit:line.netTotal-line.product.cost*line.product.qty,unit:line.unit,baseUnitsPerSale:line.product.baseUnitsPerSale??1,baseUnitPrice:line.product.price,discountPercent:line.discountPercent,taxPercent:line.taxPercent,discountAmount:line.discountAmount,taxAmount:line.taxAmount,lineTotal:line.lineTotal}))};
-  setLastInvoice(record);setSelectedInvoice(record);setInvoiceOrderId(null);setCart([]);setLineAdjustments({});setSearch('');setEditingInvoice(null);setNotice(editingInvoice?`Factura ${number} actualizada correctamente.`:`Factura ${number} guardada correctamente.`);
+  const shouldPrintAfterSave=!editingInvoice;
+  setLastInvoice(record);setSelectedInvoice(shouldPrintAfterSave?null:record);setInvoiceOrderId(null);setCart([]);setLineAdjustments({});setSearch('');setEditingInvoice(null);setNotice(editingInvoice?`Factura ${number} actualizada correctamente.`:`Factura ${number} guardada correctamente.`);
   setInvoiceNumber(nextInvoiceNumber([...sales.filter(s=>s.type==='factura_estandar').map(s=>s.invoiceNumber??''),number]));setNotes('');
+  if(shouldPrintAfterSave)printInvoice(record);
  };
  return <div className="content standard-invoice">
  <PharmacyAssistant products={products} context="Facturación estándar"/>
