@@ -46,6 +46,16 @@ describe('inventoryService', () => {
     expect(result.supplier).toBe('Proveedor B');
   });
 
+  it('recalculates unit and package sale prices from the weighted-average cost for fractionable products', () => {
+    const fractionable: Product = { ...product, unitInventoryEnabled: true, baseUnitName: 'Tableta', unitPresentations: [{ id: 'box', name: 'Caja', unitsPerPresentation: 100, retailPrice: 1500, wholesalePrice: 1300 }] };
+    const result = applyPurchaseToInventory([fractionable], [purchaseItem(5, 20)], 'Proveedor B')[0];
+    expect(result.cost).toBe(15);
+    expect(result.retail).toBe(22.5);
+    expect(result.wholesale).toBe(19.5);
+    expect(result.unitPresentations?.[0].retailPrice).toBe(2250);
+    expect(result.unitPresentations?.[0].wholesalePrice).toBe(1950);
+  });
+
   it('aggregates multiple lots of the same product into stock and weighted average cost', () => {
     const first={...purchaseItem(2,20),lot:'LOTE-A',expiry:'2027-12-31'};
     const second={...purchaseItem(3,30),lot:'LOTE-B',expiry:'2028-06-30'};
