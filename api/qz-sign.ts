@@ -1,5 +1,5 @@
 import { createSign } from 'node:crypto';
-import { authorizeQzRequest, type QzRequest, type QzResponse } from './qz-auth';
+import { authorizeQzRequest, type QzRequest, type QzResponse } from '../server/qz-auth';
 
 const MAX_QZ_SIGN_BYTES = 64 * 1024;
 
