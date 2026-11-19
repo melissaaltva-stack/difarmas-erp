@@ -7310,3 +7310,28 @@ button.icon-btn:focus-visible svg,
  .inventory-products-table .inventory-fraction-btn{width:28px;justify-content:center;padding:5px}
  .inventory-products-table .inventory-fraction-btn span{display:none}
 }
+
+
+/* Inventory product list: fewer columns and a denser desktop layout */
+.inventory-products-table{min-width:900px;table-layout:fixed}
+.inventory-products-table th:nth-child(1),.inventory-products-table td:nth-child(1){width:34px}
+.inventory-products-table th:nth-child(2),.inventory-products-table td:nth-child(2){width:34%}
+.inventory-products-table th:nth-child(3),.inventory-products-table td:nth-child(3),
+.inventory-products-table th:nth-child(4),.inventory-products-table td:nth-child(4),
+.inventory-products-table th:nth-child(5),.inventory-products-table td:nth-child(5){width:105px}
+.inventory-products-table th:nth-child(6),.inventory-products-table td:nth-child(6){width:112px}
+.inventory-products-table th:nth-child(7),.inventory-products-table td:nth-child(7){width:118px}
+.inventory-products-table th:last-child,.inventory-products-table td:last-child{width:116px;min-width:116px;max-width:116px}
+.inventory-products-table .product-cell{min-width:0;gap:8px}
+.inventory-products-table .product-cell>div{min-width:0}
+.inventory-products-table .product-cell strong{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.inventory-products-table .product-cell small{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;color:var(--text-muted,#718078)}
+@media(max-width:760px){
+ .inventory-products-table{min-width:820px}
+ .inventory-products-table th:nth-child(2),.inventory-products-table td:nth-child(2){width:270px}
+ .inventory-products-table th:nth-child(3),.inventory-products-table td:nth-child(3),
+ .inventory-products-table th:nth-child(4),.inventory-products-table td:nth-child(4),
+ .inventory-products-table th:nth-child(5),.inventory-products-table td:nth-child(5){width:92px}
+ .inventory-products-table th:nth-child(6),.inventory-products-table td:nth-child(6){width:100px}
+ .inventory-products-table th:nth-child(7),.inventory-products-table td:nth-child(7){width:108px}
+}
