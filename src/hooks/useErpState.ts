@@ -417,6 +417,50 @@ export function useErpState(userId: string, demoMode = false) {
     return true;
   };
 
+  const fractionInventoryProduct=(sourceId:number,packageQuantity:number,unitsPerPackage:number,presentationName:string,unitsPerPresentation:number,baseUnitName:string):boolean=>{
+    if(!canWriteSnapshot(remoteReady,syncStatus)||fefoProductIds.includes(sourceId))return false;
+    const source=products.find(item=>item.id===sourceId);
+    if(!source||source.itemType==='Servicio'||!Number.isInteger(packageQuantity)||packageQuantity<1||packageQuantity>source.stock||!Number.isInteger(unitsPerPackage)||unitsPerPackage<1||!Number.isInteger(unitsPerPresentation)||unitsPerPresentation<1||!presentationName.trim()||!baseUnitName.trim())return false;
+    const totalBaseUnits=packageQuantity*unitsPerPackage;
+    if(!Number.isSafeInteger(totalBaseUnits)||totalBaseUnits%unitsPerPresentation!==0)return false;
+    const outputQuantity=totalBaseUnits/unitsPerPresentation;
+    const childUnitCost=source.cost/unitsPerPackage*unitsPerPresentation;
+    if(!Number.isFinite(childUnitCost)||childUnitCost<0||!Number.isSafeInteger(outputQuantity)||outputQuantity<1)return false;
+    const date=new Date().toISOString();
+    const childExpiry=source.expiry||'';
+    const childLot=source.lot||'';
+    const child=products.find(item=>item.fractionParentId===source.id&&item.fractionUnitsPerPresentation===unitsPerPresentation&&item.fractionPresentationName?.toLowerCase()===presentationName.trim().toLowerCase()&&item.expiry===childExpiry&&item.lot===childLot);
+    let updated:Product[];
+    let childStockBefore=0;
+    let childStockAfter=outputQuantity;
+    let childId:number;
+    let childCost=childUnitCost;
+    if(child){
+      childStockBefore=child.stock;
+      childStockAfter=child.stock+outputQuantity;
+      childCost=childStockAfter>0?((child.stock*child.cost)+(outputQuantity*childUnitCost))/childStockAfter:childUnitCost;
+      const nextRetail=childCost/(1-0.4);
+      const nextWholesale=childCost/(1-0.2);
+      updated=products.map(item=>item.id===source.id?{...item,stock:item.stock-packageQuantity}:item.id===child.id?{...item,stock:childStockAfter,cost:childCost,retail:nextRetail,wholesale:nextWholesale}:item);
+      childId=child.id;
+    }else{
+      childId=nextProductId();
+      const newChild:Product={
+        ...source,id:childId,code:`FR-${source.id}-${unitsPerPresentation}-${Date.now().toString(36).toUpperCase()}`,
+        name:source.name,presentation:`${presentationName.trim()} x ${unitsPerPresentation} ${baseUnitName.trim()}`,
+        cost:childUnitCost,retail:childUnitCost/(1-0.4),wholesale:childUnitCost/(1-0.2),stock:outputQuantity,minStock:0,
+        unitInventoryEnabled:false,unitPresentations:[],fractionParentId:source.id,fractionUnitsPerPresentation:unitsPerPresentation,
+        fractionPresentationName:presentationName.trim(),fractionBaseUnitName:baseUnitName.trim(),
+      };
+      updated=[...products.map(item=>item.id===source.id?{...item,stock:item.stock-packageQuantity}:item),newChild];
+    }
+    const sourceMovement:InventoryMovement={id:nextInventoryMovementId(),productId:source.id,productName:source.name,type:'Ajuste',quantity:packageQuantity,stockBefore:source.stock,stockAfter:source.stock-packageQuantity,unitCost:source.cost,date,note:`Fraccionamiento: ${totalBaseUnits} ${baseUnitName} convertidos en ${outputQuantity} ${presentationName.trim()} x ${unitsPerPresentation}. Producto generado: ${updated.find(item=>item.id===childId)?.presentation??''}.`};
+    const childMovement:InventoryMovement={id:nextInventoryMovementId(),productId:childId,productName:source.name,type:'Ajuste',quantity:outputQuantity,stockBefore:childStockBefore,stockAfter:childStockAfter,unitCost:childCost,date,note:`Ingreso por fraccionamiento desde ${source.presentation} · producto original #${source.id}.`};
+    setProducts(updated);
+    setInventoryMovements(current=>[...current,sourceMovement,childMovement]);
+    return true;
+  };
+
   const saveOrder=(items:CartItem[],customer='',customerRtn='',total=0):number|null=>{
     if(orderSaveInProgress.current)return null;
     if(!canWriteSnapshot(remoteReady,syncStatus)||!items.length||items.some(item=>!Number.isInteger(item.qty)||item.qty<1||!Number.isFinite(item.price)||item.price<0))return null;
@@ -872,5 +916,5 @@ export function useErpState(userId: string, demoMode = false) {
   const guardedSetPurchaseLogistics=guardSnapshotSetter(setPurchaseLogistics,canWriteSnapshotNow);
   const guardedSetSaleAdjustments = guardSnapshotSetter(setSaleAdjustments, canWriteSnapshotNow);
 
-  return {active,setActive,purchaseLogistics,setPurchaseLogistics:guardedSetPurchaseLogistics,inventoryLots,lotKardex,fefoProductIds,registerOpeningLot,activateFefo,adjustInventoryLot,hrEmployees,setHrEmployees:guardedSetHrEmployees,hrAttendance,setHrAttendance:guardedSetHrAttendance,hrLeaveRequests,setHrLeaveRequests:guardedSetHrLeaveRequests,accountingAccounts,setAccountingAccounts:guardedSetAccountingAccounts,accountingEntries,setAccountingEntries:guardedSetAccountingEntries,orders,saveOrder,updateOrder,deleteOrder,customers,setCustomers:guardedSetCustomers,quotes,setQuotes:guardedSetQuotes,saveQuotes,suppliers,setSuppliers:guardedSetSuppliers,products,setProducts:guardedSetProducts,search,setSearch,monthlyGoal,setMonthlyGoal:guardedSetMonthlyGoal,fixedExpenses,setFixedExpenses:guardedSetFixedExpenses,settings,setSettings:guardedSetSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales:guardedSetSales,purchases,purchaseCostHistory,receivePurchaseLogistics,expenses,setExpenses:guardedSetExpenses,receivables,setReceivables:guardedSetReceivables,payables,setPayables:guardedSetPayables,inventoryMovements,cashClosures,setCashClosures:guardedSetCashClosures,cashMovements,setCashMovements:guardedSetCashMovements,paymentTransactions,setPaymentTransactions:guardedSetPaymentTransactions,missingProductRequests,setMissingProductRequests:guardedSetMissingProductRequests,supplierReturns,setSupplierReturns:guardedSetSupplierReturns,saleAdjustments,setSaleAdjustments:guardedSetSaleAdjustments,recordSupplierDispatch,resolveSupplierReturn,recordSaleAdjustment,recordMissingProduct,filtered,recordSale,updateStandardInvoice,saveProduct,deleteProduct,receivePurchase,syncStatus,syncError,remoteReady};
+  return {active,setActive,fractionInventoryProduct,purchaseLogistics,setPurchaseLogistics:guardedSetPurchaseLogistics,inventoryLots,lotKardex,fefoProductIds,registerOpeningLot,activateFefo,adjustInventoryLot,hrEmployees,setHrEmployees:guardedSetHrEmployees,hrAttendance,setHrAttendance:guardedSetHrAttendance,hrLeaveRequests,setHrLeaveRequests:guardedSetHrLeaveRequests,accountingAccounts,setAccountingAccounts:guardedSetAccountingAccounts,accountingEntries,setAccountingEntries:guardedSetAccountingEntries,orders,saveOrder,updateOrder,deleteOrder,customers,setCustomers:guardedSetCustomers,quotes,setQuotes:guardedSetQuotes,saveQuotes,suppliers,setSuppliers:guardedSetSuppliers,products,setProducts:guardedSetProducts,search,setSearch,monthlyGoal,setMonthlyGoal:guardedSetMonthlyGoal,fixedExpenses,setFixedExpenses:guardedSetFixedExpenses,settings,setSettings:guardedSetSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales:guardedSetSales,purchases,purchaseCostHistory,receivePurchaseLogistics,expenses,setExpenses:guardedSetExpenses,receivables,setReceivables:guardedSetReceivables,payables,setPayables:guardedSetPayables,inventoryMovements,cashClosures,setCashClosures:guardedSetCashClosures,cashMovements,setCashMovements:guardedSetCashMovements,paymentTransactions,setPaymentTransactions:guardedSetPaymentTransactions,missingProductRequests,setMissingProductRequests:guardedSetMissingProductRequests,supplierReturns,setSupplierReturns:guardedSetSupplierReturns,saleAdjustments,setSaleAdjustments:guardedSetSaleAdjustments,recordSupplierDispatch,resolveSupplierReturn,recordSaleAdjustment,recordMissingProduct,filtered,recordSale,updateStandardInvoice,saveProduct,deleteProduct,receivePurchase,syncStatus,syncError,remoteReady};
 }
