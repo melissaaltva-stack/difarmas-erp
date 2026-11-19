@@ -52,6 +52,15 @@ export function applyPurchaseToInventory(products: Product[], items: PurchaseIte
     const expiry=product.expiry&&product.stock>0&&earliestReceivedExpiry
       ? (product.expiry<earliestReceivedExpiry?product.expiry:earliestReceivedExpiry)
       : earliestReceivedExpiry||product.expiry;
+    if(product.unitInventoryEnabled){
+      const marginFor=(price:number,previousCost:number,fallback:number)=>price>previousCost&&price>0?Math.min(0.999,Math.max(0,(price-previousCost)/price)):fallback;
+      const retailMargin=marginFor(product.retail,product.cost,0.4);
+      const wholesaleMargin=marginFor(product.wholesale,product.cost,0.2);
+      const retail=Number((roundedCost/(1-retailMargin)).toFixed(2));
+      const wholesale=Number((roundedCost/(1-wholesaleMargin)).toFixed(2));
+      const unitPresentations=(product.unitPresentations??[]).map(option=>({...option,retailPrice:Number((retail*option.unitsPerPresentation).toFixed(2)),wholesalePrice:Number((wholesale*option.unitsPerPresentation).toFixed(2))}));
+      return { ...product, stock: newStock, cost: roundedCost, retail, wholesale, unitPresentations, expiry, supplier: supplier.trim() || product.supplier };
+    }
     return { ...product, stock: newStock, cost: roundedCost, expiry, supplier: supplier.trim() || product.supplier };
   });
 }
