@@ -6,7 +6,7 @@ import { isValidDateOnly } from '../utils/dates';
  * Returns an actionable error message, or null when the invoice may proceed.
  */
 export function normalizeFiscalCode(value: string | undefined): string {
-  return (value ?? '').replace(/\\D/g, '');
+  return (value ?? '').replace(/\D/g, '');
 }
 
 export function validateFiscalAuthorization(
@@ -28,8 +28,9 @@ export function validateFiscalAuthorization(
     return 'Completa el CAI, establecimiento, punto de emisión, rango autorizado y fecha límite antes de emitir una factura fiscal.';
   }
 
-  const configuredPoint = fiscal.establishmentCode + fiscal.emissionPoint;
-  if (!/^\d{4}$/.test(configuredPoint) || !/^\d{2}$/.test(fiscal.documentTypeCode)) {
+  const configuredPoint = normalizeFiscalCode(fiscal.establishmentCode) + normalizeFiscalCode(fiscal.emissionPoint);
+  const documentTypeCode = normalizeFiscalCode(fiscal.documentTypeCode);
+  if (!/^\d{4}$/.test(configuredPoint) || !/^\d{2}$/.test(documentTypeCode)) {
     return 'El código de establecimiento + punto de emisión debe sumar 4 dígitos y el código de documento debe tener 2 dígitos.';
   }
 
