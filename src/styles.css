@@ -7258,3 +7258,29 @@ button.icon-btn:focus-visible svg,
  .supplier-return-history .card-title .search{width:100%;min-width:0}
  .supplier-return-form-actions button{width:100%}
 }
+
+/* Fraccionamiento desde el listado de inventario */
+.inventory-row-actions{display:flex;align-items:center;justify-content:flex-end;gap:5px;white-space:nowrap}
+.inventory-fraction-btn{display:inline-flex;align-items:center;gap:5px;min-height:29px;padding:5px 8px;border:1px solid var(--border,#dbe5e1);border-radius:7px;background:var(--surface,#fff);color:var(--text-secondary,#526b64);font-size:10px;font-weight:650;cursor:pointer}
+.inventory-fraction-btn:hover:not(:disabled){border-color:var(--primary,#167b61);color:var(--primary,#167b61);background:var(--surface-subtle,#f5faf8)}
+.inventory-fraction-btn:disabled{opacity:.42;cursor:not-allowed}
+.fraction-modal-backdrop{z-index:150}
+.fraction-modal{width:min(680px,calc(100vw - 28px));max-height:92vh;overflow:auto;padding:18px}
+.fraction-modal .modal-head{align-items:flex-start;margin-bottom:14px}
+.fraction-modal .modal-head h2{margin:0;font-size:18px}
+.fraction-modal .modal-head p{margin:4px 0 0;font-size:11px;color:var(--muted,#718a85)}
+.fraction-source{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;padding:12px;border:1px solid var(--border,#dce7e3);border-radius:9px;background:var(--surface-subtle,#f7faf9)}
+.fraction-source>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.fraction-source small,.fraction-preview small{font-size:10px;color:var(--muted,#718a85);font-weight:650}
+.fraction-source strong{font-size:13px;overflow-wrap:anywhere}
+.fraction-source span{font-size:11px;color:var(--muted,#718a85)}
+.fraction-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:15px 0}
+.fraction-form-grid label{display:flex;flex-direction:column;gap:5px;min-width:0;font-size:11px;font-weight:650;color:var(--text-primary,#29423b)}
+.fraction-form-grid input{width:100%;min-width:0;height:35px;margin:0;padding:7px 9px;border:1px solid var(--border,#dce7e3);border-radius:7px;background:var(--surface,#fff);color:var(--text-primary,#29423b);font:inherit;font-size:12px;box-sizing:border-box}
+.fraction-form-grid label small{font-size:10px;font-weight:400;color:var(--muted,#718a85)}
+.fraction-preview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;padding:12px;border-radius:9px;background:var(--surface-subtle,#f7faf9);border:1px solid var(--border,#dce7e3)}
+.fraction-preview>div{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fraction-preview strong{font-size:13px;overflow-wrap:anywhere}
+.fraction-price-note{margin:10px 0 0;font-size:10px;line-height:1.45;color:var(--muted,#718a85)}
+.fraction-modal .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}
+@media(max-width:620px){.fraction-modal{padding:13px}.fraction-form-grid{grid-template-columns:minmax(0,1fr);gap:9px}.fraction-preview{grid-template-columns:minmax(0,1fr)}.fraction-source{grid-template-columns:minmax(0,1fr)}.inventory-fraction-btn span{display:none}.inventory-fraction-btn{width:29px;justify-content:center;padding:5px}}
