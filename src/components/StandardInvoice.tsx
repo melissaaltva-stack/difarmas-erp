@@ -71,7 +71,7 @@ export function StandardInvoice({products,customers,sales,settings,payment,setPa
   setSelectedInvoice(null);
   setLastInvoice(invoice);
   setError('');
-  void printThermalReceipt(buildInvoicePrintHtml(invoice,settings),invoice.invoiceNumber??'').then(({printer,signed})=>{
+  void printThermalReceipt(buildInvoicePrintHtml(invoice,settings),invoice.invoiceNumber??'',settings.thermalPrinterName).then(({printer,signed})=>{
    setNotice(`Factura ${invoice.invoiceNumber||''} enviada a ${printer}.${signed?'':' QZ Tray puede solicitar autorización hasta configurar el certificado de impresión silenciosa.'}`);
   }).catch(cause=>{
    const detail=cause instanceof Error?cause.message:'Error de conexión con QZ Tray.';
