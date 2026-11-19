@@ -132,7 +132,17 @@ function measureReceiptHeightMm(html: string): Promise<number> {
   });
 }
 
-export async function printThermalReceipt(html: string, invoiceNumber: string): Promise<{ printer: string; signed: boolean }> {
+export async function getThermalPrinters(): Promise<{ printers: string[]; defaultPrinter: string }> {
+  const qz = await loadQz();
+  if (!qz.websocket.isActive()) await qz.websocket.connect({ retries: 5, delay: 1 });
+  const [printers, defaultPrinter] = await Promise.all([
+    qz.printers.find(),
+    qz.printers.getDefault().catch(() => ''),
+  ]);
+  return { printers, defaultPrinter };
+}
+
+export async function printThermalReceipt(html: string, invoiceNumber: string, preferredPrinter?: string): Promise<{ printer: string; signed: boolean }> {
   if (typeof window === 'undefined' || typeof document === 'undefined') {
     throw new Error('La impresión directa solo está disponible desde el navegador de la computadora.');
   }
@@ -159,7 +169,7 @@ export async function printThermalReceipt(html: string, invoiceNumber: string): 
       : 'QZ Tray está abierto, pero no detecta impresoras instaladas en Windows.');
   }
 
-  if (/microsoft print to pdf|onenote|fax/i.test(printer)) {
+  if (!preferredPrinter?.trim() && /microsoft print to pdf|onenote|fax/i.test(printer)) {
     const printers = await qz.printers.find();
     const thermal = printers.find(name => /thermal|receipt|ticket|pos|xprinter|epson|star|citizen|zjiang|zjiang|zj-/i.test(name));
     if (thermal) printer = thermal;
