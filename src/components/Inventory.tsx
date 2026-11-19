@@ -169,7 +169,7 @@ export function ProductModal({product,onClose,onSave,onDelete,products=[],canEna
    const [unitStockConfirmation,setUnitStockConfirmation]=useState(()=>product?.unitInventoryEnabled?String(product.stock):'');
    const [unitConfigError,setUnitConfigError]=useState('');
    const defaultUnitPresentations=():ProductUnitPresentation[]=>[{id:nextLocalRecordId('unit'),name:'Caja',unitsPerPresentation:0,retailPrice:0,wholesalePrice:0},{id:nextLocalRecordId('unit'),name:'Blister',unitsPerPresentation:0,retailPrice:0,wholesalePrice:0}];
-   const updateUnitPresentation=(id:string,field:keyof ProductUnitPresentation,value:string|number)=>setForm(f=>({...f,unitPresentations:(f.unitPresentations??[]).map(option=>option.id===id?{...option,[field]:field==='name'||field==='barcode'?String(value):Number(value)}:option)}));
+   const updateUnitPresentation=(id:string,field:keyof ProductUnitPresentation,value:string|number)=>setForm(f=>({...f,unitPresentations:(f.unitPresentations??[]).map(option=>{if(option.id!==id)return option;const nextValue=field==='name'||field==='barcode'?String(value):Number(value);if(field==='unitsPerPresentation'){const units=Math.max(0,Number(nextValue)||0);return {...option,unitsPerPresentation:units,retailPrice:Number((f.retail*units).toFixed(2)),wholesalePrice:Number((f.wholesale*units).toFixed(2))};}return {...option,[field]:nextValue};})}));
    const addUnitPresentation=()=>setForm(f=>({...f,unitPresentations:[...(f.unitPresentations??[]),{id:nextLocalRecordId('unit'),name:'Nueva presentación',unitsPerPresentation:0,retailPrice:0,wholesalePrice:0}]}));
   const costHistory=[...(form.costHistory??[])].sort((a,b)=>b.date.localeCompare(a.date));
   const [drugLookupBusy,setDrugLookupBusy]=useState(false);
