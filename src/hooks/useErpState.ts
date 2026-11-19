@@ -429,6 +429,7 @@ export function useErpState(userId: string, demoMode = false) {
     const date=new Date().toISOString();
     const childExpiry=source.expiry||'';
     const childLot=source.lot||'';
+    const fractionedName=source.name+' — '+presentationName.trim()+' x '+unitsPerPresentation+' '+baseUnitName.trim();
     const child=products.find(item=>item.fractionParentId===source.id&&item.fractionUnitsPerPresentation===unitsPerPresentation&&item.fractionPresentationName?.toLowerCase()===presentationName.trim().toLowerCase()&&item.expiry===childExpiry&&item.lot===childLot);
     let updated:Product[];
     let childStockBefore=0;
@@ -441,21 +442,21 @@ export function useErpState(userId: string, demoMode = false) {
       childCost=childStockAfter>0?((child.stock*child.cost)+(outputQuantity*childUnitCost))/childStockAfter:childUnitCost;
       const nextRetail=childCost/(1-0.4);
       const nextWholesale=childCost/(1-0.2);
-      updated=products.map(item=>item.id===source.id?{...item,stock:item.stock-packageQuantity}:item.id===child.id?{...item,stock:childStockAfter,cost:childCost,retail:nextRetail,wholesale:nextWholesale}:item);
+      updated=products.map(item=>item.id===source.id?{...item,stock:item.stock-packageQuantity}:item.id===child.id?{...item,name:fractionedName,presentation:presentationName.trim()+' x '+unitsPerPresentation+' '+baseUnitName.trim(),stock:childStockAfter,cost:childCost,retail:nextRetail,wholesale:nextWholesale}:item);
       childId=child.id;
     }else{
       childId=nextProductId();
       const newChild:Product={
         ...source,id:childId,code:`FR-${source.id}-${unitsPerPresentation}-${Date.now().toString(36).toUpperCase()}`,
-        name:source.name,presentation:`${presentationName.trim()} x ${unitsPerPresentation} ${baseUnitName.trim()}`,
+        name:fractionedName,presentation:presentationName.trim()+' x '+unitsPerPresentation+' '+baseUnitName.trim(),
         cost:childUnitCost,retail:childUnitCost/(1-0.4),wholesale:childUnitCost/(1-0.2),stock:outputQuantity,minStock:0,
         unitInventoryEnabled:false,unitPresentations:[],fractionParentId:source.id,fractionUnitsPerPresentation:unitsPerPresentation,
         fractionPresentationName:presentationName.trim(),fractionBaseUnitName:baseUnitName.trim(),
       };
       updated=[...products.map(item=>item.id===source.id?{...item,stock:item.stock-packageQuantity}:item),newChild];
     }
-    const sourceMovement:InventoryMovement={id:nextInventoryMovementId(),productId:source.id,productName:source.name,type:'Ajuste',quantity:packageQuantity,stockBefore:source.stock,stockAfter:source.stock-packageQuantity,unitCost:source.cost,date,note:`Fraccionamiento: ${totalBaseUnits} ${baseUnitName} convertidos en ${outputQuantity} ${presentationName.trim()} x ${unitsPerPresentation}. Producto generado: ${updated.find(item=>item.id===childId)?.presentation??''}.`};
-    const childMovement:InventoryMovement={id:nextInventoryMovementId(),productId:childId,productName:source.name,type:'Ajuste',quantity:outputQuantity,stockBefore:childStockBefore,stockAfter:childStockAfter,unitCost:childCost,date,note:`Ingreso por fraccionamiento desde ${source.presentation} · producto original #${source.id}.`};
+    const sourceMovement:InventoryMovement={id:nextInventoryMovementId(),productId:source.id,productName:source.name,type:'Ajuste',quantity:packageQuantity,stockBefore:source.stock,stockAfter:source.stock-packageQuantity,unitCost:source.cost,date,note:`Fraccionamiento: ${totalBaseUnits} ${baseUnitName} convertidos en ${outputQuantity} ${presentationName.trim()} x ${unitsPerPresentation}. Producto generado: ${fractionedName}.`};
+    const childMovement:InventoryMovement={id:nextInventoryMovementId(),productId:childId,productName:fractionedName,type:'Ajuste',quantity:outputQuantity,stockBefore:childStockBefore,stockAfter:childStockAfter,unitCost:childCost,date,note:`Ingreso por fraccionamiento desde ${source.presentation} · producto original #${source.id}.`};
     setProducts(updated);
     setInventoryMovements(current=>[...current,sourceMovement,childMovement]);
     return true;
