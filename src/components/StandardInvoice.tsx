@@ -5,6 +5,32 @@ import { RegisterCustomerModal } from './Customers';
 import { PharmacyAssistant } from './PharmacyAssistant';
 
 const money=(value:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL',maximumFractionDigits:2}).format(value);
+const escapePrintHtml=(value:unknown)=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]??char));
+const buildInvoicePrintHtml=(invoice:SaleRecord,settings:ErpSettings)=>{
+ const dateText=(value?:string)=>{if(!value)return '—';const raw=value.slice(0,10);const parsed=/^\d{4}-\d{2}-\d{2}$/.test(raw)?new Date(raw+'T12:00:00'):new Date(value);return Number.isNaN(parsed.getTime())?'—':parsed.toLocaleDateString('es-HN');};
+ const subtotal=invoice.total+(invoice.discountTotal??0)-(invoice.taxTotal??0);
+ const rows=(invoice.items??[]).map(item=>'<tr><td><strong>'+escapePrintHtml(item.productName)+'</strong>'+(item.laboratory?'<small>'+escapePrintHtml(item.laboratory)+'</small>':'')+'</td><td>'+escapePrintHtml(item.qty)+'</td><td>'+escapePrintHtml(item.unit||'Unidad')+'</td><td>'+escapePrintHtml(money(item.baseUnitPrice??item.unitPrice))+'</td><td>'+escapePrintHtml(Number(item.discountPercent??0).toLocaleString('es-HN'))+'%</td><td>'+escapePrintHtml(Number(item.taxPercent??0).toLocaleString('es-HN'))+'%</td><td>'+escapePrintHtml(money(item.lineTotal??item.revenue))+'</td></tr>').join('');
+ const logo=settings.logoDataUrl?'<img src="'+escapePrintHtml(settings.logoDataUrl)+'" alt="Logotipo"/>':'';
+ const contact=[settings.phone,settings.email].filter(Boolean).map(escapePrintHtml).join(' · ');
+ const html=[
+ '<!doctype html><html lang="es"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Factura ',escapePrintHtml(invoice.invoiceNumber||''),'</title><style>',
+ '@page{size:letter portrait;margin:9mm}*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;color:#17252a;font:9pt/1.4 Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}.sheet{width:100%;max-width:100%;margin:0 auto}.header{display:flex;justify-content:space-between;align-items:flex-start;gap:12mm;padding:0 0 5mm;border-bottom:2px solid #167b61;margin:0 0 5mm}.business{display:flex;align-items:flex-start;gap:4mm;min-width:0}.business img{display:block;max-width:25mm;max-height:20mm;object-fit:contain}.business h1{font-size:17pt;line-height:1.15;margin:0 0 2mm;color:#145b48}.business p{font-size:8pt;line-height:1.35;margin:1mm 0;color:#475b55;overflow-wrap:anywhere}.number{min-width:48mm;text-align:right}.number span,.customer small,.payment>small{display:block;font-size:7pt;font-weight:700;letter-spacing:.6pt;color:#63766f}.number h2{font-size:14pt;margin:1mm 0;color:#145b48}.number strong{display:block;font-size:12pt;margin:1mm 0}.number small{font-size:8pt;color:#475b55}.customer{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:3mm 5mm;padding:4mm;margin:0 0 5mm;background:#f5f8f7;border:1px solid #dce7e2;break-inside:avoid}.customer>div{min-width:0}.customer strong{display:block;font-size:8.5pt;font-weight:600;margin-top:1mm;overflow-wrap:anywhere}.address{grid-column:span 2}table{width:100%;border-collapse:collapse;table-layout:auto;margin:0 0 5mm}thead{display:table-header-group}th{padding:2.5mm 1.8mm;background:#eaf3ef;color:#31594c;border-bottom:1px solid #b9d0c6;font-size:7pt;text-transform:uppercase;text-align:left;white-space:nowrap}td{padding:2.5mm 1.8mm;border-bottom:1px solid #e5ece8;font-size:8pt;vertical-align:top;overflow-wrap:anywhere}th:not(:first-child),td:not(:first-child){text-align:right;white-space:nowrap}td:first-child{min-width:42mm}td:first-child small{display:block;margin-top:1mm;font-size:7pt;color:#64766f}tr{break-inside:avoid;page-break-inside:avoid}.bottom{display:flex;justify-content:space-between;align-items:flex-start;gap:10mm;margin-top:4mm;break-inside:avoid}.payment{flex:1;min-width:0;font-size:8pt}.payment>strong{display:block;margin-top:1mm;font-size:9pt}.payment p{margin:2mm 0;white-space:pre-wrap;overflow-wrap:anywhere}.totals{width:68mm;max-width:48%;flex:0 0 68mm}.totals p{display:flex;justify-content:space-between;gap:5mm;margin:1.5mm 0;font-size:8pt}.totals p strong{text-align:right;white-space:nowrap}.grand{padding-top:2.5mm;margin-top:2.5mm;border-top:1.5px solid #167b61;font-size:11pt!important;font-weight:800;color:#145b48}.footer{margin-top:8mm;padding-top:3mm;border-top:1px solid #dce7e2;text-align:center;font-size:7pt;color:#63766f;break-inside:avoid}.footer p{margin:0 0 2mm}.footer strong{font-size:8pt;color:#31594c}@media screen{body{background:#eef3f1;padding:18px}.sheet{max-width:216mm;min-height:279mm;background:#fff;padding:12mm;box-shadow:0 4px 24px #142d2418}}@media print{body{background:#fff}}',
+ '</style></head><body><main class="sheet"><header class="header"><div class="business">',logo,'<div><h1>',escapePrintHtml(settings.businessName||'DIFARMÁS'),'</h1>',
+ settings.businessSubtitle?'<p>'+escapePrintHtml(settings.businessSubtitle)+'</p>':'',
+ settings.address?'<p>'+escapePrintHtml(settings.address)+'</p>':'',
+ contact?'<p>'+contact+'</p>':'',
+ settings.rtn?'<p>RTN: '+escapePrintHtml(settings.rtn)+'</p>':'',
+ '</div></div><div class="number"><span>DOCUMENTO COMERCIAL</span><h2>FACTURA</h2><strong>',escapePrintHtml(invoice.invoiceNumber||'—'),'</strong><small>Fecha: ',escapePrintHtml(dateText(invoice.invoiceDate||invoice.date)),'</small></div></header>',
+ '<section class="customer"><div><small>CLIENTE</small><strong>',escapePrintHtml(invoice.customer||'Consumidor Final'),'</strong></div><div><small>RTN</small><strong>',escapePrintHtml(invoice.customerRtn||'—'),'</strong></div><div><small>TELÉFONO</small><strong>',escapePrintHtml(invoice.customerPhone||'—'),'</strong></div><div><small>VENDEDOR</small><strong>',escapePrintHtml(invoice.seller||'General'),'</strong></div><div class="address"><small>DIRECCIÓN</small><strong>',escapePrintHtml(invoice.customerAddress||'—'),'</strong></div><div><small>FECHA MÁXIMA DE PAGO</small><strong>',escapePrintHtml(invoice.terms==='Crédito'?dateText(invoice.maxDate):'—'),'</strong></div></section>',
+ '<table><thead><tr><th>Descripción</th><th>Cant.</th><th>Unidad</th><th>Precio unit.</th><th>Desc.</th><th>ISV</th><th>Importe</th></tr></thead><tbody>',rows,'</tbody></table>',
+ '<section class="bottom"><div class="payment"><small>FORMA DE PAGO</small><strong>',escapePrintHtml(invoice.payment||'—'),'</strong>',
+ invoice.terms?'<p>Condición: '+escapePrintHtml(invoice.terms)+'</p>':'',
+ invoice.notes?'<p><b>Notas:</b> '+escapePrintHtml(invoice.notes)+'</p>':'',
+ '</div><div class="totals"><p><span>Subtotal</span><strong>',escapePrintHtml(money(subtotal)),'</strong></p><p><span>Descuento</span><strong>',escapePrintHtml(money(invoice.discountTotal??0)),'</strong></p><p><span>ISV</span><strong>',escapePrintHtml(money(invoice.taxTotal??0)),'</strong></p><p class="grand"><span>TOTAL</span><strong>',escapePrintHtml(money(invoice.total)),'</strong></p></div></section>',
+ '<footer class="footer"><p>',escapePrintHtml(settings.billingInfo?.fiscalLegend||'Documento comercial interno. No constituye una factura fiscal autorizada por el SAR.'),'</p><strong>Gracias por su preferencia · DIFARMÁS</strong></footer></main></body></html>'
+ ].join('');
+ return html;
+};
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
 const normalize=(v:string)=>v.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase().trim();
 const nextInvoiceNumber=(numbers:string[])=>{const highest=numbers.reduce((max,value)=>{const match=value.trim().match(/(\d{10})$/);const sequence=match?Number(match[1]):0;return Number.isSafeInteger(sequence)?Math.max(max,sequence):max;},100002036);return `001-001-${String(highest+1).padStart(10,'0')}`;};
@@ -12,7 +38,7 @@ const formatExpiry=(value:string)=>{const match=value.match(/^(\d{4})-(\d{2})-(\
 
 export function StandardInvoice({products,customers,sales,settings,payment,setPayment,onComplete,onUpdateInvoice,onCreateCustomer,onSaveOrder,onUpdateOrder,orderToInvoice,orderToEdit}:{products:Product[];customers:Customer[];sales:SaleRecord[];settings:ErpSettings;payment:string;setPayment:(v:string)=>void;onComplete:(sold:CartItem[],customer?:string,dueDate?:string,customerRtn?:string,invoiceNumber?:string,details?:StandardInvoiceDetails)=>boolean;onUpdateInvoice:(invoiceId:number,sold:CartItem[],customer:string,customerRtn:string,details?:StandardInvoiceDetails)=>boolean;onCreateCustomer:(customer:Customer)=>void;onSaveOrder:(items:CartItem[],customer:string,rtn:string,total:number)=>boolean;onUpdateOrder:(id:number,items:CartItem[],customer:string,rtn:string,total:number)=>boolean;orderToInvoice?:OrderRecord;orderToEdit?:OrderRecord}) {
  const [search,setSearch]=useState(''),[cart,setCart]=useState<CartItem[]>([]),[invoiceOrderId,setInvoiceOrderId]=useState<number|null>(null),[orderEditId,setOrderEditId]=useState<number|null>(null),[customer,setCustomer]=useState('Consumidor Final'),[rtn,setRtn]=useState(''),[customerAddress,setCustomerAddress]=useState(''),[customerPhone,setCustomerPhone]=useState(''),[terms,setTerms]=useState('Contado'),[notes,setNotes]=useState(''),[priceList,setPriceList]=useState('Precio de venta 1'),[seller,setSeller]=useState('General'),[invoiceDate,setInvoiceDate]=useState(today()),[maxDate,setMaxDate]=useState(today()),[invoiceNumber,setInvoiceNumber]=useState(()=>nextInvoiceNumber(sales.filter(s=>s.type==='factura_estandar').map(s=>s.invoiceNumber??''))),[lineAdjustments,setLineAdjustments]=useState<Record<number,{unit:string;discountPercent:number;taxPercent:number}>>({}),[taxDrafts,setTaxDrafts]=useState<Record<number,string>>({}),[presentationSelections,setPresentationSelections]=useState<Record<number,string>>({});
- const [notice,setNotice]=useState(''),[error,setError]=useState(''),[lastInvoice,setLastInvoice]=useState<SaleRecord|null>(null),[selectedInvoice,setSelectedInvoice]=useState<SaleRecord|null>(null),[printRequest,setPrintRequest]=useState<SaleRecord|null>(null),[editingInvoice,setEditingInvoice]=useState<SaleRecord|null>(null),[historySearch,setHistorySearch]=useState(''),[showHistory,setShowHistory]=useState(false),[newCustomer,setNewCustomer]=useState(false),[newName,setNewName]=useState(''),[newRtn,setNewRtn]=useState('');const [expandedProductDetails,setExpandedProductDetails]=useState<Record<number,boolean>>({});
+ const [notice,setNotice]=useState(''),[error,setError]=useState(''),[lastInvoice,setLastInvoice]=useState<SaleRecord|null>(null),[selectedInvoice,setSelectedInvoice]=useState<SaleRecord|null>(null),[editingInvoice,setEditingInvoice]=useState<SaleRecord|null>(null),[historySearch,setHistorySearch]=useState(''),[showHistory,setShowHistory]=useState(false),[newCustomer,setNewCustomer]=useState(false),[newName,setNewName]=useState(''),[newRtn,setNewRtn]=useState('');const [expandedProductDetails,setExpandedProductDetails]=useState<Record<number,boolean>>({});
  useEffect(()=>{const selected=orderToEdit?.status==='Pendiente'?orderToEdit:orderToInvoice?.status==='Pendiente'?orderToInvoice:undefined;if(!selected||orderEditId===selected.id||invoiceOrderId===selected.id)return;const editingOrder=selected===orderToEdit;setOrderEditId(editingOrder?selected.id:null);setInvoiceOrderId(editingOrder?null:selected.id);setCart(selected.items.map(item=>({...item,stock:(products.find(product=>product.id===item.id)?.stock??item.stock)+(editingOrder?item.qty*(item.baseUnitsPerSale??1):0)})));setCustomer(selected.customer||'Consumidor Final');setRtn(selected.customerRtn||'');setCustomerAddress('');setCustomerPhone('');setNotes('');setEditingInvoice(null);setLineAdjustments(Object.fromEntries(selected.items.map(item=>[item.id,{unit:item.saleUnit||item.baseUnitName||item.presentation||'Unidad',discountPercent:0,taxPercent:item.taxEnabled===false?0:(item.taxRate??settings.billingInfo?.isvRate??15)}])));setNotice(editingOrder?'Editando '+selected.number+'. Modifica los datos y guarda los cambios del pedido.':'Pedido '+selected.number+' cargado. El inventario ya está reservado; al facturar no se descontará nuevamente.');setError('');},[orderToEdit?.id,orderToEdit?.status,orderToInvoice?.id,orderToInvoice?.status,orderEditId,invoiceOrderId,settings.billingInfo?.isvRate,products]);
  const paymentMethods=settings.paymentMethods?.filter(m=>m.active)??[{id:'cash',name:'Efectivo',kind:'cash' as const,active:true,requiresReference:false},{id:'transfer',name:'Transferencia',kind:'other' as const,active:true,requiresReference:true},{id:'credit',name:'Crédito',kind:'credit' as const,active:true,requiresReference:false}];
  const credit=paymentMethods.find(m=>m.name===payment)?.kind==='credit'||payment==='Crédito';
@@ -26,25 +52,35 @@ export function StandardInvoice({products,customers,sales,settings,payment,setPa
  const priceFor=(p:Product,list=priceList,units=1,unitName?:string)=>{if(units===1)return list==='Precio de venta mayoreo'?p.wholesale:p.retail;const option=invoiceUnitOptions(p).find(item=>item.name===unitName);const configured=list==='Precio de venta mayoreo'?option?.wholesalePrice:option?.retailPrice;return configured&&configured>0?configured:(list==='Precio de venta mayoreo'?p.wholesale:p.retail)*units;};
  const reservedForCurrentEdit=(productId:number)=>orderEditId!==null?(orderToEdit?.items??[]).filter(item=>item.id===productId).reduce((sum,item)=>sum+item.qty*(item.baseUnitsPerSale??1),0):editingInvoice?(editingInvoice.items??[]).filter(item=>item.productId===productId).reduce((sum,item)=>sum+item.qty*(item.baseUnitsPerSale??1),0):0;
  const invoiceHistory=[...sales].filter(s=>s.type==='factura_estandar'||(s.invoiceNumber??'').startsWith('EST-')).filter(s=>!historySearch||normalize([s.invoiceNumber??'',s.customer??'',String(s.id)].join(' ')).includes(normalize(historySearch))).sort((a,b)=>new Date(b.date).getTime()-new Date(a.date).getTime());
- const printInvoice=(invoice:SaleRecord)=>{setSelectedInvoice(null);setLastInvoice(invoice);setPrintRequest(invoice);};
- useEffect(()=>{
-  if(!printRequest||lastInvoice?.id!==printRequest.id)return;
-  let firstFrame=0,secondFrame=0;
-  const finishPrint=()=>{document.body.classList.remove('standard-invoice-printing');setPrintRequest(null);};
-  firstFrame=window.requestAnimationFrame(()=>{
-   secondFrame=window.requestAnimationFrame(()=>{
-    document.body.classList.add('standard-invoice-printing');
-    window.addEventListener('afterprint',finishPrint,{once:true});
-    window.print();
-   });
-  });
-  return ()=>{
-   window.cancelAnimationFrame(firstFrame);
-   if(secondFrame)window.cancelAnimationFrame(secondFrame);
-   window.removeEventListener('afterprint',finishPrint);
-   document.body.classList.remove('standard-invoice-printing');
-  };
- },[printRequest,lastInvoice?.id]);
+ const printInvoice=(invoice:SaleRecord)=>{
+  setSelectedInvoice(null);
+  setLastInvoice(invoice);
+  setError('');
+  let printWindow:Window|null=null;
+  try{
+   printWindow=window.open('','_blank','popup=yes,width=960,height=760');
+   if(!printWindow){setError('El navegador bloqueó la ventana de impresión. Permite las ventanas emergentes para este sitio y vuelve a intentarlo.');return;}
+   let started=false;
+   const startPrint=()=>{
+    if(started||!printWindow||printWindow.closed)return;
+    started=true;
+    const images=Array.from(printWindow.document.images);
+    Promise.all(images.map(image=>image.complete?Promise.resolve():new Promise<void>(resolve=>{image.onload=()=>resolve();image.onerror=()=>resolve();}))).then(()=>{
+     if(!printWindow||printWindow.closed)return;
+     printWindow.focus();
+     printWindow.print();
+    });
+   };
+   printWindow.onload=startPrint;
+   printWindow.document.open();
+   printWindow.document.write(buildInvoicePrintHtml(invoice,settings));
+   printWindow.document.close();
+   window.setTimeout(startPrint,700);
+  }catch(cause){
+   printWindow?.close();
+   setError(cause instanceof Error?'No se pudo abrir la impresión: '+cause.message:'No se pudo abrir la ventana de impresión.');
+  }
+ };
  const add=(p:Product,option=selectedInvoiceUnit(p))=>{if(invoiceOrderId!==null){setError('Este pedido ya tiene sus existencias reservadas. Factúralo sin cambiar los productos; para modificarlo, vuelve a Pedidos y usa Editar.');return;}const old=cart.find(x=>x.id===p.id);if(old&&old.baseUnitsPerSale!==option.unitsPerPresentation){setError(`Quita la línea actual de ${p.name} antes de cambiar su presentación.`);return;}const baseInCart=cart.filter(x=>x.id===p.id).reduce((sum,item)=>sum+item.qty*(item.baseUnitsPerSale??1),0);const availableBase=p.stock+reservedForCurrentEdit(p.id);if(baseInCart+option.unitsPerPresentation>availableBase){setError(`No hay existencias suficientes para ${option.name} de ${p.name}.`);return;}const price=priceFor(p,priceList,option.unitsPerPresentation,option.name);if(!Number.isFinite(price)||price<=0){setError(`Configura un precio válido para ${option.name} de ${p.name}.`);return;}setCart(current=>old?current.map(x=>x.id===p.id?{...x,qty:x.qty+1}:x):[...current,{...p,cost:p.cost*option.unitsPerPresentation,qty:1,price,saleUnit:option.name,baseUnitsPerSale:option.unitsPerPresentation}]);setLineAdjustments(current=>({...current,[p.id]:current[p.id]??{unit:option.name,discountPercent:0,taxPercent:p.taxEnabled===false?0:(p.taxRate??settings.billingInfo?.isvRate??15)}}));setError('');setSearch('');};
  const updateQty=(id:number,qty:number)=>setCart(current=>current.map(p=>p.id===id?{...p,qty:Math.max(1,Math.min(Math.floor(p.stock/(p.baseUnitsPerSale??1)),Math.floor(qty)||1))}:p));
  const saveAsOrder=()=>{setError('');setNotice('');if(!cart.length){setError('Agrega al menos un producto al pedido.');return;}const ok=onSaveOrder(cart.map(item=>({...item})),customer==='Consumidor Final'?'':customer,rtn,total);if(!ok){setError('No se pudo guardar el pedido. Verifica las existencias y la sincronización.');return;}setCart([]);setLineAdjustments({});setInvoiceOrderId(null);setOrderEditId(null);setSearch('');setNotice('Pedido guardado correctamente. Las existencias fueron reservadas.');};
