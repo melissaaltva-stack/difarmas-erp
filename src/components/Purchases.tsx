@@ -205,7 +205,7 @@ export function Purchases({products,sales,purchases,cart,setCart,search,setSearc
               </div>
               <label className="purchase-cost-label">
                 
-                <input type="number" min="0" step="0.01" value={i.unitCost} onChange={e=>updateCost(purchaseLineId(i),Number(e.target.value))} aria-label={`Costo unitario de ${i.name}`}/><small className="helper">Costo por {i.baseUnitName||"unidad"}: {money(i.unitCost/(i.baseUnitsPerPurchase??1))}</small>
+                <input type="number" min="0" step="0.01" value={i.unitCost} onChange={e=>updateCost(purchaseLineId(i),Number(e.target.value))} aria-label={`Costo unitario de ${i.name}`}/>
               </label>
               <label className="purchase-isv-label">
                 
