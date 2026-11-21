@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { CartItem, CashClosure, CashMovement, Customer, ErpSettings, Expense, InventoryMovement, Module, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseItem, PurchaseRecord, PurchaseLogisticsRecord, Receivable, SaleRecord, OrderRecord, Supplier, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord, QuoteRecord, StandardInvoiceDetails, AccountingAccount, AccountingEntry, HrEmployee, HrAttendanceRecord, HrLeaveRequest, InventoryLot, LotKardexMovement, LotAllocation } from '../domain/types';
+import type { CartItem, CashClosure, CashMovement, CashOpeningBalance, Customer, ErpSettings, Expense, InventoryMovement, Module, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseItem, PurchaseRecord, PurchaseLogisticsRecord, Receivable, SaleRecord, OrderRecord, Supplier, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord, QuoteRecord, StandardInvoiceDetails, AccountingAccount, AccountingEntry, HrEmployee, HrAttendanceRecord, HrLeaveRequest, InventoryLot, LotKardexMovement, LotAllocation } from '../domain/types';
 import { loadJson as loadStoredJson, saveJson as saveStoredJson, loadNumber as loadStoredNumber, saveNumber as saveStoredNumber } from '../utils/storage';
 import { applyPurchaseToInventory, applySaleToInventory } from '../services/inventoryService';
 import { buildSaleRecord, createReceivableFromSale } from '../services/salesService';
@@ -148,6 +148,7 @@ export function useErpState(userId: string, demoMode = false) {
   };
   const [cashClosures, setCashClosures] = useState<CashClosure[]>(()=>loadJson<CashClosure[]>('difarmas_cash_closures',[]));
   const [cashMovements, setCashMovements] = useState<CashMovement[]>(()=>loadJson<CashMovement[]>('difarmas_cash_movements',[]));
+  const [cashOpenings, setCashOpenings] = useState<CashOpeningBalance[]>(()=>loadJson<CashOpeningBalance[]>('difarmas_cash_openings',[]));
   const [paymentTransactions, setPaymentTransactions] = useState<PaymentTransaction[]>(()=>loadJson<PaymentTransaction[]>('difarmas_payment_transactions',[]));
   const [missingProductRequests, setMissingProductRequests] = useState<MissingProductRequest[]>(()=>loadJson<MissingProductRequest[]>('difarmas_missing_product_requests',[]));
   const lastMissingProductRequestId = useRef(0);
@@ -212,6 +213,7 @@ export function useErpState(userId: string, demoMode = false) {
   useEffect(()=>{saveJson('farmi_fefo_product_ids',fefoProductIds)},[fefoProductIds]);
   useEffect(()=>{saveJson('difarmas_cash_closures',cashClosures)},[cashClosures]);
   useEffect(()=>{saveJson('difarmas_cash_movements',cashMovements)},[cashMovements]);
+  useEffect(()=>{saveJson('difarmas_cash_openings',cashOpenings)},[cashOpenings]);
   useEffect(()=>{saveJson('difarmas_payment_transactions',paymentTransactions)},[paymentTransactions]);
   useEffect(()=>{saveJson('difarmas_missing_product_requests',missingProductRequests)},[missingProductRequests]);
   useEffect(()=>{saveJson('difarmas_supplier_returns',supplierReturns)},[supplierReturns]);
@@ -219,8 +221,8 @@ export function useErpState(userId: string, demoMode = false) {
 
   const snapshot = useMemo<ErpSnapshot>(() => ({
     customers, quotes, suppliers, products, sales, orders, purchases, purchaseLogistics, purchaseCostHistory, settings, expenses, receivables, payables,
-    inventoryMovements, inventoryLots, lotKardex, fefoProductIds, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests, supplierReturns, saleAdjustments, accountingAccounts, accountingEntries, hrEmployees, hrAttendance, hrLeaveRequests,
-  }), [customers, quotes, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables, inventoryMovements, inventoryLots, lotKardex, fefoProductIds, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests, supplierReturns, saleAdjustments, orders, purchaseLogistics, accountingAccounts, accountingEntries, hrEmployees, hrAttendance, hrLeaveRequests]);
+    inventoryMovements, inventoryLots, lotKardex, fefoProductIds, monthlyGoal, fixedExpenses, cashClosures, cashMovements, cashOpenings, paymentTransactions, missingProductRequests, supplierReturns, saleAdjustments, accountingAccounts, accountingEntries, hrEmployees, hrAttendance, hrLeaveRequests,
+  }), [customers, quotes, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables, inventoryMovements, inventoryLots, lotKardex, fefoProductIds, monthlyGoal, fixedExpenses, cashClosures, cashMovements, cashOpenings, paymentTransactions, missingProductRequests, supplierReturns, saleAdjustments, orders, purchaseLogistics, accountingAccounts, accountingEntries, hrEmployees, hrAttendance, hrLeaveRequests]);
 
   // Load the signed-in user's snapshot before allowing remote writes. A first login
   // seeds the cloud record from this browser's existing local data.
@@ -258,6 +260,7 @@ export function useErpState(userId: string, demoMode = false) {
       setInventoryLots([]);setLotKardex([]);setFefoProductIds([]);
       setCashClosures([]);
       setCashMovements([]);
+      setCashOpenings([]);
       setPaymentTransactions([]);
       setMissingProductRequests([]);
       setSupplierReturns([]);
@@ -291,6 +294,7 @@ export function useErpState(userId: string, demoMode = false) {
         setInventoryLots(remote.inventoryLots??[]);setLotKardex(remote.lotKardex??[]);setFefoProductIds(remote.fefoProductIds??[]);
         if (remote.cashClosures !== undefined) setCashClosures(remote.cashClosures);
         if (remote.cashMovements !== undefined) setCashMovements(remote.cashMovements);
+        if (remote.cashOpenings !== undefined) setCashOpenings(remote.cashOpenings);
         if (remote.paymentTransactions !== undefined) setPaymentTransactions(remote.paymentTransactions);
         setMissingProductRequests(remote.missingProductRequests ?? []);
         setSupplierReturns(remote.supplierReturns ?? []);
@@ -855,6 +859,7 @@ export function useErpState(userId: string, demoMode = false) {
   const guardedSetPayables = guardSnapshotSetter(setPayables, canWriteSnapshotNow);
   const guardedSetCashClosures = guardSnapshotSetter(setCashClosures, canWriteSnapshotNow);
   const guardedSetCashMovements = guardSnapshotSetter(setCashMovements, canWriteSnapshotNow);
+  const guardedSetCashOpenings = guardSnapshotSetter(setCashOpenings, canWriteSnapshotNow);
   const guardedSetPaymentTransactions = guardSnapshotSetter(setPaymentTransactions, canWriteSnapshotNow);
   const guardedSetMissingProductRequests = guardSnapshotSetter(setMissingProductRequests, canWriteSnapshotNow);
   const guardedSetSupplierReturns = guardSnapshotSetter(setSupplierReturns, canWriteSnapshotNow);
@@ -917,5 +922,5 @@ export function useErpState(userId: string, demoMode = false) {
   const guardedSetPurchaseLogistics=guardSnapshotSetter(setPurchaseLogistics,canWriteSnapshotNow);
   const guardedSetSaleAdjustments = guardSnapshotSetter(setSaleAdjustments, canWriteSnapshotNow);
 
-  return {active,setActive,fractionInventoryProduct,purchaseLogistics,setPurchaseLogistics:guardedSetPurchaseLogistics,inventoryLots,lotKardex,fefoProductIds,registerOpeningLot,activateFefo,adjustInventoryLot,hrEmployees,setHrEmployees:guardedSetHrEmployees,hrAttendance,setHrAttendance:guardedSetHrAttendance,hrLeaveRequests,setHrLeaveRequests:guardedSetHrLeaveRequests,accountingAccounts,setAccountingAccounts:guardedSetAccountingAccounts,accountingEntries,setAccountingEntries:guardedSetAccountingEntries,orders,saveOrder,updateOrder,deleteOrder,customers,setCustomers:guardedSetCustomers,quotes,setQuotes:guardedSetQuotes,saveQuotes,suppliers,setSuppliers:guardedSetSuppliers,products,setProducts:guardedSetProducts,search,setSearch,monthlyGoal,setMonthlyGoal:guardedSetMonthlyGoal,fixedExpenses,setFixedExpenses:guardedSetFixedExpenses,settings,setSettings:guardedSetSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales:guardedSetSales,purchases,purchaseCostHistory,receivePurchaseLogistics,expenses,setExpenses:guardedSetExpenses,receivables,setReceivables:guardedSetReceivables,payables,setPayables:guardedSetPayables,inventoryMovements,cashClosures,setCashClosures:guardedSetCashClosures,cashMovements,setCashMovements:guardedSetCashMovements,paymentTransactions,setPaymentTransactions:guardedSetPaymentTransactions,missingProductRequests,setMissingProductRequests:guardedSetMissingProductRequests,supplierReturns,setSupplierReturns:guardedSetSupplierReturns,saleAdjustments,setSaleAdjustments:guardedSetSaleAdjustments,recordSupplierDispatch,resolveSupplierReturn,recordSaleAdjustment,recordMissingProduct,filtered,recordSale,updateStandardInvoice,saveProduct,deleteProduct,receivePurchase,syncStatus,syncError,remoteReady};
+  return {active,setActive,fractionInventoryProduct,purchaseLogistics,setPurchaseLogistics:guardedSetPurchaseLogistics,inventoryLots,lotKardex,fefoProductIds,registerOpeningLot,activateFefo,adjustInventoryLot,hrEmployees,setHrEmployees:guardedSetHrEmployees,hrAttendance,setHrAttendance:guardedSetHrAttendance,hrLeaveRequests,setHrLeaveRequests:guardedSetHrLeaveRequests,accountingAccounts,setAccountingAccounts:guardedSetAccountingAccounts,accountingEntries,setAccountingEntries:guardedSetAccountingEntries,orders,saveOrder,updateOrder,deleteOrder,customers,setCustomers:guardedSetCustomers,quotes,setQuotes:guardedSetQuotes,saveQuotes,suppliers,setSuppliers:guardedSetSuppliers,products,setProducts:guardedSetProducts,search,setSearch,monthlyGoal,setMonthlyGoal:guardedSetMonthlyGoal,fixedExpenses,setFixedExpenses:guardedSetFixedExpenses,settings,setSettings:guardedSetSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales:guardedSetSales,purchases,purchaseCostHistory,receivePurchaseLogistics,expenses,setExpenses:guardedSetExpenses,receivables,setReceivables:guardedSetReceivables,payables,setPayables:guardedSetPayables,inventoryMovements,cashClosures,setCashClosures:guardedSetCashClosures,cashMovements,setCashMovements:guardedSetCashMovements,cashOpenings,setCashOpenings:guardedSetCashOpenings,paymentTransactions,setPaymentTransactions:guardedSetPaymentTransactions,missingProductRequests,setMissingProductRequests:guardedSetMissingProductRequests,supplierReturns,setSupplierReturns:guardedSetSupplierReturns,saleAdjustments,setSaleAdjustments:guardedSetSaleAdjustments,recordSupplierDispatch,resolveSupplierReturn,recordSaleAdjustment,recordMissingProduct,filtered,recordSale,updateStandardInvoice,saveProduct,deleteProduct,receivePurchase,syncStatus,syncError,remoteReady};
 }
