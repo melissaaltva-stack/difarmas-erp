@@ -454,3 +454,95 @@
   .auth-brand-end-dot{animation:none;opacity:0}
   .auth-brand-final-period{animation:none;opacity:1}
 }
+
+
+/* Editor de textos personalizables del panel de bienvenida. */
+.auth-settings-menu{
+  max-height:min(78vh,720px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+}
+.auth-copy-settings{
+  padding:11px 7px 12px;
+  border-top:1px solid #edf1ee;
+  border-bottom:1px solid #edf1ee;
+}
+.auth-settings-section-title{
+  margin:0 0 9px;
+  color:#38584e;
+  font-size:11px;
+  line-height:1.4;
+  font-weight:800;
+}
+.auth-copy-settings>label{
+  display:block;
+  margin:9px 0 5px;
+  color:#526b62;
+  font-size:10px;
+  line-height:1.35;
+  font-weight:700;
+}
+.auth-copy-field-row{
+  display:flex;
+  align-items:stretch;
+  gap:6px;
+}
+.auth-copy-field-row input,
+.auth-copy-field-row textarea{
+  position:static;
+  display:block;
+  flex:1 1 auto;
+  width:100%;
+  min-width:0;
+  min-height:34px;
+  margin:0;
+  padding:7px 9px;
+  border:1px solid #d6e2dc;
+  border-radius:7px;
+  outline:none;
+  background:#fff;
+  color:#29483d;
+  font:inherit;
+  font-size:11px;
+  line-height:1.4;
+  opacity:1;
+  resize:vertical;
+}
+.auth-copy-field-row textarea{min-height:62px;max-height:150px}
+.auth-copy-field-row input:focus,
+.auth-copy-field-row textarea:focus{
+  border-color:var(--farmi-accent,#16856b);
+  box-shadow:0 0 0 2px color-mix(in srgb,var(--farmi-accent,#16856b) 14%,transparent);
+}
+.auth-copy-field-row button,
+.auth-copy-reset{
+  flex:0 0 auto;
+  align-self:flex-start;
+  min-height:34px;
+  padding:7px 9px;
+  border:1px solid #dce7e1;
+  border-radius:7px;
+  background:#f7faf8;
+  color:#486458;
+  font:inherit;
+  font-size:10px;
+  line-height:1.3;
+  font-weight:700;
+  cursor:pointer;
+}
+.auth-copy-field-row button:hover,
+.auth-copy-reset:hover{background:#edf5f0;border-color:#c8dcd1}
+.auth-copy-field-row button:disabled{opacity:.45;cursor:default}
+.auth-copy-hint{
+  margin:8px 0 0;
+  color:#84938c;
+  font-size:9px;
+  line-height:1.45;
+}
+.auth-copy-reset{
+  margin-top:8px;
+  border-color:var(--farmi-accent,#16856b);
+  color:var(--farmi-accent-dark,#116a56);
+  background:var(--farmi-accent-soft,#e7f4ef);
+}
+.auth-brand-copy h2{white-space:pre-line}
