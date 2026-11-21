@@ -11,7 +11,7 @@ export function Orders({orders,onDelete,onInvoice,onEdit}:{orders:OrderRecord[];
  const matches=(order:OrderRecord,dateValue:string)=>{const day=String(dateValue||'').slice(0,10),term=query.trim().toLocaleLowerCase('es');return (!term||[order.number,order.customer??'',order.customerRtn??'',...order.items.map(item=>item.name)].join(' ').toLocaleLowerCase('es').includes(term))&&(!dateFrom||day>=dateFrom)&&(!dateTo||day<=dateTo);};
  const pending=orders.filter(order=>order.status==='Pendiente'&&matches(order,order.date)),invoiced=orders.filter(order=>order.status==='Facturado'&&matches(order,order.updatedAt||order.date));
  return <div className="content orders-page">
-  <div className="page-intro orders-heading"><div><h2>Pedidos</h2><p>Administra las reservas, consulta su estado y conviértelas en factura.</p></div><span className="pill">{pending.length} pendientes</span></div>
+  <div className="page-intro orders-heading"><div><h2>Pedidos</h2></div><span className="pill">{pending.length} pendientes</span></div>
   <div className="card order-filters">
    <label className="order-search-label">Buscar pedido, cliente o producto<div className="search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="N.º de pedido, cliente o producto..."/></div></label>
    <label>Desde<input type="date" value={dateFrom} onChange={e=>setDateFrom(e.target.value)}/></label>
