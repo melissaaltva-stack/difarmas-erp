@@ -40,10 +40,12 @@ export function AuthGate({ children }: Props) {
   const [recoveryMode,setRecoveryMode] = useState(false);
   const [recoveryPassword,setRecoveryPassword] = useState('');
   const [confirmRecoveryPassword,setConfirmRecoveryPassword] = useState('');
+  const shouldMeasureBrandWordmark = supabaseConfigured && !checking && !user && !demoMode && !recoveryMode;
   const brandWordmarkRef = useRef<HTMLSpanElement | null>(null);
   const brandLetterRefs = useRef<Array<HTMLSpanElement | null>>([]);
 
   useLayoutEffect(() => {
+    if (!shouldMeasureBrandWordmark) return;
     const wordmark = brandWordmarkRef.current;
     if (!wordmark) return;
 
@@ -86,7 +88,7 @@ export function AuthGate({ children }: Props) {
       resizeObserver?.disconnect();
       window.removeEventListener('resize', measureLetterPositions);
     };
-  }, []);
+  }, [shouldMeasureBrandWordmark]);
 
 
   useEffect(() => {
