@@ -381,52 +381,52 @@
 @media(max-width:480px){.demo-mode-banner{top:6px;gap:8px;padding:7px 9px}.demo-mode-banner small{font-size:9px}.demo-mode-banner button{font-size:10px}}
 
  
-/* Wordmark Farmi: dos puntos parten de la F, rebotan letra por letra y terminan en la i y al final. */
+/* Wordmark Farmi: ambos puntos saltan sobre los centros de cada letra y se separan al aterrizar. */
 .auth-brand-lockup{display:flex;align-items:center;gap:0;color:#fff;font-size:42px;line-height:1;font-weight:850;letter-spacing:-2.2px}
 .auth-brand-symbol{display:none}
 .auth-brand-wordmark{position:relative;display:inline-block;color:#fff}
 .auth-brand-i{position:relative;display:inline-block;color:inherit}
-.auth-brand-i-dot,.auth-brand-end-dot{position:absolute;left:3%;top:.105em;width:.16em;height:.16em;border-radius:50%;background:#45c195;opacity:0;transform:translateX(-50%);animation-duration:2.7s;animation-timing-function:linear;animation-fill-mode:both;animation-delay:.12s}
+.auth-brand-i-dot,.auth-brand-end-dot{position:absolute;left:10%;top:0;width:.16em;height:.16em;border-radius:50%;background:#45c195;opacity:0;transform:translateX(-50%);animation-duration:2.45s;animation-timing-function:cubic-bezier(.42,0,.58,1);animation-fill-mode:both;animation-delay:.12s}
 .auth-brand-i-dot{animation-name:farmi-dot-to-i}
 .auth-brand-end-dot{animation-name:farmi-dot-to-end}
 @keyframes farmi-dot-to-i{
-  0%{left:3%;top:.105em;opacity:0}
-  3%{opacity:1}
-  10%{left:3%;top:-.12em}
-  14%{left:3%;top:.105em}
-  25%{left:23%;top:-.12em}
-  29%{left:23%;top:.105em}
-  40%{left:43%;top:-.12em}
-  44%{left:43%;top:.105em}
-  55%{left:66%;top:-.12em}
-  59%{left:66%;top:.105em}
-  70%{left:88%;top:-.12em}
-  74%{left:88%;top:.105em}
-  82%{left:88%;top:-.035em}
-  89%{left:88%;top:.035em}
-  95%{left:88%;top:-.012em}
-  100%{left:88%;top:.105em;opacity:1}
+  0%{left:10%;top:.02em;opacity:0}
+  4%{opacity:1}
+  10%{left:10%;top:-.16em}
+  15%{left:10%;top:.02em}
+  25%{left:33%;top:-.16em}
+  30%{left:33%;top:.02em}
+  40%{left:52%;top:-.16em}
+  45%{left:52%;top:.02em}
+  55%{left:77%;top:-.16em}
+  60%{left:77%;top:.02em}
+  70%{left:95%;top:-.16em}
+  75%{left:95%;top:.02em}
+  83%{left:95%;top:-.045em}
+  90%{left:95%;top:.02em}
+  96%{left:95%;top:-.012em}
+  100%{left:95%;top:.02em;opacity:1}
 }
 @keyframes farmi-dot-to-end{
-  0%{left:3%;top:.105em;opacity:0}
-  3%{opacity:1}
-  10%{left:3%;top:-.12em}
-  14%{left:3%;top:.105em}
-  25%{left:23%;top:-.12em}
-  29%{left:23%;top:.105em}
-  40%{left:43%;top:-.12em}
-  44%{left:43%;top:.105em}
-  55%{left:66%;top:-.12em}
-  59%{left:66%;top:.105em}
-  70%{left:88%;top:-.12em}
-  74%{left:88%;top:.105em}
-  82%{left:99%;top:-.12em}
-  87%{left:99%;top:.105em}
-  92%{left:99%;top:-.035em}
-  96%{left:99%;top:.035em}
-  100%{left:99%;top:.105em;opacity:1}
+  0%{left:10%;top:.02em;opacity:0}
+  4%{opacity:1}
+  10%{left:10%;top:-.16em}
+  15%{left:10%;top:.02em}
+  25%{left:33%;top:-.16em}
+  30%{left:33%;top:.02em}
+  40%{left:52%;top:-.16em}
+  45%{left:52%;top:.02em}
+  55%{left:77%;top:-.16em}
+  60%{left:77%;top:.02em}
+  70%{left:95%;top:-.16em}
+  75%{left:95%;top:.02em}
+  83%{left:103%;top:-.16em}
+  88%{left:103%;top:.02em}
+  93%{left:103%;top:-.045em}
+  97%{left:103%;top:.02em}
+  100%{left:103%;top:.02em;opacity:1}
 }
 @media(prefers-reduced-motion:reduce){
-  .auth-brand-i-dot{animation:none;opacity:1;left:88%;top:.105em}
-  .auth-brand-end-dot{animation:none;opacity:1;left:99%;top:.105em}
+  .auth-brand-i-dot{animation:none;opacity:1;left:95%;top:-.16em}
+  .auth-brand-end-dot{animation:none;opacity:1;left:103%;top:-.16em}
 }
