@@ -7453,3 +7453,5 @@ button.icon-btn:focus-visible svg,
  .pos-cash-movement-modal .expense-form input:nth-of-type(1){grid-column:1/-1}
  .pos-cash-movement-modal .expense-form button{grid-column:1/-1}
 }
+
+.cash-opening-save{width:100%;margin-top:8px;min-height:36px}
