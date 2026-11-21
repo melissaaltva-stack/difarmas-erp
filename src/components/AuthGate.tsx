@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode, type CSSProperties } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { LogIn, Mail, KeyRound, ShieldAlert, ImagePlus, RotateCcw, Settings, Palette, Check, FlaskConical } from 'lucide-react';
+import { LogIn, Mail, KeyRound, ShieldAlert, ImagePlus, RotateCcw, Settings, Palette, Check, FlaskConical, Save } from 'lucide-react';
 import './AuthGate.css';
 import { requireSupabase, supabase, supabaseConfigured } from '../services/supabaseClient';
 
@@ -32,19 +32,33 @@ export function AuthGate({ children }: Props) {
   const [loginBackground,setLoginBackground] = useState(()=>{try{return window.localStorage.getItem('farmi-login-background')??'';}catch{return '';}});
   const [backgroundError,setBackgroundError] = useState('');
   const [settingsOpen,setSettingsOpen] = useState(false);
+  const [settingsSaved,setSettingsSaved] = useState(false);
   const [backgroundOpacity,setBackgroundOpacity] = useState(()=>{try{return Number(window.localStorage.getItem('farmi-background-opacity')??'58');}catch{return 58;}});
   const [loginTheme,setLoginTheme] = useState(()=>{try{const saved=window.localStorage.getItem('farmi-system-theme')??'emerald';return ['emerald','blue','violet','slate','rose'].includes(saved)?saved:'emerald';}catch{return 'emerald';}});
   const [loginBrandEyebrow,setLoginBrandEyebrow] = useState(()=>{try{return window.localStorage.getItem('farmi-login-brand-eyebrow')??'PLATAFORMA DE GESTIÓN';}catch{return 'PLATAFORMA DE GESTIÓN';}});
   const [loginBrandTitle,setLoginBrandTitle] = useState(()=>{try{return window.localStorage.getItem('farmi-login-brand-title')??'Tu negocio,\nbajo control.';}catch{return 'Tu negocio,\nbajo control.';}});
   const themes=[{id:'emerald',name:'Esmeralda',color:'#16856b'},{id:'blue',name:'Azul',color:'#2867b2'},{id:'violet',name:'Violeta',color:'#7653b5'},{id:'slate',name:'Grafito',color:'#526477'},{id:'rose',name:'Rosa',color:'#b65370'}];
-  useEffect(()=>{document.documentElement.dataset.farmiTheme=loginTheme;try{window.localStorage.setItem('farmi-system-theme',loginTheme);}catch{}},[loginTheme]);
-  useEffect(()=>{try{window.localStorage.setItem('farmi-login-brand-eyebrow',loginBrandEyebrow);}catch{}},[loginBrandEyebrow]);
-  useEffect(()=>{try{window.localStorage.setItem('farmi-login-brand-title',loginBrandTitle);}catch{}},[loginBrandTitle]);
+  useEffect(()=>{document.documentElement.dataset.farmiTheme=loginTheme;},[loginTheme]);
   const resetLoginBrandText = () => {
     setLoginBrandEyebrow('PLATAFORMA DE GESTIÓN');
     setLoginBrandTitle('Tu negocio,\nbajo control.');
+    setSettingsSaved(false);
   };
-  useEffect(()=>{try{window.localStorage.setItem('farmi-background-opacity',String(backgroundOpacity));}catch{}},[backgroundOpacity]);
+  const saveLoginSettings = () => {
+    try {
+      window.localStorage.setItem('farmi-system-theme',loginTheme);
+      window.localStorage.setItem('farmi-login-brand-eyebrow',loginBrandEyebrow);
+      window.localStorage.setItem('farmi-login-brand-title',loginBrandTitle);
+      window.localStorage.setItem('farmi-background-opacity',String(backgroundOpacity));
+      if(loginBackground) window.localStorage.setItem('farmi-login-background',loginBackground);
+      else window.localStorage.removeItem('farmi-login-background');
+      setSettingsSaved(true);
+      setBackgroundError('');
+    } catch {
+      setSettingsSaved(false);
+      setBackgroundError('No se pudieron guardar los cambios. Libera espacio en el navegador e inténtalo de nuevo.');
+    }
+  };
   const [recoveryMode,setRecoveryMode] = useState(false);
   const [recoveryPassword,setRecoveryPassword] = useState('');
   const [confirmRecoveryPassword,setConfirmRecoveryPassword] = useState('');
@@ -160,8 +174,8 @@ export function AuthGate({ children }: Props) {
         let compressed=canvas.toDataURL('image/jpeg',0.78);
         if(compressed.length>2_800_000)compressed=canvas.toDataURL('image/jpeg',0.58);
         try{
-          window.localStorage.setItem('farmi-login-background',compressed);
           setLoginBackground(compressed);
+          setSettingsSaved(false);
           setBackgroundError('');
         }catch{
           setBackgroundError('No hay espacio suficiente en el navegador para guardar esta imagen. Prueba con una imagen más pequeña.');
@@ -173,8 +187,8 @@ export function AuthGate({ children }: Props) {
   };
 
   const clearLoginBackground = () => {
-    try{window.localStorage.removeItem('farmi-login-background');}catch{}
     setLoginBackground('');
+    setSettingsSaved(false);
     setBackgroundError('');
   };
 
@@ -257,26 +271,26 @@ export function AuthGate({ children }: Props) {
     <div className="auth-settings">
       <button type="button" className="auth-settings-trigger" aria-label="Ajustes de apariencia" aria-expanded={settingsOpen} onClick={()=>setSettingsOpen(value=>!value)}><Settings size={19}/></button>
       {settingsOpen&&<div className="auth-settings-menu">
-        <p className="auth-settings-heading">Personalizar FARMI</p>
+        <div className="auth-settings-header"><p className="auth-settings-heading">Personalizar FARMI</p><button type="button" className={`auth-settings-save${settingsSaved?' is-saved':''}`} onClick={saveLoginSettings} aria-label="Guardar cambios" title={settingsSaved?'Cambios guardados':'Guardar cambios'}><Save size={17}/></button></div>
         <div className="auth-copy-settings">
           <p className="auth-settings-section-title">Texto del panel de inicio</p>
           <label htmlFor="login-brand-eyebrow">Texto superior</label>
           <div className="auth-copy-field-row">
-            <input id="login-brand-eyebrow" type="text" value={loginBrandEyebrow} onChange={event=>setLoginBrandEyebrow(event.target.value)} placeholder="PLATAFORMA DE GESTIÓN" maxLength={80}/>
-            <button type="button" onClick={()=>setLoginBrandEyebrow('')} disabled={!loginBrandEyebrow}>Quitar</button>
+            <input id="login-brand-eyebrow" type="text" value={loginBrandEyebrow} onChange={event=>{setLoginBrandEyebrow(event.target.value);setSettingsSaved(false);}} placeholder="PLATAFORMA DE GESTIÓN" maxLength={80}/>
+            <button type="button" onClick={()=>{setLoginBrandEyebrow('');setSettingsSaved(false);}} disabled={!loginBrandEyebrow}>Quitar</button>
           </div>
           <label htmlFor="login-brand-title">Título principal</label>
           <div className="auth-copy-field-row auth-copy-field-row-title">
-            <textarea id="login-brand-title" rows={2} value={loginBrandTitle} onChange={event=>setLoginBrandTitle(event.target.value)} placeholder="Escribe el título que quieras mostrar" maxLength={120}/>
-            <button type="button" onClick={()=>setLoginBrandTitle('')} disabled={!loginBrandTitle}>Quitar</button>
+            <textarea id="login-brand-title" rows={2} value={loginBrandTitle} onChange={event=>{setLoginBrandTitle(event.target.value);setSettingsSaved(false);}} placeholder="Escribe el título que quieras mostrar" maxLength={120}/>
+            <button type="button" onClick={()=>{setLoginBrandTitle('');setSettingsSaved(false);}} disabled={!loginBrandTitle}>Quitar</button>
           </div>
           <p className="auth-copy-hint">Puedes escribir otro texto o dejar cada campo vacío para ocultarlo.</p>
           <button type="button" className="auth-copy-reset" onClick={resetLoginBrandText}>Restablecer textos originales</button>
         </div>
         <label className="auth-settings-item"><span className="auth-settings-icon"><ImagePlus size={17}/></span><span>Cambiar imagen de fondo</span><input type="file" accept="image/*" onChange={handleBackgroundUpload}/></label>
-        <div className="auth-settings-themes"><div className="auth-settings-item-title"><Palette size={17}/> Tema de colores</div><div className="auth-theme-options">{themes.map(theme=><button key={theme.id} type="button" className={loginTheme===theme.id?'selected':''} title={theme.name} aria-label={`Tema ${theme.name}`} onClick={()=>setLoginTheme(theme.id)}><span style={{background:theme.color}}/>{loginTheme===theme.id&&<Check size={12}/>}</button>)}</div><small>{themes.find(theme=>theme.id===loginTheme)?.name}</small><div className="auth-opacity-control"><label htmlFor="login-background-opacity">Transparencia del fondo <strong>{backgroundOpacity}%</strong></label><input id="login-background-opacity" type="range" min="0" max="90" step="5" value={backgroundOpacity} onChange={event=>setBackgroundOpacity(Number(event.target.value))}/><div><span>Más visible</span><span>Más oscuro</span></div></div></div>
+        <div className="auth-settings-themes"><div className="auth-settings-item-title"><Palette size={17}/> Tema de colores</div><div className="auth-theme-options">{themes.map(theme=><button key={theme.id} type="button" className={loginTheme===theme.id?'selected':''} title={theme.name} aria-label={`Tema ${theme.name}`} onClick={()=>{setLoginTheme(theme.id);setSettingsSaved(false);}}><span style={{background:theme.color}}/>{loginTheme===theme.id&&<Check size={12}/>}</button>)}</div><small>{themes.find(theme=>theme.id===loginTheme)?.name}</small><div className="auth-opacity-control"><label htmlFor="login-background-opacity">Transparencia del fondo <strong>{backgroundOpacity}%</strong></label><input id="login-background-opacity" type="range" min="0" max="90" step="5" value={backgroundOpacity} onChange={event=>{setBackgroundOpacity(Number(event.target.value));setSettingsSaved(false);}}/><div><span>Más visible</span><span>Más oscuro</span></div></div></div>
         {loginBackground&&<button type="button" className="auth-settings-item auth-settings-reset" onClick={clearLoginBackground}><span className="auth-settings-icon"><RotateCcw size={16}/></span><span>Restablecer fondo</span></button>}
-        {backgroundError&&<span className="auth-background-error" role="alert">{backgroundError}</span>}
+        {settingsSaved&&!backgroundError&&<span className="auth-settings-saved" role="status">Cambios guardados</span>}{backgroundError&&<span className="auth-background-error" role="alert">{backgroundError}</span>}
       </div>}
     </div>
     <div className="auth-login-layout">
