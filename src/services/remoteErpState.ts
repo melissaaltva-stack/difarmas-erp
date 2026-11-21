@@ -1,5 +1,5 @@
 import type {
-  CashClosure, CashMovement, Customer, Supplier, ErpSettings, Expense, InventoryMovement, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseRecord, PurchaseLogisticsRecord,
+  CashClosure, CashMovement, CashOpeningBalance, Customer, Supplier, ErpSettings, Expense, InventoryMovement, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseRecord, PurchaseLogisticsRecord,
   Receivable, SaleRecord, OrderRecord, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord, QuoteRecord, AccountingAccount, AccountingEntry, HrEmployee, HrAttendanceRecord, HrLeaveRequest, InventoryLot, LotKardexMovement,
 } from '../domain/types';
 import { requireSupabase } from './supabaseClient';
@@ -26,6 +26,7 @@ export type ErpSnapshot = {
   fixedExpenses: number;
   cashClosures?: CashClosure[];
   cashMovements?: CashMovement[];
+  cashOpenings?: CashOpeningBalance[];
   paymentTransactions?: PaymentTransaction[];
   missingProductRequests?: MissingProductRequest[];
   supplierReturns?: SupplierReturnRecord[];
@@ -49,7 +50,7 @@ function normalizeSnapshot(value: unknown): ErpSnapshot {
       throw new Error(`El campo ${key} de los datos guardados no es válido.`);
     }
   }
-  for (const key of ['cashClosures', 'cashMovements', 'paymentTransactions', 'missingProductRequests', 'supplierReturns', 'saleAdjustments', 'quotes', 'orders', 'hrEmployees', 'hrAttendance', 'hrLeaveRequests', 'inventoryLots', 'lotKardex', 'fefoProductIds', 'purchaseLogistics'] as const) {
+  for (const key of ['cashClosures', 'cashMovements', 'cashOpenings', 'paymentTransactions', 'missingProductRequests', 'supplierReturns', 'saleAdjustments', 'quotes', 'orders', 'hrEmployees', 'hrAttendance', 'hrLeaveRequests', 'inventoryLots', 'lotKardex', 'fefoProductIds', 'purchaseLogistics'] as const) {
     if (value[key] !== undefined && !Array.isArray(value[key])) {
       throw new Error(`El campo ${key} de los datos guardados no es válido.`);
     }
@@ -81,6 +82,7 @@ function normalizeSnapshot(value: unknown): ErpSnapshot {
     fixedExpenses,
     cashClosures: value.cashClosures as CashClosure[] | undefined,
     cashMovements: value.cashMovements as CashMovement[] | undefined,
+    cashOpenings: value.cashOpenings as CashOpeningBalance[] | undefined,
     paymentTransactions: value.paymentTransactions as PaymentTransaction[] | undefined,
     missingProductRequests: value.missingProductRequests as MissingProductRequest[] | undefined,
     supplierReturns: value.supplierReturns as SupplierReturnRecord[] | undefined,
