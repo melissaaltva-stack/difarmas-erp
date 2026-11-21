@@ -1,6 +1,6 @@
 import type {
-  CashClosure, CashMovement, Customer, Supplier, ErpSettings, Expense, InventoryMovement, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseRecord,
-  Receivable, SaleRecord, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord, QuoteRecord,
+  CashClosure, CashMovement, Customer, Supplier, ErpSettings, Expense, InventoryMovement, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseRecord, PurchaseLogisticsRecord,
+  Receivable, SaleRecord, OrderRecord, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord, QuoteRecord, AccountingAccount, AccountingEntry, HrEmployee, HrAttendanceRecord, HrLeaveRequest, InventoryLot, LotKardexMovement,
 } from '../domain/types';
 import { requireSupabase } from './supabaseClient';
 
@@ -10,13 +10,18 @@ export type ErpSnapshot = {
   suppliers?: Supplier[];
   products: Product[];
   sales: SaleRecord[];
+  orders?: OrderRecord[];
   purchases: PurchaseRecord[];
+  purchaseLogistics?: PurchaseLogisticsRecord[];
   purchaseCostHistory?: PurchaseCostHistoryEntry[];
   settings?: ErpSettings;
   expenses: Expense[];
   receivables: Receivable[];
   payables: Payable[];
   inventoryMovements: InventoryMovement[];
+  inventoryLots?: InventoryLot[];
+  lotKardex?: LotKardexMovement[];
+  fefoProductIds?: number[];
   monthlyGoal: number;
   fixedExpenses: number;
   cashClosures?: CashClosure[];
@@ -25,6 +30,11 @@ export type ErpSnapshot = {
   missingProductRequests?: MissingProductRequest[];
   supplierReturns?: SupplierReturnRecord[];
   saleAdjustments?: SaleAdjustmentRecord[];
+  accountingAccounts?: AccountingAccount[];
+  accountingEntries?: AccountingEntry[];
+  hrEmployees?: HrEmployee[];
+  hrAttendance?: HrAttendanceRecord[];
+  hrLeaveRequests?: HrLeaveRequest[];
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -39,7 +49,7 @@ function normalizeSnapshot(value: unknown): ErpSnapshot {
       throw new Error(`El campo ${key} de los datos guardados no es válido.`);
     }
   }
-  for (const key of ['cashClosures', 'cashMovements', 'paymentTransactions', 'missingProductRequests', 'supplierReturns', 'saleAdjustments', 'quotes'] as const) {
+  for (const key of ['cashClosures', 'cashMovements', 'paymentTransactions', 'missingProductRequests', 'supplierReturns', 'saleAdjustments', 'quotes', 'orders', 'hrEmployees', 'hrAttendance', 'hrLeaveRequests', 'inventoryLots', 'lotKardex', 'fefoProductIds', 'purchaseLogistics'] as const) {
     if (value[key] !== undefined && !Array.isArray(value[key])) {
       throw new Error(`El campo ${key} de los datos guardados no es válido.`);
     }
@@ -55,13 +65,18 @@ function normalizeSnapshot(value: unknown): ErpSnapshot {
     suppliers: (value.suppliers ?? []) as Supplier[],
     products: (value.products ?? []) as Product[],
     sales: (value.sales ?? []) as SaleRecord[],
+    orders: (value.orders ?? []) as OrderRecord[],
     purchases: (value.purchases ?? []) as PurchaseRecord[],
+    purchaseLogistics: (value.purchaseLogistics ?? []) as PurchaseLogisticsRecord[],
     purchaseCostHistory: (value.purchaseCostHistory ?? []) as PurchaseCostHistoryEntry[],
     settings: value.settings as ErpSettings | undefined,
     expenses: (value.expenses ?? []) as Expense[],
     receivables: (value.receivables ?? []) as Receivable[],
     payables: (value.payables ?? []) as Payable[],
     inventoryMovements: (value.inventoryMovements ?? []) as InventoryMovement[],
+    inventoryLots: (value.inventoryLots ?? []) as InventoryLot[],
+    lotKardex: (value.lotKardex ?? []) as LotKardexMovement[],
+    fefoProductIds: (value.fefoProductIds ?? []) as number[],
     monthlyGoal,
     fixedExpenses,
     cashClosures: value.cashClosures as CashClosure[] | undefined,
@@ -70,6 +85,11 @@ function normalizeSnapshot(value: unknown): ErpSnapshot {
     missingProductRequests: value.missingProductRequests as MissingProductRequest[] | undefined,
     supplierReturns: value.supplierReturns as SupplierReturnRecord[] | undefined,
     saleAdjustments: value.saleAdjustments as SaleAdjustmentRecord[] | undefined,
+    accountingAccounts: (value.accountingAccounts ?? []) as AccountingAccount[],
+    accountingEntries: (value.accountingEntries ?? []) as AccountingEntry[],
+    hrEmployees: (value.hrEmployees ?? []) as HrEmployee[],
+    hrAttendance: (value.hrAttendance ?? []) as HrAttendanceRecord[],
+    hrLeaveRequests: (value.hrLeaveRequests ?? []) as HrLeaveRequest[],
   };
 }
 

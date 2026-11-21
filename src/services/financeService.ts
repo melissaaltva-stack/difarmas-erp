@@ -106,3 +106,10 @@ export function addCashMovement(
 ): CashMovement {
   return { id, type, description, amount, category, date: now.toISOString() };
 }
+
+export type FinanceSyncStatus = 'loading' | 'saving' | 'synced' | 'error';
+
+/** Finance writes are allowed only after the remote snapshot is loaded and the last save succeeded. */
+export function canWriteFinance(remoteReady: boolean, syncStatus: FinanceSyncStatus): boolean {
+  return remoteReady && syncStatus === 'synced';
+}

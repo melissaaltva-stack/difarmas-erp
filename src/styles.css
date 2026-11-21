@@ -2045,8 +2045,7 @@ input,select,textarea{font-size:16px!important;max-width:100%}.form-grid,.settin
 
 /* Tipografía uniforme en todo DIFARMÁS ERP */
 .app :is(h1,h2,h3,h4,h5,h6,p,span,a,button,input,select,textarea,label,small,strong,em,th,td,li,summary,legend),
-.modal :is(h1,h2,h3,h4,h5,h6,p,span,a,button,input,select,textarea,label,small,strong,em,th,td,li,summary,legend),
-.auth-page :is(h1,h2,h3,h4,h5,h6,p,span,a,button,input,select,textarea,label,small,strong,em,th,td,li,summary,legend) {
+.modal :is(h1,h2,h3,h4,h5,h6,p,span,a,button,input,select,textarea,label,small,strong,em,th,td,li,summary,legend) {
   font-size: 13px !important;
 }
 
@@ -4532,4 +4531,1049 @@ button.icon-btn:focus-visible svg,
   #purchases-panel .purchase-tools-row .purchase-history-launch{flex:1 1 calc(50% - 4px)}
   #purchases-panel .purchase-tools-row .cost-comparison-button,
   #purchases-panel .purchase-tools-row .purchase-history-button{width:100%;white-space:normal}
+}
+
+
+/* Indicaciones de medicamentos dentro del módulo Clientes */
+.customer-page-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.medication-instructions-page{display:grid;gap:18px}.medication-instructions-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px}.medication-instructions-head h2{display:flex;align-items:center;gap:10px;margin:10px 0 5px;font-size:22px}.medication-instructions-head h2 svg{color:#16856b}.medication-instructions-head p,.medication-section-title p,.medication-list-heading p{margin:0;color:#71827f;font-size:13px}.text-back{display:inline-flex;align-items:center;gap:7px;border:0;background:transparent;color:#267663;padding:4px 0;cursor:pointer;font-weight:600}.medication-history-count{display:inline-flex;align-items:center;gap:7px;color:#54736c;font-size:12px;background:#edf6f3;border-radius:20px;padding:8px 12px}.medication-editor-card,.medication-history-card{padding:22px}.medication-section-title h3,.medication-list-heading h3{margin:0 0 5px;font-size:16px}.medication-customer-select{max-width:520px;margin-top:18px}.medication-customer-summary{display:flex;align-items:center;gap:10px;background:#f3f8f6;border:1px solid #e0ece7;border-radius:10px;padding:11px 13px;margin:12px 0;color:#267663}.medication-customer-summary strong,.medication-customer-summary small{display:block}.medication-customer-summary strong{color:#243b36;font-size:13px}.medication-customer-summary small{color:#72847f;font-size:11px;margin-top:3px}.medication-list-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:20px 0 12px}.medication-list-heading h3{display:flex;align-items:center;gap:8px}.medication-entry-list{display:grid;gap:12px}.medication-entry{border:1px solid #e4ece8;border-radius:12px;padding:14px;background:#fbfdfc}.medication-entry-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;color:#2c5148;font-size:13px}.medication-entry-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.medication-entry-grid .customer-form-field input,.medication-bottom-fields .customer-form-field input,.medication-bottom-fields .customer-form-field textarea,.medication-customer-select select{width:100%;min-width:0}.medication-bottom-fields{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-top:16px}.medication-save-row{display:flex;justify-content:space-between;align-items:center;gap:14px;border-top:1px solid #e8efec;margin-top:18px;padding-top:16px}.medication-save-row small{color:#74837f;max-width:540px;line-height:1.5}.medication-history-card .medication-list-heading{margin-top:0}.medication-history-list{display:grid;gap:10px}.medication-history-item{display:grid;grid-template-columns:minmax(160px,1fr) minmax(180px,2fr) auto;align-items:center;gap:14px;border:1px solid #e6eeeb;border-radius:10px;padding:13px}.medication-history-meta span{display:flex;align-items:center;gap:6px;color:#657b75;font-size:12px}.medication-history-meta strong{display:block;margin-top:5px;font-size:12px}.medication-history-drugs{display:flex;flex-wrap:wrap;gap:6px}.medication-history-drugs span{font-size:11px;background:#f0f6f3;color:#3e6258;border-radius:6px;padding:5px 7px}@media(max-width:850px){.medication-entry-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.medication-history-item{grid-template-columns:1fr auto}.medication-history-drugs{grid-column:1/-1;grid-row:2}.medication-history-item>button{grid-column:2;grid-row:1}.medication-bottom-fields{grid-template-columns:1fr}}@media(max-width:560px){.medication-instructions-head{align-items:flex-start;flex-direction:column}.medication-entry-grid{grid-template-columns:1fr}.medication-list-heading{align-items:flex-start;flex-direction:column}.medication-save-row{align-items:stretch;flex-direction:column}.medication-save-row button{width:100%;justify-content:center}.medication-editor-card,.medication-history-card{padding:15px}.customer-page-actions{width:100%}.customer-page-actions button{flex:1;justify-content:center}}
+@media print{@page{size:letter;margin:14mm}body *{visibility:hidden!important}.medication-print-sheet,.medication-print-sheet *{visibility:visible!important}.medication-print-sheet{display:block!important;position:absolute!important;left:0!important;top:0!important;width:100%!important;color:#17252a!important;background:#fff!important;font-family:Arial,sans-serif!important}.medication-print-sheet header{display:flex;align-items:center;gap:18px;border-bottom:2px solid #16856b;padding-bottom:14px;margin-bottom:20px}.medication-print-brand{font-size:23px;font-weight:800;letter-spacing:1px;color:#167b61}.medication-print-sheet h1{font-size:19px;margin:0 0 4px}.medication-print-sheet header p{font-size:11px;color:#64736f;margin:0}.medication-print-patient{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;background:#f5f8f7;padding:14px;border:1px solid #e0e8e5;margin-bottom:22px}.medication-print-patient small,.medication-print-patient strong,.medication-print-sheet td small{display:block}.medication-print-patient small,.medication-print-sheet footer small{font-size:9px;color:#65736f;margin-bottom:4px}.medication-print-patient strong{font-size:11px}.medication-print-sheet h2{font-size:13px;margin:0 0 10px}.medication-print-sheet table{width:100%;border-collapse:collapse;font-size:10px}.medication-print-sheet th{text-align:left;background:#eef4f1;padding:9px;border:1px solid #dce7e2}.medication-print-sheet td{padding:9px;border:1px solid #dce7e2;vertical-align:top}.medication-print-sheet td small{font-size:9px;color:#64736f;margin-top:3px}.medication-print-notes{margin-top:20px;border:1px solid #dce7e2;padding:12px;font-size:10px}.medication-print-notes p{margin:6px 0 0;white-space:pre-wrap}.medication-print-sheet footer{margin-top:40px;display:flex;justify-content:space-between;gap:20px;align-items:flex-end}.medication-print-sheet footer strong{display:block;border-top:1px solid #7b8984;padding-top:7px;min-width:180px;font-size:10px}.medication-print-sheet footer p{font-size:9px;color:#65736f;max-width:250px}}
+
+
+/* Ficha del cliente y ventana secundaria de indicaciones médicas */
+.customer-name-link{display:inline;padding:0;border:0;background:transparent;color:#176b59;font:inherit;font-size:13px;font-weight:750;text-align:left;cursor:pointer}
+.customer-name-link:hover{text-decoration:underline;color:#0f5949}
+.customer-name-link:focus-visible{outline:2px solid #73b99e;outline-offset:3px;border-radius:3px}
+.customer-detail-modal{width:min(680px,calc(100vw - 28px));max-height:calc(100dvh - 32px);overflow:auto;padding:22px}
+.customer-detail-header{display:flex;align-items:center;gap:13px;padding-bottom:18px;border-bottom:1px solid #e7efeb}
+.customer-detail-avatar{width:48px;height:48px;flex:0 0 48px;display:grid;place-items:center;border-radius:14px;background:#eaf5f0;color:#18765f}
+.customer-detail-header>div:nth-child(2){flex:1;min-width:0}
+.customer-detail-header h2{margin:0;color:#203a33;font-size:19px}
+.customer-detail-header p{margin:4px 0 0;color:#71827c;font-size:12px}
+.customer-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 20px;padding:18px 0}
+.customer-detail-grid>div{display:grid;gap:5px;padding:11px 0;border-bottom:1px solid #edf2ef;min-width:0}
+.customer-detail-grid small{color:#7b8b85;font-size:11px;font-weight:650}
+.customer-detail-grid strong{color:#2c403a;font-size:13px;font-weight:600;overflow-wrap:anywhere}
+.customer-detail-full{grid-column:1/-1}
+.customer-detail-notes{white-space:pre-wrap}
+.customer-detail-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:16px;border-top:1px solid #e7efeb}
+.customer-detail-footer>span{display:flex;align-items:center;gap:7px;color:#627b72;font-size:12px}
+.medication-modal-backdrop{z-index:1002;align-items:flex-start;overflow-y:auto;padding:16px}
+.medication-instructions-modal{width:min(960px,calc(100vw - 28px));max-height:calc(100dvh - 32px);overflow:auto;padding:18px;display:grid;gap:14px}
+.medication-modal-header{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.medication-modal-header h2{display:flex;align-items:center;gap:9px;margin:0;color:#23483d;font-size:19px}
+.medication-modal-header h2 svg{color:#16856b}
+.medication-modal-header p{margin:4px 0 0;color:#75847f;font-size:12px}
+.medication-instructions-modal .medication-editor-card,.medication-instructions-modal .medication-history-card{padding:16px;box-shadow:none}
+.medication-instructions-modal .medication-section-title p{font-size:12px}
+.medication-instructions-modal .medication-entry-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.medication-modal-footer{display:flex;justify-content:flex-end;padding-top:2px}
+@media(max-width:650px){.customer-detail-modal{padding:16px}.customer-detail-grid{grid-template-columns:1fr;gap:0}.customer-detail-full{grid-column:auto}.customer-detail-footer{align-items:stretch;flex-direction:column}.customer-detail-footer button{width:100%;justify-content:center}.medication-modal-backdrop{padding:8px}.medication-instructions-modal{width:calc(100vw - 16px);max-height:calc(100dvh - 16px);padding:12px}.medication-instructions-modal .medication-entry-grid{grid-template-columns:1fr}.medication-instructions-modal .medication-list-heading{align-items:center;flex-direction:row}}
+
+.customer-create-instruction{width:42px;height:42px;display:inline-grid;place-items:center;flex:0 0 42px;border:1px solid #cfe4da;border-radius:11px;background:#eaf5f0;color:#16765f}.customer-create-instruction:hover{background:#dff0e8;border-color:#a8d3c1}
+
+
+/* Interacción de filas de clientes: clic para ficha, doble clic para edición */
+.customer-clickable-row{cursor:pointer;transition:background-color .12s ease}
+.customer-clickable-row:hover{background:#f2f8f5}
+.customer-clickable-row:focus-visible{outline:2px solid #72b89e;outline-offset:-2px}
+.customer-clickable-row .customer-name-link{pointer-events:none}
+.customer-clickable-row .customer-actions{cursor:default}
+
+
+/* Clientes: búsqueda y alta en una sola fila */
+.customers-page .customer-search-toolbar{display:flex;flex-direction:column;align-items:stretch;gap:6px}
+.customers-page .customer-search-actions-row{display:flex;align-items:center;gap:10px;min-width:0}
+.customers-page .customer-search-actions-row .search{flex:1 1 auto;min-width:0;max-width:none}
+.customers-page .customer-search-actions-row .primary{flex:0 0 auto;white-space:nowrap}
+.customers-page .customer-search-toolbar>.count{text-align:right}
+@media(max-width:420px){
+ .customers-page .customer-search-actions-row{gap:6px}
+ .customers-page .customer-search-actions-row .primary{padding:8px 9px;font-size:11px}
+ .customers-page .customer-search-actions-row .primary svg{width:14px;height:14px}
+}
+
+
+/* Pedidos: gestión de reservas de inventario */
+.orders-page{display:grid;gap:16px}
+.orders-page>.page-intro{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.orders-page .order-editor{display:grid;gap:14px}
+.orders-page .order-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.orders-page .order-actions button{display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
+.orders-page .order-editor input{max-width:120px}
+@media(max-width:700px){.orders-page .order-actions{align-items:stretch}.orders-page .order-actions button{font-size:11px;padding:7px 9px}.orders-page>.page-intro{flex-direction:column}}
+
+
+/* Contabilidad general */
+.accounting-page{display:grid;gap:15px}
+.accounting-intro{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.accounting-tabs{display:flex;gap:6px;flex-wrap:wrap;padding:5px;background:#edf3f0;border:1px solid #e0eae5;border-radius:11px}
+.accounting-tabs button{border:0;border-radius:8px;background:transparent;color:#587169;padding:9px 12px;font-size:12px;font-weight:650;cursor:pointer}
+.accounting-tabs button.active{background:#fff;color:#176b50;box-shadow:0 1px 4px #183b3018}
+.accounting-period{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;padding:12px 14px;background:#fff;border:1px solid #e3ebe7;border-radius:10px}
+.accounting-period label,.accounting-form-grid label,.accounting-new-account label,.accounting-major-select{display:grid;gap:5px;color:#61766e;font-size:11px;font-weight:650}
+.accounting-period input,.accounting-form-grid input,.accounting-new-account input,.accounting-new-account select,.accounting-major-select select{height:36px;min-width:0;padding:7px 9px;border:1px solid #dce7e1;border-radius:7px;background:#fff;color:#263c34;font:inherit;font-size:12px}
+.accounting-period>span{margin-left:auto;color:#758780;font-size:11px}
+.accounting-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.accounting-metrics article{display:grid;gap:8px;padding:16px;background:#fff;border:1px solid #e2ebe6;border-radius:11px;min-width:0}
+.accounting-metrics article span,.accounting-source-grid span{color:#71837b;font-size:11px}
+.accounting-metrics article strong{font-size:19px;color:#24483b;overflow-wrap:anywhere}
+.accounting-metrics .positive{color:#187a55}.accounting-metrics .negative{color:#b34d46}
+.accounting-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}
+.accounting-section-head h3{display:flex;align-items:center;gap:7px;margin:0;color:#25463b;font-size:15px}
+.accounting-section-head p{margin:4px 0 0;color:#7a8983;font-size:11px}
+.accounting-section-head>svg{color:#43866b;flex:0 0 auto}
+.accounting-source-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.accounting-source-grid>div{display:grid;gap:7px;padding:13px;background:#f7faf8;border:1px solid #e7efea;border-radius:9px}
+.accounting-source-grid strong{color:#24483b;font-size:17px}
+.accounting-note,.accounting-disclaimer{margin:12px 0 0;color:#778780;font-size:11px;line-height:1.55}
+.accounting-balance-line{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #edf1ee;color:#60756c;font-size:12px}
+.accounting-balance-line strong{color:#27463b;font-variant-numeric:tabular-nums}
+.accounting-entry-form{display:grid;gap:14px}
+.accounting-form-grid{display:grid;grid-template-columns:170px minmax(180px,1fr);gap:12px}
+.accounting-form-grid .accounting-description{grid-column:1/-1}
+.accounting-form-grid input{width:100%}
+.accounting-entry-form table{min-width:720px}
+.accounting-entry-form td input,.accounting-entry-form td select{width:100%;min-width:90px;height:34px;padding:6px 8px;border:1px solid #dce7e1;border-radius:6px;font:inherit;font-size:11px}
+.accounting-entry-form td:first-child select{min-width:220px}
+.accounting-add-line{justify-self:start;display:inline-flex;align-items:center;gap:6px}
+.accounting-entry-totals{display:flex;justify-content:flex-end;gap:24px;flex-wrap:wrap;padding:12px;background:#f5f9f6;border-radius:8px;color:#64776f;font-size:12px}
+.accounting-entry-totals strong{color:#234a3c}
+.accounting-ref{display:block;margin-top:4px;color:#809088;font-size:10px}
+.accounting-major-select{max-width:420px;margin-bottom:14px}
+.accounting-major-select select{width:100%;margin-top:5px}
+.accounting-report-group{margin:18px 0}
+.accounting-report-group h4{margin:0 0 6px;color:#355b4c;font-size:12px}
+.accounting-result-total{display:flex;justify-content:space-between;gap:12px;margin-top:18px;padding:15px;background:#eef7f1;border:1px solid #dcece1;border-radius:9px;color:#28513f;font-size:13px;font-weight:700}
+.accounting-new-account{display:grid;grid-template-columns:110px minmax(180px,1fr) 170px auto;align-items:end;gap:10px;margin-bottom:18px}
+.accounting-new-account input,.accounting-new-account select{width:100%}
+.accounting-new-account button{height:36px;white-space:nowrap}
+.accounting-disclaimer{padding:10px 12px;background:#f7f8f6;border:1px solid #e8ece8;border-radius:8px}
+@media(max-width:900px){.accounting-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.accounting-new-account{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.accounting-intro{flex-direction:column}.accounting-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.accounting-tabs button{text-align:center;padding:9px 6px}.accounting-metrics{gap:8px}.accounting-metrics article{padding:12px}.accounting-metrics article strong{font-size:16px}.accounting-source-grid{grid-template-columns:1fr}.accounting-form-grid{grid-template-columns:1fr}.accounting-form-grid .accounting-description{grid-column:auto}.accounting-period{align-items:stretch}.accounting-period label{flex:1 1 130px}.accounting-period>span{width:100%;margin-left:0}.accounting-new-account{grid-template-columns:1fr}.accounting-new-account button{width:100%}.accounting-entry-totals{justify-content:space-between;gap:8px}}
+
+/* Cuentas por cobrar dentro de la ficha de cada cliente */
+.customer-receivables-section{border-top:1px solid #e7efeb;padding-top:17px;margin-top:4px}
+.customer-receivables-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.customer-receivables-heading h3{display:flex;align-items:center;gap:8px;margin:0;color:#203a33;font-size:14px}
+.customer-receivables-heading p{margin:4px 0 0;color:#71827c;font-size:11px}
+.customer-receivables-heading>strong{font-size:17px;color:#18765f;white-space:nowrap}
+.customer-receivables-empty{padding:15px;border:1px dashed #dce8e2;border-radius:10px;color:#71827c;font-size:12px;text-align:center}
+.customer-receivables-list{display:grid;gap:9px}
+.customer-receivable-item{border:1px solid #e7efeb;border-radius:10px;padding:12px;min-width:0}
+.customer-receivable-meta{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.customer-receivable-meta strong{font-size:12px;color:#2c403a}
+.customer-receivable-meta span,.customer-receivables-history span{font-size:11px;color:#71827c}
+.customer-receivable-amounts{display:flex;flex-wrap:wrap;gap:8px 18px;margin:10px 0;font-size:11px;color:#71827c}
+.customer-receivable-amounts b{color:#2c403a;margin-left:3px}
+.customer-receivable-payment{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.customer-receivable-payment input{flex:1 1 130px;min-width:100px}
+.customer-receivable-payment select{width:auto;min-width:115px}
+.customer-receivable-payment button{white-space:nowrap}
+.customer-receivable-paid{display:inline-flex;padding:4px 8px;border-radius:20px;background:#eaf5f0;color:#18765f;font-size:11px;font-weight:650}
+.customer-receivables-notice{margin:0 0 10px;color:#18765f;font-size:11px}
+.customer-receivables-history{display:grid;gap:7px;margin-top:13px;padding-top:12px;border-top:1px solid #edf2ef}
+.customer-receivables-history>strong{font-size:12px;color:#2c403a}
+.customer-receivables-history>div{display:flex;justify-content:space-between;gap:12px}
+.customer-receivables-history>div b{font-size:11px;color:#2c403a}
+@media(max-width:560px){.customer-receivable-meta{align-items:flex-start;flex-direction:column;gap:3px}.customer-receivable-payment{display:grid;grid-template-columns:1fr 1fr;width:100%}.customer-receivable-payment input,.customer-receivable-payment button{grid-column:1/-1}}
+
+.customer-section-dropdown{display:flex;align-items:center;gap:10px;margin:0 0 16px}.customer-section-dropdown label{font-size:12px;font-weight:650;color:#52665d}.customer-section-dropdown select{width:min(280px,100%);min-height:38px;padding:8px 34px 8px 11px;border:1px solid #d8e3dd;border-radius:8px;background:#fff;color:#263d35;font-size:13px;font-weight:600;cursor:pointer}.customer-section-dropdown select:focus{outline:2px solid #b8ddce;outline-offset:1px}.customer-ar-overview{display:grid;gap:14px}.customer-ar-customer-list{display:grid;gap:12px}.customer-ar-customer{padding:15px}.customer-ar-customer>header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.customer-ar-customer>header>div{display:grid;gap:4px}.customer-ar-customer>header strong{font-size:14px;color:#263d35}.customer-ar-customer>header small{font-size:11px;color:#71827c}.customer-ar-customer>header>span{font-size:15px;font-weight:700;color:#18765f;white-space:nowrap}.customer-ar-customer .customer-receivables-section{border-top:1px solid #edf2ef;margin-top:0}.customer-ar-empty{padding:28px;text-align:center;color:#71827c;font-size:13px}@media(max-width:560px){.customer-section-dropdown{align-items:stretch;flex-direction:column;gap:6px}.customer-section-dropdown select{width:100%}.customer-ar-customer{padding:11px}}
+
+
+/* Cuentas por cobrar: búsqueda y filtros */
+.receivables-toolbar{display:grid;grid-template-columns:minmax(0,1fr) 190px auto;align-items:end;gap:14px;margin:16px 0;padding:14px;background:#f7faf9;border:1px solid #e2ebe7;border-radius:12px}
+.receivables-search-field,.receivables-status-field{display:grid;gap:7px;min-width:0}
+.receivables-search-field>label,.receivables-status-field>label{font-size:11px;font-weight:750;letter-spacing:.02em;color:#526c63}
+.receivables-search-control{height:44px;display:flex;align-items:center;gap:10px;min-width:0;padding:0 12px;border:1px solid #d3e1dc;border-radius:9px;background:#fff;color:#70877e;transition:border-color .15s ease,box-shadow .15s ease}
+.receivables-search-control:focus-within{border-color:#168367;box-shadow:0 0 0 3px rgba(22,131,103,.11)}
+.receivables-search-control input{flex:1;min-width:0;height:100%;padding:0!important;border:0!important;outline:0!important;box-shadow:none!important;background:transparent!important;color:#20352d;font:inherit;font-size:13px}
+.receivables-search-control input::placeholder{color:#98a9a2}
+.receivables-clear{display:grid;place-items:center;flex:0 0 27px;width:27px;height:27px;padding:0;border-radius:7px;background:#edf3f0;color:#617a70;font-size:19px;line-height:1}
+.receivables-clear:hover{background:#dfeae5;color:#245d49}
+.receivables-status-field select{width:100%;height:44px;min-width:0;padding:0 11px;border:1px solid #d3e1dc;border-radius:9px;background:#fff;color:#20352d;font:inherit;font-size:13px}
+.receivables-status-field select:focus{outline:0;border-color:#168367;box-shadow:0 0 0 3px rgba(22,131,103,.11)}
+.receivables-results{display:flex;align-items:center;justify-content:center;gap:5px;height:44px;padding:0 12px;border-radius:9px;background:#eaf3ef;color:#60786e;font-size:12px;white-space:nowrap}
+.receivables-results strong{color:#17694f;font-size:15px}
+@media(max-width:760px){.receivables-toolbar{grid-template-columns:minmax(0,1fr) 180px}.receivables-results{grid-column:1/-1;justify-self:end;height:32px;padding:0 10px}}
+@media(max-width:520px){.receivables-toolbar{grid-template-columns:1fr;gap:11px;padding:12px}.receivables-results{grid-column:auto;justify-self:end}}
+@media print{.receivables-toolbar{display:none!important}}
+
+
+/* Impresión de recibos y estados de cuenta */
+.receivable-print-button{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 10px;border-radius:8px;font-size:11px;font-weight:700;white-space:nowrap}
+.settings-notice>span{flex:1;min-width:0}
+.settings-notice .secondary{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 11px;border:1px solid #c9dfd4;border-radius:8px;background:#fff;color:#17664f;font-size:11px;font-weight:700;white-space:nowrap}
+.settings-notice .secondary:hover{background:#f4faf6}
+@media(max-width:650px){.settings-notice{flex-wrap:wrap;gap:8px}.settings-notice>span{flex-basis:100%}}
+
+
+/* Historial de cobros desplegable */
+.receivables-history-card{padding:0;overflow:hidden}
+.receivables-history-toggle{width:100%;min-height:66px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 18px;border:0;background:#fff;color:#20352d;text-align:left;cursor:pointer}
+.receivables-history-toggle:hover{background:#f8fbf9}
+.receivables-history-title{display:grid;gap:4px}
+.receivables-history-title strong{font-size:14px;font-weight:750;color:#203b31}
+.receivables-history-title small{font-size:11px;color:#74877e}
+.receivables-history-toggle>svg{flex:0 0 auto;color:#567267;transition:transform .18s ease}
+.receivables-history-toggle>svg.is-open{transform:rotate(180deg)}
+.receivables-history-card>.table-wrap{border-top:1px solid #e8efeb}
+.receivables-history-card .table-wrap table{margin:0}
+@media(max-width:600px){.receivables-history-toggle{min-height:60px;padding:12px 14px}}
+@media print{.receivables-history-toggle{display:none!important}.receivables-history-card>.table-wrap{display:block!important}}
+
+
+/* Customer-ledger receivables workflow */
+.receivables-customer-search{position:relative;z-index:2;margin-bottom:14px}
+.receivables-customer-search .receivables-search-field{max-width:620px;position:relative}
+.receivables-customer-results{position:absolute;top:100%;left:0;right:0;z-index:8;margin-top:5px;background:#fff;border:1px solid #dce8e5;border-radius:10px;box-shadow:0 12px 30px #173e3e18;max-height:280px;overflow:auto}
+.receivables-customer-results button{width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border:0;border-bottom:1px solid #edf2f1;background:#fff;text-align:left;cursor:pointer;color:#233c37}
+.receivables-customer-results button:hover{background:#f2f8f5}
+.receivables-customer-results button small,.receivables-customer-results p{color:#718a85;font-size:11px}
+.receivables-customer-results p{padding:10px 14px}
+.receivables-empty-ledger{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;padding:42px 20px;color:#718a85;text-align:center}
+.receivables-empty-ledger strong{color:#36534d;font-size:14px}
+.receivables-empty-ledger span{font-size:12px}
+.receivables-ledger-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:16px}
+.receivables-ledger-head h3{margin:0;font-size:17px;color:#203d36}
+.receivables-ledger-head p{margin:5px 0 0;color:#718a85;font-size:12px}
+.receivables-ledger-actions{display:flex;gap:8px;flex-wrap:wrap}
+.receivables-ledger-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 16px}
+.receivables-ledger-summary>div{padding:12px;border:1px solid #e2ebe9;border-radius:10px;background:#fbfdfc}
+.receivables-ledger-summary small,.receivables-ledger-summary strong{display:block}
+.receivables-ledger-summary small{font-size:10px;color:#718a85}
+.receivables-ledger-summary strong{margin-top:5px;font-size:16px;color:#21483d}
+.receivables-credit-tag,.receivables-debit-tag{display:inline-block;padding:4px 8px;border-radius:99px;font-size:10px;font-weight:800}
+.receivables-credit-tag{background:#e2f4ee;color:#17674f}
+.receivables-debit-tag{background:#fff3df;color:#986515}
+.receivables-invoices{margin-top:22px}
+.receivables-invoices h4,.receivables-modal-invoices h4{margin:0 0 10px;color:#36534d;font-size:13px}
+.receivables-modal-backdrop{z-index:30}
+.receivables-payment-modal{width:min(680px,100%)}
+.receivables-modal-invoices{margin:10px 0 16px}
+.receivables-invoice-option{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #e0e9e5;border-radius:10px;margin:8px 0;cursor:pointer}
+.receivables-invoice-option.selected{border-color:#269878;background:#f1faf6;box-shadow:0 0 0 2px #26987818}
+.receivables-invoice-option input{accent-color:#167b61}
+.receivables-invoice-option>span:first-of-type{flex:1;min-width:0}
+.receivables-invoice-option strong,.receivables-invoice-option small{display:block}
+.receivables-invoice-option small{margin-top:4px;color:#718a85;font-size:10px}
+.receivables-payment-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.receivables-payment-fields label{display:block;font-size:11px;font-weight:700;color:#607a74}
+.receivables-payment-fields input,.receivables-payment-fields select{display:block;width:100%;margin-top:6px;border:1px solid #d9e5e2;border-radius:8px;padding:10px;font:inherit;color:#233c37;background:#fff}
+.receivables-selected-balance{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;padding:11px 13px;background:#f1f7f4;border-radius:9px;color:#607a74;font-size:11px}
+.receivables-selected-balance strong{font-size:16px;color:#16664f}
+@media(max-width:760px){.receivables-ledger-head{align-items:flex-start;flex-direction:column}.receivables-ledger-actions{width:100%}.receivables-ledger-actions button{flex:1}.receivables-ledger-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.receivables-payment-fields{grid-template-columns:1fr}.receivables-selected-balance{grid-column:auto}.receivables-invoice-option{align-items:flex-start;flex-wrap:wrap}.receivables-invoice-option>span:last-child{margin-left:28px}}
+
+/* FARMI: tema global aplicado a toda la interfaz */
+:root[data-farmi-theme]{
+  --farmi-ui-primary:var(--farmi-accent,#16856b);
+  --farmi-ui-primary-dark:var(--farmi-accent-dark,#116a56);
+  --farmi-ui-primary-soft:var(--farmi-accent-soft,#e7f4ef);
+  --farmi-ui-sidebar:color-mix(in srgb,var(--farmi-ui-primary-dark) 28%,#102f2f);
+  --farmi-ui-sidebar-hover:color-mix(in srgb,var(--farmi-ui-primary) 34%,#102f2f);
+  --farmi-ui-border:color-mix(in srgb,var(--farmi-ui-primary) 19%,#e2ebe9);
+  --farmi-ui-focus:color-mix(in srgb,var(--farmi-ui-primary) 20%,transparent);
+}
+:root[data-farmi-theme] body{accent-color:var(--farmi-ui-primary)}
+:root[data-farmi-theme] .sidebar{background:var(--farmi-ui-sidebar)}
+:root[data-farmi-theme] .brand-mark,
+:root[data-farmi-theme] .auth-logo{background:var(--farmi-ui-primary)}
+:root[data-farmi-theme] .nav:hover,
+:root[data-farmi-theme] .nav.active,
+:root[data-farmi-theme] .nav-submenu button.active{background:var(--farmi-ui-sidebar-hover);color:#fff}
+:root[data-farmi-theme] .primary,
+:root[data-farmi-theme] .checkout-btn,
+:root[data-farmi-theme] .type.active,
+:root[data-farmi-theme] .tab.active,
+:root[data-farmi-theme] .segmented-control button.active{background:var(--farmi-ui-primary);border-color:var(--farmi-ui-primary);color:#fff}
+:root[data-farmi-theme] .primary:hover,
+:root[data-farmi-theme] .checkout-btn:hover{background:var(--farmi-ui-primary-dark);border-color:var(--farmi-ui-primary-dark)}
+:root[data-farmi-theme] .secondary,
+:root[data-farmi-theme] .icon-btn{background:var(--farmi-ui-primary-soft);color:var(--farmi-ui-primary-dark);border-color:var(--farmi-ui-border)}
+:root[data-farmi-theme] .pill,
+:root[data-farmi-theme] .stock:not(.low),
+:root[data-farmi-theme] .change-line{background:var(--farmi-ui-primary-soft);border-color:var(--farmi-ui-border);color:var(--farmi-ui-primary-dark)}
+:root[data-farmi-theme] .hero{background:linear-gradient(120deg,var(--farmi-ui-primary-dark),var(--farmi-ui-primary))}
+:root[data-farmi-theme] .hero .pill{background:color-mix(in srgb,var(--farmi-ui-primary-soft) 82%,white);color:var(--farmi-ui-primary-dark)}
+:root[data-farmi-theme] .grand strong,
+:root[data-farmi-theme] .auth-logo,
+:root[data-farmi-theme] a,
+:root[data-farmi-theme] .link-button{color:var(--farmi-ui-primary)}
+:root[data-farmi-theme] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+:root[data-farmi-theme] select:focus,
+:root[data-farmi-theme] textarea:focus,
+:root[data-farmi-theme] .search:focus-within,
+:root[data-farmi-theme] .search-pos:focus-within,
+:root[data-farmi-theme] .social-search:focus-within{border-color:var(--farmi-ui-primary);box-shadow:0 0 0 4px var(--farmi-ui-focus)}
+:root[data-farmi-theme] .progress-fill,
+:root[data-farmi-theme] .bar.current{background:var(--farmi-ui-primary)}
+:root[data-farmi-theme] .bar{background:color-mix(in srgb,var(--farmi-ui-primary) 28%,white)}
+:root[data-farmi-theme] .card{border-color:var(--farmi-ui-border)}
+:root[data-farmi-theme] th{background:var(--farmi-ui-primary-soft);color:var(--farmi-ui-primary-dark)}
+:root[data-farmi-theme] .status span{background:var(--farmi-ui-primary)}
+:root[data-farmi-theme] .field-focus,
+:root[data-farmi-theme] .auth-login-card .auth-logo{color:var(--farmi-ui-primary)}
+
+/* FARMI theme coverage: secondary actions, controls and accent text */
+:root[data-farmi-theme] .app button:not(.primary):not(.checkout-btn):not(.danger):not(.delete):not(.remove):not(.success):not(.warning):not(.nav-parent):not(.mobile-menu-close):not(.close-btn):not([aria-label*="Cerrar"]):not([aria-label*="Eliminar"]):not([disabled]){
+  border-color:var(--farmi-ui-border);
+}
+:root[data-farmi-theme] .app button.secondary,
+:root[data-farmi-theme] .app button.outline,
+:root[data-farmi-theme] .app button.ghost,
+:root[data-farmi-theme] .app button.subtle,
+:root[data-farmi-theme] .app button.action-btn,
+:root[data-farmi-theme] .app button.icon-btn,
+:root[data-farmi-theme] .app button.filter-btn,
+:root[data-farmi-theme] .app button.tab-btn,
+:root[data-farmi-theme] .app [role="tab"]{
+  background-color:var(--farmi-ui-primary-soft) !important;
+  border-color:var(--farmi-ui-border) !important;
+  color:var(--farmi-ui-primary-dark) !important;
+}
+:root[data-farmi-theme] .app button.secondary:hover,
+:root[data-farmi-theme] .app button.outline:hover,
+:root[data-farmi-theme] .app button.ghost:hover,
+:root[data-farmi-theme] .app button.subtle:hover,
+:root[data-farmi-theme] .app button.action-btn:hover,
+:root[data-farmi-theme] .app button.icon-btn:hover,
+:root[data-farmi-theme] .app button.filter-btn:hover,
+:root[data-farmi-theme] .app button.tab-btn:hover,
+:root[data-farmi-theme] .app [role="tab"]:hover{
+  background-color:color-mix(in srgb,var(--farmi-ui-primary) 16%,white) !important;
+  color:var(--farmi-ui-primary-dark) !important;
+}
+:root[data-farmi-theme] .app button.primary,
+:root[data-farmi-theme] .app button.checkout-btn,
+:root[data-farmi-theme] .app button[type="submit"]:not(.danger){
+  background-color:var(--farmi-ui-primary) !important;
+  border-color:var(--farmi-ui-primary) !important;
+  color:#fff !important;
+}
+:root[data-farmi-theme] .app button.primary:hover,
+:root[data-farmi-theme] .app button.checkout-btn:hover,
+:root[data-farmi-theme] .app button[type="submit"]:not(.danger):hover{
+  background-color:var(--farmi-ui-primary-dark) !important;
+  border-color:var(--farmi-ui-primary-dark) !important;
+}
+:root[data-farmi-theme] .app .text-primary,
+:root[data-farmi-theme] .app .text-accent,
+:root[data-farmi-theme] .app .accent,
+:root[data-farmi-theme] .app .section-title,
+:root[data-farmi-theme] .app .page-title,
+:root[data-farmi-theme] .app .module-title,
+:root[data-farmi-theme] .app .section-heading,
+:root[data-farmi-theme] .app .link-button,
+:root[data-farmi-theme] .app .field-focus,
+:root[data-farmi-theme] .app .grand strong{
+  color:var(--farmi-ui-primary) !important;
+}
+:root[data-farmi-theme] .app .nav-submenu button.active,
+:root[data-farmi-theme] .app .tab.active,
+:root[data-farmi-theme] .app .type.active,
+:root[data-farmi-theme] .app .segmented-control button.active{
+  background-color:var(--farmi-ui-primary) !important;
+  border-color:var(--farmi-ui-primary) !important;
+  color:#fff !important;
+}
+:root[data-farmi-theme] .app button:focus-visible,
+:root[data-farmi-theme] .app a:focus-visible,
+:root[data-farmi-theme] .app [role="tab"]:focus-visible{
+  outline-color:var(--farmi-ui-primary) !important;
+  box-shadow:0 0 0 3px var(--farmi-ui-focus) !important;
+}
+
+
+/* FARMI theme v2: palette centralized and consistent across all modules */
+:root[data-farmi-theme="emerald"]{--farmi-ui-primary:#16856b;--farmi-ui-primary-dark:#116a56;--farmi-ui-primary-soft:#e7f4ef;--farmi-ui-border:#cfe5dc;--farmi-ui-sidebar:#123b35;--farmi-ui-sidebar-hover:#1b5b4d;--farmi-ui-focus:rgba(22,133,107,.2)}
+:root[data-farmi-theme="blue"]{--farmi-ui-primary:#2867b2;--farmi-ui-primary-dark:#1e4f8c;--farmi-ui-primary-soft:#eaf1fb;--farmi-ui-border:#d0def1;--farmi-ui-sidebar:#172f50;--farmi-ui-sidebar-hover:#254d7b;--farmi-ui-focus:rgba(40,103,178,.2)}
+:root[data-farmi-theme="violet"]{--farmi-ui-primary:#7653b5;--farmi-ui-primary-dark:#5e4094;--farmi-ui-primary-soft:#f0ebf8;--farmi-ui-border:#ddd2ef;--farmi-ui-sidebar:#30234a;--farmi-ui-sidebar-hover:#514078;--farmi-ui-focus:rgba(118,83,181,.2)}
+:root[data-farmi-theme="slate"]{--farmi-ui-primary:#526477;--farmi-ui-primary-dark:#3d4d5e;--farmi-ui-primary-soft:#edf1f4;--farmi-ui-border:#d5dde4;--farmi-ui-sidebar:#273543;--farmi-ui-sidebar-hover:#40566a;--farmi-ui-focus:rgba(82,100,119,.2)}
+:root[data-farmi-theme="rose"]{--farmi-ui-primary:#b65370;--farmi-ui-primary-dark:#93415a;--farmi-ui-primary-soft:#faedf1;--farmi-ui-border:#efd4dc;--farmi-ui-sidebar:#492b36;--farmi-ui-sidebar-hover:#754354;--farmi-ui-focus:rgba(182,83,112,.2)}
+:root[data-farmi-theme] body{accent-color:var(--farmi-ui-primary)}
+:root[data-farmi-theme] .app .sidebar{background:var(--farmi-ui-sidebar)!important}
+:root[data-farmi-theme] .app .brand-mark{background:var(--farmi-ui-primary)!important}
+:root[data-farmi-theme] .app .nav:hover,
+:root[data-farmi-theme] .app .nav.active,
+:root[data-farmi-theme] .app .nav-submenu button.active{background:var(--farmi-ui-sidebar-hover)!important;color:#fff!important}
+:root[data-farmi-theme] .app .primary,
+:root[data-farmi-theme] .app .checkout-btn,
+:root[data-farmi-theme] .app .type.active,
+:root[data-farmi-theme] .app .tab.active,
+:root[data-farmi-theme] .app [role="tab"].active,
+:root[data-farmi-theme] .app button[type="submit"]:not(.danger){background:var(--farmi-ui-primary)!important;border-color:var(--farmi-ui-primary)!important;color:#fff!important}
+:root[data-farmi-theme] .app .primary:hover,
+:root[data-farmi-theme] .app .checkout-btn:hover{background:var(--farmi-ui-primary-dark)!important;border-color:var(--farmi-ui-primary-dark)!important}
+:root[data-farmi-theme] .app .secondary,
+:root[data-farmi-theme] .app .icon-btn,
+:root[data-farmi-theme] .app .outline,
+:root[data-farmi-theme] .app .ghost,
+:root[data-farmi-theme] .app .subtle,
+:root[data-farmi-theme] .app .filter-btn,
+:root[data-farmi-theme] .app .tab-btn{background:var(--farmi-ui-primary-soft)!important;border-color:var(--farmi-ui-border)!important;color:var(--farmi-ui-primary-dark)!important}
+:root[data-farmi-theme] .app .pill,
+:root[data-farmi-theme] .app .stock:not(.low),
+:root[data-farmi-theme] .app .change-line{background:var(--farmi-ui-primary-soft)!important;border-color:var(--farmi-ui-border)!important;color:var(--farmi-ui-primary-dark)!important}
+:root[data-farmi-theme] .app .hero{background:linear-gradient(120deg,var(--farmi-ui-primary-dark),var(--farmi-ui-primary))!important}
+:root[data-farmi-theme] .app .hero .pill{background:var(--farmi-ui-primary-soft)!important;color:var(--farmi-ui-primary-dark)!important}
+:root[data-farmi-theme] .app .card,
+:root[data-farmi-theme] .app .metric,
+:root[data-farmi-theme] .app .modal,
+:root[data-farmi-theme] .app .modal-card{border-color:var(--farmi-ui-border)}
+:root[data-farmi-theme] .app th{background:var(--farmi-ui-primary-soft)!important;color:var(--farmi-ui-primary-dark)!important}
+:root[data-farmi-theme] .app input:focus,
+:root[data-farmi-theme] .app select:focus,
+:root[data-farmi-theme] .app textarea:focus,
+:root[data-farmi-theme] .app [role="combobox"]:focus{border-color:var(--farmi-ui-primary)!important;box-shadow:0 0 0 3px var(--farmi-ui-focus)!important;outline-color:var(--farmi-ui-primary)}
+:root[data-farmi-theme] .app input[type="checkbox"],
+:root[data-farmi-theme] .app input[type="radio"],
+:root[data-farmi-theme] .app input[type="range"]{accent-color:var(--farmi-ui-primary)}
+:root[data-farmi-theme] .app .progress-fill,
+:root[data-farmi-theme] .app .bar.current,
+:root[data-farmi-theme] .app .status span{background:var(--farmi-ui-primary)!important}
+:root[data-farmi-theme] .app .bar{background:color-mix(in srgb,var(--farmi-ui-primary) 28%,white)!important}
+:root[data-farmi-theme] .app a,
+:root[data-farmi-theme] .app .link-button,
+:root[data-farmi-theme] .app .grand strong,
+:root[data-farmi-theme] .app .cash-closing-kicker,
+:root[data-farmi-theme] .app .cash-count-card> .cash-closing-section-head>svg{color:var(--farmi-ui-primary)!important}
+:root[data-farmi-theme] .app .section-title,
+:root[data-farmi-theme] .app .page-title,
+:root[data-farmi-theme] .app .module-title,
+:root[data-farmi-theme] .app .section-heading{color:var(--farmi-ui-primary-dark)}
+/* Lucide icons must follow the text/icon color of their control, not stale CSS colors. */
+:root[data-farmi-theme] .app svg.lucide{stroke:currentColor}
+:root[data-farmi-theme] .app button svg.lucide,
+:root[data-farmi-theme] .app a svg.lucide{color:inherit!important}
+:root[data-farmi-theme] .app button:focus-visible,
+:root[data-farmi-theme] .app a:focus-visible,
+:root[data-farmi-theme] .app [role="tab"]:focus-visible{outline-color:var(--farmi-ui-primary)!important;box-shadow:0 0 0 3px var(--farmi-ui-focus)!important}
+:root[data-farmi-theme] .app .nav,
+:root[data-farmi-theme] .app .nav-parent{transition:background-color .16s ease,color .16s ease}
+
+
+/* FARMI: cobertura transversal de controles activos, pestañas, iconos y módulos. */
+:root[data-farmi-theme] .app button.active,
+:root[data-farmi-theme] .app button.selected,
+:root[data-farmi-theme] .app [role="tab"][aria-selected="true"],
+:root[data-farmi-theme] .app .settings-tabs button.active,
+:root[data-farmi-theme] .app .settings-document-list>button.selected,
+:root[data-farmi-theme] .app .nav-submenu button.active{
+  background:var(--farmi-ui-primary)!important;
+  border-color:var(--farmi-ui-primary)!important;
+  color:#fff!important;
+}
+:root[data-farmi-theme] .app .settings-tabs button:not(.active),
+:root[data-farmi-theme] .app .settings-document-list>button:not(.selected),
+:root[data-farmi-theme] .app .settings-section-head button.secondary,
+:root[data-farmi-theme] .app .toolbar button.secondary,
+:root[data-farmi-theme] .app button.secondary,
+:root[data-farmi-theme] .app button.outline,
+:root[data-farmi-theme] .app button.ghost,
+:root[data-farmi-theme] .app button.subtle,
+:root[data-farmi-theme] .app button.icon-btn,
+:root[data-farmi-theme] .app button.filter-btn,
+:root[data-farmi-theme] .app button.tab-btn{
+  background-color:var(--farmi-ui-primary-soft)!important;
+  border-color:var(--farmi-ui-border)!important;
+  color:var(--farmi-ui-primary-dark)!important;
+}
+:root[data-farmi-theme] .app .settings-tabs button:not(.active):hover,
+:root[data-farmi-theme] .app .settings-document-list>button:not(.selected):hover,
+:root[data-farmi-theme] .app button.secondary:hover,
+:root[data-farmi-theme] .app button.outline:hover,
+:root[data-farmi-theme] .app button.ghost:hover,
+:root[data-farmi-theme] .app button.subtle:hover,
+:root[data-farmi-theme] .app button.icon-btn:hover{
+  background-color:color-mix(in srgb,var(--farmi-ui-primary) 15%,white)!important;
+  border-color:var(--farmi-ui-primary)!important;
+  color:var(--farmi-ui-primary-dark)!important;
+}
+:root[data-farmi-theme] .app .card,
+:root[data-farmi-theme] .app .metric,
+:root[data-farmi-theme] .app .modal,
+:root[data-farmi-theme] .app .modal-card,
+:root[data-farmi-theme] .app .settings-editor,
+:root[data-farmi-theme] .app .settings-document-list,
+:root[data-farmi-theme] .app .settings-tabs button{
+  border-color:var(--farmi-ui-border)!important;
+}
+:root[data-farmi-theme] .app .settings-section-head h2,
+:root[data-farmi-theme] .app .settings-section-head h3,
+:root[data-farmi-theme] .app .settings-editor h3,
+:root[data-farmi-theme] .app .settings-document-list h3,
+:root[data-farmi-theme] .app .settings-custom-fields h4,
+:root[data-farmi-theme] .app .settings-system-grid>div{
+  color:var(--farmi-ui-primary-dark)!important;
+}
+:root[data-farmi-theme] .app .settings-system-grid>div>svg,
+:root[data-farmi-theme] .app .settings-hint>svg,
+:root[data-farmi-theme] .app .settings-section-head button svg,
+:root[data-farmi-theme] .app button.secondary svg,
+:root[data-farmi-theme] .app button.icon-btn svg,
+:root[data-farmi-theme] .app button.outline svg,
+:root[data-farmi-theme] .app button.ghost svg{
+  color:currentColor!important;
+  stroke:currentColor!important;
+}
+:root[data-farmi-theme] .app svg.lucide{
+  stroke:currentColor;
+}
+:root[data-farmi-theme] .app button svg.lucide,
+:root[data-farmi-theme] .app a svg.lucide,
+:root[data-farmi-theme] .app [role="button"] svg.lucide{
+  color:inherit!important;
+}
+:root[data-farmi-theme] .app input[type="checkbox"],
+:root[data-farmi-theme] .app input[type="radio"],
+:root[data-farmi-theme] .app input[type="range"]{
+  accent-color:var(--farmi-ui-primary)!important;
+}
+
+
+/* FARMI agent: in-app operational alert center */
+.ai-view-tabs{display:flex;gap:8px;margin:18px 34px 0;border-bottom:1px solid #e0eae5;padding-bottom:9px}
+.ai-view-tabs button{display:inline-flex;align-items:center;gap:8px;border:1px solid transparent;border-radius:10px;padding:10px 14px;background:transparent;color:#60766e;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.ai-view-tabs button.active{background:var(--farmi-ui-primary-soft,#e6f4ee);border-color:var(--farmi-ui-primary,#168568);color:var(--farmi-ui-primary-dark,#12634e)}
+.ai-view-tabs button span{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:99px;background:#fff0df;color:#9b5b16;font-size:10px}
+.agent-alert-summary{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:18px}
+.agent-alert-summary>div{display:flex;align-items:center;gap:12px;min-width:0}
+.agent-alert-icon{width:42px;height:42px;display:grid;place-items:center;flex:0 0 42px;border-radius:12px;background:var(--farmi-ui-primary-soft,#e6f4ee);color:var(--farmi-ui-primary-dark,#12634e)}
+.agent-alert-summary h3{margin:0;font-size:15px;color:#25483d}
+.agent-alert-summary p{margin:4px 0 0;color:#71867f;font-size:11px;line-height:1.5}
+.agent-alert-summary>strong{white-space:nowrap;border-radius:99px;background:#fff3e4;color:#955816;padding:8px 11px;font-size:11px}
+.agent-alert-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:18px 0 12px;color:#627a71;font-size:11px}
+.agent-alert-toolbar>span{display:flex;align-items:center;gap:7px;font-weight:700}
+.agent-alert-toolbar button,.agent-history-row button{display:inline-flex;align-items:center;gap:6px;font-size:11px}
+.agent-alert-list{display:flex;flex-direction:column;gap:9px}
+.agent-alert-card{display:flex;align-items:flex-start;gap:12px;padding:15px;border-left:4px solid #d6a24e}
+.agent-alert-card.severity-critical{border-left-color:#c84e4e}
+.agent-alert-card.severity-info{border-left-color:#5c93b7}
+.agent-alert-symbol{width:36px;height:36px;display:grid;place-items:center;flex:0 0 36px;border-radius:10px;background:#fff4e5;color:#a86b20}
+.severity-critical .agent-alert-symbol{background:#fff0ef;color:#bb4444}
+.severity-info .agent-alert-symbol{background:#edf6fb;color:#477f9f}
+.agent-alert-content{flex:1;min-width:0}
+.agent-alert-meta{display:flex;align-items:center;gap:8px;margin-bottom:6px;color:#71867f;font-size:10px}
+.agent-alert-meta b{border-radius:99px;padding:3px 7px;background:#fff2df;color:#946018;font-size:9px}
+.severity-critical .agent-alert-meta b{background:#ffeded;color:#b63e3e}
+.severity-info .agent-alert-meta b{background:#edf6fb;color:#477f9f}
+.agent-alert-content>strong{display:block;color:#28463d;font-size:13px;line-height:1.4}
+.agent-alert-content p{margin:5px 0;color:#60766e;font-size:11px;line-height:1.55}
+.agent-alert-content small{color:#8a9a94;font-size:10px}
+.agent-alert-action{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-size:10px}
+.agent-alert-empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;padding:34px 18px;color:var(--farmi-ui-primary-dark,#12634e)}
+.agent-alert-empty strong{font-size:13px;color:#36584c}
+.agent-alert-empty p{margin:0;color:#7a8e86;font-size:11px}
+.agent-alert-history{margin-top:16px}
+.agent-alert-history h3{display:flex;align-items:center;gap:8px;margin:0 0 12px;font-size:13px;color:#36584c}
+.agent-alert-history>p{font-size:11px;color:#7a8e86}
+.agent-history-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #edf1ef}
+.agent-history-row>div{min-width:0}
+.agent-history-row strong,.agent-history-row small{display:block;overflow-wrap:anywhere}
+.agent-history-row strong{font-size:11px;color:#38564b}
+.agent-history-row small{margin-top:4px;color:#82938d;font-size:10px}
+@media(max-width:800px){.ai-view-tabs{margin:16px 16px 0}.agent-alert-card{flex-wrap:wrap}.agent-alert-action{margin-left:48px}.agent-alert-toolbar{align-items:flex-start;flex-direction:column}.agent-alert-summary{align-items:flex-start;flex-direction:column}.agent-alert-summary>strong{margin-left:54px}}
+@media(max-width:480px){.ai-view-tabs button{flex:1;justify-content:center;padding:9px 8px;font-size:11px}.agent-history-row{align-items:flex-start;flex-direction:column}.agent-alert-action{margin-left:0}}
+
+
+.ai-analysis-intro{margin:16px 0 12px;padding:0 2px}
+.ai-analysis-intro h3{display:flex;align-items:center;gap:8px;margin:0 0 5px;font-size:14px;color:var(--farmi-ui-text,#29463c)}
+.ai-analysis-intro p{margin:0;color:var(--farmi-ui-muted,#7a8e86);font-size:11px;line-height:1.5}
+.ai-analysis-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+.ai-analysis-panel{min-width:0;padding:16px}
+.ai-analysis-panel h3{margin:0 0 12px;font-size:13px;color:var(--farmi-ui-text,#29463c)}
+.ai-analysis-panel>p{margin:0;color:var(--farmi-ui-muted,#7a8e86);font-size:11px;line-height:1.5}
+.ai-finding{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--farmi-ui-border,#edf1ef)}
+.ai-finding>span{width:8px;height:8px;flex:0 0 8px;margin-top:4px;border-radius:50%;background:var(--farmi-ui-primary,#168568)}
+.ai-finding.warning>span{background:#d58b27}
+.ai-finding strong,.ai-finding p{display:block;margin:0;font-size:11px}
+.ai-finding p{margin-top:3px;color:var(--farmi-ui-muted,#7a8e86);line-height:1.45}
+.ai-product-rank,.ai-stock-risk,.ai-aging-block>div{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--farmi-ui-border,#edf1ef)}
+.ai-product-rank>span{display:grid;place-items:center;width:22px;height:22px;flex:0 0 22px;border-radius:7px;background:var(--farmi-ui-surface,#f2f6f4);font-size:10px;font-weight:700}
+.ai-product-rank>div,.ai-stock-risk>div{flex:1;min-width:0}
+.ai-product-rank strong,.ai-product-rank small,.ai-stock-risk strong,.ai-stock-risk small{display:block;overflow-wrap:anywhere}
+.ai-product-rank strong,.ai-stock-risk strong{font-size:11px;color:var(--farmi-ui-text,#36584c)}
+.ai-product-rank small,.ai-stock-risk small{margin-top:3px;font-size:10px;color:var(--farmi-ui-muted,#7a8e86)}
+.ai-product-rank>b,.ai-stock-risk>b{font-size:10px;white-space:nowrap;color:var(--farmi-ui-text,#36584c)}
+.ai-aging-block{margin-top:10px}
+.ai-aging-block>strong{display:block;margin-bottom:4px;font-size:11px}
+.ai-aging-block>div{font-size:10px;color:var(--farmi-ui-muted,#7a8e86)}
+.ai-aging-block b{color:var(--farmi-ui-text,#36584c)}
+@media(max-width:760px){.ai-analysis-grid{grid-template-columns:1fr}.ai-analysis-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.ai-analysis-metrics{grid-template-columns:1fr}.ai-product-rank>b{white-space:normal;text-align:right}}
+
+
+/* Floating FARMI assistant, available across ERP modules */
+.farmi-floating-assistant{position:fixed;right:24px;bottom:24px;z-index:1200;display:flex;flex-direction:column;align-items:flex-end;gap:12px;pointer-events:none}
+.farmi-floating-assistant>*{pointer-events:auto}
+.farmi-assistant-fab{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:52px;padding:0 19px;border:0;border-radius:999px;background:var(--farmi-ui-primary,#16856b);color:#fff;box-shadow:0 8px 26px rgba(20,50,40,.25);font-size:12px;font-weight:750;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease}
+.farmi-assistant-fab:hover{transform:translateY(-2px);box-shadow:0 11px 30px rgba(20,50,40,.3)}
+.farmi-assistant-fab svg{stroke:currentColor}
+.farmi-assistant-fab.is-open{background:var(--farmi-ui-sidebar,#123b35)}
+.farmi-assistant-popover{display:flex;flex-direction:column;width:min(760px,calc(100vw - 40px));height:min(720px,calc(100dvh - 112px));overflow:hidden;border:1px solid var(--farmi-ui-border,#d5e5dc);border-radius:17px;background:var(--farmi-ui-surface,#fff);box-shadow:0 18px 60px rgba(18,42,34,.24)}
+.farmi-assistant-popover>header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid var(--farmi-ui-border,#e1ebe6);background:var(--farmi-ui-surface,#fff)}
+.farmi-assistant-popover>header>div{display:flex;align-items:center;gap:10px}
+.farmi-assistant-popover>header>div>span{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--farmi-ui-primary-soft,#e7f4ef);color:var(--farmi-ui-primary,#16856b)}
+.farmi-assistant-popover>header strong,.farmi-assistant-popover>header small{display:block}
+.farmi-assistant-popover>header strong{font-size:13px;color:var(--farmi-ui-primary-dark,#116a56)}
+.farmi-assistant-popover>header small{margin-top:2px;font-size:10px;color:var(--farmi-ui-muted,#7a8e86)}
+.farmi-assistant-popover>header button{display:grid;place-items:center;width:34px;height:34px;border:0;border-radius:9px;background:transparent;color:var(--farmi-ui-muted,#657c72);cursor:pointer}
+.farmi-assistant-popover-body{min-height:0;flex:1;overflow:auto}
+.farmi-assistant-popover-body .ai-page-floating{width:100%;max-width:none;margin:0;padding:16px}
+.farmi-assistant-popover-body .ai-page-floating .ai-hero{margin:0 0 12px;padding:14px 16px}
+.farmi-assistant-popover-body .ai-page-floating .ai-hero h2{font-size:18px}
+.farmi-assistant-popover-body .ai-page-floating .ai-hero p{font-size:11px}
+.farmi-assistant-popover-body .ai-page-floating .ai-hero>svg{width:34px;height:34px}
+.farmi-assistant-popover-body .ai-page-floating .ai-view-tabs{margin:0 0 12px}
+.farmi-assistant-popover-body .ai-page-floating .agent-alert-summary{margin-top:0}
+.farmi-assistant-popover-body .ai-page-floating .ai-analysis-grid{grid-template-columns:1fr}
+@media(max-width:640px){.farmi-floating-assistant{right:14px;bottom:14px}.farmi-assistant-fab{min-height:48px;padding:0 15px}.farmi-assistant-popover{width:calc(100vw - 20px);height:min(78dvh,720px);border-radius:14px}.farmi-assistant-popover-body .ai-page-floating{padding:12px}}
+@media(prefers-reduced-motion:reduce){.farmi-assistant-fab{transition:none}}
+
+/* POS search: keep focus styling on the rounded wrapper, not on an inner input rectangle. */
+.pos-grid .search-pos input,
+.pos-grid .search-pos input:focus,
+.pos-grid .search-pos input:focus-visible{
+  border:0!important;
+  border-radius:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+}
+
+/* Unified search-field focus: outer control receives focus, inner text input stays borderless. */
+:root[data-farmi-theme] :is(
+  .search,
+  .search-pos,
+  .social-search,
+  .search-box,
+  .invoice-search,
+  .invoice-search-control,
+  .receivables-search-control,
+  .product-image-search
+):focus-within{
+  border-color:var(--farmi-ui-primary,var(--farmi-accent,#16856b))!important;
+  box-shadow:0 0 0 3px var(--farmi-ui-focus,rgba(22,133,107,.14))!important;
+  background:#fff;
+}
+:is(
+  .search,
+  .search-pos,
+  .social-search,
+  .search-box,
+  .invoice-search,
+  .invoice-search-control,
+  .receivables-search-control,
+  .product-image-search
+) input,
+:is(
+  .search,
+  .search-pos,
+  .social-search,
+  .search-box,
+  .invoice-search,
+  .invoice-search-control,
+  .receivables-search-control,
+  .product-image-search
+) input:focus,
+:is(
+  .search,
+  .search-pos,
+  .social-search,
+  .search-box,
+  .invoice-search,
+  .invoice-search-control,
+  .receivables-search-control,
+  .product-image-search
+) input:focus-visible{
+  border:0!important;
+  border-radius:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+}
+.search-box{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  min-height:44px;
+  padding:9px 15px;
+  border:1px solid var(--field-border,#dce8e5);
+  border-radius:999px;
+  background:#fbfdfc;
+  color:#71877f;
+  transition:border-color .18s ease,box-shadow .18s ease,background .18s ease;
+}
+.search-box input{
+  flex:1;
+  width:100%;
+  min-width:0;
+  padding:2px 0!important;
+  font:inherit;
+}
+.product-image-search{
+  align-items:center;
+  min-width:0;
+  padding:4px 6px 4px 12px;
+  border:1px solid var(--field-border,#dce8e5);
+  border-radius:999px;
+  background:#fbfdfc;
+  transition:border-color .18s ease,box-shadow .18s ease,background .18s ease;
+}
+.product-image-search input{
+  flex:1;
+  min-height:36px;
+  padding:6px 4px!important;
+}
+
+/* Recursos Humanos: directorio, asistencia y permisos */
+.hr-page{max-width:1500px}
+.hr-page-head{align-items:flex-end;gap:16px}
+.hr-page-head h2{margin:7px 0 4px}
+.hr-page-head p{margin:0;color:var(--muted,#718a85);font-size:13px}
+.hr-header-actions{display:flex;align-items:center;gap:8px}
+.hr-private-note{display:inline-flex;align-items:center;gap:7px;padding:8px 10px;border:1px solid var(--farmi-ui-border,#e2ebe9);border-radius:9px;color:var(--farmi-ui-primary-dark,#41675b);background:var(--farmi-ui-primary-soft,#f2f7f5);font-size:11px;font-weight:700}
+.hr-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 16px}
+.hr-metric{display:flex;align-items:center;gap:12px;min-width:0;padding:15px}
+.hr-metric-icon{width:40px;height:40px;flex:0 0 40px;display:grid;place-items:center;border-radius:12px;color:var(--farmi-ui-primary-dark,#16664f);background:var(--farmi-ui-primary-soft,#e7f4ef)}
+.hr-metric>div{display:grid;gap:3px;min-width:0}
+.hr-metric small{font-size:10px;color:var(--muted,#718a85);font-weight:700}
+.hr-metric strong{font-size:22px;line-height:1.1;color:var(--text,#203b33);font-variant-numeric:tabular-nums}
+.hr-metric span:not(.hr-metric-icon){font-size:10px;color:var(--muted,#718a85)}
+.hr-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px;padding:5px;border:1px solid var(--border,#e2ebe9);border-radius:12px;background:var(--surface-muted,#f7faf9)}
+.hr-tabs button{display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:8px 13px;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--muted,#61776f);font-size:12px;font-weight:750;cursor:pointer}
+.hr-tabs button.active{background:#fff;color:var(--farmi-ui-primary-dark,#16664f);border-color:var(--farmi-ui-border,#dce8e3);box-shadow:0 2px 7px rgba(20,55,42,.07)}
+.hr-tab-count{display:grid;place-items:center;min-width:19px;height:19px;padding:0 5px;border-radius:99px;background:var(--farmi-ui-primary-soft,#e7f4ef);color:var(--farmi-ui-primary-dark,#16664f);font-size:10px}
+.hr-sync-hint{margin:0 0 12px}
+.hr-panel{padding:18px;min-width:0}
+.hr-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:15px}
+.hr-panel-heading h3{display:flex;align-items:center;gap:7px;margin:0;color:var(--text,#203b33);font-size:15px}
+.hr-panel-heading p{margin:5px 0 0;color:var(--muted,#718a85);font-size:11px;line-height:1.5}
+.hr-panel-heading>.primary{white-space:nowrap}
+.hr-toolbar{display:flex;align-items:center;gap:10px;margin:0 0 13px}
+.hr-toolbar .search{flex:1;min-width:180px;max-width:none}
+.hr-toolbar>select,.hr-date-filter input{min-height:42px;padding:8px 11px;border:1px solid var(--field-border,#d9e5e2);border-radius:10px;background:#fff;color:var(--text,#243c35);font:inherit;font-size:12px}
+.hr-date-filter{display:grid;gap:5px;min-width:170px;color:var(--muted,#718a85);font-size:10px;font-weight:750}
+.hr-date-filter input{min-width:0}
+.hr-table-wrap{width:100%;overflow:auto;border:1px solid var(--border,#e6eeea);border-radius:11px}
+.hr-table{width:100%;min-width:850px;border-collapse:collapse}
+.hr-table th{padding:11px 12px;background:var(--surface-muted,#f7faf9);color:var(--muted,#718a85);font-size:9px;letter-spacing:.045em}
+.hr-table td{padding:11px 12px;border-bottom:1px solid var(--border,#edf2ef);color:var(--text,#29463d);font-size:11px;vertical-align:middle}
+.hr-table tbody tr:last-child td{border-bottom:0}
+.hr-table td>strong,.hr-table td>small{display:block}
+.hr-table td>small{margin-top:4px;color:var(--muted,#82958f);font-size:10px}
+.hr-person-cell{display:flex;align-items:center;gap:9px;min-width:180px}
+.hr-person-cell>span:last-child{min-width:0}
+.hr-person-cell strong,.hr-person-cell small{display:block;overflow-wrap:anywhere}
+.hr-person-cell strong{font-size:11px;color:var(--text,#203b33)}
+.hr-person-cell small{margin-top:3px;color:var(--muted,#82958f);font-size:9px}
+.hr-avatar{width:32px;height:32px;flex:0 0 32px;display:grid;place-items:center;border-radius:10px;background:var(--farmi-ui-primary-soft,#e7f4ef);color:var(--farmi-ui-primary-dark,#16664f);font-size:10px;font-weight:850}
+.hr-status{display:inline-flex;align-items:center;justify-content:center;padding:4px 8px;border-radius:99px;background:#eef3f1;color:#5d7069;font-size:9px;font-weight:800;white-space:nowrap}
+.hr-status.activo,.hr-status.presente,.hr-status.aprobado{background:#e8f5ef;color:#17664f}
+.hr-status.inactivo,.hr-status.rechazado,.hr-status.ausente{background:#fff0ef;color:#a43d3d}
+.hr-status.tardanza,.hr-status.pendiente,.hr-status.permiso{background:#fff6df;color:#8b6416}
+.hr-contact{display:grid;gap:4px;color:var(--muted,#718a85);font-size:10px}
+.hr-contact span{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.hr-row-actions{display:flex;align-items:center;justify-content:flex-end;gap:5px;white-space:nowrap}
+.hr-row-actions .icon-btn{width:30px;height:30px}
+.hr-delete-btn{color:#a94646!important}
+.hr-footnote{margin:12px 2px 0;color:var(--muted,#83958e);font-size:10px;line-height:1.5}
+.hr-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:180px;padding:24px;text-align:center;color:var(--muted,#718a85)}
+.hr-empty>svg{color:var(--farmi-ui-primary,#16856b)}
+.hr-empty strong{color:var(--text,#29463d);font-size:13px}
+.hr-empty span{max-width:400px;font-size:11px;line-height:1.5}
+.hr-empty.compact{min-height:115px}
+.hr-inline-notice{margin:10px 0;padding:9px 11px;border:1px solid var(--farmi-ui-border,#dce8e3);border-radius:8px;background:var(--farmi-ui-primary-soft,#f2f8f5);color:var(--farmi-ui-primary-dark,#16664f);font-size:11px}
+.hr-attendance-form{display:grid;grid-template-columns:minmax(180px,1.6fr) repeat(3,minmax(110px,.8fr));gap:10px;align-items:end;padding:13px;margin:0 0 14px;border:1px solid var(--border,#e3ebe7);border-radius:11px;background:var(--surface-muted,#f8fbfa)}
+.hr-attendance-form label,.hr-form-grid label{display:grid;gap:6px;min-width:0;color:var(--muted,#607a74);font-size:10px;font-weight:750}
+.hr-attendance-form input,.hr-attendance-form select,.hr-form-grid input,.hr-form-grid select,.hr-form-grid textarea{width:100%;min-width:0;min-height:38px;padding:8px 10px;border:1px solid var(--field-border,#d9e5e2);border-radius:8px;background:#fff;color:var(--text,#263d35);font:inherit;font-size:12px;outline:none}
+.hr-attendance-form input:focus,.hr-attendance-form select:focus,.hr-form-grid input:focus,.hr-form-grid select:focus,.hr-form-grid textarea:focus{border-color:var(--farmi-ui-primary,#16856b);box-shadow:0 0 0 3px var(--farmi-ui-focus,rgba(22,133,107,.12))}
+.hr-attendance-form input:disabled{background:#f2f5f3;color:#9aa8a1}
+.hr-attendance-form .hr-attendance-notes{grid-column:span 2}
+.hr-attendance-form>button{min-height:38px;white-space:nowrap}
+.hr-list-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 1px 9px;color:var(--text,#29463d);font-size:11px}
+.hr-list-heading span{color:var(--muted,#718a85);font-size:10px}
+.hr-list-label{display:flex;align-items:center;gap:7px;color:var(--text,#38584e);font-size:11px;font-weight:750}
+.hr-leave-list{display:grid;gap:8px}
+.hr-leave-row{display:flex;align-items:center;gap:12px;min-width:0;padding:12px;border:1px solid var(--border,#e4ece8);border-radius:10px;background:#fff}
+.hr-leave-icon{width:36px;height:36px;flex:0 0 36px;display:grid;place-items:center;border-radius:10px;background:var(--farmi-ui-primary-soft,#e7f4ef);color:var(--farmi-ui-primary-dark,#16664f)}
+.hr-leave-main{display:grid;gap:4px;flex:1;min-width:0}
+.hr-leave-main strong{font-size:11px;color:var(--text,#29463d);overflow-wrap:anywhere}
+.hr-leave-main span,.hr-leave-main small{font-size:10px;color:var(--muted,#718a85);line-height:1.45}
+.hr-leave-main small{overflow-wrap:anywhere}
+.hr-approve-btn,.hr-reject-btn{min-height:30px;padding:6px 8px!important;font-size:10px}
+.hr-approve-btn{color:#17664f!important}
+.hr-reject-btn{color:#a43d3d!important}
+.hr-modal-backdrop{z-index:100}
+.hr-employee-modal,.hr-leave-modal{width:min(760px,100%);max-height:calc(100vh - 36px)}
+.hr-employee-modal .modal-head h2,.hr-leave-modal .modal-head h2{margin:0;font-size:18px;color:var(--text,#203b33)}
+.hr-employee-modal .modal-head p,.hr-leave-modal .modal-head p{margin:5px 0 0;color:var(--muted,#718a85);font-size:11px}
+.hr-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.hr-form-grid textarea{resize:vertical;min-height:76px}
+.hr-form-full{grid-column:1/-1}
+.hr-days-preview{display:grid;align-content:center;gap:4px;min-height:56px;padding:9px 11px;border-radius:9px;background:var(--farmi-ui-primary-soft,#edf6f2)}
+.hr-days-preview small{color:var(--muted,#718a85);font-size:9px;font-weight:750}
+.hr-days-preview strong{color:var(--farmi-ui-primary-dark,#16664f);font-size:13px}
+@media(max-width:900px){
+  .hr-attendance-form{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .hr-attendance-form .hr-attendance-notes{grid-column:auto}
+}
+@media(max-width:700px){
+  .hr-metrics{grid-template-columns:1fr;gap:8px}
+  .hr-metric{padding:12px}
+  .hr-panel{padding:13px}
+  .hr-panel-heading{align-items:flex-start;flex-direction:column}
+  .hr-panel-heading>.primary{width:100%;justify-content:center}
+  .hr-toolbar{align-items:stretch;flex-direction:column}
+  .hr-toolbar .search{width:100%;max-width:none}
+  .hr-toolbar>select{width:100%}
+  .hr-header-actions{width:100%}
+  .hr-date-filter{width:100%}
+  .hr-date-filter input{width:100%}
+  .hr-attendance-form{grid-template-columns:1fr 1fr;padding:10px}
+  .hr-leave-row{align-items:flex-start;flex-wrap:wrap}
+  .hr-leave-main{flex:1 1 calc(100% - 50px)}
+  .hr-leave-row>.hr-status{margin-left:48px}
+  .hr-leave-row .hr-row-actions{width:100%;justify-content:flex-start;margin-left:48px}
+}
+@media(max-width:520px){
+  .hr-page-head{align-items:flex-start;flex-direction:column}
+  .hr-tabs{display:grid;grid-template-columns:1fr}
+  .hr-tabs button{justify-content:flex-start}
+  .hr-attendance-form{grid-template-columns:1fr}
+  .hr-attendance-form .hr-attendance-notes{grid-column:auto}
+  .hr-form-grid{grid-template-columns:1fr}
+  .hr-form-full{grid-column:auto}
+  .hr-employee-modal,.hr-leave-modal{padding:15px}
+  .hr-employee-modal .modal-actions,.hr-leave-modal .modal-actions{display:grid;grid-template-columns:1fr 1fr}
+}
+
+
+.inventory-lots-kardex{margin-top:18px;padding:16px;display:grid;gap:14px}
+.inventory-lots-kardex .card-title h3{display:flex;align-items:center;gap:8px}
+.inventory-lot-toolbar{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.inventory-lot-toolbar label,.inventory-lot-form label{display:grid;gap:5px;font-size:12px;font-weight:600;min-width:180px}
+.inventory-lot-toolbar select,.inventory-lot-form input{min-height:36px;border:1px solid var(--border,#d8e1e1);border-radius:8px;padding:7px 10px;background:var(--surface,#fff);color:inherit}
+.inventory-lot-status{display:grid;gap:5px}
+.inventory-lot-status small,.inventory-lot-activation span{color:var(--muted,#64748b);font-size:12px}
+.inventory-lot-form{display:grid;grid-template-columns:repeat(3,minmax(140px,1fr));gap:10px;align-items:end;padding:12px;border:1px solid var(--border,#d8e1e1);border-radius:10px}
+.inventory-lot-form button{min-height:36px;justify-content:center}
+.inventory-lot-activation{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.inventory-kardex-heading{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
+.inventory-kardex-heading small{color:var(--muted,#64748b)}
+.inventory-lots-kardex .table-wrap{overflow:auto}
+.inventory-lots-kardex table{min-width:720px}
+@media(max-width:720px){.inventory-lot-form{grid-template-columns:1fr 1fr}.inventory-lot-toolbar{align-items:stretch}.inventory-lot-toolbar label{width:100%}}
+@media(max-width:480px){.inventory-lot-form{grid-template-columns:1fr}.inventory-lot-activation{align-items:stretch;flex-direction:column}.inventory-lot-activation button{width:100%}}
+
+
+.inventory-lot-adjust-form{display:grid;grid-template-columns:1.1fr 1fr 1.4fr auto;gap:10px;align-items:end;padding:12px;border:1px solid var(--border,#d8e1e1);border-radius:10px}
+.inventory-lot-adjust-form label{display:grid;gap:5px;font-size:12px;font-weight:600}
+.inventory-lot-adjust-form input,.inventory-lot-adjust-form select{min-height:36px;border:1px solid var(--border,#d8e1e1);border-radius:8px;padding:7px 10px;background:var(--surface,#fff);color:inherit}
+@media(max-width:720px){.inventory-lot-adjust-form{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.inventory-lot-adjust-form{grid-template-columns:1fr}}
+
+
+/* Product presentation selectors: caja, blister and minimum unit */
+.pos-unit-picker,.invoice-unit-picker{display:flex;flex-direction:column;gap:4px;min-width:112px;max-width:150px;font-size:11px;font-weight:700;color:var(--text-secondary,#64748b)}
+.pos-unit-picker select,.invoice-unit-picker select{width:100%;min-width:0;min-height:32px;padding:5px 7px;border:1px solid var(--border-color,#d1d5db);border-radius:7px;background:var(--surface,#fff);color:inherit;font:inherit}
+.invoice-product-add{display:flex;align-items:center;justify-content:space-between;gap:10px;flex:1;min-width:0;width:100%;padding:0;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer}
+.invoice-product-add:hover{background:transparent;border:0}
+.invoice-unit-picker{flex:0 0 118px}
+.purchase-detail-product .helper{font-weight:600;font-size:11px}
+.purchase-detail-product .helper input{min-height:31px;padding:5px 7px;font-weight:400}
+@media(max-width:640px){
+  .pos-unit-picker{min-width:94px;max-width:112px}
+  .invoice-unit-picker{min-width:100%;max-width:none;flex-basis:100%}
+  .standard-invoice .invoice-product{flex-wrap:wrap}
+  .invoice-product-add{min-width:0}
+}
+
+/* Logística integrada en Compras */
+.purchase-logistics{margin:0 0 16px;padding:18px;display:grid;gap:14px}.purchase-logistics-head,.purchase-logistics-record-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.purchase-logistics-head h3,.purchase-logistics-create strong{margin:0}.purchase-logistics-head p,.purchase-logistics-create p{margin:4px 0 0;color:var(--muted,#687386);font-size:13px}.purchase-logistics-count{margin-left:8px;font-size:12px}.purchase-logistics-create{border-top:1px solid var(--border,#e5e7eb);padding-top:14px;display:grid;gap:10px}.purchase-logistics-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:10px;align-items:end}.purchase-logistics-fields label,.purchase-logistics-actions label{display:grid;gap:5px;font-size:12px;color:var(--muted,#687386)}.purchase-logistics-fields input,.purchase-logistics-actions input,.purchase-logistics-actions select{min-width:0;width:100%}.purchase-logistics-list{display:grid;gap:10px}.purchase-logistics-record{border:1px solid var(--border,#e5e7eb);border-radius:12px;padding:14px;display:grid;gap:10px}.purchase-logistics-record-head small{display:block;color:var(--muted,#687386);font-size:12px;margin-top:3px}.purchase-logistics-status{font-size:12px;padding:5px 9px;border-radius:20px;background:var(--surface-soft,#f2f4f7);white-space:nowrap}.purchase-logistics-status.is-received{background:#e7f6ee;color:#167447}.purchase-logistics-status.has-incident{background:#fff1e8;color:#a34b12}.purchase-logistics-meta{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:12px;color:var(--muted,#687386)}.purchase-logistics-meta strong{color:var(--text,#202938)}.purchase-logistics-items{display:flex;flex-wrap:wrap;gap:6px}.purchase-logistics-items span{font-size:12px;background:var(--surface-soft,#f5f6f8);border-radius:6px;padding:5px 8px}.purchase-logistics-actions{display:grid;grid-template-columns:minmax(130px,.7fr) minmax(180px,1.4fr) auto;gap:10px;align-items:end}.purchase-logistics-error,.purchase-logistics-incident-note{color:#a34b12;font-size:12px;margin:0}.purchase-logistics-received{color:#167447}.purchase-logistics-empty{padding:18px;text-align:center;color:var(--muted,#687386);font-size:13px}@media(max-width:850px){.purchase-logistics-fields{grid-template-columns:1fr 1fr}.purchase-logistics-actions{grid-template-columns:1fr 1fr}.purchase-logistics-actions button{grid-column:1/-1}}@media(max-width:560px){.purchase-logistics-head{align-items:flex-start;flex-direction:column}.purchase-logistics-fields,.purchase-logistics-actions{grid-template-columns:1fr}.purchase-logistics-actions button{grid-column:auto}}
+
+.purchase-logistics-receive-row{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;font-size:12px;color:var(--text,#202938)}.purchase-logistics-receive-row>span:last-child{display:flex;align-items:center;gap:7px;white-space:nowrap}.purchase-logistics-receive-row input{width:82px;min-width:82px}
+
+
+/* Inventory section selector */
+.inventory-view-switch{display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:10px 12px;background:var(--card-bg,#fff);border:1px solid var(--border-color,#e2ebe9);border-radius:11px;max-width:420px}
+.inventory-view-switch label{font-size:11px;font-weight:700;color:var(--text-secondary,#607a74);white-space:nowrap}
+.inventory-view-switch select{flex:1;min-width:0;height:36px;padding:0 34px 0 10px;border:1px solid var(--border-color,#d9e5e2);border-radius:8px;background:var(--input-bg,#fff);color:var(--text-color,inherit);font:inherit;font-size:12px;outline:none}
+.inventory-view-switch select:focus{border-color:var(--accent-color,#167b61)}
+@media(max-width:560px){.inventory-view-switch{max-width:none;align-items:stretch;flex-direction:column;gap:6px}.inventory-view-switch select{width:100%}}
+
+
+/* Tipografía estándar global del ERP */
+#root .app :where(*) {
+  font-size: 14px;
+}
+@media (max-width: 900px) {
+  #root .app .nav {
+    font-size: 0;
+  }
+}
+
+
+/* Alineación centrada e iconografía combinada del ERP */
+#root .app .content{
+  width:100%;
+  margin-inline:auto;
+}
+#root .app :where(
+  .primary,.secondary,.type,.nav,.hr-tabs button,
+  .inventory-actions button,.modal-actions button,
+  .purchase-logistics-actions button
+){
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  text-align:center;
+}
+#root .app :where(
+  .primary,.secondary,.type,.nav,.hr-tabs button,
+  .inventory-actions button,.modal-actions button,
+  .purchase-logistics-actions button
+) svg{
+  width:16px;
+  height:16px;
+  flex:0 0 16px;
+  display:block;
+}
+#root .app :where(.icon-btn,.hr-row-actions .icon-btn){
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+#root .app :where(.icon-btn,.hr-row-actions .icon-btn) svg{
+  width:17px;
+  height:17px;
+  flex:0 0 17px;
+}
+#root .app :where(.page-head,.card-title,.modal-head,.hr-panel-heading,.purchase-logistics-head,.inventory-kardex-heading){
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  flex-wrap:wrap;
+}
+#root .app :where(.page-head,.card-title,.modal-head,.hr-panel-heading,.purchase-logistics-head,.inventory-kardex-heading) :where(h1,h2,h3,p){
+  text-align:center;
+}
+#root .app :where(.page-head,.modal-actions,.hr-header-actions,.inventory-actions){
+  justify-content:center;
+}
+#root .app :where(.form-grid,.hr-form-grid,.purchase-logistics-fields,.purchase-logistics-actions) label{
+  text-align:center;
+}
+#root .app :where(.form-grid,.hr-form-grid) input,
+#root .app :where(.form-grid,.hr-form-grid) select,
+#root .app :where(.form-grid,.hr-form-grid) textarea{
+  text-align:center;
+}
+#root .app :where(.hero,.empty,.hr-empty,.purchase-logistics-empty){
+  text-align:center;
+}
+#root .app :where(.hero){
+  justify-content:center;
+}
+#root .app :where(.hero-goal){
+  text-align:center;
+}
+#root .app :where(.hero-goal span,.hero-goal small){
+  text-align:center;
+}
+@media(max-width:700px){
+  #root .app :where(.page-head,.card-title,.modal-head,.hr-panel-heading,.purchase-logistics-head,.inventory-kardex-heading){
+    justify-content:center;
+    text-align:center;
+  }
+  #root .app :where(.page-head,.hr-header-actions,.inventory-actions){
+    width:100%;
+  }
+}
+
+
+/* Restaurar el menú lateral a su distribución original */
+#root .app .sidebar .nav{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:11px;
+  text-align:left;
+  padding:12px 13px;
+  border-radius:10px;
+}
+#root .app .sidebar .nav svg{
+  width:16px;
+  height:16px;
+  flex:0 0 16px;
+  margin:0;
+}
+@media(max-width:900px){
+  #root .app .sidebar .nav{
+    justify-content:center;
+    padding:12px 13px;
+  }
+  #root .app .sidebar .nav svg{
+    margin:auto;
+  }
+}
+
+/* Asistente farmacéutico IA en Facturación estándar y POS */
+.pharmacy-ai-card{margin:0 0 14px;padding:14px 16px;border:1px solid #cbded9;border-radius:12px;background:#f7fbfa}
+.pharmacy-ai-heading,.pharmacy-ai-heading>div{display:flex;align-items:center;gap:11px}
+.pharmacy-ai-heading{justify-content:space-between;flex-wrap:wrap}.pharmacy-ai-heading>div{min-width:0}
+.pharmacy-ai-heading strong,.pharmacy-ai-heading small{display:block}.pharmacy-ai-heading small{margin-top:3px;color:#647b77;font-size:12px}
+.pharmacy-ai-icon{display:grid;place-items:center;width:36px;height:36px;flex:0 0 36px;border-radius:10px;background:#e2f0ec;color:#17665b}
+.pharmacy-ai-heading button,.pharmacy-ai-form button{display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.pharmacy-ai-panel{margin-top:14px;padding-top:13px;border-top:1px solid #dce8e5}
+.pharmacy-ai-warning{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border-radius:8px;background:#fff7e8;color:#80551b;font-size:12px;line-height:1.5}.pharmacy-ai-warning svg{flex:0 0 16px;margin-top:1px}
+.pharmacy-ai-messages{display:flex;flex-direction:column;gap:10px;max-height:340px;overflow:auto;padding:12px 2px}.pharmacy-ai-empty{margin:0;color:#6b7e7a;font-size:13px}
+.pharmacy-ai-message{max-width:94%;padding:10px 12px;border-radius:10px;background:#fff;border:1px solid #e1e9e7}.pharmacy-ai-message.user{align-self:flex-end;background:#eaf4f1}
+.pharmacy-ai-message strong{font-size:11px;color:#52716a}.pharmacy-ai-message p{margin:5px 0 0;white-space:pre-wrap;font-size:13px;line-height:1.55}
+.pharmacy-ai-loading{display:flex;align-items:center;gap:8px;color:#55736c;font-size:12px}
+.pharmacy-ai-form{display:flex;align-items:flex-end;gap:8px}.pharmacy-ai-form textarea{flex:1;min-width:0;resize:vertical;border:1px solid #cbd9d5;border-radius:9px;padding:10px;font:inherit;font-size:13px;background:#fff}
+.pharmacy-ai-form button{min-height:40px}.pharmacy-ai-footer{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:8px;color:#71827e;font-size:11px}.pharmacy-ai-footer button{white-space:nowrap}
+@media(max-width:600px){.pharmacy-ai-heading{align-items:flex-start}.pharmacy-ai-heading>div{flex:1}.pharmacy-ai-heading>button{width:100%}.pharmacy-ai-form{align-items:stretch;flex-direction:column}.pharmacy-ai-form button{width:100%}.pharmacy-ai-footer{align-items:flex-start;flex-direction:column}}
+
+
+/* Corrección definitiva: evitar el borde interno duplicado en los buscadores.
+   El contorno pertenece al contenedor; el input interior debe permanecer transparente. */
+:where(
+  .search,
+  .search-pos,
+  .social-search,
+  .invoice-search,
+  .invoice-search-control,
+  .label-picker-search,
+  .product-image-search,
+  .toolbar .search-box
+) input,
+:where(
+  .search,
+  .search-pos,
+  .social-search,
+  .invoice-search,
+  .invoice-search-control,
+  .label-picker-search,
+  .product-image-search,
+  .toolbar .search-box
+) input:focus,
+:where(
+  .search,
+  .search-pos,
+  .social-search,
+  .invoice-search,
+  .invoice-search-control,
+  .label-picker-search,
+  .product-image-search,
+  .toolbar .search-box
+) input:focus-visible {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
 }
