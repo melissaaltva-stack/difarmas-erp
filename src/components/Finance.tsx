@@ -24,7 +24,7 @@ export function Finance({section='resumen',sales,purchases,expenses,setExpenses,
   useEffect(()=>{closingRef.current=false;setIsClosing(false);},[closures]);
   const today=localDateKey();
   const todayOpening=openingBalances.find(item=>item.date===today);
-  const openingSaved=Boolean(todayOpening);
+  const openingSaved=Boolean(todayOpening&&todayOpening.amount===opening);
   useEffect(()=>{
     if(todayOpening){setOpening(todayOpening.amount);return;}
     if(closures.length){
