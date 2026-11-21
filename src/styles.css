@@ -7376,3 +7376,11 @@ button.icon-btn:focus-visible svg,
   background: transparent !important;
   border-radius: 0 !important;
 }
+
+ 
+/* Wordmark Farmi: solo letras, sin emblema ni recuadro */
+.brand{gap:10px;padding-bottom:30px}
+.brand-mark{display:none}
+.brand-wordmark{display:block;color:#f4fbf7;font-size:25px;font-weight:850;line-height:1;letter-spacing:-1.35px}
+.brand-wordmark>span{color:#45c195}
+.brand-caption{margin-top:5px;color:#9fc6bd;font-size:11px;line-height:1.2}
