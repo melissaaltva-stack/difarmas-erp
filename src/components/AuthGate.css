@@ -434,9 +434,9 @@
   70%{left:var(--farmi-m-x,0px);top:.02em}
   82%{left:var(--farmi-i-x,0px);top:-.17em}
   88%{left:var(--farmi-i-x,0px);top:.02em}
-  94%{left:var(--farmi-i-x,0px);top:-.045em}
-  98%{left:var(--farmi-i-x,0px);top:.02em}
-  100%{left:var(--farmi-i-x,0px);top:.02em;opacity:1}
+  94%{left:var(--farmi-i-x,0px);top:.12em}
+  98%{left:var(--farmi-i-x,0px);top:.12em}
+  100%{left:var(--farmi-i-x,0px);top:.12em;opacity:1}
 }
 @keyframes farmi-dot-to-end{
   0%{left:var(--farmi-f-x,0px);top:.02em;opacity:0}
@@ -461,7 +461,7 @@
   99%,100%{opacity:1}
 }
 @media(prefers-reduced-motion:reduce){
-  .auth-brand-i-dot{animation:none;opacity:1;left:var(--farmi-i-x,0px);top:.02em}
+  .auth-brand-i-dot{animation:none;opacity:1;left:var(--farmi-i-x,0px);top:.12em}
   .auth-brand-end-dot{animation:none;opacity:0}
   .auth-brand-final-period{animation:none;opacity:1}
 }
