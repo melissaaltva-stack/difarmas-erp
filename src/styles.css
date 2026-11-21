@@ -7392,3 +7392,44 @@ button.icon-btn:focus-visible svg,
 .brand-wordmark{display:block;color:#f4fbf7;font-size:25px;font-weight:850;line-height:1;letter-spacing:-1.35px}
 .brand-wordmark>span{color:#45c195}
 .brand-caption{margin-top:5px;color:#9fc6bd;font-size:11px;line-height:1.2}
+
+
+/* Cierre diario desde POS: ventana compacta sin abandonar la venta */
+.pos-cash-closure-backdrop{z-index:180;padding:16px}
+.pos-cash-closure-modal{display:flex;flex-direction:column;gap:10px;width:min(920px,calc(100vw - 32px));max-height:min(88vh,820px);overflow:hidden;padding:14px}
+.pos-cash-closure-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex:0 0 auto;padding:0 2px 9px;border-bottom:1px solid var(--border,#e1eae6)}
+.pos-cash-closure-header h2{margin:0;font-size:16px;color:var(--text-primary,#243c38)}
+.pos-cash-closure-content{min-height:0;overflow:auto;padding:1px 2px 3px}
+.pos-cash-closure-content .cash-closing-page{gap:10px}
+.pos-cash-closure-content .cash-closing-intro{padding:0}
+.pos-cash-closure-content .cash-closing-date{padding:7px 10px;gap:3px}
+.pos-cash-closure-content .cash-closing-date strong{font-size:11px}
+.pos-cash-closure-content .cash-closing-metrics{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.pos-cash-closure-content .cash-closing-metric{padding:9px 10px;border-radius:9px}
+.pos-cash-closure-content .cash-closing-metric span,.pos-cash-closure-content .cash-closing-metric small{font-size:9px}
+.pos-cash-closure-content .cash-closing-metric strong{margin:5px 0 2px;font-size:15px}
+.pos-cash-closure-content .cash-closing-layout{grid-template-columns:minmax(0,1.15fr) minmax(260px,.85fr);gap:9px}
+.pos-cash-closure-content .cash-closing-breakdown,.pos-cash-closure-content .cash-count-card{padding:11px;border-radius:10px}
+.pos-cash-closure-content .cash-closing-section-head{padding-bottom:8px;gap:7px}
+.pos-cash-closure-content .cash-closing-section-head h3{font-size:12px}
+.pos-cash-closure-content .cash-closing-section-head p{font-size:9px;margin-top:3px}
+.pos-cash-closure-content .cash-closing-status{padding:4px 6px;font-size:9px}
+.pos-cash-closure-content .cash-closing-group{padding:9px 0 7px}
+.pos-cash-closure-content .cash-closing-group h4{font-size:10px;margin-bottom:5px}
+.pos-cash-closure-content .cash-closing-line,.pos-cash-closure-content .cash-closing-subtotal{padding:5px 0;font-size:10px}
+.pos-cash-closure-content .cash-closing-formula{margin-top:8px;padding:9px;font-size:9px}
+.pos-cash-closure-content .cash-closing-formula strong{font-size:14px}
+.pos-cash-closure-content .cash-field{gap:4px;margin-top:9px;font-size:10px}
+.pos-cash-closure-content .cash-field input,.pos-cash-closure-content .cash-field textarea{padding:8px 9px;font-size:12px}
+.pos-cash-closure-content .cash-field input{height:35px}
+.pos-cash-closure-content .cash-difference{gap:3px;margin-top:9px;padding:9px}
+.pos-cash-closure-content .cash-difference strong{font-size:20px}
+.pos-cash-closure-content .cash-confirm-btn{min-height:37px;margin-top:10px;font-size:11px}
+.pos-cash-closure-content .cash-closing-footnote{font-size:9px;margin-top:6px}
+@media(max-width:680px){
+ .pos-cash-closure-backdrop{padding:8px}
+ .pos-cash-closure-modal{width:calc(100vw - 16px);max-height:94vh;padding:11px}
+ .pos-cash-closure-content .cash-closing-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .pos-cash-closure-content .cash-closing-layout{grid-template-columns:minmax(0,1fr)}
+ .pos-cash-closure-content .cash-count-card{position:static}
+}
