@@ -3122,6 +3122,14 @@ h4, h5, h6 {
 .inventory-detail-footer .inventory-detail-pharma-btn svg { width:14px; height:14px; }
 
 
+/* Mantiene los controles X alineados en la esquina superior derecha de cada ventana. */
+.modal-head > .icon-btn:last-child,
+.customer-form-header > .icon-btn:last-child,
+.medication-modal-header > .icon-btn:last-child {
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
 /* Ventana de devoluciones y anulaciones del POS */
 .returns-modal-backdrop {
   z-index: 1200;
