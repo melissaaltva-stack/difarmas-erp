@@ -7335,3 +7335,44 @@ button.icon-btn:focus-visible svg,
  .inventory-products-table th:nth-child(6),.inventory-products-table td:nth-child(6){width:100px}
  .inventory-products-table th:nth-child(7),.inventory-products-table td:nth-child(7){width:108px}
 }
+
+/* Corrección: evitar el borde interno duplicado en los buscadores.
+   El contorno pertenece al contenedor; el input interior debe permanecer transparente. */
+:where(
+  .search,
+  .search-pos,
+  .social-search,
+  .invoice-search,
+  .invoice-search-control,
+  .label-picker-search,
+  .product-image-search,
+  .toolbar .search-box
+) input,
+:where(
+  .search,
+  .search-pos,
+  .social-search,
+  .invoice-search,
+  .invoice-search-control,
+  .label-picker-search,
+  .product-image-search,
+  .toolbar .search-box
+) input:focus,
+:where(
+  .search,
+  .search-pos,
+  .social-search,
+  .invoice-search,
+  .invoice-search-control,
+  .label-picker-search,
+  .product-image-search,
+  .toolbar .search-box
+) input:focus-visible {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+}
