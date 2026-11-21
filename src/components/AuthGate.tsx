@@ -207,7 +207,7 @@ export function AuthGate({ children }: Props) {
     </div>
     <div className="auth-login-layout">
       <section className="auth-brand-panel">
-        <div className="auth-brand-lockup" aria-label="Farmi"><span className="auth-brand-wordmark">Farm<span className="auth-brand-i">ı<span className="auth-brand-i-dot" aria-hidden="true"/></span><span className="auth-brand-end-dot" aria-hidden="true"/></span></div>
+        <div className="auth-brand-lockup" aria-label="Farmi"><span className="auth-brand-wordmark">Farm<span className="auth-brand-i">ı</span><span className="auth-brand-i-dot" aria-hidden="true"/><span className="auth-brand-end-dot" aria-hidden="true"/></span></div>
         <div className="auth-brand-copy"><p>PLATAFORMA DE GESTIÓN</p><h2>Tu negocio,<br/>bajo control.</h2><span>Una forma más simple de administrar DIFARMÁS: ventas, inventario y finanzas en un solo lugar.</span></div>
         <div className="auth-brand-footer"><span className="auth-brand-line"/> Gestión inteligente para DIFARMÁS</div>
       </section>
