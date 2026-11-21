@@ -7455,3 +7455,20 @@ button.icon-btn:focus-visible svg,
 }
 
 .cash-opening-save{width:100%;margin-top:8px;min-height:36px}
+
+/* Compact filters and pagination for standard invoice history */
+.invoice-history-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.invoice-history-heading h3{margin:0!important}
+.invoice-history-heading>span{font-size:12px;color:var(--muted,#71877f);white-space:nowrap}
+.invoice-history-filters{display:grid;grid-template-columns:minmax(145px,180px) minmax(145px,180px) minmax(220px,1fr) auto;align-items:end;gap:10px;margin:0 0 14px}
+.invoice-history-filters>label{display:grid;gap:5px;font-size:11px;font-weight:650;color:var(--muted,#71877f)}
+.invoice-history-filters>label input{width:100%;min-width:0;min-height:38px;padding:7px 9px!important;border:1px solid var(--border,#dce7e2)!important;border-radius:9px;background:var(--surface,#fff);color:var(--text,#183a33)}
+.invoice-history-filters .invoice-search{margin:0;min-height:38px}
+.invoice-history-filters .invoice-search input{padding:8px 0!important}
+.invoice-history-filter-actions{display:flex;gap:6px;flex-wrap:wrap}
+.invoice-history-filter-actions .secondary,.invoice-history-pagination .secondary{min-height:36px;padding:7px 10px;font-size:12px;white-space:nowrap}
+.invoice-history-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding-top:11px;border-top:1px solid var(--border,#e8efeb);font-size:12px;color:var(--muted,#71877f)}
+.invoice-history-pagination>div{display:flex;align-items:center;gap:10px}
+.invoice-history-pagination button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:900px){.invoice-history-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.invoice-history-filters .invoice-search{grid-column:1/-1}.invoice-history-filter-actions{grid-column:1/-1}}
+@media(max-width:560px){.invoice-history-pagination{align-items:stretch;flex-direction:column}.invoice-history-pagination>div{justify-content:space-between}.invoice-history-pagination>div span{align-self:center}.invoice-history-filter-actions{display:grid;grid-template-columns:1fr 1fr}}
