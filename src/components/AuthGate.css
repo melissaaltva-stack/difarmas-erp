@@ -381,20 +381,21 @@
 @media(max-width:480px){.demo-mode-banner{top:6px;gap:8px;padding:7px 9px}.demo-mode-banner small{font-size:9px}.demo-mode-banner button{font-size:10px}}
 
  
-/* Wordmark Farmi: dos puntos verdes rebotan desde la F y aterrizan sobre la i y al final. */
+/* Wordmark Farmi: dos puntos salen juntos desde la F, recorren la palabra y rebotan al aterrizar. */
 .auth-brand-lockup{display:flex;align-items:center;gap:0;color:#fff;font-size:42px;line-height:1;font-weight:850;letter-spacing:-2.2px}
 .auth-brand-symbol{display:none}
 .auth-brand-wordmark{position:relative;display:inline-block;color:#fff}
 .auth-brand-i{position:relative;display:inline-block;color:inherit}
-.auth-brand-i-dot,.auth-brand-end-dot{position:absolute;top:.105em;width:.16em;height:.16em;border-radius:50%;background:#45c195;opacity:0;animation:farmi-login-dot .95s cubic-bezier(.2,.75,.3,1) both}
-.auth-brand-i-dot{left:50%;--dot-start-x:-2.15em;animation-delay:.18s}
-.auth-brand-end-dot{left:calc(100% - .02em);--dot-start-x:-2.75em;animation-delay:.3s}
+.auth-brand-i-dot,.auth-brand-end-dot{position:absolute;top:.105em;width:.16em;height:.16em;border-radius:50%;background:#45c195;opacity:0;animation:farmi-login-dot 1.05s cubic-bezier(.2,.75,.3,1) both}
+.auth-brand-i-dot{left:50%;--dot-start-x:-2em;animation-delay:.12s}
+.auth-brand-end-dot{left:calc(100% - .02em);--dot-start-x:-2.5em;animation-delay:.12s}
 @keyframes farmi-login-dot{
-  0%{opacity:0;transform:translate(calc(-50% + var(--dot-start-x)), -.78em)}
-  38%{opacity:1;transform:translate(calc(-50% + var(--dot-start-x) + .07em),.13em)}
-  54%{opacity:1;transform:translate(calc(-50% + var(--dot-start-x) - .055em),-.16em)}
-  68%{opacity:1;transform:translate(calc(-50% + var(--dot-start-x) + .03em),.065em)}
-  82%{opacity:1;transform:translate(calc(-50% + var(--dot-start-x) - .012em),-.025em)}
+  0%{opacity:0;transform:translate(calc(-50% + var(--dot-start-x)), -.72em)}
+  12%{opacity:1}
+  48%{opacity:1;transform:translate(-50%,.12em)}
+  63%{opacity:1;transform:translate(-50%,-.13em)}
+  76%{opacity:1;transform:translate(-50%,.055em)}
+  88%{opacity:1;transform:translate(-50%,-.018em)}
   100%{opacity:1;transform:translate(-50%,0)}
 }
 @media(prefers-reduced-motion:reduce){
