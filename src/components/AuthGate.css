@@ -381,16 +381,18 @@
 @media(max-width:480px){.demo-mode-banner{top:6px;gap:8px;padding:7px 9px}.demo-mode-banner small{font-size:9px}.demo-mode-banner button{font-size:10px}}
 
  
-/* Wordmark Farmi minimalista con entrada animada del punto de la i */
+/* Wordmark Farmi: rebote suave del punto verde al entrar */
 .auth-brand-lockup{display:flex;align-items:center;gap:0;color:#fff;font-size:42px;line-height:1;font-weight:850;letter-spacing:-2.2px}
 .auth-brand-symbol{display:none}
 .auth-brand-wordmark{display:inline-block;color:#fff}
 .auth-brand-i{position:relative;display:inline-block;color:inherit}
 .auth-brand-i-dot{position:absolute;top:.105em;left:50%;width:.105em;height:.105em;border-radius:50%;background:#45c195;opacity:0;transform:translate(-50%,-.72em);animation:farmi-login-dot .9s cubic-bezier(.2,.75,.3,1) .2s both}
 @keyframes farmi-login-dot{
-  0%{opacity:0;transform:translate(-50%,-.72em)}
-  58%{opacity:1;transform:translate(-50%,.09em)}
-  76%{opacity:1;transform:translate(-50%,-.055em)}
+  0%{opacity:0;transform:translate(-50%,-.78em)}
+  38%{opacity:1;transform:translate(calc(-50% + .07em),.13em)}
+  54%{opacity:1;transform:translate(calc(-50% - .055em),-.16em)}
+  68%{opacity:1;transform:translate(calc(-50% + .03em),.065em)}
+  82%{opacity:1;transform:translate(calc(-50% - .012em),-.025em)}
   100%{opacity:1;transform:translate(-50%,0)}
 }
 @media(prefers-reduced-motion:reduce){
