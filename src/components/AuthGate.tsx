@@ -259,8 +259,8 @@ export function AuthGate({ children }: Props) {
     <div className="auth-login-layout">
       <section className="auth-brand-panel">
         <div className="auth-brand-lockup" aria-label="Farmi"><span className="auth-brand-wordmark" ref={brandWordmarkRef}><span className="auth-brand-letter" ref={(element) => { brandLetterRefs.current[0] = element; }}>F</span><span className="auth-brand-letter" ref={(element) => { brandLetterRefs.current[1] = element; }}>a</span><span className="auth-brand-letter" ref={(element) => { brandLetterRefs.current[2] = element; }}>r</span><span className="auth-brand-letter" ref={(element) => { brandLetterRefs.current[3] = element; }}>m</span><span className="auth-brand-letter auth-brand-letter-i" ref={(element) => { brandLetterRefs.current[4] = element; }}>ı</span><span className="auth-brand-final-period" ref={brandPeriodRef} aria-hidden="true">.</span><span className="auth-brand-i-dot" aria-hidden="true"/><span className="auth-brand-end-dot" aria-hidden="true"/></span></div>
-        <div className="auth-brand-copy"><p>PLATAFORMA DE GESTIÓN</p><h2>Tu negocio,<br/>bajo control.</h2><span>Una forma más simple de administrar DIFARMÁS: ventas, inventario y finanzas en un solo lugar.</span></div>
-        <div className="auth-brand-footer"><span className="auth-brand-line"/> Gestión inteligente para DIFARMÁS</div>
+        <div className="auth-brand-copy"><p>PLATAFORMA DE GESTIÓN</p><h2>Tu negocio,<br/>bajo control.</h2></div>
+        
       </section>
       <form className="auth-card auth-login-card" onSubmit={signIn}>
         <div className="auth-logo auth-login-symbol"><LogIn size={25} aria-hidden="true"/></div>
