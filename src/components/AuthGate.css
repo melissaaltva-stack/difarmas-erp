@@ -386,7 +386,7 @@
 .auth-brand-symbol{display:none}
 .auth-brand-wordmark{display:inline-block;color:#fff}
 .auth-brand-i{position:relative;display:inline-block;color:inherit}
-.auth-brand-i-dot{position:absolute;top:.105em;left:50%;width:.075em;height:.075em;border-radius:50%;background:#45c195;opacity:0;transform:translate(-50%,-.72em);animation:farmi-login-dot .9s cubic-bezier(.2,.75,.3,1) .2s both}
+.auth-brand-i-dot{position:absolute;top:.105em;left:50%;width:.16em;height:.16em;border-radius:50%;background:#45c195;opacity:0;transform:translate(-50%,-.72em);animation:farmi-login-dot .9s cubic-bezier(.2,.75,.3,1) .2s both}
 @keyframes farmi-login-dot{
   0%{opacity:0;transform:translate(-50%,-.78em)}
   38%{opacity:1;transform:translate(calc(-50% + .07em),.13em)}
