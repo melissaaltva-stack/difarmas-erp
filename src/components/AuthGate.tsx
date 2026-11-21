@@ -34,8 +34,16 @@ export function AuthGate({ children }: Props) {
   const [settingsOpen,setSettingsOpen] = useState(false);
   const [backgroundOpacity,setBackgroundOpacity] = useState(()=>{try{return Number(window.localStorage.getItem('farmi-background-opacity')??'58');}catch{return 58;}});
   const [loginTheme,setLoginTheme] = useState(()=>{try{const saved=window.localStorage.getItem('farmi-system-theme')??'emerald';return ['emerald','blue','violet','slate','rose'].includes(saved)?saved:'emerald';}catch{return 'emerald';}});
+  const [loginBrandEyebrow,setLoginBrandEyebrow] = useState(()=>{try{return window.localStorage.getItem('farmi-login-brand-eyebrow')??'PLATAFORMA DE GESTIÓN';}catch{return 'PLATAFORMA DE GESTIÓN';}});
+  const [loginBrandTitle,setLoginBrandTitle] = useState(()=>{try{return window.localStorage.getItem('farmi-login-brand-title')??'Tu negocio,\\nbajo control.';}catch{return 'Tu negocio,\\nbajo control.';}});
   const themes=[{id:'emerald',name:'Esmeralda',color:'#16856b'},{id:'blue',name:'Azul',color:'#2867b2'},{id:'violet',name:'Violeta',color:'#7653b5'},{id:'slate',name:'Grafito',color:'#526477'},{id:'rose',name:'Rosa',color:'#b65370'}];
   useEffect(()=>{document.documentElement.dataset.farmiTheme=loginTheme;try{window.localStorage.setItem('farmi-system-theme',loginTheme);}catch{}},[loginTheme]);
+  useEffect(()=>{try{window.localStorage.setItem('farmi-login-brand-eyebrow',loginBrandEyebrow);}catch{}},[loginBrandEyebrow]);
+  useEffect(()=>{try{window.localStorage.setItem('farmi-login-brand-title',loginBrandTitle);}catch{}},[loginBrandTitle]);
+  const resetLoginBrandText = () => {
+    setLoginBrandEyebrow('PLATAFORMA DE GESTIÓN');
+    setLoginBrandTitle('Tu negocio,\\nbajo control.');
+  };
   useEffect(()=>{try{window.localStorage.setItem('farmi-background-opacity',String(backgroundOpacity));}catch{}},[backgroundOpacity]);
   const [recoveryMode,setRecoveryMode] = useState(false);
   const [recoveryPassword,setRecoveryPassword] = useState('');
@@ -250,6 +258,21 @@ export function AuthGate({ children }: Props) {
       <button type="button" className="auth-settings-trigger" aria-label="Ajustes de apariencia" aria-expanded={settingsOpen} onClick={()=>setSettingsOpen(value=>!value)}><Settings size={19}/></button>
       {settingsOpen&&<div className="auth-settings-menu">
         <p className="auth-settings-heading">Personalizar FARMI</p>
+        <div className="auth-copy-settings">
+          <p className="auth-settings-section-title">Texto del panel de inicio</p>
+          <label htmlFor="login-brand-eyebrow">Texto superior</label>
+          <div className="auth-copy-field-row">
+            <input id="login-brand-eyebrow" type="text" value={loginBrandEyebrow} onChange={event=>setLoginBrandEyebrow(event.target.value)} placeholder="PLATAFORMA DE GESTIÓN" maxLength={80}/>
+            <button type="button" onClick={()=>setLoginBrandEyebrow('')} disabled={!loginBrandEyebrow}>Quitar</button>
+          </div>
+          <label htmlFor="login-brand-title">Título principal</label>
+          <div className="auth-copy-field-row auth-copy-field-row-title">
+            <textarea id="login-brand-title" rows={2} value={loginBrandTitle} onChange={event=>setLoginBrandTitle(event.target.value)} placeholder="Escribe el título que quieras mostrar" maxLength={120}/>
+            <button type="button" onClick={()=>setLoginBrandTitle('')} disabled={!loginBrandTitle}>Quitar</button>
+          </div>
+          <p className="auth-copy-hint">Puedes escribir otro texto o dejar cada campo vacío para ocultarlo.</p>
+          <button type="button" className="auth-copy-reset" onClick={resetLoginBrandText}>Restablecer textos originales</button>
+        </div>
         <label className="auth-settings-item"><span className="auth-settings-icon"><ImagePlus size={17}/></span><span>Cambiar imagen de fondo</span><input type="file" accept="image/*" onChange={handleBackgroundUpload}/></label>
         <div className="auth-settings-themes"><div className="auth-settings-item-title"><Palette size={17}/> Tema de colores</div><div className="auth-theme-options">{themes.map(theme=><button key={theme.id} type="button" className={loginTheme===theme.id?'selected':''} title={theme.name} aria-label={`Tema ${theme.name}`} onClick={()=>setLoginTheme(theme.id)}><span style={{background:theme.color}}/>{loginTheme===theme.id&&<Check size={12}/>}</button>)}</div><small>{themes.find(theme=>theme.id===loginTheme)?.name}</small><div className="auth-opacity-control"><label htmlFor="login-background-opacity">Transparencia del fondo <strong>{backgroundOpacity}%</strong></label><input id="login-background-opacity" type="range" min="0" max="90" step="5" value={backgroundOpacity} onChange={event=>setBackgroundOpacity(Number(event.target.value))}/><div><span>Más visible</span><span>Más oscuro</span></div></div></div>
         {loginBackground&&<button type="button" className="auth-settings-item auth-settings-reset" onClick={clearLoginBackground}><span className="auth-settings-icon"><RotateCcw size={16}/></span><span>Restablecer fondo</span></button>}
@@ -259,7 +282,7 @@ export function AuthGate({ children }: Props) {
     <div className="auth-login-layout">
       <section className="auth-brand-panel">
         <div className="auth-brand-lockup" aria-label="Farmi"><span className="auth-brand-wordmark" ref={brandWordmarkRef}><span className="auth-brand-letter" ref={(element) => { brandLetterRefs.current[0] = element; }}>F</span><span className="auth-brand-letter" ref={(element) => { brandLetterRefs.current[1] = element; }}>a</span><span className="auth-brand-letter" ref={(element) => { brandLetterRefs.current[2] = element; }}>r</span><span className="auth-brand-letter" ref={(element) => { brandLetterRefs.current[3] = element; }}>m</span><span className="auth-brand-letter auth-brand-letter-i" ref={(element) => { brandLetterRefs.current[4] = element; }}>ı</span><span className="auth-brand-final-period" ref={brandPeriodRef} aria-hidden="true">.</span><span className="auth-brand-i-dot" aria-hidden="true"/><span className="auth-brand-end-dot" aria-hidden="true"/></span></div>
-        <div className="auth-brand-copy"><p>PLATAFORMA DE GESTIÓN</p><h2>Tu negocio,<br/>bajo control.</h2></div>
+        <div className="auth-brand-copy">{loginBrandEyebrow.trim()&&<p>{loginBrandEyebrow}</p>}{loginBrandTitle.trim()&&<h2>{loginBrandTitle}</h2>}</div>
         
       </section>
       <form className="auth-card auth-login-card" onSubmit={signIn}>
