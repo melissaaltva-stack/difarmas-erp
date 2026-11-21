@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Activity, AlertTriangle, DollarSign, ShoppingCart, TrendingUp, Wallet, Search, Plus, Pencil, Package, History, Target, BrainCircuit, Scale, SlidersHorizontal, ShieldCheck, CheckCircle2, Clock3, ListChecks, ReceiptText, WalletCards, ArrowUpDown, Brain, LineChart, BarChart3, Megaphone, ShoppingBag, Award, Boxes, Users, X, Calculator, LayoutDashboard } from 'lucide-react';
-import type { SaleRecord, Expense, Receivable, Payable, PurchaseRecord, CashClosure, CashMovement, PaymentTransaction } from '../domain/types';
+import type { SaleRecord, Expense, Receivable, Payable, PurchaseRecord, CashClosure, CashMovement, CashOpeningBalance, PaymentTransaction } from '../domain/types';
 import { dateKey, localDateKey } from '../utils/dates';
 const validPayment = (value:number, balance:number) => Number.isFinite(value) && value > 0 && value <= balance;
 const currentMonthKey = (d = new Date()) => localDateKey(d).slice(0,7);
@@ -11,7 +11,7 @@ import { canWriteFinance, sumSales, sumProfit, sumExpenses, cashExpenses, cashMo
 
 const money = (value: number) => new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL', maximumFractionDigits: 2 }).format(value);
 
-export function Finance({section='resumen',sales,purchases,expenses,setExpenses,receivables,setReceivables,payables,setPayables,closures,setClosures,movements,setMovements,paymentTransactions,setPaymentTransactions,remoteReady,syncStatus}:{section?:'resumen'|'gastos'|'ventas'|'compras_recibidas'|'cobrar'|'pagar'|'historial_pagos'|'movimientos'|'cierre'|'historial_cierres';sales:SaleRecord[];purchases:PurchaseRecord[];expenses:Expense[];setExpenses:React.Dispatch<React.SetStateAction<Expense[]>>;receivables:Receivable[];setReceivables:React.Dispatch<React.SetStateAction<Receivable[]>>;payables:Payable[];setPayables:React.Dispatch<React.SetStateAction<Payable[]>>;closures:CashClosure[];setClosures:React.Dispatch<React.SetStateAction<CashClosure[]>>;movements:CashMovement[];setMovements:React.Dispatch<React.SetStateAction<CashMovement[]>>;paymentTransactions:PaymentTransaction[];setPaymentTransactions:React.Dispatch<React.SetStateAction<PaymentTransaction[]>>;remoteReady:boolean;syncStatus:'loading'|'saving'|'synced'|'error'}) {
+export function Finance({section='resumen',sales,purchases,expenses,setExpenses,receivables,setReceivables,payables,setPayables,closures,setClosures,movements,setMovements,openingBalances,setOpeningBalances,paymentTransactions,setPaymentTransactions,remoteReady,syncStatus}:{section?:'resumen'|'gastos'|'ventas'|'compras_recibidas'|'cobrar'|'pagar'|'historial_pagos'|'movimientos'|'cierre'|'historial_cierres';sales:SaleRecord[];purchases:PurchaseRecord[];expenses:Expense[];setExpenses:React.Dispatch<React.SetStateAction<Expense[]>>;receivables:Receivable[];setReceivables:React.Dispatch<React.SetStateAction<Receivable[]>>;payables:Payable[];setPayables:React.Dispatch<React.SetStateAction<Payable[]>>;closures:CashClosure[];setClosures:React.Dispatch<React.SetStateAction<CashClosure[]>>;movements:CashMovement[];setMovements:React.Dispatch<React.SetStateAction<CashMovement[]>>;openingBalances:CashOpeningBalance[];setOpeningBalances:React.Dispatch<React.SetStateAction<CashOpeningBalance[]>>;paymentTransactions:PaymentTransaction[];setPaymentTransactions:React.Dispatch<React.SetStateAction<PaymentTransaction[]>>;remoteReady:boolean;syncStatus:'loading'|'saving'|'synced'|'error'}) {
   const [description,setDescription]=useState(''); const [amount,setAmount]=useState(0); const [category,setCategory]=useState('Operación'); const [expensePaymentMethod,setExpensePaymentMethod]=useState<'Efectivo'|'Transferencia'>('Efectivo');
   const [paymentAmount,setPaymentAmount]=useState<Record<number,number>>({}); const [supplierPaymentMethod,setSupplierPaymentMethod]=useState<'Efectivo'|'Transferencia'>('Efectivo'); const [collectionPaymentMethod,setCollectionPaymentMethod]=useState<'Efectivo'|'Transferencia'>('Efectivo');
   const [opening,setOpening]=useState(0); const [counted,setCounted]=useState(0); const [note,setNote]=useState('');
@@ -22,12 +22,17 @@ export function Finance({section='resumen',sales,purchases,expenses,setExpenses,
   const nextFinanceId=(kind:keyof typeof lastFinanceIds.current,rows:{id:number}[])=>{const highest=rows.reduce((max,row)=>Math.max(max,Number(row.id)||0),0);const next=Math.max(Date.now(),highest,lastFinanceIds.current[kind])+1;lastFinanceIds.current[kind]=next;return next;};
   useEffect(()=>{paymentLocks.current.clear();},[receivables,payables,paymentTransactions]);
   useEffect(()=>{closingRef.current=false;setIsClosing(false);},[closures]);
+  const today=localDateKey();
+  const todayOpening=openingBalances.find(item=>item.date===today);
+  const openingSaved=Boolean(todayOpening);
   useEffect(()=>{
+    if(todayOpening){setOpening(todayOpening.amount);return;}
     if(closures.length){
       const latest=closures.reduce((a,b)=>new Date(a.date).getTime()>new Date(b.date).getTime()?a:b);
-      setOpening(current=>current===0?latest.counted:current);
+      setOpening(latest.counted);
     }
-  },[closures]);
+  },[todayOpening?.date,todayOpening?.amount,closures]);
+  const saveOpening=()=>{if(!canWrite||alreadyClosedToday||!Number.isFinite(opening)||opening<0)return;setOpeningBalances(current=>[...current.filter(item=>item.date!==today),{date:today,amount:opening,updatedAt:new Date().toISOString()}]);};
 
   const salesTotal=sumSales(sales); const profit=sumProfit(sales); const expenseTotal=sumExpenses(expenses); const cashExpenseTotal=cashExpenses(expenses);
   const receivablePending=pendingReceivables(receivables); const payablePending=pendingPayables(payables);
@@ -46,7 +51,6 @@ export function Finance({section='resumen',sales,purchases,expenses,setExpenses,
   },0);
   const { incoming: cashMovementIn, outgoing: cashMovementOut } = cashMovementTotals(movements);
   const cashFlow=cashSalesTotal+cashCollections+cashMovementIn-cashExpenseTotal-cashSupplierPayments-purchases.filter(p=>p.paymentMethod==='Efectivo').reduce((sum,p)=>sum+p.total,0)-cashMovementOut;
-  const today=localDateKey();
   const alreadyClosedToday=closures.some(closure=>dateKey(closure.date)===today);
   const dayMovementIn=movements.filter(m=>m.category!=='Banco'&&dateKey(m.date)===today&&m.type==='Entrada').reduce((a,m)=>a+m.amount,0); const dayMovementOut=movements.filter(m=>m.category!=='Banco'&&dateKey(m.date)===today&&m.type==='Salida').reduce((a,m)=>a+m.amount,0);
   const daySales=sales.filter(s=>dateKey(s.date)===today&&s.payment==='Efectivo').reduce((a,s)=>a+s.total,0);
@@ -76,7 +80,7 @@ export function Finance({section='resumen',sales,purchases,expenses,setExpenses,
   const addExpense=()=>{if(!canWrite||!description.trim()||!Number.isFinite(amount)||amount<=0)return;const expense:Expense={id:nextFinanceId('expense',expenses),description:description.trim(),amount,category,date:new Date().toISOString(),paymentMethod:expensePaymentMethod};setExpenses(current=>[...current,expense]);setDescription('');setAmount(0);};
   const collect=(r:Receivable)=>{if(!canWrite)return;const lock='Cobro:'+r.id;if(paymentLocks.current.has(lock))return;const balance=Math.max(0,r.total-r.paid);const value=paymentAmount[r.id]||0;if(!validPayment(value,balance))return;paymentLocks.current.add(lock);const date=new Date().toISOString();setReceivables(current=>current.map(x=>x.id===r.id?{...x,paid:Math.min(x.total,x.paid+value),lastPaymentDate:date}:x));setPaymentTransactions(current=>[{id:nextFinanceId('transaction',paymentTransactions),type:'Cobro',accountId:r.id,party:r.customer,amount:value,date,paymentMethod:collectionPaymentMethod},...current]);setPaymentAmount(current=>({...current,[r.id]:0}));};
   const paySupplier=(r:Payable)=>{if(!canWrite)return;const lock='Pago proveedor:'+r.id;if(paymentLocks.current.has(lock))return;const balance=Math.max(0,r.total-r.paid);const value=paymentAmount[r.id]||0;if(!validPayment(value,balance))return;paymentLocks.current.add(lock);const date=new Date().toISOString();setPayables(current=>current.map(x=>x.id===r.id?{...x,paid:Math.min(x.total,x.paid+value),lastPaymentDate:date}:x));setPaymentTransactions(current=>[{id:nextFinanceId('transaction',paymentTransactions),type:'Pago proveedor',accountId:r.id,party:r.supplier,amount:value,date,paymentMethod:supplierPaymentMethod},...current]);setPaymentAmount(current=>({...current,[r.id]:0}));};
-  const closeCash=()=>{if(!canWrite||closingRef.current||alreadyClosedToday||!Number.isFinite(opening)||opening<0||!Number.isFinite(counted)||counted<0)return;closingRef.current=true;setIsClosing(true);setClosures(current=>[createCashClosure(opening,daySales,dayCollections,dayExpenses,daySupplierPayments,expected,counted,note,new Date(),dayCashPurchases,nextFinanceId('closure',closures)),...current]);setOpening(counted);setCounted(0);setNote('');};
+  const closeCash=()=>{if(!canWrite||closingRef.current||alreadyClosedToday||!Number.isFinite(opening)||opening<0||!Number.isFinite(counted)||counted<0)return;closingRef.current=true;setIsClosing(true);setClosures(current=>[createCashClosure(opening,daySales,dayCollections,dayExpenses,daySupplierPayments,expected,counted,note,new Date(),dayCashPurchases,nextFinanceId('closure',closures)),...current]);setCounted(0);setNote('');};
   return <div className="content">
   {!canWrite&&<div className="settings-notice" role="status">{syncStatus==='error'?'Solo lectura: falló la sincronización. Revisa la conexión antes de registrar operaciones.':syncStatus==='loading'?'Cargando los datos de la cuenta. Las operaciones estarán disponibles al terminar.':'Guardando cambios en la nube. Espera a que termine la sincronización.'}</div>}
   {section === 'resumen' && <><div className="grid metrics"><article className="card metric"><div className="metric-top"><span>Ventas</span><ShoppingCart size={20}/></div><strong>{money(salesTotal)}</strong><small>{sales.length} operaciones</small></article><article className="card metric"><div className="metric-top"><span>Utilidad bruta</span><TrendingUp size={20}/></div><strong>{money(profit)}</strong></article><article className="card metric"><div className="metric-top"><span>Por cobrar</span><DollarSign size={20}/></div><strong>{money(receivablePending)}</strong></article><article className="card metric"><div className="metric-top"><span>Por pagar</span><Wallet size={20}/></div><strong>{money(payablePending)}</strong></article></div>
@@ -117,11 +121,11 @@ export function Finance({section='resumen',sales,purchases,expenses,setExpenses,
       </section>
       <section className="card cash-count-card">
         <div className="cash-closing-section-head"><div><h3>Conteo de efectivo</h3><p>Ingresa el dinero físico que tienes en caja.</p></div><Wallet size={21}/></div>
-        <label className="cash-field">Saldo inicial de caja<input type="number" min="0" step="0.01" value={opening||''} onChange={e=>setOpening(Number(e.target.value))} placeholder="0.00"/></label>
+        <label className="cash-field">Saldo inicial de caja<input type="number" min="0" step="0.01" value={opening||''} onChange={e=>setOpening(Number(e.target.value))} placeholder="Ingresa el efectivo disponible al iniciar el día"/></label><button type="button" className="secondary cash-opening-save" onClick={saveOpening} disabled={!canWrite||alreadyClosedToday||!Number.isFinite(opening)||opening<0}>{openingSaved?'Actualizar saldo inicial':'Guardar saldo inicial'}</button><small className="cash-closing-footnote">Puedes guardar el saldo al iniciar el día sin realizar el cierre. Quedará disponible para el cálculo de caja.</small>
         <label className="cash-field">Efectivo contado<input type="number" min="0" step="0.01" value={counted||''} onChange={e=>setCounted(Number(e.target.value))} placeholder="Escribe el total contado"/></label>
         <div className={`cash-difference ${counted-expected===0?'balanced':counted-expected>0?'surplus':'shortage'}`}><span>Diferencia de caja</span><strong>{money(counted-expected)}</strong><small>{counted-expected===0?'La caja está cuadrada':counted-expected>0?'Hay un sobrante de efectivo':'Hay un faltante de efectivo'}</small></div>
         <label className="cash-field">Observaciones <textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="Agrega una nota si hubo alguna diferencia..." rows={3}/></label>
-        <button className="primary cash-confirm-btn" onClick={closeCash} disabled={!canWrite||isClosing||alreadyClosedToday}>{isClosing?'Guardando cierre…':alreadyClosedToday?'Caja cerrada hoy':'Confirmar cierre de caja'}</button>
+        <button className="primary cash-confirm-btn" onClick={closeCash} disabled={!canWrite||isClosing||alreadyClosedToday||!openingSaved}>{isClosing?'Guardando cierre…':alreadyClosedToday?'Caja cerrada hoy':'Confirmar cierre de caja'}</button>
         <small className="cash-closing-footnote">Al confirmar, el cierre quedará guardado en el historial.</small>
       </section>
     </div>
