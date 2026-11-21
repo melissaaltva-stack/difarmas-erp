@@ -32,8 +32,6 @@ export function Finance({section='resumen',sales,purchases,expenses,setExpenses,
       setOpening(latest.counted);
     }
   },[todayOpening?.date,todayOpening?.amount,closures]);
-  const saveOpening=()=>{if(!canWrite||alreadyClosedToday||!Number.isFinite(opening)||opening<0)return;setOpeningBalances(current=>[...current.filter(item=>item.date!==today),{date:today,amount:opening,updatedAt:new Date().toISOString()}]);};
-
   const salesTotal=sumSales(sales); const profit=sumProfit(sales); const expenseTotal=sumExpenses(expenses); const cashExpenseTotal=cashExpenses(expenses);
   const receivablePending=pendingReceivables(receivables); const payablePending=pendingPayables(payables);
   const cashSalesTotal=cashSales(sales); const collected=collectedReceivables(receivables); const supplierPaymentsTotal=supplierPayments(payables);
@@ -52,6 +50,7 @@ export function Finance({section='resumen',sales,purchases,expenses,setExpenses,
   const { incoming: cashMovementIn, outgoing: cashMovementOut } = cashMovementTotals(movements);
   const cashFlow=cashSalesTotal+cashCollections+cashMovementIn-cashExpenseTotal-cashSupplierPayments-purchases.filter(p=>p.paymentMethod==='Efectivo').reduce((sum,p)=>sum+p.total,0)-cashMovementOut;
   const alreadyClosedToday=closures.some(closure=>dateKey(closure.date)===today);
+  const saveOpening=()=>{if(!canWrite||alreadyClosedToday||!Number.isFinite(opening)||opening<0)return;setOpeningBalances(current=>[...current.filter(item=>item.date!==today),{date:today,amount:opening,updatedAt:new Date().toISOString()}]);};
   const dayMovementIn=movements.filter(m=>m.category!=='Banco'&&dateKey(m.date)===today&&m.type==='Entrada').reduce((a,m)=>a+m.amount,0); const dayMovementOut=movements.filter(m=>m.category!=='Banco'&&dateKey(m.date)===today&&m.type==='Salida').reduce((a,m)=>a+m.amount,0);
   const daySales=sales.filter(s=>dateKey(s.date)===today&&s.payment==='Efectivo').reduce((a,s)=>a+s.total,0);
   const dayCollections=receivables.reduce((sum,r)=>{
