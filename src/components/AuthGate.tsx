@@ -35,14 +35,14 @@ export function AuthGate({ children }: Props) {
   const [backgroundOpacity,setBackgroundOpacity] = useState(()=>{try{return Number(window.localStorage.getItem('farmi-background-opacity')??'58');}catch{return 58;}});
   const [loginTheme,setLoginTheme] = useState(()=>{try{const saved=window.localStorage.getItem('farmi-system-theme')??'emerald';return ['emerald','blue','violet','slate','rose'].includes(saved)?saved:'emerald';}catch{return 'emerald';}});
   const [loginBrandEyebrow,setLoginBrandEyebrow] = useState(()=>{try{return window.localStorage.getItem('farmi-login-brand-eyebrow')??'PLATAFORMA DE GESTIÓN';}catch{return 'PLATAFORMA DE GESTIÓN';}});
-  const [loginBrandTitle,setLoginBrandTitle] = useState(()=>{try{return window.localStorage.getItem('farmi-login-brand-title')??'Tu negocio,\\nbajo control.';}catch{return 'Tu negocio,\\nbajo control.';}});
+  const [loginBrandTitle,setLoginBrandTitle] = useState(()=>{try{return window.localStorage.getItem('farmi-login-brand-title')??'Tu negocio,\nbajo control.';}catch{return 'Tu negocio,\nbajo control.';}});
   const themes=[{id:'emerald',name:'Esmeralda',color:'#16856b'},{id:'blue',name:'Azul',color:'#2867b2'},{id:'violet',name:'Violeta',color:'#7653b5'},{id:'slate',name:'Grafito',color:'#526477'},{id:'rose',name:'Rosa',color:'#b65370'}];
   useEffect(()=>{document.documentElement.dataset.farmiTheme=loginTheme;try{window.localStorage.setItem('farmi-system-theme',loginTheme);}catch{}},[loginTheme]);
   useEffect(()=>{try{window.localStorage.setItem('farmi-login-brand-eyebrow',loginBrandEyebrow);}catch{}},[loginBrandEyebrow]);
   useEffect(()=>{try{window.localStorage.setItem('farmi-login-brand-title',loginBrandTitle);}catch{}},[loginBrandTitle]);
   const resetLoginBrandText = () => {
     setLoginBrandEyebrow('PLATAFORMA DE GESTIÓN');
-    setLoginBrandTitle('Tu negocio,\\nbajo control.');
+    setLoginBrandTitle('Tu negocio,\nbajo control.');
   };
   useEffect(()=>{try{window.localStorage.setItem('farmi-background-opacity',String(backgroundOpacity));}catch{}},[backgroundOpacity]);
   const [recoveryMode,setRecoveryMode] = useState(false);
@@ -282,7 +282,7 @@ export function AuthGate({ children }: Props) {
     <div className="auth-login-layout">
       <section className="auth-brand-panel">
         <div className="auth-brand-lockup" aria-label="Farmi"><span className="auth-brand-wordmark" ref={brandWordmarkRef}><span className="auth-brand-letter" ref={(element) => { brandLetterRefs.current[0] = element; }}>F</span><span className="auth-brand-letter" ref={(element) => { brandLetterRefs.current[1] = element; }}>a</span><span className="auth-brand-letter" ref={(element) => { brandLetterRefs.current[2] = element; }}>r</span><span className="auth-brand-letter" ref={(element) => { brandLetterRefs.current[3] = element; }}>m</span><span className="auth-brand-letter auth-brand-letter-i" ref={(element) => { brandLetterRefs.current[4] = element; }}>ı</span><span className="auth-brand-final-period" ref={brandPeriodRef} aria-hidden="true">.</span><span className="auth-brand-i-dot" aria-hidden="true"/><span className="auth-brand-end-dot" aria-hidden="true"/></span></div>
-        <div className="auth-brand-copy">{loginBrandEyebrow.trim()&&<p>{loginBrandEyebrow}</p>}{loginBrandTitle.trim()&&<h2>{loginBrandTitle}</h2>}</div>
+        {(loginBrandEyebrow.trim()||loginBrandTitle.trim())&&<div className="auth-brand-copy">{loginBrandEyebrow.trim()&&<p>{loginBrandEyebrow}</p>}{loginBrandTitle.trim()&&<h2>{loginBrandTitle}</h2>}</div>}
         
       </section>
       <form className="auth-card auth-login-card" onSubmit={signIn}>
