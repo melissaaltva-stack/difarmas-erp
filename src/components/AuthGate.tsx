@@ -54,6 +54,7 @@ export function AuthGate({ children }: Props) {
       else window.localStorage.removeItem('farmi-login-background');
       setSettingsSaved(true);
       setBackgroundError('');
+      setSettingsOpen(false);
     } catch {
       setSettingsSaved(false);
       setBackgroundError('No se pudieron guardar los cambios. Libera espacio en el navegador e inténtalo de nuevo.');
