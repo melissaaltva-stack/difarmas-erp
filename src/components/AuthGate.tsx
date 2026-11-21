@@ -1,4 +1,4 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent, type ReactNode, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode, type CSSProperties } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { LogIn, Mail, KeyRound, ShieldAlert, ImagePlus, RotateCcw, Settings, Palette, Check, FlaskConical } from 'lucide-react';
 import './AuthGate.css';
@@ -40,6 +40,57 @@ export function AuthGate({ children }: Props) {
   const [recoveryMode,setRecoveryMode] = useState(false);
   const [recoveryPassword,setRecoveryPassword] = useState('');
   const [confirmRecoveryPassword,setConfirmRecoveryPassword] = useState('');
+  const shouldMeasureBrandWordmark = supabaseConfigured && !checking && !user && !demoMode && !recoveryMode;
+  const brandWordmarkRef = useRef<HTMLSpanElement | null>(null);
+  const brandLetterRefs = useRef<Array<HTMLSpanElement | null>>([]);
+  const brandPeriodRef = useRef<HTMLSpanElement | null>(null);
+
+  useLayoutEffect(() => {
+    if (!shouldMeasureBrandWordmark) return;
+    const wordmark = brandWordmarkRef.current;
+    if (!wordmark) return;
+
+    const measureLetterPositions = () => {
+      const letters = brandLetterRefs.current.slice(0, 5);
+      const period = brandPeriodRef.current;
+      if (letters.length !== 5 || letters.some((letter) => letter === null) || !period) return;
+
+      const wordmarkRect = wordmark.getBoundingClientRect();
+      const centers = letters.map((letter) => {
+        const rect = letter!.getBoundingClientRect();
+        return rect.left + rect.width / 2 - wordmarkRect.left;
+      });
+      const periodRect = period.getBoundingClientRect();
+      const periodCenter = periodRect.left + periodRect.width / 2 - wordmarkRect.left;
+
+      ['f', 'a', 'r', 'm', 'i'].forEach((letter, index) => {
+        wordmark.style.setProperty(`--farmi-${letter}-x`, `${centers[index]}px`);
+      });
+      wordmark.style.setProperty('--farmi-period-x', `${periodCenter}px`);
+    };
+
+    measureLetterPositions();
+    const resizeObserver = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(measureLetterPositions)
+      : null;
+    resizeObserver?.observe(wordmark);
+    brandLetterRefs.current.forEach((letter) => {
+      if (letter) resizeObserver?.observe(letter);
+    });
+    window.addEventListener('resize', measureLetterPositions);
+
+    let active = true;
+    document.fonts?.ready.then(() => {
+      if (active) measureLetterPositions();
+    });
+
+    return () => {
+      active = false;
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', measureLetterPositions);
+    };
+  }, [shouldMeasureBrandWordmark]);
+
 
   useEffect(() => {
     if (demoMode) { setChecking(false); setUser(null); return; }
@@ -207,7 +258,7 @@ export function AuthGate({ children }: Props) {
     </div>
     <div className="auth-login-layout">
       <section className="auth-brand-panel">
-        <div className="auth-brand-lockup"><span className="auth-brand-symbol">F</span><span>FARMI</span></div>
+        <div className="auth-brand-lockup" aria-label="Farmi"><span className="auth-brand-wordmark" ref={brandWordmarkRef}><span className="auth-brand-letter" ref={(element) => { brandLetterRefs.current[0] = element; }}>F</span><span className="auth-brand-letter" ref={(element) => { brandLetterRefs.current[1] = element; }}>a</span><span className="auth-brand-letter" ref={(element) => { brandLetterRefs.current[2] = element; }}>r</span><span className="auth-brand-letter" ref={(element) => { brandLetterRefs.current[3] = element; }}>m</span><span className="auth-brand-letter auth-brand-letter-i" ref={(element) => { brandLetterRefs.current[4] = element; }}>ı</span><span className="auth-brand-final-period" ref={brandPeriodRef} aria-hidden="true">.</span><span className="auth-brand-i-dot" aria-hidden="true"/><span className="auth-brand-end-dot" aria-hidden="true"/></span></div>
         <div className="auth-brand-copy"><p>PLATAFORMA DE GESTIÓN</p><h2>Tu negocio,<br/>bajo control.</h2><span>Una forma más simple de administrar DIFARMÁS: ventas, inventario y finanzas en un solo lugar.</span></div>
         <div className="auth-brand-footer"><span className="auth-brand-line"/> Gestión inteligente para DIFARMÁS</div>
       </section>
