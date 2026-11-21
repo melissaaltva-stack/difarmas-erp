@@ -5535,3 +5535,45 @@ button.icon-btn:focus-visible svg,
 .pharmacy-ai-form{display:flex;align-items:flex-end;gap:8px}.pharmacy-ai-form textarea{flex:1;min-width:0;resize:vertical;border:1px solid #cbd9d5;border-radius:9px;padding:10px;font:inherit;font-size:13px;background:#fff}
 .pharmacy-ai-form button{min-height:40px}.pharmacy-ai-footer{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:8px;color:#71827e;font-size:11px}.pharmacy-ai-footer button{white-space:nowrap}
 @media(max-width:600px){.pharmacy-ai-heading{align-items:flex-start}.pharmacy-ai-heading>div{flex:1}.pharmacy-ai-heading>button{width:100%}.pharmacy-ai-form{align-items:stretch;flex-direction:column}.pharmacy-ai-form button{width:100%}.pharmacy-ai-footer{align-items:flex-start;flex-direction:column}}
+
+
+/* Corrección definitiva: evitar el borde interno duplicado en los buscadores.
+   El contorno pertenece al contenedor; el input interior debe permanecer transparente. */
+:where(
+  .search,
+  .search-pos,
+  .social-search,
+  .invoice-search,
+  .invoice-search-control,
+  .label-picker-search,
+  .product-image-search,
+  .toolbar .search-box
+) input,
+:where(
+  .search,
+  .search-pos,
+  .social-search,
+  .invoice-search,
+  .invoice-search-control,
+  .label-picker-search,
+  .product-image-search,
+  .toolbar .search-box
+) input:focus,
+:where(
+  .search,
+  .search-pos,
+  .social-search,
+  .invoice-search,
+  .invoice-search-control,
+  .label-picker-search,
+  .product-image-search,
+  .toolbar .search-box
+) input:focus-visible {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+}
