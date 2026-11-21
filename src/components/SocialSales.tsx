@@ -47,7 +47,7 @@ export function SocialSales({products,customers,settings}:{products:Product[];cu
   const whatsappNumber=phoneDigits(links.whatsapp||settings.phone);
   const sendMessage=()=>{if(!selected){setNotice('Selecciona una conversación primero.');return;}const url=createWhatsAppUrl(selected,message);if(!url){setNotice('Registra el teléfono del cliente con código de país para abrir WhatsApp.');return;}window.open(url,'_blank','noopener,noreferrer');};
   return <div className="content social-sales">
-    <div className="page-head social-page-heading"><div><h2>Redes sociales / Ventas</h2><p>Seguimiento de consultas y pedidos recibidos por los canales digitales.</p></div><button className="primary" onClick={openNew}><Plus size={17}/> Nueva conversación</button></div>
+    <div className="page-head social-page-heading"><div><h2>Redes sociales / Ventas</h2></div><button className="primary" onClick={openNew}><Plus size={17}/> Nueva conversación</button></div>
     <div className="social-notice"><MessageCircle size={18}/><div><strong>Centro de atención comercial</strong><p>Registra manualmente los mensajes que recibes, controla su estado y abre WhatsApp con respuestas preparadas. La recepción automática requiere conectar las API oficiales. Los registros se guardan solo en este navegador y no se sincronizan; evita incluir datos de salud sensibles. Cambiar a «Pedido confirmado» solo actualiza el seguimiento: todavía no crea un pedido ni reserva inventario en el ERP.</p></div></div>
     {notice&&<div className="settings-notice" role="status">{notice}<button onClick={()=>setNotice('')} aria-label="Cerrar aviso">×</button></div>}
     <div className="grid metrics social-metrics">
