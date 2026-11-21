@@ -36,6 +36,7 @@ export type PurchaseLogisticsRecord = { id:string; supplier:string; createdAt:st
 export type PurchaseCostHistoryEntry = { id:number; purchaseId:number; productId:number; productCode:string; productName:string; supplier:string; unitCost:number; quantity:number; date:string };
 export type Receivable = { id:number; saleId:number; customer:string; total:number; paid:number; creditNotes?:number; debitNotes?:number; dueDate:string; date:string; lastPaymentDate?:string };
 export type Payable = { id:number; supplier:string; total:number; paid:number; dueDate:string; date:string; lastPaymentDate?:string; purchaseId?:number; invoiceNumber?:string };
+export type CashOpeningBalance = { date:string; amount:number; updatedAt:string };
 export type CashClosure = { id:number; date:string; opening:number; cashSales:number; collections:number; expenses:number; supplierPayments:number; purchasesCash?:number; expected:number; counted:number; difference:number; note:string };
 export type CashMovement = { id:number; type:'Entrada'|'Salida'; description:string; amount:number; category:string; date:string };
 export type PaymentTransaction = { id:number; type:'Cobro'|'Pago proveedor'|'Nota de crédito'|'Nota de débito'; accountId:number; party:string; amount:number; date:string; paymentMethod?:'Efectivo'|'Transferencia'; reference?:string; balanceBefore?:number; balanceAfter?:number };
