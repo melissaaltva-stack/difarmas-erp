@@ -381,11 +381,17 @@
 @media(max-width:480px){.demo-mode-banner{top:6px;gap:8px;padding:7px 9px}.demo-mode-banner small{font-size:9px}.demo-mode-banner button{font-size:10px}}
 
  
-/* Wordmark Farmi: posiciones medidas en los glifos reales para alinear cada salto. */
+/* Wordmark Farmi: saltos medidos y punto final tipográfico. */
 .auth-brand-lockup{display:flex;align-items:center;gap:0;color:#fff;font-size:42px;line-height:1;font-weight:850;letter-spacing:-2.2px}
 .auth-brand-symbol{display:none}
 .auth-brand-wordmark{position:relative;display:inline-block;color:#fff;white-space:nowrap}
 .auth-brand-letter{display:inline-block}
+.auth-brand-final-period{
+  display:inline-block;
+  color:#45c195;
+  opacity:0;
+  animation:farmi-period-appear 2.45s steps(1,end) .12s both;
+}
 .auth-brand-i-dot,.auth-brand-end-dot{
   position:absolute;
   left:var(--farmi-f-x,0px);
@@ -434,11 +440,17 @@
   70%{left:var(--farmi-m-x,0px);top:.02em}
   82%{left:var(--farmi-i-x,0px);top:-.17em}
   88%{left:var(--farmi-i-x,0px);top:.02em}
-  94%{left:var(--farmi-end-x,100%);top:-.17em}
-  98%{left:var(--farmi-end-x,100%);top:.02em}
-  100%{left:var(--farmi-end-x,100%);top:.02em;opacity:1}
+  94%{left:var(--farmi-period-x,100%);top:.76em}
+  98%{left:var(--farmi-period-x,100%);top:.76em;opacity:1}
+  99%{left:var(--farmi-period-x,100%);top:.76em;opacity:0}
+  100%{left:var(--farmi-period-x,100%);top:.76em;opacity:0}
+}
+@keyframes farmi-period-appear{
+  0%,98%{opacity:0}
+  99%,100%{opacity:1}
 }
 @media(prefers-reduced-motion:reduce){
   .auth-brand-i-dot{animation:none;opacity:1;left:var(--farmi-i-x,0px);top:.02em}
-  .auth-brand-end-dot{animation:none;opacity:1;left:var(--farmi-end-x,100%);top:.02em}
+  .auth-brand-end-dot{animation:none;opacity:0}
+  .auth-brand-final-period{animation:none;opacity:1}
 }
