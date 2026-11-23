@@ -23,6 +23,7 @@ export function POS({products,fefoProductIds=[],customers,cart,setCart,saleType,
   useEffect(()=>{const firstMethod=paymentMethods[0];if(firstMethod&&!paymentMethods.some(method=>method.name===payment)){setPayment(firstMethod.name);}},[payment,paymentMethods,setPayment]);
   const promotionUnitPrice=(p:Product,qty=1)=>{const promo=p.promotion;if(!promo)return p.retail;if(promo.type==='percentage')return Number((p.retail*(1-(promo.discountPercent??0)/100)).toFixed(2));if(promo.type==='2x1')return Number((p.retail*Math.ceil(qty/2)/qty).toFixed(2));return promo.price;};
   const promotionIsActive=(p:Product)=>Boolean(p.promotion?.active&&(p.promotion?.type==='2x1'||(promotionUnitPrice(p)<p.retail&&promotionUnitPrice(p)>0))&&p.promotion.startsAt&&p.promotion.endsAt&&localDateKey(new Date())>=p.promotion.startsAt&&localDateKey(new Date())<=p.promotion.endsAt);
+   const promotionDiscountPercent=(p:Product,qty=1)=>p.retail>0?Math.max(0,Math.min(100,(1-promotionUnitPrice(p,qty)/p.retail)*100)):0;
   const salePrice=(p:Product)=>saleType==='mayorista'?p.wholesale:p.retail;
   const saleUnitOptions=(p:Product)=>[{name:p.baseUnitName||'Unidad',unitsPerPresentation:1,retailPrice:p.retail,wholesalePrice:p.wholesale},...(p.unitInventoryEnabled?(p.unitPresentations??[]):[])];
   const [presentationSelections,setPresentationSelections]=useState<Record<number,string>>({});
@@ -128,8 +129,9 @@ export function POS({products,fefoProductIds=[],customers,cart,setCart,saleType,
     if(currentBaseQuantity+option.unitsPerPresentation>p.stock){setError(`Stock insuficiente para ${option.name} de “${p.name}”. Disponible: ${Math.max(0,p.stock-currentBaseQuantity)} ${p.baseUnitName||'unidades'}.`);return;}
     const price=priceForSaleUnit(p,option);
     if(!Number.isFinite(price)||price<=0){setError(`Configura un precio válido para la presentación ${option.name} de “${p.name}”.`);return;}
-    if(existing){setCart(cart.map(item=>item.cartLineId===existing.cartLineId?{...item,qty:item.qty+1,price:item.promotionApplied?promotionUnitPrice(item,item.qty+1):item.price}:item));}
-    else {const cartLineId=`${p.id}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;setCart([...cart,{...p,cost:p.cost*option.unitsPerPresentation,qty:1,price,saleUnit:option.name,baseUnitsPerSale:option.unitsPerPresentation,promotionApplied:false,cartLineId}]);setLineDiscounts(current=>({...current,[cartLineId]:0}));}
+    const applyPromotion=saleType==='minorista'&&option.unitsPerPresentation===1&&promotionIsActive(p);const nextQty=(existing?.qty??0)+1;
+    if(existing){setCart(cart.map(item=>item.cartLineId===existing.cartLineId?{...item,qty:nextQty,promotionApplied:applyPromotion}:item));if(existing.cartLineId)setLineDiscounts(current=>({...current,[existing.cartLineId!]:applyPromotion?promotionDiscountPercent(p,nextQty):current[existing.cartLineId!]??0}));}
+    else {const cartLineId=`${p.id}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;setCart([...cart,{...p,cost:p.cost*option.unitsPerPresentation,qty:1,price,saleUnit:option.name,baseUnitsPerSale:option.unitsPerPresentation,promotionApplied:applyPromotion,cartLineId}]);setLineDiscounts(current=>({...current,[cartLineId]:applyPromotion?promotionDiscountPercent(p,1):0}));}
     setSearch('');
     setError(fefoProductIds.includes(p.id)?'':(expiryAlert?.message ?? ''));
   };
@@ -147,11 +149,11 @@ export function POS({products,fefoProductIds=[],customers,cart,setCart,saleType,
     const otherBaseQuantity=cart.reduce((sum,item,index)=>sum+(item.id===target.id&&cartLineKey(item,index)!==lineId?item.qty*(item.baseUnitsPerSale??1):0),0);
     const maxPackages=Math.floor(Math.max(0,target.stock-otherBaseQuantity)/multiplier);
     if(delta>0&&target.qty+delta>maxPackages){setError(`Stock máximo alcanzado para ${target.saleUnit||target.baseUnitName||'unidad'} de “${target.name}”.`);return;}
-    setCart(current=>current.map((item,index)=>cartLineKey(item,index)===lineId?{...item,qty:Math.max(1,Math.min(item.qty+delta,maxPackages)),price:item.promotionApplied?promotionUnitPrice(item,Math.max(1,Math.min(item.qty+delta,maxPackages))):item.price}:item));
+    const nextQty=Math.max(1,Math.min(target.qty+delta,maxPackages));setCart(current=>current.map((item,index)=>cartLineKey(item,index)===lineId?{...item,qty:nextQty}:item));if(target.promotionApplied)setLineDiscounts(current=>({...current,[lineId]:promotionDiscountPercent(target,nextQty)}));
     setError('');
   };
   const remove=(lineId:string)=>{setCart(current=>current.filter((item,index)=>cartLineKey(item,index)!==lineId));setLineDiscounts(current=>{const next={...current};delete next[lineId];return next;});};
-  const togglePromotion=(lineId:string)=>setCart(current=>current.map((item,index)=>{if(cartLineKey(item,index)!==lineId)return item;const apply=!item.promotionApplied;return {...item,price:apply?promotionUnitPrice(item,item.qty):item.retail,promotionApplied:apply};}));
+  const togglePromotion=(lineId:string)=>{const item=cart.find((entry,index)=>cartLineKey(entry,index)===lineId);if(!item)return;const apply=!item.promotionApplied;setCart(current=>current.map((entry,index)=>cartLineKey(entry,index)===lineId?{...entry,promotionApplied:apply}:entry));setLineDiscounts(current=>({...current,[lineId]:apply?promotionDiscountPercent(item,item.qty):0}));};
   const openDrugAssistant=(product:Product)=>setDrugProduct(product);
   const checkout=()=>{setError('');if(cart.length)setShowPaymentModal(true);};
   useEffect(()=>{if(!printAfterCheckout||!invoice)return;const timer=window.setTimeout(()=>{window.print();setPrintAfterCheckout(false);},250);return ()=>window.clearTimeout(timer);},[printAfterCheckout,invoice]);
