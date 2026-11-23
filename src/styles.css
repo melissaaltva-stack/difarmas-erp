@@ -7528,3 +7528,43 @@ button.icon-btn:focus-visible svg,
 .product-promotion-fields{align-items:start}
 .product-promotion-fields select{display:block;width:100%;margin-top:6px;border:1px solid #d9e5e2;border-radius:8px;padding:10px;outline:none;font:inherit;color:#233c37;background:#fff}
 .product-promotion-fields input:focus,.product-promotion-fields select:focus{border-color:#56a78f}
+
+
+/* Estilo unificado para el encabezado y el botón X de todas las ventanas. */
+#root .app :where(.modal-head,.pos-cash-closure-header,.inventory-detail-head,.medication-modal-header,.customer-form-header) {
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  flex-wrap:nowrap;
+  gap:12px;
+  text-align:left;
+}
+#root .app :where(.modal-head,.pos-cash-closure-header,.inventory-detail-head,.medication-modal-header,.customer-form-header) > :first-child {
+  flex:1 1 auto;
+  min-width:0;
+  text-align:left;
+}
+#root .app :where(.modal-head,.pos-cash-closure-header,.inventory-detail-head,.medication-modal-header,.customer-form-header) :where(h1,h2,h3,p) {
+  text-align:left;
+}
+#root .app :where(.modal-head,.pos-cash-closure-header,.inventory-detail-head,.medication-modal-header,.customer-form-header) > .icon-btn:last-child,
+#root .app .inventory-detail-head-actions > .icon-btn:last-child,
+#root .app .farmi-assistant-popover > header > button[aria-label*="Cerrar"] {
+  width:32px;
+  height:32px;
+  min-width:32px;
+  flex:0 0 32px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 0 0 auto;
+  padding:0;
+  border-radius:8px;
+}
+#root .app :where(.modal-head,.pos-cash-closure-header,.inventory-detail-head,.medication-modal-header,.customer-form-header) > .icon-btn:last-child svg,
+#root .app .inventory-detail-head-actions > .icon-btn:last-child svg,
+#root .app .farmi-assistant-popover > header > button[aria-label*="Cerrar"] svg {
+  width:17px;
+  height:17px;
+  flex:0 0 17px;
+}
