@@ -35,8 +35,8 @@ export function AuthGate({ children }: Props) {
   const [settingsSaved,setSettingsSaved] = useState(false);
   const [backgroundOpacity,setBackgroundOpacity] = useState(()=>{try{return Number(window.localStorage.getItem('farmi-background-opacity')??'58');}catch{return 58;}});
   const [loginTheme,setLoginTheme] = useState(()=>{try{const saved=window.localStorage.getItem('farmi-system-theme')??'emerald';return ['emerald','blue','violet','slate','rose'].includes(saved)?saved:'emerald';}catch{return 'emerald';}});
-  const [loginBrandEyebrow,setLoginBrandEyebrow] = useState(()=>{try{return window.localStorage.getItem('farmi-login-brand-eyebrow')??'PLATAFORMA DE GESTIÓN';}catch{return 'PLATAFORMA DE GESTIÓN';}});
-  const [loginBrandTitle,setLoginBrandTitle] = useState(()=>{try{return window.localStorage.getItem('farmi-login-brand-title')??'Tu negocio,\nbajo control.';}catch{return 'Tu negocio,\nbajo control.';}});
+  const [loginBrandEyebrow,setLoginBrandEyebrow] = useState(()=>{try{const saved=window.localStorage.getItem('farmi-login-appearance-v1');if(saved){const config=JSON.parse(saved);if(typeof config.eyebrow==='string')return config.eyebrow;}return window.localStorage.getItem('farmi-login-brand-eyebrow')??'PLATAFORMA DE GESTIÓN';}catch{return 'PLATAFORMA DE GESTIÓN';}});
+  const [loginBrandTitle,setLoginBrandTitle] = useState(()=>{try{const saved=window.localStorage.getItem('farmi-login-appearance-v1');if(saved){const config=JSON.parse(saved);if(typeof config.title==='string')return config.title;}return window.localStorage.getItem('farmi-login-brand-title')??'Tu negocio,\nbajo control.';}catch{return 'Tu negocio,\nbajo control.';}});
   const themes=[{id:'emerald',name:'Esmeralda',color:'#16856b'},{id:'blue',name:'Azul',color:'#2867b2'},{id:'violet',name:'Violeta',color:'#7653b5'},{id:'slate',name:'Grafito',color:'#526477'},{id:'rose',name:'Rosa',color:'#b65370'}];
   useEffect(()=>{document.documentElement.dataset.farmiTheme=loginTheme;},[loginTheme]);
   const resetLoginBrandText = () => {
@@ -46,10 +46,15 @@ export function AuthGate({ children }: Props) {
   };
   const saveLoginSettings = () => {
     try {
+      const appearance = { theme: loginTheme, eyebrow: loginBrandEyebrow, title: loginBrandTitle, backgroundOpacity, background: loginBackground };
+      const serializedAppearance = JSON.stringify(appearance);
+      window.localStorage.setItem('farmi-login-appearance-v1', serializedAppearance);
       window.localStorage.setItem('farmi-system-theme',loginTheme);
       window.localStorage.setItem('farmi-login-brand-eyebrow',loginBrandEyebrow);
       window.localStorage.setItem('farmi-login-brand-title',loginBrandTitle);
       window.localStorage.setItem('farmi-background-opacity',String(backgroundOpacity));
+      const verifiedAppearance = JSON.parse(window.localStorage.getItem('farmi-login-appearance-v1') || 'null');
+      if (!verifiedAppearance || verifiedAppearance.title !== loginBrandTitle || verifiedAppearance.eyebrow !== loginBrandEyebrow || verifiedAppearance.theme !== loginTheme) throw new Error('No se pudo verificar el guardado.');
       if(loginBackground) window.localStorage.setItem('farmi-login-background',loginBackground);
       else window.localStorage.removeItem('farmi-login-background');
       setSettingsSaved(true);
