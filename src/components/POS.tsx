@@ -176,7 +176,7 @@ export function POS({products,fefoProductIds=[],customers,cart,setCart,saleType,
     if(fiscalError){setError(fiscalError);return;}
     const fiscalConfigured=Boolean(fiscal?.cai?.trim());
     const invoiceNumber=fiscalConfigured
-      ? `${fiscal?.invoiceSeries?.trim()??''}-${String(invoiceSequence).padStart(8,'0')}`
+      ? `${fiscal?.invoiceSeries?.trim()??''}${String(invoiceSequence).padStart(8,'0')}`
       : `${numbering.factura?.prefix??'FAC-'}${String(invoiceSequence).padStart(8,'0')}`;
     const customerName=customer.trim()||'Consumidor final';
     if(onComplete(discountedCart,customerName,dueDate,customerRtn.trim(),invoiceNumber)){
