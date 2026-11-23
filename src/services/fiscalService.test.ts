@@ -7,6 +7,8 @@ const validFiscal: FiscalBillingInfo = {
   invoiceSeries: '001-001-01',
   authorizedRangeStart: '00002156',
   authorizedRangeEnd: '00003000',
+  isvRate: 15,
+  fiscalLegend: '',
 };
 
 describe('validateFiscalAuthorization', () => {
