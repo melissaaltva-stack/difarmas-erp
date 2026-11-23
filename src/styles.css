@@ -7521,3 +7521,10 @@ button.icon-btn:focus-visible svg,
 .product-promotion-error{background:#fff0ee;color:#a12d25}
 .product-promotion-note{background:var(--surface-secondary,#f5f8f6);color:var(--text-secondary)}
 @media(max-width:620px){.product-promotion-intro{flex-direction:column;align-items:flex-start}.product-promotion-fields{grid-template-columns:1fr}.product-promotion-name{grid-column:auto}.product-promotion-prices{grid-template-columns:repeat(2,minmax(0,1fr))}.product-promotion-quickdates button{flex:1}}
+
+
+.product-promotion-rule{display:flex;flex-direction:column;justify-content:center;gap:5px;min-height:58px;padding:10px 12px;border:1px solid #d9e5e2;border-radius:8px;background:var(--surface-secondary,#f7faf9);color:var(--text-primary)}
+.product-promotion-rule strong{font-size:12px}.product-promotion-rule small{font-size:11px;line-height:1.45;color:var(--text-secondary)}
+.product-promotion-fields{align-items:start}
+.product-promotion-fields select{display:block;width:100%;margin-top:6px;border:1px solid #d9e5e2;border-radius:8px;padding:10px;outline:none;font:inherit;color:#233c37;background:#fff}
+.product-promotion-fields input:focus,.product-promotion-fields select:focus{border-color:#56a78f}
