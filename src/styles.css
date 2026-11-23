@@ -7483,3 +7483,5 @@ button.icon-btn:focus-visible svg,
 .inventory-movement-pagination>div{display:flex;align-items:center;gap:9px}
 .inventory-movement-pagination button{min-height:32px}
 @media(max-width:640px){.inventory-movement-filters{display:grid;grid-template-columns:1fr 1fr}.inventory-movement-filters .inventory-movement-search{grid-column:1/-1}.inventory-movement-filters button{width:100%}.inventory-movement-pagination{align-items:flex-start}.inventory-movement-pagination>div{width:100%;justify-content:space-between}}
+
+.invoice-promotion-toggle{display:inline-flex;align-items:center;gap:6px;width:max-content;max-width:100%;margin:6px 0;padding:6px 9px;border:1px solid #b8d8cd;border-radius:8px;background:#f0faf6;color:#176b52;font-size:11px;font-weight:700;cursor:pointer}.invoice-promotion-toggle:hover{background:#e1f4ec;border-color:#6eb59b}.invoice-promotion-toggle.is-applied{background:#167b61;border-color:#167b61;color:#fff}.invoice-promotion-toggle span{overflow-wrap:anywhere}.pos-promotion-toggle{margin:5px 0 2px}.standard-invoice-lines .invoice-promotion-toggle{margin-top:7px}@media(max-width:560px){.invoice-promotion-toggle{font-size:10px;padding:6px 8px}}
