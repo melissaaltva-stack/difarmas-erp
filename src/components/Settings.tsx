@@ -84,9 +84,19 @@ export function Settings({settings,setSettings,userEmail,userId}:{settings:ErpSe
     cai:draftSettings.billingInfo?.cai??'',
     invoiceSeries:formatFiscalSeries(draftSettings.billingInfo?.invoiceSeries??''),
     authorizedRangeStart:normalizeFiscalRange(draftSettings.billingInfo?.authorizedRangeStart),
-    authorizedRangeEnd:normalizeFiscalRange(draftSettings.billingInfo?.authorizedRangeEnd)
+    authorizedRangeEnd:normalizeFiscalRange(draftSettings.billingInfo?.authorizedRangeEnd),
+    isvRate:draftSettings.billingInfo?.isvRate??15,
+    fiscalLegend:draftSettings.billingInfo?.fiscalLegend??''
   };
-  const updateBillingInfo=(patch:Partial<NonNullable<ErpSettings['billingInfo']>>)=>setDraftSettings(current=>({...current,billingInfo:{cai:current.billingInfo?.cai??'',invoiceSeries:formatFiscalSeries(current.billingInfo?.invoiceSeries??''),authorizedRangeStart:normalizeFiscalRange(current.billingInfo?.authorizedRangeStart),authorizedRangeEnd:normalizeFiscalRange(current.billingInfo?.authorizedRangeEnd),...patch}}));
+  const updateBillingInfo=(patch:Partial<NonNullable<ErpSettings['billingInfo']>>)=>setDraftSettings(current=>({...current,billingInfo:{
+    cai:current.billingInfo?.cai??'',
+    invoiceSeries:formatFiscalSeries(current.billingInfo?.invoiceSeries??''),
+    authorizedRangeStart:normalizeFiscalRange(current.billingInfo?.authorizedRangeStart),
+    authorizedRangeEnd:normalizeFiscalRange(current.billingInfo?.authorizedRangeEnd),
+    isvRate:current.billingInfo?.isvRate??15,
+    fiscalLegend:current.billingInfo?.fiscalLegend??'',
+    ...patch
+  }}));
   const defaultInvoicePrintFormats:NonNullable<ErpSettings['invoicePrintFormats']>={
     ticket:{title:'FACTURA / TICKET',subtitle:'COMPROBANTE DE VENTA',footer:'Gracias por su compra. ¡En DIFARMÁS estamos para servirle!',showLogo:true,showFiscalData:true,showCustomer:true,showPrices:true,showPaymentDetails:true,showSignatures:false,marginsMm:3},
     carta:{title:'FACTURA',subtitle:'COMPROBANTE DE VENTA',footer:'Gracias por su compra. ¡En DIFARMÁS estamos para servirle!',showLogo:true,showFiscalData:true,showCustomer:true,showPrices:true,showPaymentDetails:true,showSignatures:false,marginsMm:10}

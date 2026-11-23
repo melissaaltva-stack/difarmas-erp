@@ -33,7 +33,7 @@ paymentMethods:[
 {id:'credit',name:'Crédito',kind:'credit',active:true,requiresReference:false},
 {id:'card',name:'Tarjeta',kind:'other',active:true,requiresReference:true}
 ],
-billingInfo:{cai:'',authorizedRangeStart:'',authorizedRangeEnd:'',authorizationExpiry:'',establishmentCode:'',emissionPoint:'',documentTypeCode:'01',isvRate:15,fiscalLegend:'Documento interno. Configure la autorización fiscal vigente del SAR antes de emitir comprobantes fiscales.'}
+billingInfo:{cai:'',invoiceSeries:'',authorizedRangeStart:'',authorizedRangeEnd:'',isvRate:15,fiscalLegend:'Documento interno. Configure la autorización fiscal vigente del SAR antes de emitir comprobantes fiscales.'}
 };
 
 const demoProducts: Product[] = [
