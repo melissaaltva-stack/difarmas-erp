@@ -7568,3 +7568,34 @@ button.icon-btn:focus-visible svg,
   height:17px;
   flex:0 0 17px;
 }
+
+
+/* Impresion del cierre diario de caja */
+.cash-closing-actions{display:flex;justify-content:flex-end;align-items:center}
+.cash-print-button{min-height:36px;padding:8px 13px;font-size:12px}
+.cash-closing-print-sheet{display:none}
+@media print{
+  @page{size:letter portrait;margin:12mm}
+  html,body{margin:0!important;padding:0!important;background:#fff!important;color:#111!important}
+  body *{visibility:hidden!important}
+  .cash-closing-print-sheet,.cash-closing-print-sheet *{visibility:visible!important}
+  .cash-closing-print-sheet{display:block!important;position:fixed!important;inset:0 auto auto 0!important;width:100%!important;max-width:none!important;padding:0!important;margin:0!important;background:#fff!important;color:#111!important;font:10pt/1.45 Arial,sans-serif!important}
+  .cash-closing-print-sheet header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;padding-bottom:14px;border-bottom:2px solid #176b4d}
+  .cash-closing-print-sheet header>div:first-child>strong{font-size:10pt;color:#176b4d}
+  .cash-closing-print-sheet h1{margin:5px 0 0;font-size:22pt;color:#183b34}
+  .cash-print-date{text-align:right;display:grid;gap:3px;font-size:9pt}
+  .cash-print-date span,.cash-print-date small{color:#555}
+  .cash-print-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:18px 0}
+  .cash-print-summary>div{padding:10px;border:1px solid #cfd8d3;border-radius:6px}
+  .cash-print-summary span,.cash-print-summary strong{display:block}
+  .cash-print-summary span{font-size:8pt;color:#555}
+  .cash-print-summary strong{margin-top:5px;font-size:12pt;color:#183b34}
+  .cash-closing-print-sheet h2{margin:20px 0 8px;font-size:13pt;color:#183b34}
+  .cash-closing-print-sheet table{width:100%!important;min-width:0!important;border-collapse:collapse!important}
+  .cash-closing-print-sheet th,.cash-closing-print-sheet td{padding:9px 8px!important;border:1px solid #d7dfda!important;font-size:9pt!important;color:#111!important}
+  .cash-closing-print-sheet th{text-align:left!important;background:#f3f7f4!important;text-transform:none!important;letter-spacing:0!important}
+  .cash-closing-print-sheet td{text-align:right!important;font-variant-numeric:tabular-nums}
+  .cash-print-observations{margin-top:18px;padding:12px;border:1px solid #d7dfda;border-radius:6px}
+  .cash-print-observations p{margin:6px 0 0;white-space:pre-wrap}
+  .cash-closing-print-sheet footer{margin-top:24px;padding-top:8px;border-top:1px solid #d7dfda;color:#555;font-size:8pt;text-align:center}
+}
