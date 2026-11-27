@@ -16,7 +16,7 @@ type Props = {
  children?: ReactNode;
 };
 
-const normalize=(value:string)=>value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('es').trim();
+const normalize=(value:string)=>value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('es').replace(/[^a-z0-9]/g,'');
 
 export function CustomerSearchInput({customers,query,onQueryChange,open,onOpenChange,onSelect,onRegisterNew,id,placeholder='Buscar por nombre, código o RTN',includeConsumerFinal=false,children}:Props){
  const matches=useMemo(()=>{
