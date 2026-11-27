@@ -4,54 +4,45 @@ import { normalizeFiscalCode, validateFiscalAuthorization } from './fiscalServic
 
 const validFiscal: FiscalBillingInfo = {
   cai: 'TEST-CAI',
-  authorizedRangeStart: '0001-01-00000001',
-  authorizedRangeEnd: '0001-01-00001000',
-  authorizationExpiry: '2099-12-31',
-  establishmentCode: '01',
-  emissionPoint: '01',
-  documentTypeCode: '01',
+  invoiceSeries: '001-001-01',
+  authorizedRangeStart: '00002156',
+  authorizedRangeEnd: '00003000',
   isvRate: 15,
   fiscalLegend: '',
 };
 
 describe('validateFiscalAuthorization', () => {
-  it('accepts a valid correlativo within the authorized range', () => {
-    expect(validateFiscalAuthorization(validFiscal, 12, new Date('2026-10-18T12:00:00'))).toBeNull();
+  it('accepts a valid correlativo at the start of the authorized range', () => {
+    expect(validateFiscalAuthorization(validFiscal, 2156)).toBeNull();
+  });
+
+  it('accepts a valid correlativo at the end of the authorized range', () => {
+    expect(validateFiscalAuthorization(validFiscal, 3000)).toBeNull();
   });
 
   it('does not require fiscal settings when no CAI is configured', () => {
     expect(validateFiscalAuthorization({ ...validFiscal, cai: '' }, 1)).toBeNull();
   });
 
-  it('rejects missing fiscal authorization fields', () => {
-    expect(validateFiscalAuthorization({ ...validFiscal, emissionPoint: '' }, 1)).toMatch(/Completa el CAI/);
+  it('requires only the CAI, invoice series and authorized range', () => {
+    expect(validateFiscalAuthorization({ ...validFiscal, invoiceSeries: '' }, 2156)).toMatch(/serie de facturación/);
+    expect(validateFiscalAuthorization({ ...validFiscal, authorizedRangeStart: '' }, 2156)).toMatch(/rangos desde\/hasta/);
+    expect(validateFiscalAuthorization({ ...validFiscal, authorizedRangeEnd: '' }, 2156)).toMatch(/rangos desde\/hasta/);
   });
 
-  it('rejects malformed establishment/document codes', () => {
-    expect(validateFiscalAuthorization({ ...validFiscal, establishmentCode: 'A1' }, 1)).toMatch(/4 dígitos/);
+  it('rejects a malformed invoice series', () => {
+    expect(validateFiscalAuthorization({ ...validFiscal, invoiceSeries: '001-01-01' }, 2156)).toMatch(/formato 000-000-00/);
   });
 
-  it('normalizes separators and spaces in fiscal codes before validation', () => {
-    const formatted = { ...validFiscal, establishmentCode: '0 1', emissionPoint: '0-1', documentTypeCode: '0-1' };
-    expect(normalizeFiscalCode(formatted.establishmentCode)).toBe('01');
-    expect(validateFiscalAuthorization(formatted, 12, new Date('2026-10-18T12:00:00'))).toBeNull();
-  });
-
-  it('still rejects fiscal codes whose normalized lengths are incorrect', () => {
-    expect(validateFiscalAuthorization({ ...validFiscal, emissionPoint: '1' }, 12, new Date('2026-10-18T12:00:00'))).toMatch(/4 dígitos/);
-    expect(validateFiscalAuthorization({ ...validFiscal, documentTypeCode: '1' }, 12, new Date('2026-10-18T12:00:00'))).toMatch(/2 dígitos/);
+  it('normalizes separators and spaces in range values', () => {
+    const formatted = { ...validFiscal, authorizedRangeStart: '00 00-2156', authorizedRangeEnd: '0000-3000' };
+    expect(normalizeFiscalCode(formatted.authorizedRangeStart)).toBe('00002156');
+    expect(validateFiscalAuthorization(formatted, 2156)).toBeNull();
   });
 
   it('rejects malformed ranges and out-of-range correlativos', () => {
-    expect(validateFiscalAuthorization({ ...validFiscal, authorizedRangeStart: 'bad' }, 1)).toMatch(/rango autorizado/);
-    expect(validateFiscalAuthorization(validFiscal, 1001)).toMatch(/fuera del rango/);
-  });
-
-  it('rejects impossible authorization dates', () => {
-    expect(validateFiscalAuthorization({ ...validFiscal, authorizationExpiry: '2027-02-31' }, 1, new Date('2026-10-18T12:00:00'))).toMatch(/fecha límite no es válida/);
-  });
-
-  it('rejects expired authorizations', () => {
-    expect(validateFiscalAuthorization({ ...validFiscal, authorizationExpiry: '2020-01-01' }, 1, new Date('2026-10-18T12:00:00'))).toMatch(/vencida/);
+    expect(validateFiscalAuthorization({ ...validFiscal, authorizedRangeStart: 'bad' }, 2156)).toMatch(/exactamente 8 dígitos/);
+    expect(validateFiscalAuthorization(validFiscal, 3001)).toMatch(/fuera del rango/);
+    expect(validateFiscalAuthorization({ ...validFiscal, authorizedRangeStart: '00003001' }, 3001)).toMatch(/inicio no puede ser mayor/);
   });
 });

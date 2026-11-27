@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#123b38"/>
+  <g text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="800">
+    <text x="256" y="285" font-size="116" letter-spacing="-7" fill="#ffffff">Farmi</text>
+    <circle cx="414" cy="177" r="15" fill="#45c195"/>
+    <circle cx="367" cy="308" r="12" fill="#45c195"/>
+  </g>
+</svg>

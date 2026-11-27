@@ -1,0 +1,19 @@
+{
+  "id": "/",
+  "name": "FARMI ERP",
+  "short_name": "FARMI",
+  "description": "Sistema de gestión FARMI",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#24545d",
+  "icons": [
+    {
+      "src": "/farmi-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

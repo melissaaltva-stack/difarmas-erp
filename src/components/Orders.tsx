@@ -1,17 +1,37 @@
-import { useState } from 'react';
-import { ClipboardList, FileText, Pencil, Trash2, Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ClipboardList, FileText, Pencil, Trash2, Search, ShoppingCart } from 'lucide-react';
 import type { OrderRecord } from '../domain/types';
 
 const money=(value:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL',maximumFractionDigits:2}).format(value);
 const orderDate=(value:string)=>{const date=new Date(value);return Number.isNaN(date.getTime())?'—':date.toLocaleString('es-HN');};
 
-export function Orders({orders,onDelete,onInvoice,onEdit}:{orders:OrderRecord[];onDelete:(id:number)=>boolean;onInvoice:(order:OrderRecord)=>void;onEdit:(order:OrderRecord)=>void}){
+type OpenPosDraft={id:string;label?:string;customer?:string;cart:{qty:number;price:number;name?:string}[];saleType?:string;payment?:string};
+type OpenPosDraftStore={activeDraftId?:string;drafts:OpenPosDraft[]};
+
+export function Orders({orders,onDelete,onInvoice,onEdit,userId,onOpenPos}:{orders:OrderRecord[];onDelete:(id:number)=>boolean;onInvoice:(order:OrderRecord)=>void;onEdit:(order:OrderRecord)=>void;userId:string;onOpenPos:()=>void}){
  const [notice,setNotice]=useState('');
+ const [openPosDrafts,setOpenPosDrafts]=useState<OpenPosDraft[]>([]);
+ useEffect(()=>{
+  try{
+   const stored=JSON.parse(localStorage.getItem('farmi_pos_drafts_'+userId)||'null') as OpenPosDraftStore|null;
+   setOpenPosDrafts(Array.isArray(stored?.drafts)?stored.drafts.filter(draft=>draft&&typeof draft.id==='string'&&Array.isArray(draft.cart)):[]);
+  }catch{setOpenPosDrafts([]);}
+ },[userId]);
  const [query,setQuery]=useState(''),[dateFrom,setDateFrom]=useState(''),[dateTo,setDateTo]=useState('');
  const matches=(order:OrderRecord,dateValue:string)=>{const day=String(dateValue||'').slice(0,10),term=query.trim().toLocaleLowerCase('es');return (!term||[order.number,order.customer??'',order.customerRtn??'',...order.items.map(item=>item.name)].join(' ').toLocaleLowerCase('es').includes(term))&&(!dateFrom||day>=dateFrom)&&(!dateTo||day<=dateTo);};
  const pending=orders.filter(order=>order.status==='Pendiente'&&matches(order,order.date)),invoiced=orders.filter(order=>order.status==='Facturado'&&matches(order,order.updatedAt||order.date));
  return <div className="content orders-page">
-  <div className="page-intro orders-heading"><div><h2>Pedidos</h2><p>Administra las reservas, consulta su estado y conviértelas en factura.</p></div><span className="pill">{pending.length} pendientes</span></div>
+  <div className="page-intro orders-heading"><div><h2>Pedidos</h2></div><span className="pill">{pending.length} pendientes</span></div>
+  <section className="card open-pos-orders">
+   <div className="section-heading"><div><h3>Pedidos abiertos de Venta / POS ({openPosDrafts.length})</h3><p>Pedidos en curso guardados automáticamente en este navegador.</p></div><ShoppingCart size={20}/></div>
+   {!openPosDrafts.length?<p className="muted">No hay pedidos abiertos en el punto de venta.</p>:<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,260px),1fr))',gap:10}}>
+    {openPosDrafts.map((draft,index)=><article key={draft.id} style={{border:'1px solid var(--border)',borderRadius:10,padding:13,display:'flex',flexDirection:'column',gap:8}}>
+     <strong>{draft.customer?.trim()||draft.label||('Pedido POS '+(index+1))}</strong>
+     <span className="muted">{draft.cart.length} productos · {money(draft.cart.reduce((sum,item)=>sum+(Number(item.price)||0)*(Number(item.qty)||0),0))}</span>
+     <button type="button" className="primary" onClick={()=>{try{const key='farmi_pos_drafts_'+userId;const saved=JSON.parse(localStorage.getItem(key)||'null') as OpenPosDraftStore|null;if(saved&&Array.isArray(saved.drafts)&&saved.drafts.some(item=>item.id===draft.id)){localStorage.setItem(key,JSON.stringify({...saved,activeDraftId:draft.id}));onOpenPos();}}catch{setNotice('No se pudo abrir el pedido guardado.');}}}>Continuar en Venta / POS</button>
+    </article>)}
+   </div>}
+  </section>
   <div className="card order-filters">
    <label className="order-search-label">Buscar pedido, cliente o producto<div className="search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="N.º de pedido, cliente o producto..."/></div></label>
    <label>Desde<input type="date" value={dateFrom} onChange={e=>setDateFrom(e.target.value)}/></label>
