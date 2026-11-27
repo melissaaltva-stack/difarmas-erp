@@ -8156,3 +8156,18 @@ button.icon-btn:focus-visible svg,
 .app[data-theme="dark"] #root .app .orders-pending-modal-header{border-color:#34483e}
 .app[data-theme="dark"] #root .app .orders-pending-row{background:#1b2b22;border-color:#34483e}
 .app[data-theme="dark"] #root .app .orders-pending-row-head{background:#22372a;color:#b8cabe}
+
+
+#root .app .orders-pending-filter{
+ display:flex;align-items:center;gap:9px;min-height:38px;margin:0 0 11px;padding:0 10px;
+ border:1px solid var(--border,#dfe7e1);border-radius:8px;background:var(--surface,#fff);
+ color:var(--text-secondary,#78877f);
+}
+#root .app .orders-pending-filter input{
+ flex:1;min-width:0;height:34px;border:0!important;outline:0!important;box-shadow:none!important;
+ background:transparent!important;color:var(--text,#263b33);font-size:11px;
+}
+#root .app .orders-pending-filter button{min-height:27px;padding:3px 9px;font-size:10px}
+#root .app .orders-pending-filter button:disabled{opacity:.45;cursor:default}
+.app[data-theme="dark"] #root .app .orders-pending-filter{background:#1b2b22;border-color:#34483e}
+.app[data-theme="dark"] #root .app .orders-pending-filter input{color:#e6f0e9}
