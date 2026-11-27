@@ -97,7 +97,7 @@ export function Orders({orders,onDelete,onInvoice,userId,products,customers,onSa
  useEffect(()=>{try{localStorage.setItem(tabTitleKey(userId),JSON.stringify(savedTabTitles));}catch{/* Los nombres personalizados siguen disponibles en memoria durante esta sesión. */}},[savedTabTitles,userId]);
  const [query,setQuery]=useState(''),[dateFrom,setDateFrom]=useState(''),[dateTo,setDateTo]=useState('');
  const matches=(order:OrderRecord,dateValue:string)=>{const day=String(dateValue||'').slice(0,10),term=query.trim().toLocaleLowerCase('es');return (!term||[order.number,order.customer??'',order.customerRtn??'',...order.items.map(item=>item.name)].join(' ').toLocaleLowerCase('es').includes(term))&&(!dateFrom||day>=dateFrom)&&(!dateTo||day<=dateTo);};
- const pending=orders.filter(order=>order.status==='Pendiente'&&matches(order,order.date)),invoiced=orders.filter(order=>order.status==='Facturado'&&matches(order,order.updatedAt||order.date));
+ const pending=orders.filter(order=>order.status==='Pendiente'&&matches(order,order.date));
  const visiblePending=pending.filter(order=>!pendingSearch.trim()||[order.number,order.customer??'',order.customerRtn??'',...order.items.map(item=>item.name)].join(' ').toLocaleLowerCase('es').includes(pendingSearch.trim().toLocaleLowerCase('es')));
  const createDraft=():OrderDraft=>({id:'new-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),orderNumber:remoteReady?reserveOrderNumber():'',customer:'',customerRtn:'',items:[]});
  const addDraft=()=>{const draft=createDraft();setNewDrafts(current=>[draft,...current]);setActiveTab('new:'+draft.id);};
@@ -132,7 +132,7 @@ export function Orders({orders,onDelete,onInvoice,userId,products,customers,onSa
     {editingIds.map(id=>{const order=orders.find(item=>item.id===id);if(!order)return null;return <div key={id} className="orders-tab-panel" hidden={activeTab!=='saved:'+id}><div className="orders-tab-panel-heading"><div><strong>{order.number}</strong><small>Pedido pendiente · {order.customer||'Consumidor final'}</small></div><span>{money(order.total)}</span></div><OrderEditor key={id} products={products} customers={customers} initialItems={order.items} initialCustomer={order.customer??''} initialRtn={order.customerRtn??''} orderNumber={order.number} saveLabel="Guardar cambios" onCreateCustomer={onCreateCustomer} onCancel={()=>closeTab('saved:'+id)} onSave={(items,customer,rtn,total)=>{const ok=onUpdateOrder(order.id,items,customer,rtn,total);if(ok)closeTab('saved:'+id);return ok;}}/></div>;})}
    </div>
   </section>
-  <div className="card order-filters"><label className="order-search-label">Buscar pedido, cliente o producto<div className="search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="N.º de pedido, cliente o producto..."/></div></label><label>Desde<input type="date" value={dateFrom} onChange={e=>setDateFrom(e.target.value)}/></label><label>Hasta<input type="date" value={dateTo} onChange={e=>setDateTo(e.target.value)}/></label><button type="button" className="secondary" onClick={()=>{setQuery('');setDateFrom('');setDateTo('');}}>Limpiar filtros</button><span className="count order-filter-count">{pending.length+invoiced.length} pedidos encontrados · {pending.length} pendientes · {invoiced.length} facturados</span></div>
+  <div className="card order-filters"><label className="order-search-label">Buscar pedido, cliente o producto<div className="search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="N.º de pedido, cliente o producto..."/></div></label><label>Desde<input type="date" value={dateFrom} onChange={e=>setDateFrom(e.target.value)}/></label><label>Hasta<input type="date" value={dateTo} onChange={e=>setDateTo(e.target.value)}/></label><button type="button" className="secondary" onClick={()=>{setQuery('');setDateFrom('');setDateTo('');}}>Limpiar filtros</button><span className="count order-filter-count">{pending.length} pedidos pendientes</span></div>
   {notice&&<p className="helper" role="status">{notice}</p>}
   {pendingModalOpen&&<div className="orders-pending-overlay" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)setPendingModalOpen(false);}}>
    <section className="orders-pending-modal" role="dialog" aria-modal="true" aria-labelledby="orders-pending-title">
@@ -153,8 +153,6 @@ export function Orders({orders,onDelete,onInvoice,userId,products,customers,onSa
    </section>
   </div>}
 
-  <section className="card"><div className="section-heading"><div><h3>Pedidos facturados ({invoiced.length})</h3><p>Historial de pedidos convertidos en factura.</p></div></div>
-   {!invoiced.length?<p className="muted">{orders.some(order=>order.status==='Facturado')?'No hay pedidos facturados que coincidan con los filtros.':'Todavía no hay pedidos facturados.'}</p>:<div className="table-wrap"><table><thead><tr><th>Pedido</th><th>Fecha de facturación</th><th>Cliente</th><th>Factura</th><th>Total</th></tr></thead><tbody>{invoiced.map(order=><tr key={order.id}><td>{order.number}</td><td>{orderDate(order.updatedAt||order.date)}</td><td>{order.customer||'Consumidor final'}</td><td>{order.invoiceId??'—'}</td><td>{money(order.total)}</td></tr>)}</tbody></table></div>}
-  </section>
+
  </div>;
 }
