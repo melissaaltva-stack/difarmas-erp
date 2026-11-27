@@ -7957,3 +7957,98 @@ button.icon-btn:focus-visible svg,
 .app[data-theme="dark"] #root .orders-tabs-bar .orders-tab{background:transparent;color:#bdcec3}
 .app[data-theme="dark"] #root .orders-tabs-bar .orders-tab.active{background:transparent;color:#edf7f0;border-bottom-color:#68b486}
 .app[data-theme="dark"] #root .orders-tabs-bar .orders-tab-add{background:transparent;color:#b9e0c6}
+
+
+/* Rediseño moderno de pestañas de Pedidos */
+#root .app .orders-tabs-bar{
+  display:flex;flex-wrap:nowrap;align-items:center;gap:8px;
+  min-height:56px;padding:10px 14px;overflow-x:auto;overflow-y:hidden;
+  background:var(--surface-muted,#f5f7f6);
+  border-bottom:1px solid var(--border,#e4eae6);
+  scrollbar-width:thin;
+}
+#root .app .orders-tabs-bar .orders-tab{
+  flex:0 0 auto;min-width:132px;max-width:205px;min-height:36px;
+  display:flex;align-items:center;gap:4px;padding:3px 7px;
+  border:1px solid transparent;border-radius:9px;
+  background:transparent;box-shadow:none;
+  color:var(--text-secondary,#687a72);
+  transition:background .16s ease,border-color .16s ease,color .16s ease;
+}
+#root .app .orders-tabs-bar .orders-tab:hover{
+  background:rgba(255,255,255,.72);border-color:var(--border,#dce5df);
+  color:var(--text,#263b33);box-shadow:none;
+}
+#root .app .orders-tabs-bar .orders-tab.active{
+  background:var(--surface,#fff);border:1px solid #b9d5c5;
+  color:#236343;box-shadow:0 1px 3px rgba(24,65,43,.07);margin:0;
+}
+#root .app .orders-tabs-bar .orders-tab.active:before{display:none}
+#root .app .orders-tabs-bar .orders-tab .orders-tab-select{
+  display:flex;align-items:center;gap:8px;min-width:0;flex:1;
+  padding:4px 3px;cursor:pointer;
+}
+#root .app .orders-tabs-bar .orders-tab .orders-tab-dot{
+  width:7px;height:7px;flex:0 0 7px;border-radius:50%;
+  background:#d59b45;box-shadow:none;
+}
+#root .app .orders-tabs-bar .orders-tab .orders-tab-dot.saved{background:#6a9fbd;box-shadow:none}
+#root .app .orders-tabs-bar .orders-tab.active .orders-tab-dot{background:#319466}
+#root .app .orders-tabs-bar .orders-tab .orders-tab-title-input{
+  width:100%;min-width:0;min-height:23px;padding:2px 0;
+  border:0!important;border-radius:0;background:transparent!important;
+  box-shadow:none!important;outline:0;
+  color:inherit!important;-webkit-text-fill-color:currentColor!important;
+  font-size:12px;font-weight:650;letter-spacing:0;
+}
+#root .app .orders-tabs-bar .orders-tab .orders-tab-title-input::placeholder{
+  color:inherit!important;-webkit-text-fill-color:currentColor!important;
+  opacity:.85;font-weight:600;
+}
+#root .app .orders-tabs-bar .orders-tab .orders-tab-title-input:focus{
+  border-bottom:1px solid #319466!important;
+}
+#root .app .orders-tabs-bar .orders-tab .orders-tab-close{
+  width:20px;height:20px;flex:0 0 20px;border:0;border-radius:6px;
+  background:transparent;color:var(--text-secondary,#829188);opacity:.7;
+}
+#root .app .orders-tabs-bar .orders-tab .orders-tab-close:hover{
+  background:#fbeeed;color:#b74740;opacity:1;
+}
+#root .app .orders-tabs-bar .orders-tab-add{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  flex:0 0 auto;min-height:34px;margin:0 0 0 2px;padding:5px 11px;
+  border:1px dashed #a9c8b6;border-radius:9px;
+  background:transparent;color:#28734e;font-size:11px;font-weight:650;
+}
+#root .app .orders-tabs-bar .orders-tab-add:hover{
+  background:#eaf4ee;border-color:#77ae8d;
+}
+#root .app .orders-tabs-bar .orders-tab-add svg{width:14px;height:14px}
+#root .app .orders-tab-content{padding:14px}
+@media(max-width:650px){
+  #root .app .orders-tabs-bar{min-height:50px;padding:8px;gap:6px}
+  #root .app .orders-tabs-bar .orders-tab{min-width:118px;max-width:170px;min-height:34px}
+  #root .app .orders-tabs-bar .orders-tab-add{min-height:32px;padding:4px 9px}
+  #root .app .orders-tab-content{padding:9px}
+}
+.app[data-theme="dark"] #root .orders-tabs-bar{
+  background:#17231d;border-color:#34483e;
+}
+.app[data-theme="dark"] #root .orders-tabs-bar .orders-tab{
+  background:transparent;border-color:transparent;color:#bdcec3;
+}
+.app[data-theme="dark"] #root .orders-tabs-bar .orders-tab:hover{
+  background:#203329;border-color:#354b3f;color:#e5f1e9;
+}
+.app[data-theme="dark"] #root .orders-tabs-bar .orders-tab.active{
+  background:#263e30;border-color:#527d62;color:#e7f5eb;
+  box-shadow:0 1px 3px rgba(0,0,0,.16);
+}
+.app[data-theme="dark"] #root .orders-tabs-bar .orders-tab .orders-tab-title-input{
+  color:inherit!important;-webkit-text-fill-color:currentColor!important;
+}
+.app[data-theme="dark"] #root .orders-tabs-bar .orders-tab-add{
+  color:#b9e0c6;border-color:#527d62;background:transparent;
+}
+.app[data-theme="dark"] #root .orders-tabs-bar .orders-tab-add:hover{background:#203a2c}
