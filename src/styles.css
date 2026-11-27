@@ -7825,3 +7825,28 @@ button.icon-btn:focus-visible svg,
 .app[data-theme="dark"] .orders-tab-close:hover{background:#492b2a;color:#ffaaa3}
 .app[data-theme="dark"] .orders-tab-add{background:#203a2c;border-color:#4f8063;color:#b9e0c6}
 .app[data-theme="dark"] .orders-tab-add:hover{background:#294b37}
+
+
+/* El campo editable ocupa la pestaña sin mostrar un rectángulo blanco interno. */
+#root .app .orders-tab .orders-tab-select,
+#root .app .orders-tab .orders-tab-title-input {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+#root .app .orders-tab .orders-tab-title-input {
+  border: 0 !important;
+  border-bottom: 1px dashed transparent !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  -webkit-appearance: none;
+  appearance: none;
+}
+#root .app .orders-tab .orders-tab-title-input:focus {
+  background: transparent !important;
+  border-bottom: 1px solid #26865e !important;
+  box-shadow: none !important;
+}
+.app[data-theme="dark"] .orders-tab .orders-tab-title-input {
+  background: transparent !important;
+  color: inherit !important;
+}
