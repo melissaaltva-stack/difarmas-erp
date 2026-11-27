@@ -99,6 +99,7 @@ export function useErpState(userId: string, demoMode = false) {
   const [hrLeaveRequests,setHrLeaveRequestsRaw]=useState<HrLeaveRequest[]>(()=>loadJson<HrLeaveRequest[]>('farmi_hr_leave_requests',[]));
   const [orders,setOrders]=useState<OrderRecord[]>(()=>loadJson<OrderRecord[]>('difarmas_orders',[]));
   const lastOrderId=useRef(0);
+  const lastOrderSequence=useRef(0);
   const nextOrderId=()=>{const highest=orders.reduce((max,order)=>Math.max(max,Number(order.id)||0),0);const id=Math.max(Date.now(),highest,lastOrderId.current)+1;lastOrderId.current=id;return id;};
   const lastSaleId = useRef(0);
   const nextSaleId = () => {
@@ -474,10 +475,14 @@ export function useErpState(userId: string, demoMode = false) {
     if([...quantities].some(([id,qty])=>!products.some(product=>product.id===id&&product.stock>=qty)))return null;
     let workingLots=inventoryLots;const orderAllocations:LotAllocation[]=[];const lotMovements:LotKardexMovement[]=[];
     for(const [productId,qty] of quantities){if(!fefoProductIds.includes(productId))continue;const allocated=allocateFefo(workingLots,productId,qty,'PEDIDO-PENDIENTE','Reserva');if(!allocated)return null;workingLots=allocated.lots;orderAllocations.push(...allocated.allocations);lotMovements.push(...allocated.movements);}
+    const storedSequence=loadNumber('farmi_order_sequence',0);
+    const existingSequence=orders.reduce((max,order)=>{const match=/^PED-(\d{6})$/.exec(order.number);return Math.max(max,match?Number(match[1]):0);},0);
+    const orderSequence=Math.max(storedSequence,existingSequence,lastOrderSequence.current)+1;
+    lastOrderSequence.current=orderSequence;saveNumber('farmi_order_sequence',orderSequence);
     const id=nextOrderId(),date=new Date().toISOString();
     const updated=products.map(product=>{const qty=quantities.get(product.id)??0;return qty?{...product,stock:product.stock-qty}:product;});
     const movements:InventoryMovement[]=[...quantities].map(([productId,quantity])=>{const product=products.find(item=>item.id===productId)!;return {id:nextInventoryMovementId(),productId,productName:product.name,type:'Ajuste',quantity,stockBefore:product.stock,stockAfter:product.stock-quantity,unitCost:product.cost,referenceId:id,date,note:'Reserva de pedido '+id};});
-    const order:OrderRecord={id,number:'PED-'+String(id).slice(-8),date,updatedAt:date,status:'Pendiente',customer:customer.trim()||undefined,customerRtn:customerRtn.trim()||undefined,total,items:items.map(item=>({...item})),lotAllocations:orderAllocations};
+    const order:OrderRecord={id,number:'PED-'+String(orderSequence).padStart(6,'0'),date,updatedAt:date,status:'Pendiente',customer:customer.trim()||undefined,customerRtn:customerRtn.trim()||undefined,total,items:items.map(item=>({...item})),lotAllocations:orderAllocations};
     lotMovements.forEach(movement=>movement.reference=order.number);
     orderSaveInProgress.current=true;
     setProducts(updated);setInventoryMovements(current=>[...current,...movements]);if(orderAllocations.length){setInventoryLots(workingLots);setLotKardex(current=>[...current,...lotMovements]);}setOrders(current=>[order,...current]);
