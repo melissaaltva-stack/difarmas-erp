@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ClipboardList, FileText, Pencil, Trash2, Search, Plus, Save, X } from 'lucide-react';
+import { FileText, Pencil, Trash2, Search, Plus, Save, X } from 'lucide-react';
 import type { CartItem, Customer, OrderRecord, Product } from '../domain/types';
 
 const money=(value:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL',maximumFractionDigits:2}).format(value);
