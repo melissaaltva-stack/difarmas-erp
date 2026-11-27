@@ -8171,3 +8171,27 @@ button.icon-btn:focus-visible svg,
 #root .app .orders-pending-filter button:disabled{opacity:.45;cursor:default}
 .app[data-theme="dark"] #root .app .orders-pending-filter{background:#1b2b22;border-color:#34483e}
 .app[data-theme="dark"] #root .app .orders-pending-filter input{color:#e6f0e9}
+
+/* Accesos compactos en Factura estándar */
+#root .app .standard-invoice-shortcuts{display:flex;align-items:center;justify-content:flex-end;gap:9px;margin:0 0 12px;padding:0;flex-wrap:wrap}
+#root .app .standard-invoice-shortcuts .orders-pending-shortcut{min-width:205px}
+#root .app .invoice-history-overlay,#root .app .invoice-ai-overlay{position:fixed;inset:0;z-index:1250;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(13,25,18,.5);backdrop-filter:blur(3px)}
+#root .app .invoice-history-modal{width:min(1120px,96vw);max-height:88vh;overflow:auto;margin:0;padding:16px}
+#root .app .invoice-history-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#root .app .invoice-history-heading>div{display:grid;gap:3px}
+#root .app .invoice-history-heading h3{margin:0}
+#root .app .invoice-ai-modal{width:min(760px,96vw);max-height:88vh;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--border,#dfe7e1);border-radius:14px;background:var(--surface,#fff);color:var(--text,#263b33);box-shadow:0 22px 70px rgba(0,0,0,.24)}
+#root .app .invoice-ai-modal-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 17px;border-bottom:1px solid var(--border,#e4eae6)}
+#root .app .invoice-ai-modal-header h3{margin:0;font-size:15px}
+#root .app .invoice-ai-modal-header p{margin:3px 0 0;color:var(--text-secondary,#78877f);font-size:11px}
+#root .app .invoice-ai-modal-body{overflow:auto;padding:12px}
+#root .app .invoice-ai-modal-body .pharmacy-ai-card{margin:0;border:0;box-shadow:none;padding:0}
+#root .app .invoice-ai-modal-body .pharmacy-ai-heading{display:none}
+@media(max-width:650px){
+ #root .app .standard-invoice-shortcuts{display:grid;grid-template-columns:1fr;gap:7px}
+ #root .app .standard-invoice-shortcuts .orders-pending-shortcut{width:100%;min-width:0}
+ #root .app .invoice-history-overlay,#root .app .invoice-ai-overlay{padding:8px}
+ #root .app .invoice-history-modal,#root .app .invoice-ai-modal{width:100%;max-height:92vh}
+}
+.app[data-theme="dark"] #root .app .invoice-ai-modal{background:#17231d;color:#e6f0e9;border-color:#34483e}
+.app[data-theme="dark"] #root .app .invoice-ai-modal-header{border-color:#34483e}
