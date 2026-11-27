@@ -81,6 +81,7 @@ function OrderEditor({products,customers,initialItems,initialCustomer='',initial
 export function Orders({orders,onDelete,onInvoice,userId,products,customers,onSaveOrder,onUpdateOrder,onCreateCustomer,reserveOrderNumber,remoteReady}:{orders:OrderRecord[];onDelete:(id:number)=>boolean;onInvoice:(order:OrderRecord)=>void;userId:string;products:Product[];customers:Customer[];onCreateCustomer:(customer:Customer)=>void;reserveOrderNumber:()=>string;remoteReady:boolean;onSaveOrder:(items:CartItem[],customer:string,rtn:string,total:number,number:string)=>boolean;onUpdateOrder:(id:number,items:CartItem[],customer:string,rtn:string,total:number)=>boolean}){
  const [notice,setNotice]=useState('');
  const [pendingModalOpen,setPendingModalOpen]=useState(false);
+ const [pendingSearch,setPendingSearch]=useState('');
  const [newDrafts,setNewDrafts]=useState<OrderDraft[]>(()=>{const saved=readDrafts(userId);return saved.length?saved:[{id:'new-initial-'+userId,customer:'',customerRtn:'',items:[]}];});
  const [editingIds,setEditingIds]=useState<number[]>([]);
  const [savedTabTitles,setSavedTabTitles]=useState<Record<string,string>>(()=>readSavedTabTitles(userId));
@@ -97,6 +98,7 @@ export function Orders({orders,onDelete,onInvoice,userId,products,customers,onSa
  const [query,setQuery]=useState(''),[dateFrom,setDateFrom]=useState(''),[dateTo,setDateTo]=useState('');
  const matches=(order:OrderRecord,dateValue:string)=>{const day=String(dateValue||'').slice(0,10),term=query.trim().toLocaleLowerCase('es');return (!term||[order.number,order.customer??'',order.customerRtn??'',...order.items.map(item=>item.name)].join(' ').toLocaleLowerCase('es').includes(term))&&(!dateFrom||day>=dateFrom)&&(!dateTo||day<=dateTo);};
  const pending=orders.filter(order=>order.status==='Pendiente'&&matches(order,order.date)),invoiced=orders.filter(order=>order.status==='Facturado'&&matches(order,order.updatedAt||order.date));
+ const visiblePending=pending.filter(order=>!pendingSearch.trim()||[order.number,order.customer??'',order.customerRtn??'',...order.items.map(item=>item.name)].join(' ').toLocaleLowerCase('es').includes(pendingSearch.trim().toLocaleLowerCase('es')));
  const createDraft=():OrderDraft=>({id:'new-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),orderNumber:remoteReady?reserveOrderNumber():'',customer:'',customerRtn:'',items:[]});
  const addDraft=()=>{const draft=createDraft();setNewDrafts(current=>[draft,...current]);setActiveTab('new:'+draft.id);};
  const openSavedOrder=(id:number)=>{setPendingModalOpen(false);setEditingIds(current=>current.includes(id)?current:[...current,id]);setActiveTab('saved:'+id);};
@@ -134,11 +136,12 @@ export function Orders({orders,onDelete,onInvoice,userId,products,customers,onSa
   {notice&&<p className="helper" role="status">{notice}</p>}
   {pendingModalOpen&&<div className="orders-pending-overlay" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)setPendingModalOpen(false);}}>
    <section className="orders-pending-modal" role="dialog" aria-modal="true" aria-labelledby="orders-pending-title">
-    <header className="orders-pending-modal-header"><div><h3 id="orders-pending-title">Pedidos pendientes</h3><p>{pending.length} pedido(s) por facturar</p></div><button type="button" className="icon-button" aria-label="Cerrar pedidos pendientes" onClick={()=>setPendingModalOpen(false)}><X size={18}/></button></header>
+    <header className="orders-pending-modal-header"><div><h3 id="orders-pending-title">Pedidos pendientes</h3><p>{visiblePending.length} de {pending.length} pedido(s) por facturar</p></div><button type="button" className="icon-button" aria-label="Cerrar pedidos pendientes" onClick={()=>setPendingModalOpen(false)}><X size={18}/></button></header>
     <div className="orders-pending-modal-body">
-     {!pending.length?<p className="muted orders-pending-empty">{orders.some(order=>order.status==='Pendiente')?'No hay pedidos pendientes que coincidan con los filtros.':'Todavía no hay pedidos pendientes.'}</p>:<div className="orders-pending-rows">
+     <label className="orders-pending-filter"><Search size={15}/><input type="search" value={pendingSearch} onChange={event=>setPendingSearch(event.target.value)} placeholder="Filtrar por número, cliente o producto..." aria-label="Filtrar pedidos pendientes"/><button type="button" className="secondary" onClick={()=>setPendingSearch('')} disabled={!pendingSearch}>Limpiar</button></label>
+     {!pending.length?<p className="muted orders-pending-empty">{orders.some(order=>order.status==='Pendiente')?'No hay pedidos pendientes que coincidan con los filtros.':'Todavía no hay pedidos pendientes.'}</p>:!visiblePending.length?<p className="muted orders-pending-empty">No hay pedidos que coincidan con el filtro.</p>:<div className="orders-pending-rows">
       <div className="orders-pending-row orders-pending-row-head"><span>Pedido / fecha</span><span>Cliente</span><span>Artículos</span><span>Total</span><span>Acciones</span></div>
-      {pending.map(order=><article className="orders-pending-row" key={order.id}>
+      {visiblePending.map(order=><article className="orders-pending-row" key={order.id}>
        <div className="orders-pending-order"><strong>{order.number}</strong><small>{orderDate(order.date)}</small></div>
        <span className="orders-pending-customer">{order.customer||'Consumidor final'}</span>
        <span>{order.items.reduce((sum,item)=>sum+item.qty,0)} unidades</span>
