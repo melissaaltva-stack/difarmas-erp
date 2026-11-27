@@ -80,7 +80,7 @@ function OrderEditor({products,customers,initialItems,initialCustomer='',initial
 
 export function Orders({orders,onDelete,onInvoice,userId,products,customers,onSaveOrder,onUpdateOrder,onCreateCustomer,reserveOrderNumber,remoteReady}:{orders:OrderRecord[];onDelete:(id:number)=>boolean;onInvoice:(order:OrderRecord)=>void;userId:string;products:Product[];customers:Customer[];onCreateCustomer:(customer:Customer)=>void;reserveOrderNumber:()=>string;remoteReady:boolean;onSaveOrder:(items:CartItem[],customer:string,rtn:string,total:number,number:string)=>boolean;onUpdateOrder:(id:number,items:CartItem[],customer:string,rtn:string,total:number)=>boolean}){
  const [notice,setNotice]=useState('');
- const pendingSectionRef=useRef<HTMLElement|null>(null);
+ const [pendingModalOpen,setPendingModalOpen]=useState(false);
  const [newDrafts,setNewDrafts]=useState<OrderDraft[]>(()=>{const saved=readDrafts(userId);return saved.length?saved:[{id:'new-initial-'+userId,customer:'',customerRtn:'',items:[]}];});
  const [editingIds,setEditingIds]=useState<number[]>([]);
  const [savedTabTitles,setSavedTabTitles]=useState<Record<string,string>>(()=>readSavedTabTitles(userId));
@@ -99,7 +99,7 @@ export function Orders({orders,onDelete,onInvoice,userId,products,customers,onSa
  const pending=orders.filter(order=>order.status==='Pendiente'&&matches(order,order.date)),invoiced=orders.filter(order=>order.status==='Facturado'&&matches(order,order.updatedAt||order.date));
  const createDraft=():OrderDraft=>({id:'new-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),orderNumber:remoteReady?reserveOrderNumber():'',customer:'',customerRtn:'',items:[]});
  const addDraft=()=>{const draft=createDraft();setNewDrafts(current=>[draft,...current]);setActiveTab('new:'+draft.id);};
- const openSavedOrder=(id:number)=>{setEditingIds(current=>current.includes(id)?current:[...current,id]);setActiveTab('saved:'+id);};
+ const openSavedOrder=(id:number)=>{setPendingModalOpen(false);setEditingIds(current=>current.includes(id)?current:[...current,id]);setActiveTab('saved:'+id);};
  const closeTab=(tabId:string)=>{
   if(tabId.startsWith('new:')){
    const id=tabId.slice(4),remainingDrafts=newDrafts.filter(draft=>draft.id!==id);
@@ -118,7 +118,7 @@ export function Orders({orders,onDelete,onInvoice,userId,products,customers,onSa
  const activeNew=newDrafts.find(draft=>'new:'+draft.id===activeTab);
  const activeSaved=orders.find(order=>'saved:'+order.id===activeTab&&editingIds.includes(order.id));
  return <div className="content orders-page">
-  <div className="page-intro orders-heading"><button type="button" className="orders-pending-shortcut" onClick={()=>pendingSectionRef.current?.scrollIntoView({behavior:"smooth",block:"start"})}><span className="orders-pending-shortcut-icon"><ClipboardList size={18}/></span><span className="orders-pending-shortcut-copy"><strong>Pedidos pendientes</strong><small>Consultar pedidos por facturar</small></span><span className="orders-pending-shortcut-count">{pending.length}</span></button></div>
+  <div className="page-intro orders-heading"><button type="button" className="orders-pending-shortcut" onClick={()=>setPendingModalOpen(true)} aria-haspopup="dialog" aria-expanded={pendingModalOpen}><span className="orders-pending-shortcut-icon"><ClipboardList size={18}/></span><span className="orders-pending-shortcut-copy"><strong>Pedidos pendientes</strong><small>Consultar pedidos por facturar</small></span><span className="orders-pending-shortcut-count">{pending.length}</span></button></div>
   <section className="card orders-workspace">
    <div className="orders-tabs-bar" role="tablist" aria-label="Pedidos abiertos">
     {newDrafts.map((draft,index)=><div className={'orders-tab'+(activeTab==='new:'+draft.id?' active':'')} key={draft.id} role="tab" aria-selected={activeTab==='new:'+draft.id}><div className="orders-tab-select" onClick={()=>setActiveTab('new:'+draft.id)}><span className="orders-tab-dot"/><input type="text" className="orders-tab-title-input" aria-label="Nombre de la pestaña del pedido" value={draft.tabTitle??''} placeholder="Pedido" onFocus={()=>setActiveTab('new:'+draft.id)} onChange={event=>setNewDrafts(current=>current.map(item=>item.id===draft.id?{...item,tabTitle:event.target.value}:item))}/></div><button type="button" className="orders-tab-close" aria-label="Cerrar borrador" onClick={()=>closeTab('new:'+draft.id)}><X size={13}/></button></div>)}
@@ -132,9 +132,24 @@ export function Orders({orders,onDelete,onInvoice,userId,products,customers,onSa
   </section>
   <div className="card order-filters"><label className="order-search-label">Buscar pedido, cliente o producto<div className="search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="N.º de pedido, cliente o producto..."/></div></label><label>Desde<input type="date" value={dateFrom} onChange={e=>setDateFrom(e.target.value)}/></label><label>Hasta<input type="date" value={dateTo} onChange={e=>setDateTo(e.target.value)}/></label><button type="button" className="secondary" onClick={()=>{setQuery('');setDateFrom('');setDateTo('');}}>Limpiar filtros</button><span className="count order-filter-count">{pending.length+invoiced.length} pedidos encontrados · {pending.length} pendientes · {invoiced.length} facturados</span></div>
   {notice&&<p className="helper" role="status">{notice}</p>}
-  <section className="card" ref={pendingSectionRef} id="orders-pending-section"><div className="section-heading"><div><h3>Pedidos pendientes ({pending.length})</h3><p>Pedidos guardados que aún no se han facturado.</p></div></div>
-   {!pending.length?<p className="muted">{orders.some(order=>order.status==='Pendiente')?'No hay pedidos pendientes que coincidan con los filtros.':'Todavía no hay pedidos pendientes.'}</p>:<div className="order-saved-list">{pending.map(order=><article className="order-saved-card" key={order.id}><div className="order-saved-summary"><div><strong>{order.number}</strong><small>{orderDate(order.date)} · {order.customer||'Consumidor final'} · {order.items.reduce((sum,item)=>sum+item.qty,0)} unidades</small></div><strong>{money(order.total)}</strong></div><div className="order-saved-actions"><button type="button" className="secondary" onClick={()=>openSavedOrder(order.id)}><Pencil size={14}/>{editingIds.includes(order.id)?'Ver pestaña':'Abrir en pestaña'}</button><button type="button" className="primary" onClick={()=>onInvoice(order)}><FileText size={14}/> Facturar</button><button type="button" className="icon-button" aria-label={'Eliminar '+order.number} onClick={()=>{if(window.confirm('¿Eliminar '+order.number+' y devolver las cantidades reservadas al inventario?')){const deleted=onDelete(order.id);setNotice(deleted?'':'No se pudo eliminar el pedido.');}}}><Trash2 size={15}/></button></div></article>)}</div>}
-  </section>
+  {pendingModalOpen&&<div className="orders-pending-overlay" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)setPendingModalOpen(false);}}>
+   <section className="orders-pending-modal" role="dialog" aria-modal="true" aria-labelledby="orders-pending-title">
+    <header className="orders-pending-modal-header"><div><h3 id="orders-pending-title">Pedidos pendientes</h3><p>{pending.length} pedido(s) por facturar</p></div><button type="button" className="icon-button" aria-label="Cerrar pedidos pendientes" onClick={()=>setPendingModalOpen(false)}><X size={18}/></button></header>
+    <div className="orders-pending-modal-body">
+     {!pending.length?<p className="muted orders-pending-empty">{orders.some(order=>order.status==='Pendiente')?'No hay pedidos pendientes que coincidan con los filtros.':'Todavía no hay pedidos pendientes.'}</p>:<div className="orders-pending-rows">
+      <div className="orders-pending-row orders-pending-row-head"><span>Pedido / fecha</span><span>Cliente</span><span>Artículos</span><span>Total</span><span>Acciones</span></div>
+      {pending.map(order=><article className="orders-pending-row" key={order.id}>
+       <div className="orders-pending-order"><strong>{order.number}</strong><small>{orderDate(order.date)}</small></div>
+       <span className="orders-pending-customer">{order.customer||'Consumidor final'}</span>
+       <span>{order.items.reduce((sum,item)=>sum+item.qty,0)} unidades</span>
+       <strong className="orders-pending-total">{money(order.total)}</strong>
+       <div className="orders-pending-actions"><button type="button" className="secondary" onClick={()=>openSavedOrder(order.id)}><Pencil size={13}/>{editingIds.includes(order.id)?'Ver':'Abrir'}</button><button type="button" className="primary" onClick={()=>{setPendingModalOpen(false);onInvoice(order);}}><FileText size={13}/> Facturar</button><button type="button" className="icon-button" aria-label={'Eliminar '+order.number} title="Eliminar pedido" onClick={()=>{if(window.confirm('¿Eliminar '+order.number+' y devolver las cantidades reservadas al inventario?')){const deleted=onDelete(order.id);setNotice(deleted?'':'No se pudo eliminar el pedido.');}}}><Trash2 size={14}/></button></div>
+      </article>)}
+     </div>}
+    </div>
+   </section>
+  </div>}
+
   <section className="card"><div className="section-heading"><div><h3>Pedidos facturados ({invoiced.length})</h3><p>Historial de pedidos convertidos en factura.</p></div></div>
    {!invoiced.length?<p className="muted">{orders.some(order=>order.status==='Facturado')?'No hay pedidos facturados que coincidan con los filtros.':'Todavía no hay pedidos facturados.'}</p>:<div className="table-wrap"><table><thead><tr><th>Pedido</th><th>Fecha de facturación</th><th>Cliente</th><th>Factura</th><th>Total</th></tr></thead><tbody>{invoiced.map(order=><tr key={order.id}><td>{order.number}</td><td>{orderDate(order.updatedAt||order.date)}</td><td>{order.customer||'Consumidor final'}</td><td>{order.invoiceId??'—'}</td><td>{money(order.total)}</td></tr>)}</tbody></table></div>}
   </section>
