@@ -76,7 +76,7 @@ export function Orders({orders,onDelete,onInvoice,userId,products,customers,onSa
  const activeNew=newDrafts.find(draft=>'new:'+draft.id===activeTab);
  const activeSaved=orders.find(order=>'saved:'+order.id===activeTab&&editingIds.includes(order.id));
  return <div className="content orders-page">
-  <div className="page-intro orders-heading"><div><h2>Pedidos</h2><p>Creación, seguimiento y edición de pedidos.</p></div><button type="button" className="primary" onClick={addDraft}><Plus size={16}/> Crear pedido</button></div>
+  <div className="page-intro orders-heading"><div><h2>Pedidos</h2></div><button type="button" className="primary" onClick={addDraft}><Plus size={16}/> Crear pedido</button></div>
   <section className="card orders-workspace">
    <div className="orders-tabs-bar" role="tablist" aria-label="Pedidos abiertos">
     {newDrafts.map((draft,index)=><div className={'orders-tab'+(activeTab==='new:'+draft.id?' active':'')} key={draft.id} role="tab" aria-selected={activeTab==='new:'+draft.id}><button type="button" className="orders-tab-select" onClick={()=>setActiveTab('new:'+draft.id)}><span className="orders-tab-dot"/><span>{draft.customer||('Nuevo pedido '+(newDrafts.length-index))}</span></button><button type="button" className="orders-tab-close" aria-label="Cerrar borrador" onClick={()=>closeTab('new:'+draft.id)}><X size={13}/></button></div>)}
