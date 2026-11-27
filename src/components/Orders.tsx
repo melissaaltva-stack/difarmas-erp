@@ -76,23 +76,23 @@ function OrderEditor({products,customers,initialItems,initialCustomer='',initial
  </div>;
 }
 
-export function Orders({orders,onDelete,onInvoice,userId,products,customers,onSaveOrder,onUpdateOrder,onCreateCustomer,reserveOrderNumber}:{orders:OrderRecord[];onDelete:(id:number)=>boolean;onInvoice:(order:OrderRecord)=>void;userId:string;products:Product[];customers:Customer[];onCreateCustomer:(customer:Customer)=>void;reserveOrderNumber:()=>string;onSaveOrder:(items:CartItem[],customer:string,rtn:string,total:number,number:string)=>boolean;onUpdateOrder:(id:number,items:CartItem[],customer:string,rtn:string,total:number)=>boolean}){
+export function Orders({orders,onDelete,onInvoice,userId,products,customers,onSaveOrder,onUpdateOrder,onCreateCustomer,reserveOrderNumber,remoteReady}:{orders:OrderRecord[];onDelete:(id:number)=>boolean;onInvoice:(order:OrderRecord)=>void;userId:string;products:Product[];customers:Customer[];onCreateCustomer:(customer:Customer)=>void;reserveOrderNumber:()=>string;remoteReady:boolean;onSaveOrder:(items:CartItem[],customer:string,rtn:string,total:number,number:string)=>boolean;onUpdateOrder:(id:number,items:CartItem[],customer:string,rtn:string,total:number)=>boolean}){
  const [notice,setNotice]=useState('');
  const [newDrafts,setNewDrafts]=useState<OrderDraft[]>(()=>{const saved=readDrafts(userId);return saved.length?saved:[{id:'new-initial-'+userId,customer:'',customerRtn:'',items:[]}];});
  const [editingIds,setEditingIds]=useState<number[]>([]);
  const [activeTab,setActiveTab]=useState('new:'+ (readDrafts(userId)[0]?.id??'new-initial-'+userId));
  const draftNumbersAssigned=useRef(false);
  useEffect(()=>{
-  if(draftNumbersAssigned.current)return;
+  if(!remoteReady||draftNumbersAssigned.current)return;
   draftNumbersAssigned.current=true;
   const reserved=new Map(newDrafts.filter(draft=>!draft.orderNumber).map(draft=>[draft.id,reserveOrderNumber()]));
   if(reserved.size)setNewDrafts(current=>current.map(draft=>reserved.has(draft.id)?{...draft,orderNumber:reserved.get(draft.id)}:draft));
- },[userId]);
+ },[remoteReady,userId]);
  useEffect(()=>{try{localStorage.setItem(draftKey(userId),JSON.stringify(newDrafts));}catch{/* Los borradores siguen disponibles en memoria durante esta sesión. */}},[newDrafts,userId]);
  const [query,setQuery]=useState(''),[dateFrom,setDateFrom]=useState(''),[dateTo,setDateTo]=useState('');
  const matches=(order:OrderRecord,dateValue:string)=>{const day=String(dateValue||'').slice(0,10),term=query.trim().toLocaleLowerCase('es');return (!term||[order.number,order.customer??'',order.customerRtn??'',...order.items.map(item=>item.name)].join(' ').toLocaleLowerCase('es').includes(term))&&(!dateFrom||day>=dateFrom)&&(!dateTo||day<=dateTo);};
  const pending=orders.filter(order=>order.status==='Pendiente'&&matches(order,order.date)),invoiced=orders.filter(order=>order.status==='Facturado'&&matches(order,order.updatedAt||order.date));
- const createDraft=():OrderDraft=>({id:'new-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),orderNumber:reserveOrderNumber(),customer:'',customerRtn:'',items:[]});
+ const createDraft=():OrderDraft=>({id:'new-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),orderNumber:remoteReady?reserveOrderNumber():'',customer:'',customerRtn:'',items:[]});
  const addDraft=()=>{const draft=createDraft();setNewDrafts(current=>[draft,...current]);setActiveTab('new:'+draft.id);};
  const openSavedOrder=(id:number)=>{setEditingIds(current=>current.includes(id)?current:[...current,id]);setActiveTab('saved:'+id);};
  const closeTab=(tabId:string)=>{
@@ -113,12 +113,12 @@ export function Orders({orders,onDelete,onInvoice,userId,products,customers,onSa
  const activeNew=newDrafts.find(draft=>'new:'+draft.id===activeTab);
  const activeSaved=orders.find(order=>'saved:'+order.id===activeTab&&editingIds.includes(order.id));
  return <div className="content orders-page">
-  <div className="page-intro orders-heading"><div><h2>Pedidos</h2></div><button type="button" className="primary" onClick={addDraft}><Plus size={16}/> Crear pedido</button></div>
+  <div className="page-intro orders-heading"><div><h2>Pedidos</h2></div><button type="button" className="primary" onClick={addDraft} disabled={!remoteReady}><Plus size={16}/> Crear pedido</button></div>
   <section className="card orders-workspace">
    <div className="orders-tabs-bar" role="tablist" aria-label="Pedidos abiertos">
     {newDrafts.map((draft,index)=><div className={'orders-tab'+(activeTab==='new:'+draft.id?' active':'')} key={draft.id} role="tab" aria-selected={activeTab==='new:'+draft.id}><button type="button" className="orders-tab-select" onClick={()=>setActiveTab('new:'+draft.id)}><span className="orders-tab-dot"/><span>{draft.customer||('Nuevo pedido '+(newDrafts.length-index))}</span></button><button type="button" className="orders-tab-close" aria-label="Cerrar borrador" onClick={()=>closeTab('new:'+draft.id)}><X size={13}/></button></div>)}
     {editingIds.map(id=>{const order=orders.find(item=>item.id===id);if(!order)return null;return <div className={'orders-tab'+(activeTab==='saved:'+id?' active':'')} key={id} role="tab" aria-selected={activeTab==='saved:'+id}><button type="button" className="orders-tab-select" onClick={()=>setActiveTab('saved:'+id)}><span className="orders-tab-dot saved"/><span>{order.number}</span></button><button type="button" className="orders-tab-close" aria-label={'Cerrar '+order.number} onClick={()=>closeTab('saved:'+id)}><X size={13}/></button></div>;})}
-    <button type="button" className="orders-tab-add" onClick={addDraft}><Plus size={15}/> Nuevo</button>
+    <button type="button" className="orders-tab-add" onClick={addDraft} disabled={!remoteReady}><Plus size={15}/> Nuevo</button>
    </div>
    <div className="orders-tab-content">
     {newDrafts.map(draft=><div key={draft.id} className="orders-tab-panel" hidden={activeTab!=='new:'+draft.id}><div className="orders-tab-panel-heading"><div>{draft.customer&&<strong>{draft.customer}</strong>}</div><span>{draft.items.length} producto(s)</span></div><OrderEditor key={draft.id} products={products} customers={customers} initialItems={draft.items} initialCustomer={draft.customer} initialRtn={draft.customerRtn} orderNumber={draft.orderNumber} onDraftChange={(items,customer,customerRtn)=>setNewDrafts(current=>current.map(item=>item.id===draft.id?{...item,items,customer,customerRtn}:item))} onCreateCustomer={onCreateCustomer} onSave={(items,customer,rtn,total,number)=>{const ok=onSaveOrder(items,customer,rtn,total,number);if(ok){const next=newDrafts.find(item=>item.id!==draft.id);if(next){setNewDrafts(current=>current.filter(item=>item.id!==draft.id));setActiveTab('new:'+next.id);}else{const fresh=createDraft();setNewDrafts([fresh]);setActiveTab('new:'+fresh.id);}}return ok;}}/></div>)}
