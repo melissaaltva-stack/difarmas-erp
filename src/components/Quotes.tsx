@@ -330,7 +330,7 @@ return <div className="content standard-invoice quotes-page"><style>{`
        {p.expiry&&<small>Vencimiento: {formatProductExpiry(p.expiry)}</small>}
        <small>{p.code} · {p.presentation||p.category} · Existencia: {p.stock}</small>
       </span>
-      <span className="invoice-product-price">{money(priceWithTax(p))}</span>
+      <span className="invoice-product-price">{money(priceForQuote(p,priceList))}</span>
       <Plus size={16}/>
      </button>
     </div>)}
@@ -389,14 +389,14 @@ return <div className="content standard-invoice quotes-page"><style>{`
   </div>}
   <div className="invoice-summary quote-summary" aria-label="Resumen de cotización">
    <div className="invoice-summary-row quote-summary-row"><span>Subtotal</span><strong>{money(subtotal)}</strong></div>
-   <div className="quote-summary-row"><span>Descuento</span><strong>{money(lineDiscountTotal+quoteDiscount)}</strong></div>
+   <div className="invoice-summary-row quote-summary-row"><span>Descuento</span><strong>{money(lineDiscountTotal+quoteDiscount)}</strong></div>
    <div className="invoice-summary-row quote-summary-row quote-summary-isv"><span>ISV</span><strong>{money(quoteTaxTotal)}</strong></div>
   </div>
   <div className="invoice-total"><span>Total de la cotización</span><strong>{money(quoteTotal)}</strong></div>
   {saveError&&<p className="error-text" role="alert">{saveError}</p>}
   <div className="invoice-actions">
    <button className="secondary" onClick={()=>{setLines([]);setDiscount('0');}} disabled={!lines.length}>Vaciar detalle</button>
-   <button className="secondary" onClick={()=>{setCreating(false);setEditingId(null);setClientOpen(false);}}>Cancelar</button>
+   <button className="secondary" onClick={()=>{setCreating(false);setEditingId(null);}}>Cancelar</button>
    <button className="primary" disabled={saving||(!client&&editingId===null)||!lines.length} onClick={save}>
     <Save size={16}/> {saving?"Guardando...":editingId!==null?"Guardar cambios":"Guardar cotización"}
    </button>
