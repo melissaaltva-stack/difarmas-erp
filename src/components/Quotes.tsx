@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { Customer, Product, ErpSettings, QuoteRecord, QuoteLine } from '../domain/types';
 import { Plus, Search, Printer, Trash2, FileText, Eye, Save, ChevronDown } from 'lucide-react';
