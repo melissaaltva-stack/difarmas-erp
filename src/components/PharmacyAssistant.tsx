@@ -4,8 +4,8 @@ import type { FormEvent } from 'react';
 import type { Product } from '../domain/types';
 import { requireSupabase } from '../services/supabaseClient';
 type Message={role:'user'|'assistant';content:string};
-export function PharmacyAssistant({products,context}:{products:Product[];context:'Facturación estándar'|'Venta POS'}){
- const [open,setOpen]=useState(false),[draft,setDraft]=useState(''),[messages,setMessages]=useState<Message[]>([]),[busy,setBusy]=useState(false),[error,setError]=useState('');
+export function PharmacyAssistant({products,context,initiallyOpen=false}:{products:Product[];context:'Facturación estándar'|'Venta POS';initiallyOpen?:boolean}){
+ const [open,setOpen]=useState(initiallyOpen),[draft,setDraft]=useState(''),[messages,setMessages]=useState<Message[]>([]),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const send=async(event:FormEvent)=>{event.preventDefault();const question=draft.trim();if(!question||busy)return;const next=[...messages,{role:'user' as const,content:question}].slice(-12);setMessages(next);setDraft('');setBusy(true);setError('');
   try{const {data}=await requireSupabase().auth.getSession();const token=data.session?.access_token;if(!token)throw new Error('Tu sesión expiró. Inicia sesión nuevamente.');
    const terms=question.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().split(/[^a-z0-9]+/).filter(word=>word.length>3);
