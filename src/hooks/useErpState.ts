@@ -367,7 +367,7 @@ export function useErpState(userId: string, demoMode = false) {
     const sequenceKey=`farmi_quote_sequence_${userId}`;
     const storedSequence=Math.max(loadNumber('farmi_quote_sequence',0),loadNumber(sequenceKey,0));
     const existingSequence=quotes.reduce((max,quote)=>{
-      const match=/^COT-(\\d{6})$/.exec(quote.number);
+      const match=/^COT-(\d{6})$/.exec(quote.number);
       return Math.max(max,match?Number(match[1]):0);
     },0);
     const sequence=Math.max(storedSequence,existingSequence,lastQuoteSequence.current.value)+1;
