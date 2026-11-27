@@ -7893,3 +7893,12 @@ button.icon-btn:focus-visible svg,
 #root .app .orders-tabs-bar .orders-tab .orders-tab-select {
   color: #ffffff !important;
 }
+
+/* Ventana del listado de pedidos pendientes */
+.orders-pending-modal-backdrop{z-index:180}
+.orders-pending-modal.modal{width:min(900px,calc(100vw - 32px));max-width:900px;max-height:88vh;overflow-y:auto}
+.orders-pending-modal .modal-head{align-items:center;gap:12px}
+.orders-pending-modal .modal-head h2{font-size:18px}
+.orders-pending-modal .order-saved-list{max-height:62vh;overflow-y:auto;padding:2px}
+.orders-pending-launch .section-heading{align-items:center}
+@media(max-width:600px){.orders-pending-modal.modal{width:calc(100vw - 16px);max-height:92vh;padding:12px}.orders-pending-launch .section-heading{align-items:flex-start;flex-direction:column}.orders-pending-launch .section-heading button{width:100%}.orders-pending-modal .order-saved-list{max-height:68vh}}
