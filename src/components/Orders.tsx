@@ -65,10 +65,11 @@ function OrderEditor({products,customers,initialItems,initialCustomer='',initial
 export function Orders({orders,onDelete,onInvoice,userId,onOpenPos,products,customers,onSaveOrder,onUpdateOrder}:{orders:OrderRecord[];onDelete:(id:number)=>boolean;onInvoice:(order:OrderRecord)=>void;userId:string;onOpenPos:()=>void;products:Product[];customers:Customer[];onSaveOrder:(items:CartItem[],customer:string,rtn:string,total:number)=>boolean;onUpdateOrder:(id:number,items:CartItem[],customer:string,rtn:string,total:number)=>boolean}){
  const [notice,setNotice]=useState('');
  const [openPosDrafts,setOpenPosDrafts]=useState<OpenPosDraft[]>([]);
- const [newDrafts,setNewDrafts]=useState<OrderDraft[]>(()=>readDrafts(userId));
+ const [newDrafts,setNewDrafts]=useState<OrderDraft[]>(()=>{const saved=readDrafts(userId);return saved.length?saved:[{id:'new-initial-'+userId,customer:'',customerRtn:'',items:[]}];});
  const [editingIds,setEditingIds]=useState<number[]>([]);
  useEffect(()=>{try{const stored=JSON.parse(localStorage.getItem('farmi_pos_drafts_'+userId)||'null') as OpenPosDraftStore|null;setOpenPosDrafts(Array.isArray(stored?.drafts)?stored.drafts.filter(draft=>draft&&typeof draft.id==='string'&&Array.isArray(draft.cart)):[]);}catch{setOpenPosDrafts([]);}},[userId]);
  useEffect(()=>{try{localStorage.setItem(draftKey(userId),JSON.stringify(newDrafts));}catch{/* Los borradores siguen disponibles en memoria durante esta sesión. */}},[newDrafts,userId]);
+ useEffect(()=>{if(!newDrafts.length)setNewDrafts([{id:'new-initial-'+userId,customer:'',customerRtn:'',items:[]}]);},[newDrafts.length,userId]);
  const [query,setQuery]=useState(''),[dateFrom,setDateFrom]=useState(''),[dateTo,setDateTo]=useState('');
  const matches=(order:OrderRecord,dateValue:string)=>{const day=String(dateValue||'').slice(0,10),term=query.trim().toLocaleLowerCase('es');return (!term||[order.number,order.customer??'',order.customerRtn??'',...order.items.map(item=>item.name)].join(' ').toLocaleLowerCase('es').includes(term))&&(!dateFrom||day>=dateFrom)&&(!dateTo||day<=dateTo);};
  const pending=orders.filter(order=>order.status==='Pendiente'&&matches(order,order.date)),invoiced=orders.filter(order=>order.status==='Facturado'&&matches(order,order.updatedAt||order.date));
