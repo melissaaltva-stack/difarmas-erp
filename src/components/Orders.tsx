@@ -11,31 +11,54 @@ type OrderDraft={id:string;customer:string;customerRtn:string;items:CartItem[]};
 const draftKey=(userId:string)=>'farmi_orders_create_drafts_'+userId;
 const readDrafts=(userId:string):OrderDraft[]=>{try{const value=JSON.parse(localStorage.getItem(draftKey(userId))||'[]');return Array.isArray(value)?value.filter(item=>item&&typeof item.id==='string'&&Array.isArray(item.items)):[];}catch{return [];}};
 
-function OrderEditor({products,customers,initialItems,initialCustomer='',initialRtn='',saveLabel='Guardar pedido',onSave,onCancel}:{products:Product[];customers:Customer[];initialItems:CartItem[];initialCustomer?:string;initialRtn?:string;saveLabel?:string;onSave:(items:CartItem[],customer:string,rtn:string,total:number)=>boolean;onCancel?:()=>void}){
+function OrderEditor({products,customers,initialItems,initialCustomer='',initialRtn='',orderNumber='',saveLabel='Guardar pedido',onSave,onCancel}:{products:Product[];customers:Customer[];initialItems:CartItem[];initialCustomer?:string;initialRtn?:string;orderNumber?:string;saveLabel?:string;onSave:(items:CartItem[],customer:string,rtn:string,total:number)=>boolean;onCancel?:()=>void}){
  const customerListId=useId();
  const [items,setItems]=useState<CartItem[]>(()=>initialItems.map(item=>({...item})));
  const [customer,setCustomer]=useState(initialCustomer);
  const [customerRtn,setCustomerRtn]=useState(initialRtn);
  const [query,setQuery]=useState('');
  const [notice,setNotice]=useState('');
- const results=useMemo(()=>products.filter(product=>[product.code,product.name,...(product.activeIngredients??[])].join(' ').toLocaleLowerCase('es').includes(query.trim().toLocaleLowerCase('es'))).slice(0,8),[products,query]);
- const total=items.reduce((sum,item)=>sum+(Number(item.price)||0)*(Number(item.qty)||0),0);
+ const results=useMemo(()=>products.filter(product=>product.stock>0&&[product.code,product.name,product.laboratory,product.category,product.presentation,...(product.activeIngredients??[])].join(' ').toLocaleLowerCase('es').includes(query.trim().toLocaleLowerCase('es'))).slice(0,8),[products,query]);
+ const subtotal=items.reduce((sum,item)=>sum+(Number(item.price)||0)*(Number(item.qty)||0),0);
  const addProduct=(product:Product)=>{setItems(current=>{const found=current.find(item=>item.id===product.id&&item.saleUnit===undefined);if(found)return current.map(item=>item===found?{...item,qty:item.qty+1}:item);return [...current,{...product,qty:1,price:product.retail}];});setQuery('');};
  const updateLine=(index:number,patch:Partial<CartItem>)=>setItems(current=>current.map((item,i)=>i===index?{...item,...patch}:item));
- return <div className="card order-editor">
-  <div className="section-heading"><div><h3>Detalle del pedido</h3><p>Agrega productos, cantidades y datos del cliente.</p></div><Package size={19}/></div>
-  <div className="order-editor-fields">
-   <label>Cliente <input list={customerListId} value={customer} onChange={e=>{setCustomer(e.target.value);const found=customers.find(c=>c.name.toLocaleLowerCase('es')===e.target.value.trim().toLocaleLowerCase('es'));if(found)setCustomerRtn(found.rtn??'');}} placeholder="Nombre del cliente / Consumidor final"/></label>
-   <datalist id={customerListId}>{customers.filter(c=>c.active!==false).map(customer=><option key={customer.id} value={customer.name}/>)}</datalist>
-   <label>RTN del cliente <input value={customerRtn} onChange={e=>setCustomerRtn(e.target.value)} placeholder="Opcional"/></label>
+ const selectedCustomer=customers.find(c=>c.name===customer);
+ return <div className="card order-editor standard-invoice">
+  <div className="invoice-layout">
+   <section className="card invoice-header-card order-invoice-header">
+    <div className="invoice-header-grid">
+     <div className="invoice-top-fields-row">
+      <div className="invoice-field invoice-field-number"><label className="field-label">N.º de pedido</label><input value={orderNumber||'Se asigna al guardar'} readOnly/></div>
+      <div className="invoice-field invoice-field-date"><label className="field-label">Fecha</label><input type="date" value={new Date().toISOString().slice(0,10)} readOnly/></div>
+     </div>
+     <div className="invoice-field invoice-customer-field">
+      <label className="field-label">Cliente</label>
+      <div className="invoice-customer-select-row">
+       <select aria-label="Cliente" value={customer} onChange={e=>{const next=e.target.value;const found=customers.find(c=>c.name===next);setCustomer(next);setCustomerRtn(found?.rtn??'');}}><option value="">Consumidor final</option>{customers.filter(c=>c.active!==false).map(c=><option key={c.id} value={c.name}>{c.code?c.code+' · ':''}{c.name}</option>)}</select>
+      </div>
+     </div>
+     <div className="invoice-bottom-fields-row">
+      <div className="invoice-field invoice-field-price"><label className="field-label">Precio de venta</label><input value={selectedCustomer?.priceList??'Precio de venta 1'} readOnly/></div>
+      <div className="invoice-field invoice-field-address"><label className="field-label">Dirección</label><input value={selectedCustomer?.address??''} readOnly placeholder="Dirección del cliente"/></div>
+      <div className="invoice-field invoice-field-phone"><label className="field-label">Teléfono</label><input value={selectedCustomer?.phone??''} readOnly placeholder="Teléfono del cliente"/></div>
+      <div className="invoice-field invoice-field-rtn"><label className="field-label">RTN</label><input value={customerRtn} onChange={e=>setCustomerRtn(e.target.value)} placeholder="RTN del cliente"/></div>
+     </div>
+    </div>
+   </section>
+   <section className="card invoice-products-card">
+    <div className="section-heading"><div><h3>Detalle de productos</h3><p>Busca por nombre, código o principio activo; selecciona los productos para agregarlos al pedido.</p></div></div>
+    <div className="invoice-search"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar producto o escanear código"/></div>
+    {query.trim()&&<div className="invoice-product-results">{results.map(product=><div className="invoice-product" key={product.id}><button type="button" className="invoice-product-add" disabled={product.stock<=0} onClick={()=>addProduct(product)}><span className="invoice-product-copy"><strong>{product.name}</strong><small>{product.code} · {product.presentation} · Existencia: {product.stock}</small></span><span className="invoice-product-price">{money(product.retail)}</span><Plus size={16}/></button></div>)}{!results.length&&<p className="muted">No se encontraron productos disponibles.</p>}</div>}
+   </section>
   </div>
-  <label className="order-product-search">Buscar producto<div className="search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Nombre, código o principio activo..."/></div></label>
-  {query&&<div className="order-product-results">{results.length?results.map(product=><button type="button" key={product.id} disabled={product.stock<=0} onClick={()=>addProduct(product)}><span><strong>{product.name}</strong><small>{product.code} · Stock {product.stock}</small></span><b>{money(product.retail)}</b><Plus size={16}/></button>):<p className="muted">No se encontraron productos.</p>}</div>}
-  <div className="table-wrap order-editor-table"><table><thead><tr><th>Producto</th><th>Precio</th><th>Cantidad</th><th>Importe</th><th></th></tr></thead><tbody>
-   {!items.length?<tr><td colSpan={5} className="muted">Agrega productos para completar el pedido.</td></tr>:items.map((item,index)=><tr key={item.cartLineId??item.id+'-'+index}><td><strong>{item.name}</strong><small className="order-line-sub">{item.code} · {item.presentation}</small></td><td><input aria-label={'Precio de '+item.name} className="order-number-input" type="number" min="0" step="0.01" value={item.price} onChange={e=>updateLine(index,{price:Math.max(0,Number(e.target.value)||0)})}/></td><td><input aria-label={'Cantidad de '+item.name} className="order-number-input order-quantity-input" type="number" min="1" step="1" value={item.qty} onChange={e=>updateLine(index,{qty:Math.max(1,Math.floor(Number(e.target.value)||1))})}/></td><td>{money(item.price*item.qty)}</td><td><button type="button" className="icon-button" aria-label={'Quitar '+item.name} onClick={()=>setItems(current=>current.filter((_,i)=>i!==index))}><X size={15}/></button></td></tr>)}
-  </tbody></table></div>
-  <div className="order-editor-footer"><strong>Total: {money(total)}</strong><div className="order-editor-actions">{onCancel&&<button type="button" className="secondary" onClick={onCancel}>Cancelar</button>}<button type="button" className="primary" disabled={!items.length} onClick={()=>{setNotice('');if(onSave(items,customer.trim(),customerRtn.trim(),total))setNotice('Pedido guardado correctamente.');else setNotice('No se pudo guardar. Revisa existencias y sincronización.');}}><Save size={15}/>{saveLabel}</button></div></div>
-  {notice&&<p className="helper" role="status">{notice}</p>}
+  <section className="card invoice-cart">
+   <div className="section-heading"><div><h3>Detalle del pedido</h3><p>{items.length} producto(s) en el pedido</p></div></div>
+   {!items.length?<p className="muted">Busca un producto arriba y selecciónalo para agregarlo al pedido.</p>:<div className="table-wrap"><table className="standard-invoice-lines"><thead><tr><th>Código</th><th>Descripción</th><th>Cantidad</th><th>Precio de venta</th><th>Total</th><th></th></tr></thead><tbody>{items.map((item,index)=><tr key={item.cartLineId??item.id+'-'+index}><td>{item.code}</td><td><div className="invoice-product-detail"><strong className="invoice-product-detail-name">{item.name}</strong><div className="invoice-product-meta invoice-product-meta-primary"><span>{item.saleUnit||item.presentation||item.baseUnitName||'Unidad'}</span></div><div className="invoice-product-meta invoice-product-meta-secondary"><span>{item.laboratory||''}</span><span className="invoice-product-stock">Existencia: {item.stock}</span></div></div></td><td><input className="invoice-qty" aria-label={'Cantidad de '+item.name} type="number" min="1" step="1" value={item.qty} onChange={e=>updateLine(index,{qty:Math.max(1,Math.floor(Number(e.target.value)||1))})}/></td><td><input className="order-number-input" aria-label={'Precio de '+item.name} type="number" min="0" step="0.01" value={item.price} onChange={e=>updateLine(index,{price:Math.max(0,Number(e.target.value)||0)})}/></td><td><strong>{money(item.price*item.qty)}</strong></td><td><button type="button" className="icon-button" aria-label={'Quitar '+item.name} onClick={()=>setItems(current=>current.filter((_,i)=>i!==index))}><Trash2 size={16}/></button></td></tr>)}</tbody></table></div>}
+   <div className="invoice-summary"><div className="invoice-summary-row"><span>Subtotal</span><strong>{money(subtotal)}</strong></div></div>
+   <div className="invoice-total"><span>Total del pedido</span><strong>{money(subtotal)}</strong></div>
+   <div className="invoice-actions">{onCancel&&<button type="button" className="secondary" onClick={onCancel}>Cancelar</button>}<button type="button" className="primary" disabled={!items.length} onClick={()=>{setNotice('');if(onSave(items,customer,customerRtn.trim(),subtotal))setNotice('Pedido guardado correctamente.');else setNotice('No se pudo guardar. Revisa existencias y sincronización.');}}><Save size={15}/>{saveLabel}</button></div>
+   {notice&&<p className="helper" role="status">{notice}</p>}
+  </section>
  </div>;
 }
 
