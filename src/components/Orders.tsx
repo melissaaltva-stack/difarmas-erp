@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { FileText, Pencil, Trash2, Search, Plus, Save, X } from 'lucide-react';
+import { FileText, Pencil, Trash2, Search, Plus, Save, X, UserPlus } from 'lucide-react';
+import { RegisterCustomerModal } from './Customers';
 import type { CartItem, Customer, OrderRecord, Product } from '../domain/types';
 
 const money=(value:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL',maximumFractionDigits:2}).format(value);
@@ -9,12 +10,13 @@ type OrderDraft={id:string;customer:string;customerRtn:string;items:CartItem[]};
 const draftKey=(userId:string)=>'farmi_orders_create_drafts_'+userId;
 const readDrafts=(userId:string):OrderDraft[]=>{try{const value=JSON.parse(localStorage.getItem(draftKey(userId))||'[]');return Array.isArray(value)?value.filter(item=>item&&typeof item.id==='string'&&Array.isArray(item.items)):[];}catch{return [];}};
 
-function OrderEditor({products,customers,initialItems,initialCustomer='',initialRtn='',orderNumber='',saveLabel='Guardar pedido',onSave,onCancel,onDraftChange}:{products:Product[];customers:Customer[];initialItems:CartItem[];initialCustomer?:string;initialRtn?:string;orderNumber?:string;saveLabel?:string;onSave:(items:CartItem[],customer:string,rtn:string,total:number)=>boolean;onCancel?:()=>void;onDraftChange?:(items:CartItem[],customer:string,rtn:string)=>void}){
+function OrderEditor({products,customers,initialItems,initialCustomer='',initialRtn='',orderNumber='',saveLabel='Guardar pedido',onSave,onCancel,onDraftChange,onCreateCustomer}:{products:Product[];customers:Customer[];initialItems:CartItem[];initialCustomer?:string;initialRtn?:string;orderNumber?:string;saveLabel?:string;onSave:(items:CartItem[],customer:string,rtn:string,total:number)=>boolean;onCancel?:()=>void;onDraftChange?:(items:CartItem[],customer:string,rtn:string)=>void;onCreateCustomer:(customer:Customer)=>void}){
  const [items,setItems]=useState<CartItem[]>(()=>initialItems.map(item=>({...item})));
  const [customer,setCustomer]=useState(initialCustomer);
  const [customerRtn,setCustomerRtn]=useState(initialRtn);
  const [query,setQuery]=useState('');
  const [notice,setNotice]=useState('');
+ const [newCustomer,setNewCustomer]=useState(false);
  const [seller,setSeller]=useState('General');
  const [priceList,setPriceList]=useState('Precio de venta 1');
  const [payment,setPayment]=useState('Efectivo');
@@ -39,6 +41,7 @@ function OrderEditor({products,customers,initialItems,initialCustomer='',initial
     </div>
     <div className="invoice-field invoice-customer-field"><label className="field-label">Cliente</label><div className="invoice-customer-select-row">
      <select aria-label="Cliente" value={customer} onChange={e=>{const next=e.target.value;const found=customers.find(c=>c.name===next);setCustomer(next);setCustomerRtn(found?.rtn??'');}}><option value="">Consumidor Final</option>{customers.filter(c=>c.active!==false).map(c=><option key={c.id} value={c.name}>{c.code?c.code+' · ':''}{c.name}</option>)}</select>
+     <button className="text-button register-customer-button" type="button" onClick={()=>setNewCustomer(true)}><UserPlus size={15}/> Registrar cliente nuevo</button>
      <div className="invoice-payment-inline"><label className="field-label">Forma de pago</label><select value={payment} onChange={e=>setPayment(e.target.value)}><option>Efectivo</option><option>Transferencia</option><option>Crédito</option></select></div>
     </div></div>
     <div className="invoice-bottom-fields-row">
@@ -46,7 +49,9 @@ function OrderEditor({products,customers,initialItems,initialCustomer='',initial
      <div className="invoice-field invoice-field-address"><label className="field-label">Dirección</label><input value={customers.find(c=>c.name===customer)?.address??''} readOnly placeholder="Dirección del cliente"/></div>
      <div className="invoice-field invoice-field-phone"><label className="field-label">Teléfono</label><input value={customers.find(c=>c.name===customer)?.phone??''} readOnly placeholder="Teléfono del cliente"/></div>
      <div className="invoice-field invoice-field-rtn"><label className="field-label">RTN</label><input value={customerRtn} onChange={e=>setCustomerRtn(e.target.value)} placeholder="RTN del cliente"/></div>
-    </div></div></section>
+    </div></div>
+    {newCustomer&&<RegisterCustomerModal customers={customers} onClose={()=>setNewCustomer(false)} onSave={customerRecord=>{onCreateCustomer(customerRecord);setCustomer(customerRecord.name);setCustomerRtn(customerRecord.rtn??'');setNewCustomer(false);}}/>}
+   </section>
    <section className="card invoice-products-card">
     <div className="section-heading"><div><h3>Detalle de productos</h3><p>Busca por nombre, código o principio activo; selecciona los productos para agregarlos al pedido.</p></div></div>
     <div className="invoice-search"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar producto o escanear código"/></div>
@@ -65,7 +70,7 @@ function OrderEditor({products,customers,initialItems,initialCustomer='',initial
  </div>;
 }
 
-export function Orders({orders,onDelete,onInvoice,userId,products,customers,onSaveOrder,onUpdateOrder}:{orders:OrderRecord[];onDelete:(id:number)=>boolean;onInvoice:(order:OrderRecord)=>void;userId:string;products:Product[];customers:Customer[];onSaveOrder:(items:CartItem[],customer:string,rtn:string,total:number)=>boolean;onUpdateOrder:(id:number,items:CartItem[],customer:string,rtn:string,total:number)=>boolean}){
+export function Orders({orders,onDelete,onInvoice,userId,products,customers,onSaveOrder,onUpdateOrder,onCreateCustomer}:{orders:OrderRecord[];onDelete:(id:number)=>boolean;onInvoice:(order:OrderRecord)=>void;userId:string;products:Product[];customers:Customer[];onCreateCustomer:(customer:Customer)=>void;onSaveOrder:(items:CartItem[],customer:string,rtn:string,total:number)=>boolean;onUpdateOrder:(id:number,items:CartItem[],customer:string,rtn:string,total:number)=>boolean}){
  const [notice,setNotice]=useState('');
  const [newDrafts,setNewDrafts]=useState<OrderDraft[]>(()=>{const saved=readDrafts(userId);return saved.length?saved:[{id:'new-initial-'+userId,customer:'',customerRtn:'',items:[]}];});
  const [editingIds,setEditingIds]=useState<number[]>([]);
@@ -89,8 +94,8 @@ export function Orders({orders,onDelete,onInvoice,userId,products,customers,onSa
     <button type="button" className="orders-tab-add" onClick={addDraft}><Plus size={15}/> Nuevo</button>
    </div>
    <div className="orders-tab-content">
-    {newDrafts.map(draft=><div key={draft.id} className="orders-tab-panel" hidden={activeTab!=='new:'+draft.id}><div className="orders-tab-panel-heading"><div>{draft.customer&&<strong>{draft.customer}</strong>}</div><span>{draft.items.length} producto(s)</span></div><OrderEditor key={draft.id} products={products} customers={customers} initialItems={draft.items} initialCustomer={draft.customer} initialRtn={draft.customerRtn} onDraftChange={(items,customer,customerRtn)=>setNewDrafts(current=>current.map(item=>item.id===draft.id?{...item,items,customer,customerRtn}:item))} onSave={(items,customer,rtn,total)=>{const ok=onSaveOrder(items,customer,rtn,total);if(ok){const next=newDrafts.find(item=>item.id!==draft.id);if(next){setNewDrafts(current=>current.filter(item=>item.id!==draft.id));setActiveTab('new:'+next.id);}else{const fresh={id:'new-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),customer:'',customerRtn:'',items:[]};setNewDrafts([fresh]);setActiveTab('new:'+fresh.id);}}return ok;}}/></div>)}
-    {editingIds.map(id=>{const order=orders.find(item=>item.id===id);if(!order)return null;return <div key={id} className="orders-tab-panel" hidden={activeTab!=='saved:'+id}><div className="orders-tab-panel-heading"><div><strong>{order.number}</strong><small>Pedido pendiente · {order.customer||'Consumidor final'}</small></div><span>{money(order.total)}</span></div><OrderEditor key={id} products={products} customers={customers} initialItems={order.items} initialCustomer={order.customer??''} initialRtn={order.customerRtn??''} orderNumber={order.number} saveLabel="Guardar cambios" onCancel={()=>closeTab('saved:'+id)} onSave={(items,customer,rtn,total)=>{const ok=onUpdateOrder(order.id,items,customer,rtn,total);if(ok)closeTab('saved:'+id);return ok;}}/></div>;})}
+    {newDrafts.map(draft=><div key={draft.id} className="orders-tab-panel" hidden={activeTab!=='new:'+draft.id}><div className="orders-tab-panel-heading"><div>{draft.customer&&<strong>{draft.customer}</strong>}</div><span>{draft.items.length} producto(s)</span></div><OrderEditor key={draft.id} products={products} customers={customers} initialItems={draft.items} initialCustomer={draft.customer} initialRtn={draft.customerRtn} onDraftChange={(items,customer,customerRtn)=>setNewDrafts(current=>current.map(item=>item.id===draft.id?{...item,items,customer,customerRtn}:item))} onCreateCustomer={onCreateCustomer} onSave={(items,customer,rtn,total)=>{const ok=onSaveOrder(items,customer,rtn,total);if(ok){const next=newDrafts.find(item=>item.id!==draft.id);if(next){setNewDrafts(current=>current.filter(item=>item.id!==draft.id));setActiveTab('new:'+next.id);}else{const fresh={id:'new-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),customer:'',customerRtn:'',items:[]};setNewDrafts([fresh]);setActiveTab('new:'+fresh.id);}}return ok;}}/></div>)}
+    {editingIds.map(id=>{const order=orders.find(item=>item.id===id);if(!order)return null;return <div key={id} className="orders-tab-panel" hidden={activeTab!=='saved:'+id}><div className="orders-tab-panel-heading"><div><strong>{order.number}</strong><small>Pedido pendiente · {order.customer||'Consumidor final'}</small></div><span>{money(order.total)}</span></div><OrderEditor key={id} products={products} customers={customers} initialItems={order.items} initialCustomer={order.customer??''} initialRtn={order.customerRtn??''} orderNumber={order.number} saveLabel="Guardar cambios" onCreateCustomer={onCreateCustomer} onCancel={()=>closeTab('saved:'+id)} onSave={(items,customer,rtn,total)=>{const ok=onUpdateOrder(order.id,items,customer,rtn,total);if(ok)closeTab('saved:'+id);return ok;}}/></div>;})}
    </div>
   </section>
   <div className="card order-filters"><label className="order-search-label">Buscar pedido, cliente o producto<div className="search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="N.º de pedido, cliente o producto..."/></div></label><label>Desde<input type="date" value={dateFrom} onChange={e=>setDateFrom(e.target.value)}/></label><label>Hasta<input type="date" value={dateTo} onChange={e=>setDateTo(e.target.value)}/></label><button type="button" className="secondary" onClick={()=>{setQuery('');setDateFrom('');setDateTo('');}}>Limpiar filtros</button><span className="count order-filter-count">{pending.length+invoiced.length} pedidos encontrados · {pending.length} pendientes · {invoiced.length} facturados</span></div>
