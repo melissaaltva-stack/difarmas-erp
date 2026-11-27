@@ -7881,3 +7881,15 @@ button.icon-btn:focus-visible svg,
   color: #c4e2ce !important;
   -webkit-text-fill-color: #c4e2ce !important;
 }
+
+
+/* Texto blanco en todas las pestañas de Pedidos, también en el nombre editable. */
+#root .app .orders-tabs-bar .orders-tab,
+#root .app .orders-tabs-bar .orders-tab .orders-tab-title-input,
+#root .app .orders-tabs-bar .orders-tab .orders-tab-title-input::placeholder {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+#root .app .orders-tabs-bar .orders-tab .orders-tab-select {
+  color: #ffffff !important;
+}
