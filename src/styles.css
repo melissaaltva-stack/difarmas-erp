@@ -7894,3 +7894,66 @@ button.icon-btn:focus-visible svg,
   color: #ffffff !important;
 }
 
+
+
+/* Pestañas de Pedidos: estilo minimalista y compacto */
+#root .app .orders-tabs-bar{
+  display:flex;flex-wrap:nowrap;align-items:center;gap:3px;
+  min-height:42px;padding:4px 10px;overflow-x:auto;overflow-y:hidden;
+  background:var(--surface,#fff);border-bottom:1px solid var(--border,#e5ebe7);
+}
+#root .app .orders-tabs-bar .orders-tab{
+  flex:0 0 auto;min-width:105px;max-width:180px;min-height:32px;
+  gap:2px;padding:0 5px;border:0;border-bottom:2px solid transparent;
+  border-radius:0;background:transparent;box-shadow:none;
+  color:var(--text-secondary,#718078);transition:color .15s,border-color .15s;
+}
+#root .app .orders-tabs-bar .orders-tab:hover{
+  background:transparent;border-color:transparent;color:var(--text,#263b33);box-shadow:none;
+}
+#root .app .orders-tabs-bar .orders-tab.active{
+  border:0;border-bottom:2px solid #26865e;border-radius:0;
+  background:transparent;color:var(--text,#263b33);
+  box-shadow:none;margin:0;
+}
+#root .app .orders-tabs-bar .orders-tab.active:before{display:none}
+#root .app .orders-tabs-bar .orders-tab .orders-tab-select{
+  gap:6px;padding:4px 2px;cursor:pointer;
+}
+#root .app .orders-tabs-bar .orders-tab .orders-tab-dot{
+  width:6px;height:6px;flex-basis:6px;box-shadow:none;
+}
+#root .app .orders-tabs-bar .orders-tab .orders-tab-title-input{
+  min-height:22px;padding:2px 0;border:0!important;
+  background:transparent!important;box-shadow:none!important;
+  color:inherit!important;-webkit-text-fill-color:currentColor!important;
+  font-size:11px;font-weight:600;letter-spacing:0;
+}
+#root .app .orders-tabs-bar .orders-tab .orders-tab-title-input::placeholder{
+  color:inherit!important;-webkit-text-fill-color:currentColor!important;opacity:.8;font-weight:550;
+}
+#root .app .orders-tabs-bar .orders-tab .orders-tab-close{
+  width:18px;height:18px;flex-basis:18px;border-radius:50%;
+  color:var(--text-secondary,#87948d);opacity:.65;
+}
+#root .app .orders-tabs-bar .orders-tab .orders-tab-close:hover{
+  background:var(--surface-muted,#eef3ef);color:#a33f3f;opacity:1;
+}
+#root .app .orders-tabs-bar .orders-tab-add{
+  min-height:27px;gap:4px;margin:0 0 0 5px;padding:3px 8px;
+  border:0;border-radius:6px;background:transparent;
+  color:var(--primary,#327653);font-size:11px;font-weight:600;
+}
+#root .app .orders-tabs-bar .orders-tab-add:hover{background:var(--surface-muted,#eef3ef)}
+#root .app .orders-tabs-bar .orders-tab-add svg{width:13px;height:13px}
+#root .app .orders-tab-content{padding:12px}
+@media(max-width:650px){
+  #root .app .orders-tabs-bar{padding:4px 7px;gap:2px}
+  #root .app .orders-tabs-bar .orders-tab{min-width:96px;max-width:155px}
+  #root .app .orders-tabs-bar .orders-tab-add{flex:0 0 auto;margin-left:4px}
+  #root .app .orders-tab-content{padding:9px}
+}
+.app[data-theme="dark"] #root .orders-tabs-bar{background:var(--surface,#17231d);border-color:var(--border,#34483e)}
+.app[data-theme="dark"] #root .orders-tabs-bar .orders-tab{background:transparent;color:#bdcec3}
+.app[data-theme="dark"] #root .orders-tabs-bar .orders-tab.active{background:transparent;color:#edf7f0;border-bottom-color:#68b486}
+.app[data-theme="dark"] #root .orders-tabs-bar .orders-tab-add{background:transparent;color:#b9e0c6}
