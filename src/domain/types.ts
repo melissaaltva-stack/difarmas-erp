@@ -47,7 +47,7 @@ export type Customer = { id:number; code?:string; name:string; phone:string; cre
 export type Supplier = { id:number; name:string; contact:string; phone:string; email:string; rtn:string; address:string; paymentTerms:string; notes:string; active:boolean };
 
 export type QuoteLine = { id:number; name:string; code:string; qty:number; price:number; discountPercent?:number };
-export type QuoteRecord = { id:number; number:string; client:string; date:string; valid:string; discount:number; lines:QuoteLine[]; notes:string };
+export type QuoteRecord = { id:number; number:string; client:string; date:string; valid:string; discount:number; lines:QuoteLine[]; notes:string; seller?:string; payment?:string; priceList?:string };
 
 export type AccountingAccount = { id:string; code:string; name:string; type:'Activo'|'Pasivo'|'Patrimonio'|'Ingreso'|'Costo'|'Gasto'; nature:'Deudora'|'Acreedora'; active:boolean };
 export type AccountingEntryLine = { accountId:string; description:string; debit:number; credit:number };
