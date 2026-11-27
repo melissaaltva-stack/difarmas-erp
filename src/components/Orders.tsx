@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { FileText, Pencil, Trash2, Search, Plus, Save, X, UserPlus } from 'lucide-react';
 import { RegisterCustomerModal } from './Customers';
+import { CustomerSearchInput } from './CustomerSearchInput';
 import type { CartItem, Customer, OrderRecord, Product } from '../domain/types';
 
 const money=(value:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL',maximumFractionDigits:2}).format(value);
@@ -13,6 +14,8 @@ const readDrafts=(userId:string):OrderDraft[]=>{try{const value=JSON.parse(local
 function OrderEditor({products,customers,initialItems,initialCustomer='',initialRtn='',orderNumber='',saveLabel='Guardar pedido',onSave,onCancel,onDraftChange,onCreateCustomer}:{products:Product[];customers:Customer[];initialItems:CartItem[];initialCustomer?:string;initialRtn?:string;orderNumber?:string;saveLabel?:string;onSave:(items:CartItem[],customer:string,rtn:string,total:number)=>boolean;onCancel?:()=>void;onDraftChange?:(items:CartItem[],customer:string,rtn:string)=>void;onCreateCustomer:(customer:Customer)=>void}){
  const [items,setItems]=useState<CartItem[]>(()=>initialItems.map(item=>({...item})));
  const [customer,setCustomer]=useState(initialCustomer);
+ const [customerSearch,setCustomerSearch]=useState(initialCustomer);
+ const [customerPickerOpen,setCustomerPickerOpen]=useState(false);
  const [customerRtn,setCustomerRtn]=useState(initialRtn);
  const [query,setQuery]=useState('');
  const [notice,setNotice]=useState('');
@@ -39,18 +42,21 @@ function OrderEditor({products,customers,initialItems,initialCustomer='',initial
      <div className="invoice-field invoice-field-date"><label className="field-label">Fecha</label><input type="date" value={invoiceDate} readOnly/></div>
      <div className="invoice-field invoice-field-max-date"><label className="field-label">Fecha máxima</label><input type="date" min={invoiceDate} value={maxDate} onChange={e=>setMaxDate(e.target.value)}/></div>
     </div>
-    <div className="invoice-field invoice-customer-field"><label className="field-label">Cliente</label><div className="invoice-customer-select-row">
-     <select aria-label="Cliente" value={customer} onChange={e=>{const next=e.target.value;const found=customers.find(c=>c.name===next);setCustomer(next);setCustomerRtn(found?.rtn??'');}}><option value="">Consumidor Final</option>{customers.filter(c=>c.active!==false).map(c=><option key={c.id} value={c.name}>{c.code?c.code+' · ':''}{c.name}</option>)}</select>
-     <button className="text-button register-customer-button" type="button" onClick={()=>setNewCustomer(true)}><UserPlus size={15}/> Registrar cliente nuevo</button>
-     <div className="invoice-payment-inline"><label className="field-label">Forma de pago</label><select value={payment} onChange={e=>setPayment(e.target.value)}><option>Efectivo</option><option>Transferencia</option><option>Crédito</option></select></div>
-    </div></div>
+    <div className="invoice-field invoice-customer-field"><label className="field-label" htmlFor="order-customer">Cliente</label>
+     <CustomerSearchInput id="order-customer" customers={customers} query={customerSearch} open={customerPickerOpen} onOpenChange={setCustomerPickerOpen}
+      onQueryChange={value=>{setCustomerSearch(value);setCustomer('');setCustomerRtn('');}}
+      onSelect={selectedCustomer=>{setCustomer(selectedCustomer?.name??'');setCustomerSearch(selectedCustomer?.name??'Consumidor Final');setCustomerRtn(selectedCustomer?.rtn??'');}}
+      onRegisterNew={()=>setNewCustomer(true)} includeConsumerFinal placeholder="Buscar cliente por nombre, código o RTN">
+      <div className="invoice-payment-inline"><label className="field-label">Forma de pago</label><select value={payment} onChange={e=>setPayment(e.target.value)}><option>Efectivo</option><option>Transferencia</option><option>Crédito</option></select></div>
+     </CustomerSearchInput>
+    </div>
     <div className="invoice-bottom-fields-row">
      <div className="invoice-field invoice-field-price"><label className="field-label">Precio de venta</label><select value={priceList} onChange={e=>setPriceList(e.target.value)}><option>Precio de venta 1</option><option>Precio de venta mayoreo</option></select></div>
      <div className="invoice-field invoice-field-address"><label className="field-label">Dirección</label><input value={customers.find(c=>c.name===customer)?.address??''} readOnly placeholder="Dirección del cliente"/></div>
      <div className="invoice-field invoice-field-phone"><label className="field-label">Teléfono</label><input value={customers.find(c=>c.name===customer)?.phone??''} readOnly placeholder="Teléfono del cliente"/></div>
      <div className="invoice-field invoice-field-rtn"><label className="field-label">RTN</label><input value={customerRtn} onChange={e=>setCustomerRtn(e.target.value)} placeholder="RTN del cliente"/></div>
     </div></div>
-    {newCustomer&&<RegisterCustomerModal customers={customers} onClose={()=>setNewCustomer(false)} onSave={customerRecord=>{onCreateCustomer(customerRecord);setCustomer(customerRecord.name);setCustomerRtn(customerRecord.rtn??'');setNewCustomer(false);}}/>}
+    {newCustomer&&<RegisterCustomerModal customers={customers} onClose={()=>setNewCustomer(false)} onSave={customerRecord=>{onCreateCustomer(customerRecord);setCustomer(customerRecord.name);setCustomerSearch(customerRecord.name);setCustomerPickerOpen(false);setCustomerRtn(customerRecord.rtn??'');setNewCustomer(false);}}/>}
    </section>
    <section className="card invoice-products-card">
     <div className="section-heading"><div><h3>Detalle de productos</h3><p>Busca por nombre, código o principio activo; selecciona los productos para agregarlos al pedido.</p></div></div>
