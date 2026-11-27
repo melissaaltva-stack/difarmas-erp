@@ -1,13 +1,14 @@
 import { useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { Customer, Product, ErpSettings, QuoteRecord, QuoteLine } from '../domain/types';
-import { Plus, Search, Printer, Trash2, FileText, Eye, Save, ChevronDown } from 'lucide-react';
+import { Plus, Search, Printer, Trash2, FileText, Eye, Save, ChevronDown, UserPlus } from 'lucide-react';
+import { RegisterCustomerModal } from './Customers';
 const money=(n:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL'}).format(n);
 const lineDiscountAmount=(line:QuoteLine)=>line.qty*line.price*Math.max(0,Math.min(100,Number(line.discountPercent)||0))/100;
 const discountedLineTotal=(line:QuoteLine)=>Math.max(0,line.qty*line.price-lineDiscountAmount(line));
 const formatProductExpiry=(value:string)=>{const match=value.match(/^(\d{4})-(\d{2})-(\d{2})$/);return match?`${match[3]}/${match[2]}/${match[1]}`:value;};
-export function Quotes({customers,products,settings,quotes,setQuotes,saveQuotes}:{customers:Customer[];products:Product[];settings:ErpSettings;quotes:QuoteRecord[];setQuotes:Dispatch<SetStateAction<QuoteRecord[]>>;saveQuotes:(nextQuotes:QuoteRecord[])=>Promise<void>}){
-const [creating,setCreating]=useState(false);const [showList,setShowList]=useState(false);const [selected,setSelected]=useState<QuoteRecord|null>(null);const [editingId,setEditingId]=useState<number|null>(null);const [saving,setSaving]=useState(false);const [saveError,setSaveError]=useState('');const [search,setSearch]=useState('');const [quoteStatus,setQuoteStatus]=useState<'Todos'|'Vigentes'|'Vencidas'>('Todos');const [dateFrom,setDateFrom]=useState('');const [dateTo,setDateTo]=useState('');const [client,setClient]=useState('');const [clientSearch,setClientSearch]=useState('');const [clientOpen,setClientOpen]=useState(false);const [valid,setValid]=useState('');const [discount,setDiscount]=useState('0');const [notes,setNotes]=useState('');const [term,setTerm]=useState('');const [lines,setLines]=useState<QuoteLine[]>([]);const [seller,setSeller]=useState("");const [deliveryTime,setDeliveryTime]=useState("1 - 3 días");const [includeNotes,setIncludeNotes]=useState(true);const [expandedQuoteProductDetails,setExpandedQuoteProductDetails]=useState<Record<number,boolean>>({});
+export function Quotes({customers,products,settings,quotes,setQuotes,saveQuotes,onCreateCustomer}:{customers:Customer[];products:Product[];settings:ErpSettings;quotes:QuoteRecord[];setQuotes:Dispatch<SetStateAction<QuoteRecord[]>>;onCreateCustomer:(customer:Customer)=>void;saveQuotes:(nextQuotes:QuoteRecord[])=>Promise<void>}){
+const [creating,setCreating]=useState(false);const [showList,setShowList]=useState(false);const [selected,setSelected]=useState<QuoteRecord|null>(null);const [editingId,setEditingId]=useState<number|null>(null);const [saving,setSaving]=useState(false);const [saveError,setSaveError]=useState('');const [search,setSearch]=useState('');const [quoteStatus,setQuoteStatus]=useState<'Todos'|'Vigentes'|'Vencidas'>('Todos');const [dateFrom,setDateFrom]=useState('');const [dateTo,setDateTo]=useState('');const [client,setClient]=useState('');const [clientSearch,setClientSearch]=useState('');const [clientOpen,setClientOpen]=useState(false);const [valid,setValid]=useState('');const [discount,setDiscount]=useState('0');const [notes,setNotes]=useState('');const [term,setTerm]=useState('');const [lines,setLines]=useState<QuoteLine[]>([]);const [seller,setSeller]=useState("");const [deliveryTime,setDeliveryTime]=useState("1 - 3 días");const [includeNotes,setIncludeNotes]=useState(true);const [newCustomerOpen,setNewCustomerOpen]=useState(false);const [expandedQuoteProductDetails,setExpandedQuoteProductDetails]=useState<Record<number,boolean>>({});
 const filteredQuotes=quotes.filter(q=>(q.number+' '+q.client).toLowerCase().includes(search.toLowerCase())&&(quoteStatus==='Todos'||(quoteStatus==='Vencidas'?Boolean(q.valid&&q.valid<new Date().toISOString().slice(0,10)):!q.valid||q.valid>=new Date().toISOString().slice(0,10)))&&(!dateFrom||q.date>=dateFrom)&&(!dateTo||q.date<=dateTo));
 const lastQuoteId=useRef(0);
 const nextQuoteId=()=>{const highestStoredId=quotes.reduce((highest,quote)=>Math.max(highest,Number(quote.id)||0),0);const nextId=Math.max(Date.now(),highestStoredId,lastQuoteId.current)+1;lastQuoteId.current=nextId;return nextId;};
@@ -104,7 +105,7 @@ return <div className="content standard-invoice quotes-page"><style>{`
 }
 .quotes-page .invoice-layout > .card:first-child .invoice-customer-field .invoice-customer-select-row {
   display: grid !important;
-  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
   width: 100% !important;
   min-width: 0 !important;
 }
@@ -199,6 +200,10 @@ return <div className="content standard-invoice quotes-page"><style>{`
 }
 .quotes-page .quote-status.active { background: #eaf6ef; color: #23734e; }
 .quotes-page .quote-status.expired { background: #fff1ed; color: #a94f3e; }
+@media (max-width: 760px) {
+  .quotes-page .invoice-layout > .card:first-child .invoice-customer-field .invoice-customer-select-row { grid-template-columns: minmax(0, 1fr) !important; }
+  .quotes-page .invoice-layout > .card:first-child .invoice-customer-field .register-customer-button { grid-column: 1 !important; justify-self: start; }
+}
 @media (max-width: 850px) {
   .quotes-page .quotes-list-metrics { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
@@ -261,7 +266,9 @@ return <div className="content standard-invoice quotes-page"><style>{`
         {matchingCustomers.length===0&&<div className="quote-client-matches-empty">No se encontraron clientes activos.</div>}
        </div>}
       </div>
+      <button className="text-button register-customer-button" type="button" onClick={()=>setNewCustomerOpen(true)}><UserPlus size={15}/> Registrar cliente nuevo</button>
      </div>
+     {newCustomerOpen&&<RegisterCustomerModal customers={customers} onClose={()=>setNewCustomerOpen(false)} onSave={customerRecord=>{onCreateCustomer(customerRecord);setClient(String(customerRecord.id));setClientSearch(customerRecord.name);setClientOpen(false);setNewCustomerOpen(false);}}/>}
     </div>
     <div className="invoice-bottom-fields-row">
      <div className="invoice-field invoice-field-price">
