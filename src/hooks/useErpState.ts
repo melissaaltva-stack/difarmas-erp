@@ -102,6 +102,15 @@ export function useErpState(userId: string, demoMode = false) {
   const lastOrderSequence=useRef(0);
   const lastQuoteSequence=useRef<{userId:string;value:number}>({userId,value:0});
   const nextOrderId=()=>{const highest=orders.reduce((max,order)=>Math.max(max,Number(order.id)||0),0);const id=Math.max(Date.now(),highest,lastOrderId.current)+1;lastOrderId.current=id;return id;};
+  const reserveOrderNumber=():string=>{
+    const storedSequence=Math.max(loadNumber('farmi_order_sequence',0),loadNumber(`farmi_order_sequence_${userId}`,0));
+    const existingSequence=orders.reduce((max,order)=>{const match=/^PED-(\\d{6})$/.exec(order.number);return Math.max(max,match?Number(match[1]):0);},0);
+    const sequence=Math.max(storedSequence,existingSequence,lastOrderSequence.current)+1;
+    lastOrderSequence.current=sequence;
+    saveNumber('farmi_order_sequence',sequence);
+    saveNumber(`farmi_order_sequence_${userId}`,sequence);
+    return `PED-${String(sequence).padStart(6,'0')}`;
+  };
   const lastSaleId = useRef(0);
   const nextSaleId = () => {
     const highestStoredId = sales.reduce((highest,sale)=>Math.max(highest,Number(sale.id)||0),0);
@@ -483,7 +492,7 @@ export function useErpState(userId: string, demoMode = false) {
     return true;
   };
 
-  const saveOrder=(items:CartItem[],customer='',customerRtn='',total=0):number|null=>{
+  const saveOrder=(items:CartItem[],customer='',customerRtn='',total=0,requestedNumber?:string):number|null=>{
     if(orderSaveInProgress.current)return null;
     if(!canWriteSnapshot(remoteReady,syncStatus)||!items.length||items.some(item=>!Number.isInteger(item.qty)||item.qty<1||!Number.isFinite(item.price)||item.price<0))return null;
     if(items.some(item=>!validBaseMultiplier(item.baseUnitsPerSale)))return null;
@@ -491,14 +500,17 @@ export function useErpState(userId: string, demoMode = false) {
     if([...quantities].some(([id,qty])=>!products.some(product=>product.id===id&&product.stock>=qty)))return null;
     let workingLots=inventoryLots;const orderAllocations:LotAllocation[]=[];const lotMovements:LotKardexMovement[]=[];
     for(const [productId,qty] of quantities){if(!fefoProductIds.includes(productId))continue;const allocated=allocateFefo(workingLots,productId,qty,'PEDIDO-PENDIENTE','Reserva');if(!allocated)return null;workingLots=allocated.lots;orderAllocations.push(...allocated.allocations);lotMovements.push(...allocated.movements);}
-    const storedSequence=Math.max(loadNumber('farmi_order_sequence',0),loadNumber(`farmi_order_sequence_${userId}`,0));
-    const existingSequence=orders.reduce((max,order)=>{const match=/^PED-(\d{6})$/.exec(order.number);return Math.max(max,match?Number(match[1]):0);},0);
-    const orderSequence=Math.max(storedSequence,existingSequence,lastOrderSequence.current)+1;
-    lastOrderSequence.current=orderSequence;saveNumber('farmi_order_sequence',orderSequence);saveNumber(`farmi_order_sequence_${userId}`,orderSequence);
+    const orderNumber=requestedNumber??reserveOrderNumber();
+    const sequenceMatch=/^PED-(\\d{6})$/.exec(orderNumber);
+    if(!sequenceMatch||orders.some(order=>order.number===orderNumber))return null;
+    const orderSequence=Number(sequenceMatch[1]);
+    const sequenceFloor=Math.max(loadNumber('farmi_order_sequence',0),loadNumber(`farmi_order_sequence_${userId}`,0),lastOrderSequence.current,orders.reduce((max,order)=>{const match=/^PED-(\\d{6})$/.exec(order.number);return Math.max(max,match?Number(match[1]):0);},0));
+    lastOrderSequence.current=Math.max(sequenceFloor,orderSequence);
+    saveNumber('farmi_order_sequence',lastOrderSequence.current);saveNumber(`farmi_order_sequence_${userId}`,lastOrderSequence.current);
     const id=nextOrderId(),date=new Date().toISOString();
     const updated=products.map(product=>{const qty=quantities.get(product.id)??0;return qty?{...product,stock:product.stock-qty}:product;});
     const movements:InventoryMovement[]=[...quantities].map(([productId,quantity])=>{const product=products.find(item=>item.id===productId)!;return {id:nextInventoryMovementId(),productId,productName:product.name,type:'Ajuste',quantity,stockBefore:product.stock,stockAfter:product.stock-quantity,unitCost:product.cost,referenceId:id,date,note:'Reserva de pedido '+id};});
-    const order:OrderRecord={id,number:'PED-'+String(orderSequence).padStart(6,'0'),date,updatedAt:date,status:'Pendiente',customer:customer.trim()||undefined,customerRtn:customerRtn.trim()||undefined,total,items:items.map(item=>({...item})),lotAllocations:orderAllocations};
+    const order:OrderRecord={id,number:orderNumber,date,updatedAt:date,status:'Pendiente',customer:customer.trim()||undefined,customerRtn:customerRtn.trim()||undefined,total,items:items.map(item=>({...item})),lotAllocations:orderAllocations};
     lotMovements.forEach(movement=>movement.reference=order.number);
     orderSaveInProgress.current=true;
     setProducts(updated);setInventoryMovements(current=>[...current,...movements]);if(orderAllocations.length){setInventoryLots(workingLots);setLotKardex(current=>[...current,...lotMovements]);}setOrders(current=>[order,...current]);
@@ -943,5 +955,5 @@ export function useErpState(userId: string, demoMode = false) {
   const guardedSetPurchaseLogistics=guardSnapshotSetter(setPurchaseLogistics,canWriteSnapshotNow);
   const guardedSetSaleAdjustments = guardSnapshotSetter(setSaleAdjustments, canWriteSnapshotNow);
 
-  return {active,setActive,fractionInventoryProduct,purchaseLogistics,setPurchaseLogistics:guardedSetPurchaseLogistics,inventoryLots,lotKardex,fefoProductIds,registerOpeningLot,activateFefo,adjustInventoryLot,hrEmployees,setHrEmployees:guardedSetHrEmployees,hrAttendance,setHrAttendance:guardedSetHrAttendance,hrLeaveRequests,setHrLeaveRequests:guardedSetHrLeaveRequests,accountingAccounts,setAccountingAccounts:guardedSetAccountingAccounts,accountingEntries,setAccountingEntries:guardedSetAccountingEntries,orders,saveOrder,updateOrder,deleteOrder,customers,setCustomers:guardedSetCustomers,quotes,setQuotes:guardedSetQuotes,saveQuotes,nextQuoteNumber,suppliers,setSuppliers:guardedSetSuppliers,products,setProducts:guardedSetProducts,search,setSearch,monthlyGoal,setMonthlyGoal:guardedSetMonthlyGoal,fixedExpenses,setFixedExpenses:guardedSetFixedExpenses,settings,setSettings:guardedSetSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales:guardedSetSales,purchases,purchaseCostHistory,receivePurchaseLogistics,expenses,setExpenses:guardedSetExpenses,receivables,setReceivables:guardedSetReceivables,payables,setPayables:guardedSetPayables,inventoryMovements,cashClosures,setCashClosures:guardedSetCashClosures,cashMovements,setCashMovements:guardedSetCashMovements,cashOpenings,setCashOpenings:guardedSetCashOpenings,paymentTransactions,setPaymentTransactions:guardedSetPaymentTransactions,missingProductRequests,setMissingProductRequests:guardedSetMissingProductRequests,supplierReturns,setSupplierReturns:guardedSetSupplierReturns,saleAdjustments,setSaleAdjustments:guardedSetSaleAdjustments,recordSupplierDispatch,resolveSupplierReturn,recordSaleAdjustment,recordMissingProduct,filtered,recordSale,updateStandardInvoice,saveProduct,deleteProduct,receivePurchase,syncStatus,syncError,remoteReady};
+  return {active,setActive,fractionInventoryProduct,purchaseLogistics,setPurchaseLogistics:guardedSetPurchaseLogistics,inventoryLots,lotKardex,fefoProductIds,registerOpeningLot,activateFefo,adjustInventoryLot,hrEmployees,setHrEmployees:guardedSetHrEmployees,hrAttendance,setHrAttendance:guardedSetHrAttendance,hrLeaveRequests,setHrLeaveRequests:guardedSetHrLeaveRequests,accountingAccounts,setAccountingAccounts:guardedSetAccountingAccounts,accountingEntries,setAccountingEntries:guardedSetAccountingEntries,orders,saveOrder,reserveOrderNumber,updateOrder,deleteOrder,customers,setCustomers:guardedSetCustomers,quotes,setQuotes:guardedSetQuotes,saveQuotes,nextQuoteNumber,suppliers,setSuppliers:guardedSetSuppliers,products,setProducts:guardedSetProducts,search,setSearch,monthlyGoal,setMonthlyGoal:guardedSetMonthlyGoal,fixedExpenses,setFixedExpenses:guardedSetFixedExpenses,settings,setSettings:guardedSetSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales:guardedSetSales,purchases,purchaseCostHistory,receivePurchaseLogistics,expenses,setExpenses:guardedSetExpenses,receivables,setReceivables:guardedSetReceivables,payables,setPayables:guardedSetPayables,inventoryMovements,cashClosures,setCashClosures:guardedSetCashClosures,cashMovements,setCashMovements:guardedSetCashMovements,cashOpenings,setCashOpenings:guardedSetCashOpenings,paymentTransactions,setPaymentTransactions:guardedSetPaymentTransactions,missingProductRequests,setMissingProductRequests:guardedSetMissingProductRequests,supplierReturns,setSupplierReturns:guardedSetSupplierReturns,saleAdjustments,setSaleAdjustments:guardedSetSaleAdjustments,recordSupplierDispatch,resolveSupplierReturn,recordSaleAdjustment,recordMissingProduct,filtered,recordSale,updateStandardInvoice,saveProduct,deleteProduct,receivePurchase,syncStatus,syncError,remoteReady};
 }
