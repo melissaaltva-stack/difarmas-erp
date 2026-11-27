@@ -21,7 +21,6 @@ function OrderEditor({products,customers,initialItems,initialCustomer='',initial
  const [customerRtn,setCustomerRtn]=useState(initialRtn);
  const [query,setQuery]=useState('');
  const [notice,setNotice]=useState('');
- const [showPendingModal,setShowPendingModal]=useState(false);
  const [newCustomer,setNewCustomer]=useState(false);
  const [seller,setSeller]=useState('General');
  const [priceList,setPriceList]=useState('Precio de venta 1');
@@ -81,6 +80,7 @@ function OrderEditor({products,customers,initialItems,initialCustomer='',initial
 
 export function Orders({orders,onDelete,onInvoice,userId,products,customers,onSaveOrder,onUpdateOrder,onCreateCustomer,reserveOrderNumber,remoteReady}:{orders:OrderRecord[];onDelete:(id:number)=>boolean;onInvoice:(order:OrderRecord)=>void;userId:string;products:Product[];customers:Customer[];onCreateCustomer:(customer:Customer)=>void;reserveOrderNumber:()=>string;remoteReady:boolean;onSaveOrder:(items:CartItem[],customer:string,rtn:string,total:number,number:string)=>boolean;onUpdateOrder:(id:number,items:CartItem[],customer:string,rtn:string,total:number)=>boolean}){
  const [notice,setNotice]=useState('');
+ const [showPendingModal,setShowPendingModal]=useState(false);
  const [newDrafts,setNewDrafts]=useState<OrderDraft[]>(()=>{const saved=readDrafts(userId);return saved.length?saved:[{id:'new-initial-'+userId,customer:'',customerRtn:'',items:[]}];});
  const [editingIds,setEditingIds]=useState<number[]>([]);
  const [savedTabTitles,setSavedTabTitles]=useState<Record<string,string>>(()=>readSavedTabTitles(userId));
