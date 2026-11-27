@@ -17,6 +17,8 @@ export function buildSaleRecord(
     category: item.category,
     laboratory: item.laboratory,
     qty: item.qty,
+    unit: item.saleUnit??item.baseUnitName??'Unidad',
+    baseUnitsPerSale: item.baseUnitsPerSale??1,
     unitCost: item.cost,
     unitPrice: item.price,
     revenue: item.price * item.qty,

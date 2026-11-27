@@ -1,6 +1,7 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useState, type ChangeEvent, type FormEvent, type ReactNode, type CSSProperties } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { LockKeyhole, LogIn, Mail, KeyRound, ShieldAlert } from 'lucide-react';
+import { LogIn, Mail, KeyRound, ShieldAlert, ImagePlus, RotateCcw, Settings, Palette, Check } from 'lucide-react';
+import './AuthGate.css';
 import { requireSupabase, supabase, supabaseConfigured } from '../services/supabaseClient';
 
 type Props = {
@@ -27,6 +28,14 @@ export function AuthGate({ children }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice,setNotice] = useState('');
+  const [loginBackground,setLoginBackground] = useState(()=>{try{return window.localStorage.getItem('farmi-login-background')??'';}catch{return '';}});
+  const [backgroundError,setBackgroundError] = useState('');
+  const [settingsOpen,setSettingsOpen] = useState(false);
+  const [backgroundOpacity,setBackgroundOpacity] = useState(()=>{try{return Number(window.localStorage.getItem('farmi-background-opacity')??'58');}catch{return 58;}});
+  const [loginTheme,setLoginTheme] = useState(()=>{try{const saved=window.localStorage.getItem('farmi-system-theme')??'emerald';return ['emerald','blue','violet','slate','rose'].includes(saved)?saved:'emerald';}catch{return 'emerald';}});
+  const themes=[{id:'emerald',name:'Esmeralda',color:'#16856b'},{id:'blue',name:'Azul',color:'#2867b2'},{id:'violet',name:'Violeta',color:'#7653b5'},{id:'slate',name:'Grafito',color:'#526477'},{id:'rose',name:'Rosa',color:'#b65370'}];
+  useEffect(()=>{document.documentElement.dataset.farmiTheme=loginTheme;try{window.localStorage.setItem('farmi-system-theme',loginTheme);}catch{}},[loginTheme]);
+  useEffect(()=>{try{window.localStorage.setItem('farmi-background-opacity',String(backgroundOpacity));}catch{}},[backgroundOpacity]);
   const [recoveryMode,setRecoveryMode] = useState(false);
   const [recoveryPassword,setRecoveryPassword] = useState('');
   const [confirmRecoveryPassword,setConfirmRecoveryPassword] = useState('');
@@ -44,6 +53,13 @@ export function AuthGate({ children }: Props) {
       const initialLinkType=new URLSearchParams(window.location.hash.replace(/^#/,'')).get('type');
       if(initialLinkType==='invite'||initialLinkType==='recovery')setRecoveryMode(true);
       setChecking(false);
+    }).catch((sessionError: unknown) => {
+      if (!mounted) return;
+      // A rejected session lookup must not leave the login screen loading forever
+      // or create an unhandled promise rejection.
+      setUser(null);
+      setError(getSignInErrorMessage(sessionError));
+      setChecking(false);
     });
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
@@ -56,6 +72,46 @@ export function AuthGate({ children }: Props) {
       listener.subscription.unsubscribe();
     };
   }, []);
+
+  const handleBackgroundUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file=event.currentTarget.files?.[0];
+    event.currentTarget.value='';
+    if(!file)return;
+    if(!file.type.startsWith('image/')){setBackgroundError('Selecciona un archivo de imagen.');return;}
+    if(file.size>12*1024*1024){setBackgroundError('La imagen debe pesar menos de 12 MB.');return;}
+    const reader=new FileReader();
+    reader.onerror=()=>setBackgroundError('No se pudo leer la imagen. Inténtalo de nuevo.');
+    reader.onload=()=>{
+      const image=new Image();
+      image.onerror=()=>setBackgroundError('El archivo seleccionado no es una imagen válida.');
+      image.onload=()=>{
+        const scale=Math.min(1,1920/Math.max(image.width,image.height));
+        const canvas=document.createElement('canvas');
+        canvas.width=Math.max(1,Math.round(image.width*scale));
+        canvas.height=Math.max(1,Math.round(image.height*scale));
+        const context=canvas.getContext('2d');
+        if(!context){setBackgroundError('No se pudo procesar la imagen en este navegador.');return;}
+        context.drawImage(image,0,0,canvas.width,canvas.height);
+        let compressed=canvas.toDataURL('image/jpeg',0.78);
+        if(compressed.length>2_800_000)compressed=canvas.toDataURL('image/jpeg',0.58);
+        try{
+          window.localStorage.setItem('farmi-login-background',compressed);
+          setLoginBackground(compressed);
+          setBackgroundError('');
+        }catch{
+          setBackgroundError('No hay espacio suficiente en el navegador para guardar esta imagen. Prueba con una imagen más pequeña.');
+        }
+      };
+      image.src=String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const clearLoginBackground = () => {
+    try{window.localStorage.removeItem('farmi-login-background');}catch{}
+    setLoginBackground('');
+    setBackgroundError('');
+  };
 
   const signIn = async (event: FormEvent) => {
     event.preventDefault();
@@ -130,21 +186,39 @@ export function AuthGate({ children }: Props) {
 
   if (user) return <>{children(user, signOut)}</>;
 
-  return <div className="auth-page">
-    <form className="auth-card" onSubmit={signIn}>
-      <div className="auth-logo"><LockKeyhole size={25}/></div>
-      <p className="auth-eyebrow">DIFARMÁS · FARMI ERP</p>
-      <h1>Acceso al sistema</h1>
-      <p className="auth-subtitle">Inicia sesión para ingresar al sistema de gestión de DIFARMÁS.</p>
-      <label htmlFor="erp-email">Nombre de usuario o correo electrónico</label>
-      <input id="erp-email" type="text" autoComplete="username" required value={email} onChange={event => setEmail(event.target.value)} placeholder="Ej. vendedor01" />
-      <label htmlFor="erp-password">Contraseña</label>
-      <input id="erp-password" type="password" autoComplete="current-password" required value={password} onChange={event => setPassword(event.target.value)} />
-      {error && <p className="auth-error" role="alert">{error}</p>}
-      {notice && <p className="auth-note" role="status">{notice}</p>}
-      <button className="primary auth-submit" type="submit" disabled={busy}>{busy ? 'Verificando…' : <><LogIn size={17}/> Entrar al ERP</>}</button>
-      <button className="secondary auth-submit" type="button" onClick={requestPasswordRecovery} disabled={busy}><Mail size={16}/> Recuperar contraseña</button>
-      <p className="auth-note">Las cuentas se administran desde Configuración → Usuarios y permisos. El registro público no está habilitado.</p>
-    </form>
+  return <div className={`auth-page auth-login-page${loginBackground?' has-custom-background':''}`} style={{'--login-overlay-opacity':backgroundOpacity/100} as CSSProperties}>
+    {loginBackground&&<div className="auth-login-background-image" style={{backgroundImage:`url("${loginBackground}")`}} aria-hidden="true"/>}
+    <div className="auth-settings">
+      <button type="button" className="auth-settings-trigger" aria-label="Ajustes de apariencia" aria-expanded={settingsOpen} onClick={()=>setSettingsOpen(value=>!value)}><Settings size={19}/></button>
+      {settingsOpen&&<div className="auth-settings-menu">
+        <p className="auth-settings-heading">Personalizar FARMI</p>
+        <label className="auth-settings-item"><span className="auth-settings-icon"><ImagePlus size={17}/></span><span>Cambiar imagen de fondo</span><input type="file" accept="image/*" onChange={handleBackgroundUpload}/></label>
+        <div className="auth-settings-themes"><div className="auth-settings-item-title"><Palette size={17}/> Tema de colores</div><div className="auth-theme-options">{themes.map(theme=><button key={theme.id} type="button" className={loginTheme===theme.id?'selected':''} title={theme.name} aria-label={`Tema ${theme.name}`} onClick={()=>setLoginTheme(theme.id)}><span style={{background:theme.color}}/>{loginTheme===theme.id&&<Check size={12}/>}</button>)}</div><small>{themes.find(theme=>theme.id===loginTheme)?.name}</small><div className="auth-opacity-control"><label htmlFor="login-background-opacity">Transparencia del fondo <strong>{backgroundOpacity}%</strong></label><input id="login-background-opacity" type="range" min="0" max="90" step="5" value={backgroundOpacity} onChange={event=>setBackgroundOpacity(Number(event.target.value))}/><div><span>Más visible</span><span>Más oscuro</span></div></div></div>
+        {loginBackground&&<button type="button" className="auth-settings-item auth-settings-reset" onClick={clearLoginBackground}><span className="auth-settings-icon"><RotateCcw size={16}/></span><span>Restablecer fondo</span></button>}
+        {backgroundError&&<span className="auth-background-error" role="alert">{backgroundError}</span>}
+      </div>}
+    </div>
+    <div className="auth-login-layout">
+      <section className="auth-brand-panel">
+        <div className="auth-brand-lockup"><span className="auth-brand-symbol">F</span><span>FARMI</span></div>
+        <div className="auth-brand-copy"><p>PLATAFORMA DE GESTIÓN</p><h2>Tu negocio,<br/>bajo control.</h2><span>Una forma más simple de administrar DIFARMÁS: ventas, inventario y finanzas en un solo lugar.</span></div>
+        <div className="auth-brand-footer"><span className="auth-brand-line"/> Gestión inteligente para DIFARMÁS</div>
+      </section>
+      <form className="auth-card auth-login-card" onSubmit={signIn}>
+        <div className="auth-logo auth-login-symbol"><LogIn size={25} aria-hidden="true"/></div>
+        <p className="auth-eyebrow">BIENVENIDO A FARMI</p>
+        <h1>Iniciar sesión</h1>
+        <p className="auth-subtitle">Ingresa tus credenciales para continuar.</p>
+        <label htmlFor="erp-email">Nombre de usuario o correo electrónico</label>
+        <input id="erp-email" type="text" autoComplete="username" required value={email} onChange={event => setEmail(event.target.value)} placeholder="Ej. vendedor01" />
+        <label htmlFor="erp-password">Contraseña</label>
+        <input id="erp-password" type="password" autoComplete="current-password" required value={password} onChange={event => setPassword(event.target.value)} placeholder="Ingresa tu contraseña"/>
+        {error && <p className="auth-error" role="alert">{error}</p>}
+        {notice && <p className="auth-note" role="status">{notice}</p>}
+        <button className="primary auth-submit" type="submit" disabled={busy}>{busy ? 'Verificando…' : <><LogIn size={17}/> Entrar a FARMI</>}</button>
+        <button className="secondary auth-submit" type="button" onClick={requestPasswordRecovery} disabled={busy}><Mail size={16}/> Recuperar contraseña</button>
+        <p className="auth-note">Las cuentas se administran desde Configuración → Usuarios y permisos.</p>
+      </form>
+    </div>
   </div>;
 }

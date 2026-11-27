@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { CartItem, CashClosure, CashMovement, Customer, ErpSettings, Expense, InventoryMovement, Module, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseItem, PurchaseRecord, Receivable, SaleRecord, Supplier, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord, QuoteRecord, StandardInvoiceDetails } from '../domain/types';
+import type { CartItem, CashClosure, CashMovement, Customer, ErpSettings, Expense, InventoryMovement, Module, Payable, PaymentTransaction, Product, PurchaseCostHistoryEntry, PurchaseItem, PurchaseRecord, PurchaseLogisticsRecord, Receivable, SaleRecord, OrderRecord, Supplier, MissingProductRequest, SupplierReturnRecord, SaleAdjustmentRecord, QuoteRecord, StandardInvoiceDetails, AccountingAccount, AccountingEntry, HrEmployee, HrAttendanceRecord, HrLeaveRequest, InventoryLot, LotKardexMovement, LotAllocation } from '../domain/types';
 import { loadJson, saveJson, loadNumber, saveNumber } from '../utils/storage';
 import { applyPurchaseToInventory, applySaleToInventory } from '../services/inventoryService';
 import { buildSaleRecord, createReceivableFromSale } from '../services/salesService';
@@ -7,6 +7,7 @@ import { createPayableFromPurchase } from '../services/purchaseService';
 import { createInventoryMovementsForPurchase, createInventoryMovementsForSale } from '../services/inventoryMovementService';
 import { loadErpSnapshot, saveErpSnapshot, saveQuotesForUser, type ErpSnapshot } from '../services/remoteErpState';
 import { ensureCustomerCodes } from '../services/customerCodeService';
+import { canWriteSnapshot, guardSnapshotSetter } from '../services/snapshotWriteGuard';
 
 const initialProducts: Product[] = [
   { id: 1, code: '750100000001', name: 'Eutirox 50 mcg', category: 'Medicamentos', laboratory: 'Merck', presentation: 'Caja x 50 tabletas', cost: 250, retail: 330, wholesale: 310, stock: 18, minStock: 8, lot: 'EUT-2607', expiry: '2027-07-31', supplier: 'Distribuidora Nacional' },
@@ -55,6 +56,14 @@ export function useErpState(userId: string) {
   const [purchaseSearch, setPurchaseSearch] = useState('');
   const [purchaseSupplier, setPurchaseSupplier] = useState('');
   const [sales, setSales] = useState<SaleRecord[]>(()=>loadJson<SaleRecord[]>('difarmas_sales',[]));
+  const [accountingAccounts,setAccountingAccounts]=useState<AccountingAccount[]>(()=>loadJson<AccountingAccount[]>('farmi_accounting_accounts',[]));
+  const [accountingEntries,setAccountingEntries]=useState<AccountingEntry[]>(()=>loadJson<AccountingEntry[]>('farmi_accounting_entries',[]));
+  const [hrEmployees,setHrEmployeesRaw]=useState<HrEmployee[]>(()=>loadJson<HrEmployee[]>('farmi_hr_employees',[]));
+  const [hrAttendance,setHrAttendanceRaw]=useState<HrAttendanceRecord[]>(()=>loadJson<HrAttendanceRecord[]>('farmi_hr_attendance',[]));
+  const [hrLeaveRequests,setHrLeaveRequestsRaw]=useState<HrLeaveRequest[]>(()=>loadJson<HrLeaveRequest[]>('farmi_hr_leave_requests',[]));
+  const [orders,setOrders]=useState<OrderRecord[]>(()=>loadJson<OrderRecord[]>('difarmas_orders',[]));
+  const lastOrderId=useRef(0);
+  const nextOrderId=()=>{const highest=orders.reduce((max,order)=>Math.max(max,Number(order.id)||0),0);const id=Math.max(Date.now(),highest,lastOrderId.current)+1;lastOrderId.current=id;return id;};
   const lastSaleId = useRef(0);
   const nextSaleId = () => {
     const highestStoredId = sales.reduce((highest,sale)=>Math.max(highest,Number(sale.id)||0),0);
@@ -63,6 +72,7 @@ export function useErpState(userId: string) {
     return nextId;
   };
   const [purchases, setPurchases] = useState<PurchaseRecord[]>(()=>loadJson<PurchaseRecord[]>('difarmas_purchases',[]));
+  const [purchaseLogistics,setPurchaseLogistics]=useState<PurchaseLogisticsRecord[]>(()=>loadJson<PurchaseLogisticsRecord[]>('difarmas_purchase_logistics',[]));
   const [purchaseCostHistory, setPurchaseCostHistory] = useState<PurchaseCostHistoryEntry[]>(()=>loadJson<PurchaseCostHistoryEntry[]>('difarmas_purchase_cost_history',[]));
   const lastPurchaseId = useRef(0);
   const nextPurchaseId = () => {
@@ -90,6 +100,9 @@ export function useErpState(userId: string) {
     return nextId;
   };
   const [inventoryMovements, setInventoryMovements] = useState<InventoryMovement[]>(()=>loadJson<InventoryMovement[]>('difarmas_inventory_movements',[]));
+  const [inventoryLots,setInventoryLots]=useState<InventoryLot[]>(()=>loadJson<InventoryLot[]>('farmi_inventory_lots',[]));
+  const [lotKardex,setLotKardex]=useState<LotKardexMovement[]>(()=>loadJson<LotKardexMovement[]>('farmi_lot_kardex',[]));
+  const [fefoProductIds,setFefoProductIds]=useState<number[]>(()=>loadJson<number[]>('farmi_fefo_product_ids',[]));
   const lastInventoryMovementId = useRef(0);
   const nextInventoryMovementId = () => {
     const highestStoredId = inventoryMovements.reduce((highest,movement)=>Math.max(highest,Number(movement.id)||0),0);
@@ -120,13 +133,19 @@ export function useErpState(userId: string) {
   const [remoteReady, setRemoteReady] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'loading'|'saving'|'synced'|'error'>('loading');
   const [syncError, setSyncError] = useState<string | null>(null);
+  const syncStateRef = useRef<{remoteReady:boolean;syncStatus:'loading'|'saving'|'synced'|'error'}>({remoteReady:false,syncStatus:'loading'});
+  syncStateRef.current = {remoteReady, syncStatus};
+  const canWriteSnapshotNow = () => canWriteSnapshot(syncStateRef.current.remoteReady, syncStateRef.current.syncStatus);
   const autoSaveTimerRef = useRef<number | null>(null);
   const saleInProgress = useRef(false);
+  const orderSaveInProgress=useRef(false);
+  const orderMutationInProgress=useRef<Set<number>>(new Set());
   const purchaseInProgress = useRef(false);
   const supplierDispatchInProgress = useRef<Set<number>>(new Set());
   const supplierReturnResolutionInProgress = useRef<Set<number>>(new Set());
 
   useEffect(()=>{saleInProgress.current=false},[sales]);
+  useEffect(()=>{orderSaveInProgress.current=false;orderMutationInProgress.current.clear();},[orders]);
   useEffect(()=>{purchaseInProgress.current=false},[purchases]);
 
   useEffect(()=>{saveJson('difarmas_customers',customers)},[customers]);
@@ -136,13 +155,23 @@ export function useErpState(userId: string) {
   useEffect(()=>{saveNumber('difarmas_monthly_goal',monthlyGoal)},[monthlyGoal]);
   useEffect(()=>{saveNumber('difarmas_fixed_expenses',fixedExpenses)},[fixedExpenses]);
   useEffect(()=>{saveJson('difarmas_sales',sales)},[sales]);
+  useEffect(()=>{saveJson('farmi_accounting_accounts',accountingAccounts)},[accountingAccounts]);
+  useEffect(()=>{saveJson('farmi_accounting_entries',accountingEntries)},[accountingEntries]);
+  useEffect(()=>{saveJson('farmi_hr_employees',hrEmployees)},[hrEmployees]);
+  useEffect(()=>{saveJson('farmi_hr_attendance',hrAttendance)},[hrAttendance]);
+  useEffect(()=>{saveJson('farmi_hr_leave_requests',hrLeaveRequests)},[hrLeaveRequests]);
+  useEffect(()=>{saveJson('difarmas_orders',orders)},[orders]);
   useEffect(()=>{saveJson('difarmas_purchases',purchases)},[purchases]);
+  useEffect(()=>{saveJson('difarmas_purchase_logistics',purchaseLogistics)},[purchaseLogistics]);
   useEffect(()=>{saveJson('difarmas_purchase_cost_history',purchaseCostHistory)},[purchaseCostHistory]);
   useEffect(()=>{saveJson('difarmas_settings',settings)},[settings]);
   useEffect(()=>{saveJson('difarmas_expenses',expenses)},[expenses]);
   useEffect(()=>{saveJson('difarmas_receivables',receivables)},[receivables]);
   useEffect(()=>{saveJson('difarmas_payables',payables)},[payables]);
   useEffect(()=>{saveJson('difarmas_inventory_movements',inventoryMovements)},[inventoryMovements]);
+  useEffect(()=>{saveJson('farmi_inventory_lots',inventoryLots)},[inventoryLots]);
+  useEffect(()=>{saveJson('farmi_lot_kardex',lotKardex)},[lotKardex]);
+  useEffect(()=>{saveJson('farmi_fefo_product_ids',fefoProductIds)},[fefoProductIds]);
   useEffect(()=>{saveJson('difarmas_cash_closures',cashClosures)},[cashClosures]);
   useEffect(()=>{saveJson('difarmas_cash_movements',cashMovements)},[cashMovements]);
   useEffect(()=>{saveJson('difarmas_payment_transactions',paymentTransactions)},[paymentTransactions]);
@@ -151,9 +180,9 @@ export function useErpState(userId: string) {
   useEffect(()=>{saveJson('difarmas_sale_adjustments',saleAdjustments)},[saleAdjustments]);
 
   const snapshot = useMemo<ErpSnapshot>(() => ({
-    customers, quotes, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables,
-    inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests, supplierReturns, saleAdjustments,
-  }), [customers, quotes, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables, inventoryMovements, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests, supplierReturns, saleAdjustments]);
+    customers, quotes, suppliers, products, sales, orders, purchases, purchaseLogistics, purchaseCostHistory, settings, expenses, receivables, payables,
+    inventoryMovements, inventoryLots, lotKardex, fefoProductIds, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests, supplierReturns, saleAdjustments, accountingAccounts, accountingEntries, hrEmployees, hrAttendance, hrLeaveRequests,
+  }), [customers, quotes, suppliers, products, sales, purchases, purchaseCostHistory, settings, expenses, receivables, payables, inventoryMovements, inventoryLots, lotKardex, fefoProductIds, monthlyGoal, fixedExpenses, cashClosures, cashMovements, paymentTransactions, missingProductRequests, supplierReturns, saleAdjustments, orders, purchaseLogistics, accountingAccounts, accountingEntries, hrEmployees, hrAttendance, hrLeaveRequests]);
 
   // Load the signed-in user's snapshot before allowing remote writes. A first login
   // seeds the cloud record from this browser's existing local data.
@@ -173,13 +202,21 @@ export function useErpState(userId: string) {
       setSuppliers([]);
       setProducts(initialProducts);
       setSales([]);
+      setAccountingAccounts([]);
+      setAccountingEntries([]);
+      setHrEmployeesRaw([]);
+      setHrAttendanceRaw([]);
+      setHrLeaveRequestsRaw([]);
+      setOrders([]);
       setPurchases([]);
+      setPurchaseLogistics([]);
       setPurchaseCostHistory([]);
       setSettings(initialSettings);
       setExpenses([]);
       setReceivables([]);
       setPayables([]);
       setInventoryMovements([]);
+      setInventoryLots([]);setLotKardex([]);setFefoProductIds([]);
       setCashClosures([]);
       setCashMovements([]);
       setPaymentTransactions([]);
@@ -198,13 +235,21 @@ export function useErpState(userId: string) {
         setSuppliers(remote.suppliers ?? []);
         setProducts(remote.products);
         setSales(remote.sales);
+        setAccountingAccounts(remote.accountingAccounts ?? []);
+        setAccountingEntries(remote.accountingEntries ?? []);
+        setHrEmployeesRaw(remote.hrEmployees ?? []);
+        setHrAttendanceRaw(remote.hrAttendance ?? []);
+        setHrLeaveRequestsRaw(remote.hrLeaveRequests ?? []);
+        setOrders(remote.orders ?? []);
         setPurchases(remote.purchases);
+        setPurchaseLogistics(remote.purchaseLogistics ?? []);
         setPurchaseCostHistory(remote.purchaseCostHistory ?? []);
         setSettings(remote.settings ?? initialSettings);
         setExpenses(remote.expenses);
         setReceivables(remote.receivables);
         setPayables(remote.payables);
         setInventoryMovements(remote.inventoryMovements);
+        setInventoryLots(remote.inventoryLots??[]);setLotKardex(remote.lotKardex??[]);setFefoProductIds(remote.fefoProductIds??[]);
         if (remote.cashClosures !== undefined) setCashClosures(remote.cashClosures);
         if (remote.cashMovements !== undefined) setCashMovements(remote.cashMovements);
         if (remote.paymentTransactions !== undefined) setPaymentTransactions(remote.paymentTransactions);
@@ -249,7 +294,7 @@ export function useErpState(userId: string) {
   }, [remoteReady, userId, snapshot]);
 
   const saveQuotes = async (nextQuotes: QuoteRecord[]): Promise<void> => {
-    if (!remoteReady) throw new Error('El sistema todavía está sincronizando los datos. Espera a que termine e inténtalo de nuevo.');
+    if (!canWriteSnapshot(remoteReady, syncStatus)) throw new Error('El sistema no está sincronizado. Espera a que termine la sincronización e inténtalo de nuevo.');
     // Cancel a delayed autosave captured before this edit. Any save already
     // queued completes first; the quote update then merges only the quotes field.
     if (autoSaveTimerRef.current !== null) {
@@ -274,22 +319,127 @@ export function useErpState(userId: string) {
   const filtered=useMemo(()=>products.filter(p=>[p.code,p.name,p.category,p.laboratory].join(' ').toLowerCase().includes(search.toLowerCase())),[products,search]);
 
   const recordMissingProduct=(request:Omit<MissingProductRequest,'id'|'requestedAt'|'status'>):boolean=>{
+    if (!canWriteSnapshot(remoteReady, syncStatus)) return false;
     const name=request.name.trim();
     if(!name||!Number.isFinite(request.quantity)||request.quantity<1)return false;
     setMissingProductRequests(current=>[{...request,name,id:nextMissingProductRequestId(),requestedAt:new Date().toISOString(),status:'Pendiente'},...current]);
     return true;
   };
 
+
+  const baseQuantityOf=(item:Pick<CartItem,'qty'|'baseUnitsPerSale'>)=>item.qty*(item.baseUnitsPerSale??1);
+  const validBaseMultiplier=(value:number|undefined)=>value===undefined||(Number.isInteger(value)&&value>0&&value<=1000000);
+  const validUnitInventoryProduct=(product:Product)=>!product.unitInventoryEnabled||(product.itemType==='Producto'&&!!product.baseUnitName?.trim()&&Number.isInteger(product.stock)&&Number.isInteger(product.minStock)&&!!product.unitPresentations?.length&&product.unitPresentations.every(option=>option.name.trim()&&option.name.trim().toLocaleLowerCase()!==product.baseUnitName!.trim().toLocaleLowerCase()&&Number.isInteger(option.unitsPerPresentation)&&option.unitsPerPresentation>1&&Number.isFinite(option.retailPrice)&&option.retailPrice>0&&Number.isFinite(option.wholesalePrice)&&option.wholesalePrice>0)&&new Set(product.unitPresentations.map(option=>option.name.trim().toLocaleLowerCase())).size===product.unitPresentations.length);
+  const allocateFefo=(sourceLots:InventoryLot[],productId:number,quantity:number,reference:string,type:'Venta'|'Reserva'|'Devolución a proveedor',includeExpired=false):{lots:InventoryLot[];allocations:LotAllocation[];movements:LotKardexMovement[]}|null=>{
+    let remaining=quantity;const allocations:LotAllocation[]=[];const movements:LotKardexMovement[]=[];
+    const eligible=sourceLots.filter(lot=>lot.productId===productId&&lot.quantityRemaining>0&&(includeExpired||lot.expiry>=new Date().toISOString().slice(0,10))).sort((a,b)=>a.expiry.localeCompare(b.expiry)||a.receivedAt.localeCompare(b.receivedAt));
+    let next=sourceLots;
+    for(const lot of eligible){if(remaining<=0)break;const take=Math.min(remaining,lot.quantityRemaining);if(take<=0)continue;
+      next=next.map(item=>item.id===lot.id?{...item,quantityRemaining:item.quantityRemaining-take}:item);
+      allocations.push({lotId:lot.id,lotCode:lot.lotCode,expiry:lot.expiry,quantity:take,unitCost:lot.unitCost});
+      movements.push({id:crypto.randomUUID(),lotId:lot.id,productId,productName:products.find(p=>p.id===productId)?.name??'',lotCode:lot.lotCode,expiry:lot.expiry,type,quantity:take,stockBefore:lot.quantityRemaining,stockAfter:lot.quantityRemaining-take,unitCost:lot.unitCost,reference,date:new Date().toISOString()});
+      remaining-=take;
+    }
+    return remaining===0?{lots:next,allocations,movements}:null;
+  };
+  const releaseLotAllocations=(sourceLots:InventoryLot[],allocations:LotAllocation[],reference:string):{lots:InventoryLot[];movements:LotKardexMovement[]}=>{
+    let next=sourceLots;const movements:LotKardexMovement[]=[];const date=new Date().toISOString();
+    for(const allocation of allocations){const lot=next.find(item=>item.id===allocation.lotId);if(!lot)continue;next=next.map(item=>item.id===lot.id?{...item,quantityRemaining:item.quantityRemaining+allocation.quantity}:item);movements.push({id:crypto.randomUUID(),lotId:lot.id,productId:lot.productId,productName:products.find(p=>p.id===lot.productId)?.name??'',lotCode:lot.lotCode,expiry:lot.expiry,type:'Liberación',quantity:allocation.quantity,stockBefore:lot.quantityRemaining,stockAfter:lot.quantityRemaining+allocation.quantity,unitCost:lot.unitCost,reference,date,note:'Liberación de reserva'});}
+    return {lots:next,movements};
+  };
+  const registerOpeningLot=(productId:number,lotCode:string,expiry:string,quantity:number,unitCost:number,supplier=''):boolean=>{
+    if(!canWriteSnapshot(remoteReady,syncStatus)||fefoProductIds.includes(productId))return false;
+    const product=products.find(item=>item.id===productId);if(!product||!lotCode.trim()||!/^\d{4}-\d{2}-\d{2}$/.test(expiry)||!Number.isInteger(quantity)||quantity<=0||!Number.isFinite(unitCost)||unitCost<0)return false;
+    const already=inventoryLots.filter(lot=>lot.productId===productId&&lot.opening).reduce((sum,lot)=>sum+lot.quantityReceived,0);
+    if(already+quantity>product.stock)return false;
+    const date=new Date().toISOString(),id=crypto.randomUUID();
+    const lot:InventoryLot={id,productId,lotCode:lotCode.trim(),expiry,receivedAt:date,supplier:supplier.trim(),unitCost,quantityReceived:quantity,quantityRemaining:quantity,sourceReference:'APERTURA',opening:true};
+    setInventoryLots(current=>[...current,lot]);
+    setLotKardex(current=>[...current,{id:crypto.randomUUID(),lotId:id,productId,productName:product.name,lotCode:lot.lotCode,expiry,type:'Apertura',quantity,stockBefore:0,stockAfter:quantity,unitCost,reference:'APERTURA',date,note:'Carga inicial conciliada manualmente'}]);
+    return true;
+  };
+  const activateFefo=(productId:number):boolean=>{
+    if(!canWriteSnapshot(remoteReady,syncStatus)||fefoProductIds.includes(productId))return false;
+    const product=products.find(item=>item.id===productId);if(!product||orders.some(order=>order.status==='Pendiente'&&order.items.some(item=>item.id===productId)))return false;
+    const opening=inventoryLots.filter(lot=>lot.productId===productId&&lot.opening);
+    if(opening.reduce((sum,lot)=>sum+lot.quantityRemaining,0)!==product.stock||opening.length===0)return false;
+    setFefoProductIds(current=>[...current,productId]);return true;
+  };
+  const adjustInventoryLot=(lotId:string,delta:number,note:string):boolean=>{
+    if(!canWriteSnapshot(remoteReady,syncStatus)||!Number.isInteger(delta)||delta===0||!note.trim())return false;
+    const lot=inventoryLots.find(item=>item.id===lotId);if(!lot)return false;
+    const product=products.find(item=>item.id===lot.productId);if(!product||lot.quantityRemaining+delta<0||product.stock+delta<0)return false;
+    const date=new Date().toISOString();const nextBalance=lot.quantityRemaining+delta;
+    setInventoryLots(current=>current.map(item=>item.id===lotId?{...item,quantityRemaining:nextBalance,quantityReceived:item.quantityReceived+(delta>0?delta:0)}:item));
+    setProducts(current=>current.map(item=>item.id===product.id?{...item,stock:item.stock+delta}:item));
+    setLotKardex(current=>[...current,{id:crypto.randomUUID(),lotId,productId:lot.productId,productName:product.name,lotCode:lot.lotCode,expiry:lot.expiry,type:'Ajuste',quantity:Math.abs(delta),stockBefore:lot.quantityRemaining,stockAfter:nextBalance,unitCost:lot.unitCost,reference:'AJUSTE MANUAL',date,note:note.trim()}]);
+    setInventoryMovements(current=>[...current,{id:nextInventoryMovementId(),productId:product.id,productName:product.name,type:'Ajuste',quantity:Math.abs(delta),stockBefore:product.stock,stockAfter:product.stock+delta,unitCost:lot.unitCost,date,note:note.trim()+' · Lote '+lot.lotCode}]);
+    return true;
+  };
+
+  const saveOrder=(items:CartItem[],customer='',customerRtn='',total=0):number|null=>{
+    if(orderSaveInProgress.current)return null;
+    if(!canWriteSnapshot(remoteReady,syncStatus)||!items.length||items.some(item=>!Number.isInteger(item.qty)||item.qty<1||!Number.isFinite(item.price)||item.price<0))return null;
+    if(items.some(item=>!validBaseMultiplier(item.baseUnitsPerSale)))return null;
+    const quantities=new Map<number,number>();items.forEach(item=>quantities.set(item.id,(quantities.get(item.id)??0)+baseQuantityOf(item)));
+    if([...quantities].some(([id,qty])=>!products.some(product=>product.id===id&&product.stock>=qty)))return null;
+    let workingLots=inventoryLots;const orderAllocations:LotAllocation[]=[];const lotMovements:LotKardexMovement[]=[];
+    for(const [productId,qty] of quantities){if(!fefoProductIds.includes(productId))continue;const allocated=allocateFefo(workingLots,productId,qty,'PEDIDO-PENDIENTE','Reserva');if(!allocated)return null;workingLots=allocated.lots;orderAllocations.push(...allocated.allocations);lotMovements.push(...allocated.movements);}
+    const id=nextOrderId(),date=new Date().toISOString();
+    const updated=products.map(product=>{const qty=quantities.get(product.id)??0;return qty?{...product,stock:product.stock-qty}:product;});
+    const movements:InventoryMovement[]=[...quantities].map(([productId,quantity])=>{const product=products.find(item=>item.id===productId)!;return {id:nextInventoryMovementId(),productId,productName:product.name,type:'Ajuste',quantity,stockBefore:product.stock,stockAfter:product.stock-quantity,unitCost:product.cost,referenceId:id,date,note:'Reserva de pedido '+id};});
+    const order:OrderRecord={id,number:'PED-'+String(id).slice(-8),date,updatedAt:date,status:'Pendiente',customer:customer.trim()||undefined,customerRtn:customerRtn.trim()||undefined,total,items:items.map(item=>({...item})),lotAllocations:orderAllocations};
+    lotMovements.forEach(movement=>movement.reference=order.number);
+    orderSaveInProgress.current=true;
+    setProducts(updated);setInventoryMovements(current=>[...current,...movements]);if(orderAllocations.length){setInventoryLots(workingLots);setLotKardex(current=>[...current,...lotMovements]);}setOrders(current=>[order,...current]);
+    return id;
+  };
+  const updateOrder=(orderId:number,items:CartItem[],customer='',customerRtn='',total=0):boolean=>{
+    if(orderMutationInProgress.current.has(orderId))return false;
+    if(!canWriteSnapshot(remoteReady,syncStatus)||!items.length||items.some(item=>!Number.isInteger(item.qty)||item.qty<1||!Number.isFinite(item.price)||item.price<0))return false;
+    const order=orders.find(item=>item.id===orderId&&item.status==='Pendiente');if(!order)return false;
+    const before=new Map<number,number>(),after=new Map<number,number>();
+    if(items.some(item=>!validBaseMultiplier(item.baseUnitsPerSale)))return false;
+    order.items.forEach(item=>before.set(item.id,(before.get(item.id)??0)+baseQuantityOf(item)));items.forEach(item=>after.set(item.id,(after.get(item.id)??0)+baseQuantityOf(item)));
+    for(const productId of new Set([...before.keys(),...after.keys()])){const product=products.find(item=>item.id===productId);if(!product||product.stock+(before.get(productId)??0)<(after.get(productId)??0))return false;}
+    const updated=products.map(product=>{const delta=(before.get(product.id)??0)-(after.get(product.id)??0);return delta?{...product,stock:product.stock+delta}:product;});
+    let workingLots=inventoryLots;const nextAllocations:LotAllocation[]=[];const lotMovements:LotKardexMovement[]=[];
+    const released=releaseLotAllocations(workingLots,order.lotAllocations??[],'PED-'+order.number);workingLots=released.lots;lotMovements.push(...released.movements);
+    for(const [productId,qty] of after){if(!fefoProductIds.includes(productId))continue;const allocated=allocateFefo(workingLots,productId,qty,'PED-'+order.number,'Reserva');if(!allocated)return false;workingLots=allocated.lots;nextAllocations.push(...allocated.allocations);lotMovements.push(...allocated.movements);}
+    const date=new Date().toISOString();
+    const movements:InventoryMovement[]=[...new Set([...before.keys(),...after.keys()])].flatMap(productId=>{const oldQty=before.get(productId)??0,newQty=after.get(productId)??0,delta=newQty-oldQty;if(!delta)return [];const product=products.find(item=>item.id===productId)!;return [{id:nextInventoryMovementId(),productId,productName:product.name,type:'Ajuste' as const,quantity:Math.abs(delta),stockBefore:product.stock,stockAfter:product.stock-delta,unitCost:product.cost,referenceId:orderId,date,note:'Actualización de reserva del pedido '+order.number}];});
+    orderMutationInProgress.current.add(orderId);
+    setProducts(updated);setInventoryMovements(current=>[...current,...movements]);if(lotMovements.length){setInventoryLots(workingLots);setLotKardex(current=>[...current,...lotMovements]);}setOrders(current=>current.map(item=>item.id===orderId?{...item,items:items.map(line=>({...line})),lotAllocations:nextAllocations,customer:customer.trim()||undefined,customerRtn:customerRtn.trim()||undefined,total,updatedAt:date}:item));return true;
+  };
+  const deleteOrder=(orderId:number):boolean=>{
+    if(orderMutationInProgress.current.has(orderId))return false;
+    if(!canWriteSnapshot(remoteReady,syncStatus))return false;
+    const order=orders.find(item=>item.id===orderId&&item.status==='Pendiente');if(!order)return false;
+    const quantities=new Map<number,number>();order.items.forEach(item=>quantities.set(item.id,(quantities.get(item.id)??0)+baseQuantityOf(item)));
+    if([...quantities.keys()].some(id=>!products.some(product=>product.id===id)))return false;
+    const date=new Date().toISOString();
+    const released=releaseLotAllocations(inventoryLots,order.lotAllocations??[],'PED-'+order.number);
+    const updated=products.map(product=>{const qty=quantities.get(product.id)??0;return qty?{...product,stock:product.stock+qty}:product;});
+    const movements:InventoryMovement[]=[...quantities].map(([productId,quantity])=>{const product=products.find(item=>item.id===productId)!;return {id:nextInventoryMovementId(),productId,productName:product.name,type:'Ajuste',quantity,stockBefore:product.stock,stockAfter:product.stock+quantity,unitCost:product.cost,referenceId:orderId,date,note:'Liberación de reserva por eliminación del pedido '+order.number};});
+    orderMutationInProgress.current.add(orderId);
+    setProducts(updated);setInventoryMovements(current=>[...current,...movements]);if((order.lotAllocations??[]).length){setInventoryLots(released.lots);setLotKardex(current=>[...current,...released.movements]);}setOrders(current=>current.filter(item=>item.id!==orderId));return true;
+  };
+
   const recordSale=(sold:CartItem[],customer='',dueDate='',customerRtn='',invoiceNumber='',invoiceDetails?:StandardInvoiceDetails):boolean=>{
-    if (saleInProgress.current) return false;
-    if (!sold.length || sold.some(item => !Number.isFinite(item.qty) || item.qty <= 0)) return false;
+    if (!canWriteSnapshot(remoteReady, syncStatus) || saleInProgress.current) return false;
+    if (!sold.length || sold.some(item => !Number.isInteger(item.qty) || item.qty <= 0 || !validBaseMultiplier(item.baseUnitsPerSale))) return false;
     if (((settings.paymentMethods??[]).find(method=>method.name===payment)?.kind==='credit'||payment==='Crédito') && (!customer.trim() || !dueDate.trim())) return false;
     const normalizedInvoiceNumber=invoiceNumber.trim().toLocaleLowerCase();
     if(invoiceDetails&&normalizedInvoiceNumber&&sales.some(sale=>sale.type==='factura_estandar'&&sale.invoiceNumber?.trim().toLocaleLowerCase()===normalizedInvoiceNumber))return false;
-    const requestedQuantities=new Map<number,number>();sold.forEach(item=>requestedQuantities.set(item.id,(requestedQuantities.get(item.id)??0)+item.qty));
-    if ([...requestedQuantities.entries()].some(([id,qty])=>!products.some(p=>p.id===id&&p.stock>=qty))) return false;
-    let updated: Product[];
-    try { updated = applySaleToInventory(products,sold); } catch { return false; }
+    const requestedQuantities=new Map<number,number>();sold.forEach(item=>requestedQuantities.set(item.id,(requestedQuantities.get(item.id)??0)+baseQuantityOf(item)));
+    const sourceOrder=invoiceDetails?.orderId?orders.find(order=>order.id===invoiceDetails.orderId&&order.status==='Pendiente'):undefined;
+    if(invoiceDetails?.orderId&&!sourceOrder)return false;
+    if(sourceOrder){const reserved=new Map<number,number>();sourceOrder.items.forEach(item=>reserved.set(item.id,(reserved.get(item.id)??0)+baseQuantityOf(item)));if([...requestedQuantities].some(([id,qty])=>qty>(reserved.get(id)??0))||[...reserved].some(([id,qty])=>qty!==(requestedQuantities.get(id)??0)))return false;}
+    else if ([...requestedQuantities.entries()].some(([id,qty])=>!products.some(p=>p.id===id&&p.stock>=qty))) return false;
+    let updated: Product[]=products;let saleLots=inventoryLots;const saleLotMovements:LotKardexMovement[]=[];const saleLotAllocations:LotAllocation[]=[];
+    if(!sourceOrder){try { updated = applySaleToInventory(products,[...requestedQuantities].map(([id,qty])=>{const product=products.find(item=>item.id===id)!;return {...product,qty,price:product.retail,cost:product.cost};})); } catch { return false; }
+      for(const [productId,qty] of requestedQuantities){if(!fefoProductIds.includes(productId))continue;const allocated=allocateFefo(saleLots,productId,qty,invoiceNumber||'VENTA','Venta');if(!allocated)return false;saleLots=allocated.lots;saleLotMovements.push(...allocated.movements);saleLotAllocations.push(...allocated.allocations);}
+    }
     saleInProgress.current=true;
     const recordDate=invoiceDetails?.invoiceDate ? new Date(invoiceDetails.invoiceDate+'T12:00:00') : new Date();
     const base=buildSaleRecord(sold,payment,invoiceDetails?'factura_estandar':saleType,customer,dueDate,recordDate,nextSaleId());
@@ -297,7 +447,7 @@ export function useErpState(userId: string) {
       const d=invoiceDetails.lines.find(row=>row.productId===line.productId);
       if(!d)return line;
       const net=d.netTotal;
-      return {...line,unit:d.unit,baseUnitPrice:line.unitPrice,unitPrice:line.qty?net/line.qty:line.unitPrice,revenue:net,profit:net-line.cost,discountPercent:d.discountPercent,taxPercent:d.taxPercent,discountAmount:d.discountAmount,taxAmount:d.taxAmount,lineTotal:d.lineTotal};
+      return {...line,unit:d.unit,baseUnitsPerSale:d.baseUnitsPerSale??line.baseUnitsPerSale??1,baseUnitPrice:line.unitPrice,unitPrice:line.qty?net/line.qty:line.unitPrice,revenue:net,profit:net-line.cost,discountPercent:d.discountPercent,taxPercent:d.taxPercent,discountAmount:d.discountAmount,taxAmount:d.taxAmount,lineTotal:d.lineTotal};
     }) : base.items;
     const sale:SaleRecord={
       ...base,
@@ -306,6 +456,7 @@ export function useErpState(userId: string) {
       customer:customer.trim()||undefined,
       customerRtn:customerRtn.trim()||undefined,
       items,
+      lotAllocations:sourceOrder?.lotAllocations??saleLotAllocations,
       total:invoiceDetails?invoiceDetails.lines.reduce((sum,row)=>sum+row.lineTotal,0):base.total,
       profit:items?.reduce((sum,line)=>sum+line.profit,0)??base.profit,
       customerAddress:invoiceDetails?.customerAddress||undefined,
@@ -320,21 +471,28 @@ export function useErpState(userId: string) {
       taxTotal:invoiceDetails?.taxTotal,
       dueDate:payment==='Crédito'||((settings.paymentMethods??[]).find(method=>method.name===payment)?.kind==='credit')?dueDate:undefined
     };
-    setProducts(updated);
-    setInventoryMovements(current=>[...current,...createInventoryMovementsForSale(products,sold,sale.id,nextInventoryMovementId)]);
+    if(!sourceOrder){setProducts(updated);setInventoryMovements(current=>[...current,...createInventoryMovementsForSale(products,[...requestedQuantities].map(([id,qty])=>({id,qty})),sale.id,nextInventoryMovementId)]);if(saleLotMovements.length){setInventoryLots(saleLots);setLotKardex(current=>[...current,...saleLotMovements.map(m=>({...m,reference:invoiceNumber||String(sale.id)}))]);}}
+    else setOrders(current=>current.map(order=>order.id===sourceOrder.id?{...order,status:'Facturado',invoiceId:sale.id,updatedAt:new Date().toISOString()}:order));
     setSales(current=>[...current,sale]);
     if((settings.paymentMethods??[]).find(method=>method.name===payment)?.kind==='credit'||payment==='Crédito') setReceivables(current=>[...current,createReceivableFromSale(sale,customer,dueDate)]);
     return true;
   };
 
   const updateStandardInvoice=(invoiceId:number,sold:CartItem[],customer='',customerRtn='',details?:StandardInvoiceDetails):boolean=>{
+    if (!canWriteSnapshot(remoteReady, syncStatus)) return false;
     const original=sales.find(sale=>sale.id===invoiceId);
-    if(!original||original.type!=='factura_estandar'||!sold.length||sold.some(item=>!Number.isFinite(item.qty)||item.qty<=0||!Number.isFinite(item.price)||item.price<0))return false;
+    if(!original||original.type!=='factura_estandar'||!sold.length||sold.some(item=>!Number.isInteger(item.qty)||item.qty<=0||!Number.isFinite(item.price)||item.price<0))return false;
+    if((original.items??[]).some(line=>products.some(product=>product.id===line.productId&&product.unitInventoryEnabled&&line.baseUnitsPerSale===undefined)))return false;
     const oldQty=new Map<number,number>();
-    (original.items??[]).forEach(line=>oldQty.set(line.productId,(oldQty.get(line.productId)??0)+line.qty));
+    (original.items??[]).forEach(line=>oldQty.set(line.productId,(oldQty.get(line.productId)??0)+line.qty*(line.baseUnitsPerSale??1)));
     const newQty=new Map<number,number>();
-    sold.forEach(item=>newQty.set(item.id,(newQty.get(item.id)??0)+item.qty));
+    if(sold.some(item=>!validBaseMultiplier(item.baseUnitsPerSale)))return false;
+    sold.forEach(item=>newQty.set(item.id,(newQty.get(item.id)??0)+baseQuantityOf(item)));
     for(const item of sold){const product=products.find(p=>p.id===item.id);if(!product||product.stock+(oldQty.get(item.id)??0)<(newQty.get(item.id)??0))return false;}
+    if([...newQty.keys()].some(id=>fefoProductIds.includes(id))&&!original.lotAllocations?.length)return false;
+    let updatedLots=inventoryLots;const revisedAllocations:LotAllocation[]=[];const lotMovements:LotKardexMovement[]=[];
+    const released=releaseLotAllocations(updatedLots,original.lotAllocations??[],'FACTURA-'+(original.invoiceNumber??invoiceId));updatedLots=released.lots;lotMovements.push(...released.movements);
+    for(const [productId,qty] of newQty){if(!fefoProductIds.includes(productId))continue;const allocated=allocateFefo(updatedLots,productId,qty,'FACTURA-'+(original.invoiceNumber??invoiceId),'Venta');if(!allocated)return false;updatedLots=allocated.lots;revisedAllocations.push(...allocated.allocations);lotMovements.push(...allocated.movements);}
     const updatedProducts=products.map(product=>{const before=oldQty.get(product.id)??0;const after=newQty.get(product.id)??0;return before===after?product:{...product,stock:product.stock+before-after};});
     const movements:InventoryMovement[]=[];
     for(const product of products){const before=oldQty.get(product.id)??0;const after=newQty.get(product.id)??0;if(before===after)continue;movements.push({id:nextInventoryMovementId(),productId:product.id,productName:product.name,type:'Ajuste',quantity:Math.abs(after-before),stockBefore:product.stock,stockAfter:product.stock+before-after,unitCost:product.cost,referenceId:invoiceId,date:new Date().toISOString(),note:'Corrección de detalle de factura estándar '+(original.invoiceNumber??invoiceId)});}
@@ -342,10 +500,11 @@ export function useErpState(userId: string) {
       const d=details?.lines.find(row=>row.productId===item.id);
       const net=d?.netTotal??item.price*item.qty;
       const cost=item.cost*item.qty;
-      return {productId:item.id,productName:item.name,category:item.category,laboratory:item.laboratory,qty:item.qty,unitCost:item.cost,unitPrice:details&&item.qty?net/item.qty:item.price,revenue:net,cost,profit:net-cost,...(d?{unit:d.unit,baseUnitPrice:item.price,discountPercent:d.discountPercent,taxPercent:d.taxPercent,discountAmount:d.discountAmount,taxAmount:d.taxAmount,lineTotal:d.lineTotal}:{})};
+      return {productId:item.id,productName:item.name,category:item.category,laboratory:item.laboratory,qty:item.qty,unitCost:item.cost,unitPrice:details&&item.qty?net/item.qty:item.price,revenue:net,cost,profit:net-cost,...(d?{unit:d.unit,baseUnitsPerSale:d.baseUnitsPerSale??item.baseUnitsPerSale??1,baseUnitPrice:item.price,discountPercent:d.discountPercent,taxPercent:d.taxPercent,discountAmount:d.discountAmount,taxAmount:d.taxAmount,lineTotal:d.lineTotal}:{})};
     });
     const updatedSale:SaleRecord={
       ...original,
+      lotAllocations:revisedAllocations,
       customer:customer.trim()||undefined,
       customerRtn:customerRtn.trim()||undefined,
       items,
@@ -367,6 +526,7 @@ export function useErpState(userId: string) {
     const existingReceivable=receivables.find(item=>item.saleId===invoiceId);
     if(existingReceivable&&updatedSale.total<existingReceivable.paid)return false;
     setProducts(updatedProducts);
+    if(lotMovements.length){setInventoryLots(updatedLots);setLotKardex(current=>[...current,...lotMovements]);}
     setInventoryMovements(current=>[...current,...movements]);
     setSales(current=>current.map(sale=>sale.id===invoiceId?updatedSale:sale));
     if(existingReceivable)setReceivables(current=>current.map(item=>item.saleId===invoiceId?{...item,total:updatedSale.total,customer:updatedSale.customer||item.customer,dueDate:updatedSale.dueDate||item.dueDate}:item));
@@ -374,12 +534,15 @@ export function useErpState(userId: string) {
   };
 
   const recordSupplierDispatch=(record:SupplierReturnRecord):boolean=>{
+    if(!canWriteSnapshot(remoteReady, syncStatus))return false;
     const dispatchNote='Devolución enviada al proveedor: ';
     if(supplierDispatchInProgress.current.has(record.id)||inventoryMovements.some(movement=>movement.referenceId===record.id&&movement.note?.startsWith(dispatchNote)))return false;
     if(!record.items.length||record.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!Number.isFinite(item.unitCost)||item.unitCost<0))return false;
     const quantitiesByProduct=new Map<number,number>();
     record.items.forEach(item=>quantitiesByProduct.set(item.productId,(quantitiesByProduct.get(item.productId)??0)+item.quantity));
     if([...quantitiesByProduct].some(([productId,quantity])=>!products.some(product=>product.id===productId&&product.stock>=quantity)))return false;
+    let workingLots=inventoryLots;const supplierLotMovements:LotKardexMovement[]=[];
+    for(const [productId,quantity] of quantitiesByProduct){if(!fefoProductIds.includes(productId))continue;const allocated=allocateFefo(workingLots,productId,quantity,'DEV-PROV-'+record.id,'Devolución a proveedor',true);if(!allocated)return false;workingLots=allocated.lots;supplierLotMovements.push(...allocated.movements);}
     const updated=products.map(product=>{
       const quantity=quantitiesByProduct.get(product.id)??0;
       return quantity?{...product,stock:product.stock-quantity}:product;
@@ -396,10 +559,12 @@ export function useErpState(userId: string) {
     supplierDispatchInProgress.current.add(record.id);
     setProducts(updated);
     setInventoryMovements(current=>[...current,...movements]);
+    if(supplierLotMovements.length){setInventoryLots(workingLots);setLotKardex(current=>[...current,...supplierLotMovements]);}
     return true;
   };
 
   const resolveSupplierReturn=(record:SupplierReturnRecord,status:SupplierReturnRecord['status']):boolean=>{
+    if(!canWriteSnapshot(remoteReady, syncStatus))return false;
     if(supplierReturnResolutionInProgress.current.has(record.id))return false;
     supplierReturnResolutionInProgress.current.add(record.id);
     try {
@@ -421,6 +586,7 @@ export function useErpState(userId: string) {
       return true;
     }
     if(status==='Cambio recibido') {
+      if(record.items.some(item=>fefoProductIds.includes(item.productId)))return false;
       const quantities=new Map<number,number>();record.items.forEach(item=>quantities.set(item.productId,(quantities.get(item.productId)??0)+item.quantity));
       if([...quantities.keys()].some(id=>!products.some(product=>product.id===id)))return false;
       const date=new Date().toISOString();
@@ -445,6 +611,7 @@ export function useErpState(userId: string) {
   };
 
   const recordSaleAdjustment=(adjustment:SaleAdjustmentRecord):boolean=>{
+    if(!canWriteSnapshot(remoteReady, syncStatus))return false;
     if(saleAdjustments.some(item=>item.id===adjustment.id)||!sales.some(sale=>sale.id===adjustment.saleId)||!adjustment.items.length||!Number.isFinite(adjustment.amount)||adjustment.amount<=0)return false;
     if(adjustment.items.some(item=>!Number.isInteger(item.quantity)||item.quantity<=0||!Number.isFinite(item.unitPrice)||item.unitPrice<0||!Number.isFinite(item.unitCost)||item.unitCost<0))return false;
     const originalSale=sales.find(sale=>sale.id===adjustment.saleId);
@@ -453,12 +620,14 @@ export function useErpState(userId: string) {
     const alreadyAdjustedAmount=saleAdjustments.filter(item=>item.saleId===adjustment.saleId&&item.type!=='Anulación').reduce((sum,item)=>sum+item.amount,0);
     if(!Number.isFinite(calculatedAmount)||Math.abs(calculatedAmount-adjustment.amount)>0.01||adjustment.amount>Math.max(0,originalSale.total-alreadyAdjustedAmount)+0.01)return false;
     const soldQuantities=new Map<number,number>();
-    (originalSale.items??[]).forEach(line=>soldQuantities.set(line.productId,(soldQuantities.get(line.productId)??0)+line.qty));
+    (originalSale.items??[]).forEach(line=>soldQuantities.set(line.productId,(soldQuantities.get(line.productId)??0)+line.qty*(line.baseUnitsPerSale??1)));
     const adjustedItems=saleAdjustments.filter(item=>item.saleId===adjustment.saleId&&item.type!=='Anulación').flatMap(item=>item.items);
     const alreadyAdjusted=new Map<number,number>();
-    adjustedItems.forEach(item=>alreadyAdjusted.set(item.productId,(alreadyAdjusted.get(item.productId)??0)+item.quantity));
+    adjustedItems.forEach(item=>alreadyAdjusted.set(item.productId,(alreadyAdjusted.get(item.productId)??0)+item.quantity*(item.baseUnitsPerSale??1)));
+    if(adjustment.items.some(item=>!validBaseMultiplier(item.baseUnitsPerSale)))return false;
+    if(adjustment.items.some(line=>line.returnToStock&&products.some(product=>product.id===line.productId&&product.unitInventoryEnabled)&&(originalSale.items??[]).some(soldLine=>soldLine.productId===line.productId&&soldLine.baseUnitsPerSale===undefined)))return false;
     const requestedInThisAdjustment=new Map<number,number>();
-    adjustment.items.forEach(item=>requestedInThisAdjustment.set(item.productId,(requestedInThisAdjustment.get(item.productId)??0)+item.quantity));
+    adjustment.items.forEach(item=>requestedInThisAdjustment.set(item.productId,(requestedInThisAdjustment.get(item.productId)??0)+item.quantity*(item.baseUnitsPerSale??1)));
     for(const [productId,quantity] of requestedInThisAdjustment){
       const soldQuantity=soldQuantities.get(productId)??0;
       const already=alreadyAdjusted.get(productId)??0;
@@ -472,10 +641,29 @@ export function useErpState(userId: string) {
     for(const productId of returnedByProduct.keys()){
       if(!products.some(product=>product.id===productId))return false;
     }
-    const movementDate=new Date().toISOString();
+    const movementDate=new Date().toISOString();let returnedLots=inventoryLots;const lotReturnMovements:LotKardexMovement[]=[];
+    const previousReturned=new Map<string,number>();
+    saleAdjustments.filter(record=>record.saleId===adjustment.saleId).flatMap(record=>record.items).forEach(item=>(item.lotAllocations??[]).forEach(allocation=>previousReturned.set(allocation.lotId,(previousReturned.get(allocation.lotId)??0)+allocation.quantity)));
+    const lotAdjustedItems=adjustment.items.map(line=>{
+      if(!line.returnToStock||!fefoProductIds.includes(line.productId))return line;
+      if(!originalSale.lotAllocations?.length)return null;
+      let remaining=line.quantity*(line.baseUnitsPerSale??1);const allocations:LotAllocation[]=[];
+      for(const soldAllocation of originalSale.lotAllocations.filter(allocation=>allocation.lotId&&inventoryLots.some(lot=>lot.id===allocation.lotId&&lot.productId===line.productId))){
+        const already=previousReturned.get(soldAllocation.lotId)??0;const available=Math.max(0,soldAllocation.quantity-already);const take=Math.min(remaining,available);if(!take)continue;
+        const lot=returnedLots.find(item=>item.id===soldAllocation.lotId);if(!lot)continue;
+        returnedLots=returnedLots.map(item=>item.id===lot.id?{...item,quantityRemaining:item.quantityRemaining+take}:item);
+        allocations.push({...soldAllocation,quantity:take});previousReturned.set(soldAllocation.lotId,already+take);
+        lotReturnMovements.push({id:crypto.randomUUID(),lotId:lot.id,productId:line.productId,productName:line.productName,lotCode:lot.lotCode,expiry:lot.expiry,type:'Devolución',quantity:take,stockBefore:lot.quantityRemaining,stockAfter:lot.quantityRemaining+take,unitCost:lot.unitCost,reference:adjustment.invoiceNumber,date:movementDate,note:'Devolución reincorporada al lote original'});
+        remaining-=take;if(remaining===0)break;
+      }
+      if(remaining>0)return null;
+      return {...line,lotAllocations:allocations};
+    });
+    if(lotAdjustedItems.some(item=>item===null))return false;
+    const savedAdjustment:SaleAdjustmentRecord={...adjustment,items:lotAdjustedItems as SaleAdjustmentRecord['items']};
     const movements:InventoryMovement[]=[...returnedByProduct].map(([productId,lines])=>{
       const product=products.find(item=>item.id===productId)!;
-      const quantity=lines.reduce((sum,line)=>sum+line.quantity,0);
+      const quantity=lines.reduce((sum,line)=>sum+line.quantity*(line.baseUnitsPerSale??1),0);
       const totalCost=lines.reduce((sum,line)=>sum+line.quantity*line.unitCost,0);
       return {id:nextInventoryMovementId(),productId,productName:lines[0]?.productName??product.name,type:'Ajuste' as const,quantity,stockBefore:product.stock,stockAfter:product.stock+quantity,unitCost:quantity?totalCost/quantity:0,referenceId:adjustment.id,date:movementDate,note:'Devolución de venta '+adjustment.invoiceNumber};
     });
@@ -493,6 +681,7 @@ export function useErpState(userId: string) {
       : 0;
     setProducts(updated);
     setInventoryMovements(current=>[...current,...movements]);
+    if(lotReturnMovements.length){setInventoryLots(returnedLots);setLotKardex(current=>[...current,...lotReturnMovements]);}
     if(receivable&&creditReduction>0){
       setReceivables(current=>current.map(item=>item.saleId===adjustment.saleId
         ? {...item,total:Math.max(item.paid,item.total-creditReduction)}
@@ -501,22 +690,28 @@ export function useErpState(userId: string) {
     if(adjustment.paymentMethod.toLowerCase().includes('efectivo')){
       setCashMovements(current=>[{id:adjustment.id,type:'Salida',description:'Reembolso por '+adjustment.type+' '+adjustment.invoiceNumber,amount:adjustment.amount,category:'Devoluciones de ventas',date:new Date().toISOString()},...current]);
     }
-    setSaleAdjustments(current=>[adjustment,...current]);
+    setSaleAdjustments(current=>[savedAdjustment,...current]);
     return true;
   };
 
   const saveProduct=(product:Product):Product|null=>{
+    if (!canWriteSnapshot(remoteReady, syncStatus)) return null;
     if (!product.name.trim() || [product.cost,product.retail,product.wholesale,product.stock,product.minStock].some(v=>!Number.isFinite(v)||v<0)) return null;
     let saved:Product;
     if (editing) {
       const previous = products.find(p=>p.id===editing.id);
+      if(previous&&!previous.unitInventoryEnabled&&product.unitInventoryEnabled&&(fefoProductIds.includes(previous.id)||inventoryLots.some(lot=>lot.productId===previous.id)||orders.some(order=>order.status==='Pendiente'&&order.items.some(item=>item.id===previous.id))))return null;
+      if(previous?.unitInventoryEnabled&&!product.unitInventoryEnabled&&(fefoProductIds.includes(previous.id)||inventoryLots.some(lot=>lot.productId===previous.id)||orders.some(order=>order.status==='Pendiente'&&order.items.some(item=>item.id===previous.id))))return null;
+      if(!validUnitInventoryProduct(product))return null;
       saved = {...product,id:editing.id};
+      if(previous&&previous.stock!==saved.stock&&(fefoProductIds.includes(previous.id)||previous.unitInventoryEnabled))return null;
       setProducts(current=>current.map(p=>p.id===editing.id?saved:p));
       if (previous && previous.stock !== saved.stock) {
         const difference = saved.stock - previous.stock;
         setInventoryMovements(current=>[...current,{id:nextInventoryMovementId(),productId:saved.id,productName:saved.name,type:'Ajuste',quantity:Math.abs(difference),stockBefore:previous.stock,stockAfter:saved.stock,unitCost:saved.cost,date:new Date().toISOString(),note:difference>0?'Ajuste de entrada manual':'Ajuste de salida manual'}]);
       }
     } else {
+      if(!validUnitInventoryProduct(product))return null;
       saved = {...product,id:nextProductId()};
       setProducts(current=>[...current,saved]);
     }
@@ -524,31 +719,62 @@ export function useErpState(userId: string) {
     return saved;
   };
 
-  const deleteProduct=(id:number)=>{ setProducts(current=>current.filter(product=>product.id!==id)); };
+  const deleteProduct=(id:number)=>{ if (!canWriteSnapshot(remoteReady, syncStatus)) return; setProducts(current=>current.filter(product=>product.id!==id)); };
 
-  const receivePurchase=(items:PurchaseItem[],paymentMethod:string,dueDate:string,invoiceNumber='',invoiceDate='',notes='',enteredTotal?:number,paymentTerms='Contado - Efectivo'):boolean=>{
-    if (purchaseInProgress.current) return false;
+  const receivePurchase=(items:PurchaseItem[],paymentMethod:string,dueDate:string,invoiceNumber='',invoiceDate='',notes='',enteredTotal?:number,paymentTerms='Contado - Efectivo',supplierOverride?:string):boolean=>{
+    if (!canWriteSnapshot(remoteReady, syncStatus) || purchaseInProgress.current) return false;
+    const receivingSupplier=(supplierOverride??purchaseSupplier).trim();
+    if(!receivingSupplier)return false;
     if (!items.length || items.some(item => !Number.isFinite(item.qty) || item.qty <= 0 || !Number.isFinite(item.unitCost) || item.unitCost < 0)) return false;
-    const supplierKey=purchaseSupplier.trim().toLocaleLowerCase();
+    const supplierKey=receivingSupplier.toLocaleLowerCase();
     const invoiceKey=invoiceNumber.trim().toLocaleLowerCase();
     if(invoiceKey && purchases.some(p=>p.supplier.trim().toLocaleLowerCase()===supplierKey && String(p.invoiceNumber??'').trim().toLocaleLowerCase()===invoiceKey)) return false;
+    if(items.some(item=>!Number.isInteger(item.baseUnitsPerPurchase??1)||(item.baseUnitsPerPurchase??1)<1||(item.baseUnitsPerPurchase??1)>1000000))return false;
+    const inventoryItems:PurchaseItem[]=items.map(item=>{const units=item.baseUnitsPerPurchase??1;return {...item,qty:item.qty*units,unitCost:item.unitCost/units,purchaseUnit:undefined,baseUnitsPerPurchase:1};});
     let updated: Product[];
-    try { updated = applyPurchaseToInventory(products,items,purchaseSupplier); } catch { return false; }
+    try { updated = applyPurchaseToInventory(products,inventoryItems,receivingSupplier); } catch { return false; }
+    const receivedAt=new Date().toISOString();const newLots:InventoryLot[]=[];const newLotMovements:LotKardexMovement[]=[];
+    for(const item of inventoryItems){if(!fefoProductIds.includes(item.id))continue;if(!item.lot?.trim()||!item.expiry||!/^\d{4}-\d{2}-\d{2}$/.test(item.expiry))return false;const lotId=crypto.randomUUID();const lot:InventoryLot={id:lotId,productId:item.id,lotCode:item.lot.trim(),expiry:item.expiry,receivedAt,supplier:receivingSupplier,unitCost:item.unitCost,quantityReceived:item.qty,quantityRemaining:item.qty,sourceReference:invoiceNumber||'COMPRA',opening:false};newLots.push(lot);newLotMovements.push({id:crypto.randomUUID(),lotId,productId:item.id,productName:item.name,lotCode:lot.lotCode,expiry:lot.expiry,type:'Compra',quantity:item.qty,stockBefore:0,stockAfter:item.qty,unitCost:item.unitCost,reference:invoiceNumber||'COMPRA',date:receivedAt});}
     purchaseInProgress.current=true;
     const referenceId = nextPurchaseId();
     setProducts(updated);
-    setInventoryMovements(current=>[...current,...createInventoryMovementsForPurchase(products,items,referenceId,nextInventoryMovementId)]);
+    setInventoryMovements(current=>[...current,...createInventoryMovementsForPurchase(products,inventoryItems,referenceId,nextInventoryMovementId)]);
     const calculatedTotal=items.reduce((sum,item)=>sum+item.qty*item.unitCost,0);
     const total=typeof enteredTotal==='number'&&Number.isFinite(enteredTotal)&&enteredTotal>=0?enteredTotal:calculatedTotal;
-    const receivedAt = new Date().toISOString();
     setPurchases(current=>[{id:referenceId,supplier:purchaseSupplier,total,paymentMethod:paymentMethod as 'Efectivo'|'Transferencia'|'Crédito',date:receivedAt,invoiceNumber,invoiceDate,notes,paymentTerms,dueDate:paymentMethod==='Crédito'?dueDate:undefined},...current]);
+    if(newLots.length){setInventoryLots(current=>[...current,...newLots]);setLotKardex(current=>[...current,...newLotMovements]);}
     setPurchaseCostHistory(current=>[
-      ...items.map((item):PurchaseCostHistoryEntry=>({id:nextPurchaseCostHistoryId(),purchaseId:referenceId,productId:item.id,productCode:item.code,productName:item.name,supplier:purchaseSupplier.trim(),unitCost:item.unitCost,quantity:item.qty,date:receivedAt})),
+      ...inventoryItems.map((item):PurchaseCostHistoryEntry=>({id:nextPurchaseCostHistoryId(),purchaseId:referenceId,productId:item.id,productCode:item.code,productName:item.name,supplier:receivingSupplier,unitCost:item.unitCost,quantity:item.qty,date:receivedAt})),
       ...current,
     ]);
     if(paymentMethod==='Crédito'){const payable=createPayableFromPurchase(items,purchaseSupplier,dueDate,new Date(),referenceId,invoiceNumber,nextPayableId());setPayables(current=>[...current,{...payable,total}]);}
     return true;
   };
 
-  return {active,setActive,customers,setCustomers,quotes,setQuotes,saveQuotes,suppliers,setSuppliers,products,setProducts,search,setSearch,monthlyGoal,setMonthlyGoal,fixedExpenses,setFixedExpenses,settings,setSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales,purchases,purchaseCostHistory,expenses,setExpenses,receivables,setReceivables,payables,setPayables,inventoryMovements,cashClosures,setCashClosures,cashMovements,setCashMovements,paymentTransactions,setPaymentTransactions,missingProductRequests,setMissingProductRequests,supplierReturns,setSupplierReturns,saleAdjustments,setSaleAdjustments,recordSupplierDispatch,resolveSupplierReturn,recordSaleAdjustment,recordMissingProduct,filtered,recordSale,updateStandardInvoice,saveProduct,deleteProduct,receivePurchase,syncStatus,syncError};
+  // Public snapshot setters fail closed; internal hydration continues using raw setters.
+  const guardedSetCustomers = guardSnapshotSetter(setCustomers, canWriteSnapshotNow);
+  const guardedSetQuotes = guardSnapshotSetter(setQuotes, canWriteSnapshotNow);
+  const guardedSetSuppliers = guardSnapshotSetter(setSuppliers, canWriteSnapshotNow);
+  const guardedSetProducts = guardSnapshotSetter(setProducts, canWriteSnapshotNow);
+  const guardedSetMonthlyGoal = guardSnapshotSetter(setMonthlyGoal, canWriteSnapshotNow);
+  const guardedSetAccountingAccounts = guardSnapshotSetter(setAccountingAccounts, canWriteSnapshotNow);
+  const guardedSetAccountingEntries = guardSnapshotSetter(setAccountingEntries, canWriteSnapshotNow);
+  const guardedSetHrEmployees = guardSnapshotSetter(setHrEmployeesRaw, canWriteSnapshotNow);
+  const guardedSetHrAttendance = guardSnapshotSetter(setHrAttendanceRaw, canWriteSnapshotNow);
+  const guardedSetHrLeaveRequests = guardSnapshotSetter(setHrLeaveRequestsRaw, canWriteSnapshotNow);
+  const guardedSetFixedExpenses = guardSnapshotSetter(setFixedExpenses, canWriteSnapshotNow);
+  const guardedSetSettings = guardSnapshotSetter(setSettings, canWriteSnapshotNow);
+  const guardedSetSales = guardSnapshotSetter(setSales, canWriteSnapshotNow);
+  const guardedSetExpenses = guardSnapshotSetter(setExpenses, canWriteSnapshotNow);
+  const guardedSetReceivables = guardSnapshotSetter(setReceivables, canWriteSnapshotNow);
+  const guardedSetPayables = guardSnapshotSetter(setPayables, canWriteSnapshotNow);
+  const guardedSetCashClosures = guardSnapshotSetter(setCashClosures, canWriteSnapshotNow);
+  const guardedSetCashMovements = guardSnapshotSetter(setCashMovements, canWriteSnapshotNow);
+  const guardedSetPaymentTransactions = guardSnapshotSetter(setPaymentTransactions, canWriteSnapshotNow);
+  const guardedSetMissingProductRequests = guardSnapshotSetter(setMissingProductRequests, canWriteSnapshotNow);
+  const guardedSetSupplierReturns = guardSnapshotSetter(setSupplierReturns, canWriteSnapshotNow);
+  const guardedSetPurchaseLogistics=guardSnapshotSetter(setPurchaseLogistics,canWriteSnapshotNow);
+  const guardedSetSaleAdjustments = guardSnapshotSetter(setSaleAdjustments, canWriteSnapshotNow);
+
+  return {active,setActive,purchaseLogistics,setPurchaseLogistics:guardedSetPurchaseLogistics,inventoryLots,lotKardex,fefoProductIds,registerOpeningLot,activateFefo,adjustInventoryLot,hrEmployees,setHrEmployees:guardedSetHrEmployees,hrAttendance,setHrAttendance:guardedSetHrAttendance,hrLeaveRequests,setHrLeaveRequests:guardedSetHrLeaveRequests,accountingAccounts,setAccountingAccounts:guardedSetAccountingAccounts,accountingEntries,setAccountingEntries:guardedSetAccountingEntries,orders,saveOrder,updateOrder,deleteOrder,customers,setCustomers:guardedSetCustomers,quotes,setQuotes:guardedSetQuotes,saveQuotes,suppliers,setSuppliers:guardedSetSuppliers,products,setProducts:guardedSetProducts,search,setSearch,monthlyGoal,setMonthlyGoal:guardedSetMonthlyGoal,fixedExpenses,setFixedExpenses:guardedSetFixedExpenses,settings,setSettings:guardedSetSettings,showForm,setShowForm,editing,setEditing,cart,setCart,saleType,setSaleType,payment,setPayment,saleSearch,setSaleSearch,purchaseCart,setPurchaseCart,purchaseSearch,setPurchaseSearch,purchaseSupplier,setPurchaseSupplier,sales,setSales:guardedSetSales,purchases,purchaseCostHistory,expenses,setExpenses:guardedSetExpenses,receivables,setReceivables:guardedSetReceivables,payables,setPayables:guardedSetPayables,inventoryMovements,cashClosures,setCashClosures:guardedSetCashClosures,cashMovements,setCashMovements:guardedSetCashMovements,paymentTransactions,setPaymentTransactions:guardedSetPaymentTransactions,missingProductRequests,setMissingProductRequests:guardedSetMissingProductRequests,supplierReturns,setSupplierReturns:guardedSetSupplierReturns,saleAdjustments,setSaleAdjustments:guardedSetSaleAdjustments,recordSupplierDispatch,resolveSupplierReturn,recordSaleAdjustment,recordMissingProduct,filtered,recordSale,updateStandardInvoice,saveProduct,deleteProduct,receivePurchase,syncStatus,syncError,remoteReady};
 }
