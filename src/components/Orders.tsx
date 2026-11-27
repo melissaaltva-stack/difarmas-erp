@@ -15,6 +15,12 @@ function OrderEditor({products,customers,initialItems,initialCustomer='',initial
  const [customerRtn,setCustomerRtn]=useState(initialRtn);
  const [query,setQuery]=useState('');
  const [notice,setNotice]=useState('');
+ const [seller,setSeller]=useState('General');
+ const [priceList,setPriceList]=useState('Precio de venta 1');
+ const [payment,setPayment]=useState('Efectivo');
+ const [notes,setNotes]=useState('');
+ const invoiceDate=new Date().toISOString().slice(0,10);
+ const [maxDate,setMaxDate]=useState(invoiceDate);
  useEffect(()=>{onDraftChange?.(items,customer,customerRtn);},[items,customer,customerRtn]);
  const results=useMemo(()=>products.filter(product=>product.stock>0&&[product.code,product.name,product.laboratory,product.category,product.presentation,...(product.activeIngredients??[])].join(' ').toLocaleLowerCase('es').includes(query.trim().toLocaleLowerCase('es'))).slice(0,8),[products,query]);
  const subtotal=items.reduce((sum,item)=>sum+(Number(item.price)||0)*(Number(item.qty)||0),0);
@@ -23,26 +29,23 @@ function OrderEditor({products,customers,initialItems,initialCustomer='',initial
  const selectedCustomer=customers.find(c=>c.name===customer);
  return <div className="card order-editor standard-invoice">
   <div className="invoice-layout">
-   <section className="card invoice-header-card order-invoice-header">
-    <div className="invoice-header-grid">
-     <div className="invoice-top-fields-row">
-      <div className="invoice-field invoice-field-number"><label className="field-label">N.º de pedido</label><input value={orderNumber||'Se asigna al guardar'} readOnly/></div>
-      <div className="invoice-field invoice-field-date"><label className="field-label">Fecha</label><input type="date" value={new Date().toISOString().slice(0,10)} readOnly/></div>
-     </div>
-     <div className="invoice-field invoice-customer-field">
-      <label className="field-label">Cliente</label>
-      <div className="invoice-customer-select-row">
-       <select aria-label="Cliente" value={customer} onChange={e=>{const next=e.target.value;const found=customers.find(c=>c.name===next);setCustomer(next);setCustomerRtn(found?.rtn??'');}}><option value="">Consumidor final</option>{customers.filter(c=>c.active!==false).map(c=><option key={c.id} value={c.name}>{c.code?c.code+' · ':''}{c.name}</option>)}</select>
-      </div>
-     </div>
-     <div className="invoice-bottom-fields-row">
-      <div className="invoice-field invoice-field-price"><label className="field-label">Precio de venta</label><input value={selectedCustomer?.priceList??'Precio de venta 1'} readOnly/></div>
-      <div className="invoice-field invoice-field-address"><label className="field-label">Dirección</label><input value={selectedCustomer?.address??''} readOnly placeholder="Dirección del cliente"/></div>
-      <div className="invoice-field invoice-field-phone"><label className="field-label">Teléfono</label><input value={selectedCustomer?.phone??''} readOnly placeholder="Teléfono del cliente"/></div>
-      <div className="invoice-field invoice-field-rtn"><label className="field-label">RTN</label><input value={customerRtn} onChange={e=>setCustomerRtn(e.target.value)} placeholder="RTN del cliente"/></div>
-     </div>
+   <section className="card invoice-header-card order-invoice-header"><div className="invoice-header-grid">
+    <div className="invoice-top-fields-row">
+     <div className="invoice-field invoice-field-number"><label className="field-label">N.º de pedido</label><input value={orderNumber||'Se asigna al guardar'} readOnly/></div>
+     <div className="invoice-field invoice-field-seller"><label className="field-label">Vendedor</label><select value={seller} onChange={e=>setSeller(e.target.value)}><option>General</option></select></div>
+     <div className="invoice-field invoice-field-date"><label className="field-label">Fecha</label><input type="date" value={invoiceDate} readOnly/></div>
+     <div className="invoice-field invoice-field-max-date"><label className="field-label">Fecha máxima</label><input type="date" min={invoiceDate} value={maxDate} onChange={e=>setMaxDate(e.target.value)}/></div>
     </div>
-   </section>
+    <div className="invoice-field invoice-customer-field"><label className="field-label">Cliente</label><div className="invoice-customer-select-row">
+     <select aria-label="Cliente" value={customer} onChange={e=>{const next=e.target.value;const found=customers.find(c=>c.name===next);setCustomer(next);setCustomerRtn(found?.rtn??'');}}><option value="">Consumidor Final</option>{customers.filter(c=>c.active!==false).map(c=><option key={c.id} value={c.name}>{c.code?c.code+' · ':''}{c.name}</option>)}</select>
+     <div className="invoice-payment-inline"><label className="field-label">Forma de pago</label><select value={payment} onChange={e=>setPayment(e.target.value)}><option>Efectivo</option><option>Transferencia</option><option>Crédito</option></select></div>
+    </div></div>
+    <div className="invoice-bottom-fields-row">
+     <div className="invoice-field invoice-field-price"><label className="field-label">Precio de venta</label><select value={priceList} onChange={e=>setPriceList(e.target.value)}><option>Precio de venta 1</option><option>Precio de venta mayoreo</option></select></div>
+     <div className="invoice-field invoice-field-address"><label className="field-label">Dirección</label><input value={customers.find(c=>c.name===customer)?.address??''} readOnly placeholder="Dirección del cliente"/></div>
+     <div className="invoice-field invoice-field-phone"><label className="field-label">Teléfono</label><input value={customers.find(c=>c.name===customer)?.phone??''} readOnly placeholder="Teléfono del cliente"/></div>
+     <div className="invoice-field invoice-field-rtn"><label className="field-label">RTN</label><input value={customerRtn} onChange={e=>setCustomerRtn(e.target.value)} placeholder="RTN del cliente"/></div>
+    </div></div></section>
    <section className="card invoice-products-card">
     <div className="section-heading"><div><h3>Detalle de productos</h3><p>Busca por nombre, código o principio activo; selecciona los productos para agregarlos al pedido.</p></div></div>
     <div className="invoice-search"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar producto o escanear código"/></div>
@@ -52,11 +55,12 @@ function OrderEditor({products,customers,initialItems,initialCustomer='',initial
   <section className="card invoice-cart">
    <div className="section-heading"><div><h3>Detalle del pedido</h3><p>{items.length} producto(s) en el pedido</p></div></div>
    {!items.length?<p className="muted">Busca un producto arriba y selecciónalo para agregarlo al pedido.</p>:<div className="table-wrap"><table className="standard-invoice-lines"><thead><tr><th>Código</th><th>Descripción</th><th>Cantidad</th><th>Precio de venta</th><th>Total</th><th></th></tr></thead><tbody>{items.map((item,index)=><tr key={item.cartLineId??item.id+'-'+index}><td>{item.code}</td><td><div className="invoice-product-detail"><strong className="invoice-product-detail-name">{item.name}</strong><div className="invoice-product-meta invoice-product-meta-primary"><span>{item.saleUnit||item.presentation||item.baseUnitName||'Unidad'}</span></div><div className="invoice-product-meta invoice-product-meta-secondary"><span>{item.laboratory||''}</span><span className="invoice-product-stock">Existencia: {item.stock}</span></div></div></td><td><input className="invoice-qty" aria-label={'Cantidad de '+item.name} type="number" min="1" step="1" value={item.qty} onChange={e=>updateLine(index,{qty:Math.max(1,Math.floor(Number(e.target.value)||1))})}/></td><td><input className="order-number-input" aria-label={'Precio de '+item.name} type="number" min="0" step="0.01" value={item.price} onChange={e=>updateLine(index,{price:Math.max(0,Number(e.target.value)||0)})}/></td><td><strong>{money(item.price*item.qty)}</strong></td><td><button type="button" className="icon-button" aria-label={'Quitar '+item.name} onClick={()=>setItems(current=>current.filter((_,i)=>i!==index))}><Trash2 size={16}/></button></td></tr>)}</tbody></table></div>}
-   <div className="invoice-summary"><div className="invoice-summary-row"><span>Subtotal</span><strong>{money(subtotal)}</strong></div></div>
+   <div className="invoice-summary"><div className="invoice-summary-row"><span>Subtotal</span><strong>{money(subtotal)}</strong></div><div className="invoice-summary-row"><span>Descuento</span><strong>{money(0)}</strong></div><div className="invoice-summary-row invoice-summary-isv"><span>ISV</span><strong>{money(0)}</strong></div></div>
    <div className="invoice-total"><span>Total del pedido</span><strong>{money(subtotal)}</strong></div>
    <div className="invoice-actions">{onCancel&&<button type="button" className="secondary" onClick={onCancel}>Cancelar</button>}<button type="button" className="primary" disabled={!items.length} onClick={()=>{setNotice('');if(onSave(items,customer,customerRtn.trim(),subtotal))setNotice('Pedido guardado correctamente.');else setNotice('No se pudo guardar. Revisa existencias y sincronización.');}}><Save size={15}/>{saveLabel}</button></div>
    {notice&&<p className="helper" role="status">{notice}</p>}
   </section>
+ <section className="card invoice-header-card invoice-notes-card"><div className="invoice-field inv-span-12"><label className="field-label">Notas del pedido</label><textarea rows={2} value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Ingresar notas en el pedido (opcional)"/></div></section>
  </div>;
 }
 
