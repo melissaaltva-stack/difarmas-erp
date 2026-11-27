@@ -8052,3 +8052,49 @@ button.icon-btn:focus-visible svg,
   color:#b9e0c6;border-color:#527d62;background:transparent;
 }
 .app[data-theme="dark"] #root .orders-tabs-bar .orders-tab-add:hover{background:#203a2c}
+
+
+/* Acceso moderno a pedidos pendientes */
+#root .app .orders-heading{
+  display:flex;align-items:center;justify-content:flex-end;
+  margin:0 0 12px;padding:0;
+}
+#root .app .orders-pending-shortcut{
+  display:inline-flex;align-items:center;gap:11px;min-height:54px;
+  padding:7px 13px 7px 8px;border:1px solid #cfe1d6;border-radius:13px;
+  background:linear-gradient(135deg,#f7fcf9 0%,#edf7f1 100%);
+  color:#245d40;box-shadow:0 3px 12px rgba(31,91,58,.07);
+  cursor:pointer;text-align:left;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+#root .app .orders-pending-shortcut:hover{
+  transform:translateY(-1px);border-color:#8fbea2;
+  box-shadow:0 6px 16px rgba(31,91,58,.12);
+}
+#root .app .orders-pending-shortcut:focus-visible{
+  outline:3px solid rgba(49,148,102,.25);outline-offset:2px;
+}
+#root .app .orders-pending-shortcut-icon{
+  display:grid;place-items:center;width:36px;height:36px;flex:0 0 36px;
+  border-radius:10px;background:#dff0e5;color:#28764e;
+}
+#root .app .orders-pending-shortcut-copy{display:grid;gap:2px}
+#root .app .orders-pending-shortcut-copy strong{font-size:12px;font-weight:750;line-height:1.2}
+#root .app .orders-pending-shortcut-copy small{font-size:10px;color:#71877a;line-height:1.2}
+#root .app .orders-pending-shortcut-count{
+  display:grid;place-items:center;min-width:27px;height:27px;padding:0 7px;
+  margin-left:5px;border-radius:9px;background:#28764e;color:#fff;
+  font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;
+}
+#root .app #orders-pending-section{scroll-margin-top:18px}
+@media(max-width:650px){
+  #root .app .orders-heading{justify-content:stretch}
+  #root .app .orders-pending-shortcut{width:100%;justify-content:flex-start}
+  #root .app .orders-pending-shortcut-count{margin-left:auto}
+}
+.app[data-theme="dark"] #root .app .orders-pending-shortcut{
+  border-color:#3e604c;background:linear-gradient(135deg,#20372a,#1a2c22);
+  color:#e2f2e7;box-shadow:0 3px 12px rgba(0,0,0,.15);
+}
+.app[data-theme="dark"] #root .app .orders-pending-shortcut-icon{background:#294b36;color:#a9dfbd}
+.app[data-theme="dark"] #root .app .orders-pending-shortcut-copy small{color:#b0c7b8}
+.app[data-theme="dark"] #root .app .orders-pending-shortcut-count{background:#3a8a5d;color:#fff}
