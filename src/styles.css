@@ -8098,3 +8098,61 @@ button.icon-btn:focus-visible svg,
 .app[data-theme="dark"] #root .app .orders-pending-shortcut-icon{background:#294b36;color:#a9dfbd}
 .app[data-theme="dark"] #root .app .orders-pending-shortcut-copy small{color:#b0c7b8}
 .app[data-theme="dark"] #root .app .orders-pending-shortcut-count{background:#3a8a5d;color:#fff}
+
+
+/* Ventana compacta de pedidos pendientes */
+#root .app .orders-pending-overlay{
+ position:fixed;inset:0;z-index:1200;display:flex;align-items:center;justify-content:center;
+ padding:20px;background:rgba(13,25,18,.48);backdrop-filter:blur(3px);
+}
+#root .app .orders-pending-modal{
+ width:min(1040px,96vw);max-height:min( min(760px,88vh),900px);display:flex;flex-direction:column;
+ overflow:hidden;border:1px solid var(--border,#dfe7e1);border-radius:14px;
+ background:var(--surface,#fff);color:var(--text,#263b33);
+ box-shadow:0 22px 70px rgba(0,0,0,.24);
+}
+#root .app .orders-pending-modal-header{
+ display:flex;align-items:center;justify-content:space-between;gap:14px;
+ padding:15px 18px;border-bottom:1px solid var(--border,#e4eae6);
+}
+#root .app .orders-pending-modal-header h3{margin:0;font-size:15px;font-weight:750}
+#root .app .orders-pending-modal-header p{margin:3px 0 0;color:var(--text-secondary,#78877f);font-size:11px}
+#root .app .orders-pending-modal-body{min-height:0;overflow:auto;padding:10px 14px 14px}
+#root .app .orders-pending-empty{padding:26px 10px;text-align:center}
+#root .app .orders-pending-rows{display:grid;gap:5px;min-width:0}
+#root .app .orders-pending-row{
+ display:grid;grid-template-columns:minmax(125px,1.05fr) minmax(130px,1.3fr) minmax(72px,.65fr) minmax(90px,.75fr) minmax(190px,1.5fr);
+ align-items:center;gap:10px;min-height:52px;padding:7px 9px;
+ border:1px solid var(--border,#e7ece8);border-radius:8px;background:var(--surface,#fff);
+ font-size:11px;
+}
+#root .app .orders-pending-row-head{
+ min-height:30px;border:0;background:var(--surface-muted,#f3f6f4);
+ color:var(--text-secondary,#718078);font-size:10px;font-weight:700;
+}
+#root .app .orders-pending-order{display:grid;gap:3px;min-width:0}
+#root .app .orders-pending-order strong{font-size:11px}
+#root .app .orders-pending-order small{color:var(--text-secondary,#829087);font-size:10px}
+#root .app .orders-pending-customer{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#root .app .orders-pending-total{font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap}
+#root .app .orders-pending-actions{display:flex;align-items:center;justify-content:flex-end;gap:5px}
+#root .app .orders-pending-actions button{min-height:29px;padding:4px 8px;gap:4px;font-size:10px;white-space:nowrap}
+#root .app .orders-pending-actions .icon-button{width:29px;min-width:29px;padding:4px}
+@media(max-width:760px){
+ #root .app .orders-pending-overlay{padding:10px}
+ #root .app .orders-pending-modal{width:100%;max-height:90vh}
+ #root .app .orders-pending-row-head{display:none}
+ #root .app .orders-pending-row{grid-template-columns:minmax(0,1fr) auto;gap:7px 10px;padding:10px}
+ #root .app .orders-pending-order{grid-column:1}
+ #root .app .orders-pending-customer{grid-column:1;grid-row:2}
+ #root .app .orders-pending-row>span:nth-child(3){grid-column:1;grid-row:3;color:var(--text-secondary,#829087)}
+ #root .app .orders-pending-total{grid-column:2;grid-row:1;justify-self:end}
+ #root .app .orders-pending-actions{grid-column:2;grid-row:2 / span 2;flex-wrap:wrap}
+}
+@media(max-width:420px){
+ #root .app .orders-pending-actions button{padding:4px 6px;font-size:9px}
+}
+.app[data-theme="dark"] #root .app .orders-pending-modal{background:#17231d;color:#e6f0e9;border-color:#34483e}
+.app[data-theme="dark"] #root .app .orders-pending-modal-header{border-color:#34483e}
+.app[data-theme="dark"] #root .app .orders-pending-row{background:#1b2b22;border-color:#34483e}
+.app[data-theme="dark"] #root .app .orders-pending-row-head{background:#22372a;color:#b8cabe}
