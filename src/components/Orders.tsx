@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { FileText, Pencil, Trash2, Search, Plus, Save, X, UserPlus } from 'lucide-react';
+import { FileText, Pencil, Trash2, Search, Plus, Save, X } from 'lucide-react';
 import { RegisterCustomerModal } from './Customers';
 import { CustomerSearchInput } from './CustomerSearchInput';
 import type { CartItem, Customer, OrderRecord, Product } from '../domain/types';
