@@ -104,7 +104,7 @@ export function useErpState(userId: string, demoMode = false) {
   const nextOrderId=()=>{const highest=orders.reduce((max,order)=>Math.max(max,Number(order.id)||0),0);const id=Math.max(Date.now(),highest,lastOrderId.current)+1;lastOrderId.current=id;return id;};
   const reserveOrderNumber=():string=>{
     const storedSequence=Math.max(loadNumber('farmi_order_sequence',0),loadNumber(`farmi_order_sequence_${userId}`,0));
-    const existingSequence=orders.reduce((max,order)=>{const match=/^PED-(\\d{6})$/.exec(order.number);return Math.max(max,match?Number(match[1]):0);},0);
+    const existingSequence=orders.reduce((max,order)=>{const match=/^PED-(\d{6})$/.exec(order.number);return Math.max(max,match?Number(match[1]):0);},0);
     const sequence=Math.max(storedSequence,existingSequence,lastOrderSequence.current)+1;
     lastOrderSequence.current=sequence;
     saveNumber('farmi_order_sequence',sequence);
@@ -501,10 +501,10 @@ export function useErpState(userId: string, demoMode = false) {
     let workingLots=inventoryLots;const orderAllocations:LotAllocation[]=[];const lotMovements:LotKardexMovement[]=[];
     for(const [productId,qty] of quantities){if(!fefoProductIds.includes(productId))continue;const allocated=allocateFefo(workingLots,productId,qty,'PEDIDO-PENDIENTE','Reserva');if(!allocated)return null;workingLots=allocated.lots;orderAllocations.push(...allocated.allocations);lotMovements.push(...allocated.movements);}
     const orderNumber=requestedNumber??reserveOrderNumber();
-    const sequenceMatch=/^PED-(\\d{6})$/.exec(orderNumber);
+    const sequenceMatch=/^PED-(\d{6})$/.exec(orderNumber);
     if(!sequenceMatch||orders.some(order=>order.number===orderNumber))return null;
     const orderSequence=Number(sequenceMatch[1]);
-    const sequenceFloor=Math.max(loadNumber('farmi_order_sequence',0),loadNumber(`farmi_order_sequence_${userId}`,0),lastOrderSequence.current,orders.reduce((max,order)=>{const match=/^PED-(\\d{6})$/.exec(order.number);return Math.max(max,match?Number(match[1]):0);},0));
+    const sequenceFloor=Math.max(loadNumber('farmi_order_sequence',0),loadNumber(`farmi_order_sequence_${userId}`,0),lastOrderSequence.current,orders.reduce((max,order)=>{const match=/^PED-(\d{6})$/.exec(order.number);return Math.max(max,match?Number(match[1]):0);},0));
     lastOrderSequence.current=Math.max(sequenceFloor,orderSequence);
     saveNumber('farmi_order_sequence',lastOrderSequence.current);saveNumber(`farmi_order_sequence_${userId}`,lastOrderSequence.current);
     const id=nextOrderId(),date=new Date().toISOString();
