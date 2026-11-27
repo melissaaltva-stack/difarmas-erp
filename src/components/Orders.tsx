@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { FileText, Pencil, Trash2, Search, Plus, Save, X } from 'lucide-react';
 import { RegisterCustomerModal } from './Customers';
 import { CustomerSearchInput } from './CustomerSearchInput';
@@ -7,11 +7,11 @@ import type { CartItem, Customer, OrderRecord, Product } from '../domain/types';
 const money=(value:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL',maximumFractionDigits:2}).format(value);
 const orderDate=(value:string)=>{const date=new Date(value);return Number.isNaN(date.getTime())?'—':date.toLocaleString('es-HN');};
 
-type OrderDraft={id:string;customer:string;customerRtn:string;items:CartItem[]};
+type OrderDraft={id:string;orderNumber?:string;customer:string;customerRtn:string;items:CartItem[]};
 const draftKey=(userId:string)=>'farmi_orders_create_drafts_'+userId;
 const readDrafts=(userId:string):OrderDraft[]=>{try{const value=JSON.parse(localStorage.getItem(draftKey(userId))||'[]');return Array.isArray(value)?value.filter(item=>item&&typeof item.id==='string'&&Array.isArray(item.items)):[];}catch{return [];}};
 
-function OrderEditor({products,customers,initialItems,initialCustomer='',initialRtn='',orderNumber='',saveLabel='Guardar pedido',onSave,onCancel,onDraftChange,onCreateCustomer}:{products:Product[];customers:Customer[];initialItems:CartItem[];initialCustomer?:string;initialRtn?:string;orderNumber?:string;saveLabel?:string;onSave:(items:CartItem[],customer:string,rtn:string,total:number)=>boolean;onCancel?:()=>void;onDraftChange?:(items:CartItem[],customer:string,rtn:string)=>void;onCreateCustomer:(customer:Customer)=>void}){
+function OrderEditor({products,customers,initialItems,initialCustomer='',initialRtn='',orderNumber='',saveLabel='Guardar pedido',onSave,onCancel,onDraftChange,onCreateCustomer}:{products:Product[];customers:Customer[];initialItems:CartItem[];initialCustomer?:string;initialRtn?:string;orderNumber?:string;saveLabel?:string;onSave:(items:CartItem[],customer:string,rtn:string,total:number,number:string)=>boolean;onCancel?:()=>void;onDraftChange?:(items:CartItem[],customer:string,rtn:string)=>void;onCreateCustomer:(customer:Customer)=>void}){
  const [items,setItems]=useState<CartItem[]>(()=>initialItems.map(item=>({...item})));
  const [customer,setCustomer]=useState(initialCustomer);
  const [customerSearch,setCustomerSearch]=useState(initialCustomer);
@@ -37,7 +37,7 @@ function OrderEditor({products,customers,initialItems,initialCustomer='',initial
   <div className="invoice-layout">
    <section className="card invoice-header-card order-invoice-header"><div className="invoice-header-grid">
     <div className="invoice-top-fields-row">
-     <div className="invoice-field invoice-field-number"><label className="field-label">N.º de pedido</label><input value={orderNumber||'Se asigna al guardar'} readOnly/></div>
+     <div className="invoice-field invoice-field-number"><label className="field-label">N.º de pedido</label><input value={orderNumber||'Asignando correlativo…'} readOnly/></div>
      <div className="invoice-field invoice-field-seller"><label className="field-label">Vendedor</label><select value={seller} onChange={e=>setSeller(e.target.value)}><option>General</option></select></div>
      <div className="invoice-field invoice-field-date"><label className="field-label">Fecha</label><input type="date" value={invoiceDate} readOnly/></div>
      <div className="invoice-field invoice-field-max-date"><label className="field-label">Fecha máxima</label><input type="date" min={invoiceDate} value={maxDate} onChange={e=>setMaxDate(e.target.value)}/></div>
@@ -69,26 +69,47 @@ function OrderEditor({products,customers,initialItems,initialCustomer='',initial
    {!items.length?<p className="muted">Busca un producto arriba y selecciónalo para agregarlo al pedido.</p>:<div className="table-wrap"><table className="standard-invoice-lines"><thead><tr><th>Código</th><th>Descripción</th><th>Cantidad</th><th>Precio de venta</th><th>Total</th><th></th></tr></thead><tbody>{items.map((item,index)=><tr key={item.cartLineId??item.id+'-'+index}><td>{item.code}</td><td><div className="invoice-product-detail"><strong className="invoice-product-detail-name">{item.name}</strong><div className="invoice-product-meta invoice-product-meta-primary"><span>{item.saleUnit||item.presentation||item.baseUnitName||'Unidad'}</span></div><div className="invoice-product-meta invoice-product-meta-secondary"><span>{item.laboratory||''}</span><span className="invoice-product-stock">Existencia: {item.stock}</span></div></div></td><td><input className="invoice-qty" aria-label={'Cantidad de '+item.name} type="number" min="1" step="1" value={item.qty} onChange={e=>updateLine(index,{qty:Math.max(1,Math.floor(Number(e.target.value)||1))})}/></td><td><input className="order-number-input" aria-label={'Precio de '+item.name} type="number" min="0" step="0.01" value={item.price} onChange={e=>updateLine(index,{price:Math.max(0,Number(e.target.value)||0)})}/></td><td><strong>{money(item.price*item.qty)}</strong></td><td><button type="button" className="icon-button" aria-label={'Quitar '+item.name} onClick={()=>setItems(current=>current.filter((_,i)=>i!==index))}><Trash2 size={16}/></button></td></tr>)}</tbody></table></div>}
    <div className="invoice-summary"><div className="invoice-summary-row"><span>Subtotal</span><strong>{money(subtotal)}</strong></div><div className="invoice-summary-row"><span>Descuento</span><strong>{money(0)}</strong></div><div className="invoice-summary-row invoice-summary-isv"><span>ISV</span><strong>{money(taxTotal)}</strong></div></div>
    <div className="invoice-total"><span>Total del pedido</span><strong>{money(subtotal)}</strong></div>
-   <div className="invoice-actions">{onCancel&&<button type="button" className="secondary" onClick={onCancel}>Cancelar</button>}<button type="button" className="primary" disabled={!items.length} onClick={()=>{setNotice('');if(onSave(items,customer,customerRtn.trim(),subtotal))setNotice('Pedido guardado correctamente.');else setNotice('No se pudo guardar. Revisa existencias y sincronización.');}}><Save size={15}/>{saveLabel}</button></div>
+   <div className="invoice-actions">{onCancel&&<button type="button" className="secondary" onClick={onCancel}>Cancelar</button>}<button type="button" className="primary" disabled={!items.length||!orderNumber} onClick={()=>{setNotice('');if(onSave(items,customer,customerRtn.trim(),subtotal,orderNumber))setNotice('Pedido guardado correctamente.');else setNotice('No se pudo guardar. Revisa existencias y sincronización.');}}><Save size={15}/>{saveLabel}</button></div>
    {notice&&<p className="helper" role="status">{notice}</p>}
   </section>
  <section className="card invoice-header-card invoice-notes-card"><div className="invoice-field inv-span-12"><label className="field-label">Notas del pedido</label><textarea rows={2} value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Ingresar notas en el pedido (opcional)"/></div></section>
  </div>;
 }
 
-export function Orders({orders,onDelete,onInvoice,userId,products,customers,onSaveOrder,onUpdateOrder,onCreateCustomer}:{orders:OrderRecord[];onDelete:(id:number)=>boolean;onInvoice:(order:OrderRecord)=>void;userId:string;products:Product[];customers:Customer[];onCreateCustomer:(customer:Customer)=>void;onSaveOrder:(items:CartItem[],customer:string,rtn:string,total:number)=>boolean;onUpdateOrder:(id:number,items:CartItem[],customer:string,rtn:string,total:number)=>boolean}){
+export function Orders({orders,onDelete,onInvoice,userId,products,customers,onSaveOrder,onUpdateOrder,onCreateCustomer,reserveOrderNumber}:{orders:OrderRecord[];onDelete:(id:number)=>boolean;onInvoice:(order:OrderRecord)=>void;userId:string;products:Product[];customers:Customer[];onCreateCustomer:(customer:Customer)=>void;reserveOrderNumber:()=>string;onSaveOrder:(items:CartItem[],customer:string,rtn:string,total:number,number:string)=>boolean;onUpdateOrder:(id:number,items:CartItem[],customer:string,rtn:string,total:number)=>boolean}){
  const [notice,setNotice]=useState('');
  const [newDrafts,setNewDrafts]=useState<OrderDraft[]>(()=>{const saved=readDrafts(userId);return saved.length?saved:[{id:'new-initial-'+userId,customer:'',customerRtn:'',items:[]}];});
  const [editingIds,setEditingIds]=useState<number[]>([]);
  const [activeTab,setActiveTab]=useState('new:'+ (readDrafts(userId)[0]?.id??'new-initial-'+userId));
+ const draftNumbersAssigned=useRef(false);
+ useEffect(()=>{
+  if(draftNumbersAssigned.current)return;
+  draftNumbersAssigned.current=true;
+  const reserved=new Map(newDrafts.filter(draft=>!draft.orderNumber).map(draft=>[draft.id,reserveOrderNumber()]));
+  if(reserved.size)setNewDrafts(current=>current.map(draft=>reserved.has(draft.id)?{...draft,orderNumber:reserved.get(draft.id)}:draft));
+ },[userId]);
  useEffect(()=>{try{localStorage.setItem(draftKey(userId),JSON.stringify(newDrafts));}catch{/* Los borradores siguen disponibles en memoria durante esta sesión. */}},[newDrafts,userId]);
- useEffect(()=>{if(!newDrafts.length)setNewDrafts([{id:'new-initial-'+userId,customer:'',customerRtn:'',items:[]}]);},[newDrafts.length,userId]);
  const [query,setQuery]=useState(''),[dateFrom,setDateFrom]=useState(''),[dateTo,setDateTo]=useState('');
  const matches=(order:OrderRecord,dateValue:string)=>{const day=String(dateValue||'').slice(0,10),term=query.trim().toLocaleLowerCase('es');return (!term||[order.number,order.customer??'',order.customerRtn??'',...order.items.map(item=>item.name)].join(' ').toLocaleLowerCase('es').includes(term))&&(!dateFrom||day>=dateFrom)&&(!dateTo||day<=dateTo);};
  const pending=orders.filter(order=>order.status==='Pendiente'&&matches(order,order.date)),invoiced=orders.filter(order=>order.status==='Facturado'&&matches(order,order.updatedAt||order.date));
- const addDraft=()=>{const draft={id:'new-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),customer:'',customerRtn:'',items:[]};setNewDrafts(current=>[draft,...current]);setActiveTab('new:'+draft.id);};
+ const createDraft=():OrderDraft=>({id:'new-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),orderNumber:reserveOrderNumber(),customer:'',customerRtn:'',items:[]});
+ const addDraft=()=>{const draft=createDraft();setNewDrafts(current=>[draft,...current]);setActiveTab('new:'+draft.id);};
  const openSavedOrder=(id:number)=>{setEditingIds(current=>current.includes(id)?current:[...current,id]);setActiveTab('saved:'+id);};
- const closeTab=(tabId:string)=>{if(tabId.startsWith('new:')){const id=tabId.slice(4);setNewDrafts(current=>current.filter(draft=>draft.id!==id));const next=newDrafts.find(draft=>draft.id!==id);setActiveTab(next?'new:'+next.id:(editingIds[0]!==undefined?'saved:'+editingIds[0]:'new:new-initial-'+userId));}else{const id=Number(tabId.slice(6));setEditingIds(current=>current.filter(value=>value!==id));const next=editingIds.find(value=>value!==id);setActiveTab(next!==undefined?'saved:'+next:(newDrafts[0]?'new:'+newDrafts[0].id:'new:new-initial-'+userId));}};
+ const closeTab=(tabId:string)=>{
+  if(tabId.startsWith('new:')){
+   const id=tabId.slice(4),remainingDrafts=newDrafts.filter(draft=>draft.id!==id);
+   setNewDrafts(remainingDrafts);
+   if(remainingDrafts.length)setActiveTab('new:'+remainingDrafts[0].id);
+   else if(editingIds[0]!==undefined)setActiveTab('saved:'+editingIds[0]);
+   else{const fresh=createDraft();setNewDrafts([fresh]);setActiveTab('new:'+fresh.id);}
+  }else{
+   const id=Number(tabId.slice(6)),remainingEditing=editingIds.filter(value=>value!==id);
+   setEditingIds(remainingEditing);
+   if(remainingEditing.length)setActiveTab('saved:'+remainingEditing[0]);
+   else if(newDrafts.length)setActiveTab('new:'+newDrafts[0].id);
+   else{const fresh=createDraft();setNewDrafts([fresh]);setActiveTab('new:'+fresh.id);}
+  }
+ };
  const activeNew=newDrafts.find(draft=>'new:'+draft.id===activeTab);
  const activeSaved=orders.find(order=>'saved:'+order.id===activeTab&&editingIds.includes(order.id));
  return <div className="content orders-page">
@@ -100,7 +121,7 @@ export function Orders({orders,onDelete,onInvoice,userId,products,customers,onSa
     <button type="button" className="orders-tab-add" onClick={addDraft}><Plus size={15}/> Nuevo</button>
    </div>
    <div className="orders-tab-content">
-    {newDrafts.map(draft=><div key={draft.id} className="orders-tab-panel" hidden={activeTab!=='new:'+draft.id}><div className="orders-tab-panel-heading"><div>{draft.customer&&<strong>{draft.customer}</strong>}</div><span>{draft.items.length} producto(s)</span></div><OrderEditor key={draft.id} products={products} customers={customers} initialItems={draft.items} initialCustomer={draft.customer} initialRtn={draft.customerRtn} onDraftChange={(items,customer,customerRtn)=>setNewDrafts(current=>current.map(item=>item.id===draft.id?{...item,items,customer,customerRtn}:item))} onCreateCustomer={onCreateCustomer} onSave={(items,customer,rtn,total)=>{const ok=onSaveOrder(items,customer,rtn,total);if(ok){const next=newDrafts.find(item=>item.id!==draft.id);if(next){setNewDrafts(current=>current.filter(item=>item.id!==draft.id));setActiveTab('new:'+next.id);}else{const fresh={id:'new-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),customer:'',customerRtn:'',items:[]};setNewDrafts([fresh]);setActiveTab('new:'+fresh.id);}}return ok;}}/></div>)}
+    {newDrafts.map(draft=><div key={draft.id} className="orders-tab-panel" hidden={activeTab!=='new:'+draft.id}><div className="orders-tab-panel-heading"><div>{draft.customer&&<strong>{draft.customer}</strong>}</div><span>{draft.items.length} producto(s)</span></div><OrderEditor key={draft.id} products={products} customers={customers} initialItems={draft.items} initialCustomer={draft.customer} initialRtn={draft.customerRtn} orderNumber={draft.orderNumber} onDraftChange={(items,customer,customerRtn)=>setNewDrafts(current=>current.map(item=>item.id===draft.id?{...item,items,customer,customerRtn}:item))} onCreateCustomer={onCreateCustomer} onSave={(items,customer,rtn,total,number)=>{const ok=onSaveOrder(items,customer,rtn,total,number);if(ok){const next=newDrafts.find(item=>item.id!==draft.id);if(next){setNewDrafts(current=>current.filter(item=>item.id!==draft.id));setActiveTab('new:'+next.id);}else{const fresh=createDraft();setNewDrafts([fresh]);setActiveTab('new:'+fresh.id);}}return ok;}}/></div>)}
     {editingIds.map(id=>{const order=orders.find(item=>item.id===id);if(!order)return null;return <div key={id} className="orders-tab-panel" hidden={activeTab!=='saved:'+id}><div className="orders-tab-panel-heading"><div><strong>{order.number}</strong><small>Pedido pendiente · {order.customer||'Consumidor final'}</small></div><span>{money(order.total)}</span></div><OrderEditor key={id} products={products} customers={customers} initialItems={order.items} initialCustomer={order.customer??''} initialRtn={order.customerRtn??''} orderNumber={order.number} saveLabel="Guardar cambios" onCreateCustomer={onCreateCustomer} onCancel={()=>closeTab('saved:'+id)} onSave={(items,customer,rtn,total)=>{const ok=onUpdateOrder(order.id,items,customer,rtn,total);if(ok)closeTab('saved:'+id);return ok;}}/></div>;})}
    </div>
   </section>
