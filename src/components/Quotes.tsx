@@ -24,9 +24,8 @@ const quoteFinancials=(lines:QuoteLine[],overallDiscount:number,products:Product
   if(!product.priceIncludesTax)additionalTax+=tax;
  }
  return {subtotal,lineDiscountTotal,quoteDiscount,discountTotal:lineDiscountTotal+quoteDiscount,taxTotal,total:Math.max(0,netSubtotal-quoteDiscount+additionalTax)};
-const quoteLineTotal=(line:QuoteLine,products:Product[],defaultTaxRate:number)=>{const base=discountedLineTotal(line);const product=products.find(item=>item.id===line.id);if(!product?.taxEnabled||product.priceIncludesTax)return base;const rate=Math.max(0,Number(product.taxRate??defaultTaxRate));return base*(1+rate/100);};
-
 };
+const quoteLineTotal=(line:QuoteLine,products:Product[],defaultTaxRate:number)=>{const base=discountedLineTotal(line);const product=products.find(item=>item.id===line.id);if(!product?.taxEnabled||product.priceIncludesTax)return base;const rate=Math.max(0,Number(product.taxRate??defaultTaxRate));return base*(1+rate/100);};
 
 const formatProductExpiry=(value:string)=>{const match=value.match(/^(\d{4})-(\d{2})-(\d{2})$/);return match?`${match[3]}/${match[2]}/${match[1]}`:value;};
 export function Quotes({customers,products,settings,quotes,setQuotes,saveQuotes,onCreateCustomer}:{customers:Customer[];products:Product[];settings:ErpSettings;quotes:QuoteRecord[];setQuotes:Dispatch<SetStateAction<QuoteRecord[]>>;onCreateCustomer:(customer:Customer)=>void;saveQuotes:(nextQuotes:QuoteRecord[])=>Promise<void>}){
