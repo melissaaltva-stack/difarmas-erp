@@ -7,9 +7,11 @@ import type { CartItem, Customer, OrderRecord, Product } from '../domain/types';
 const money=(value:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL',maximumFractionDigits:2}).format(value);
 const orderDate=(value:string)=>{const date=new Date(value);return Number.isNaN(date.getTime())?'—':date.toLocaleString('es-HN');};
 
-type OrderDraft={id:string;orderNumber?:string;customer:string;customerRtn:string;items:CartItem[]};
+type OrderDraft={id:string;orderNumber?:string;tabTitle?:string;customer:string;customerRtn:string;items:CartItem[]};
 const draftKey=(userId:string)=>'farmi_orders_create_drafts_'+userId;
+const tabTitleKey=(userId:string)=>'farmi_orders_tab_titles_'+userId;
 const readDrafts=(userId:string):OrderDraft[]=>{try{const value=JSON.parse(localStorage.getItem(draftKey(userId))||'[]');return Array.isArray(value)?value.filter(item=>item&&typeof item.id==='string'&&Array.isArray(item.items)):[];}catch{return [];}};
+const readSavedTabTitles=(userId:string):Record<string,string>=>{try{const value=JSON.parse(localStorage.getItem(tabTitleKey(userId))||'{}');return value&&typeof value==='object'&&!Array.isArray(value)?value:{};}catch{return {};}};
 
 function OrderEditor({products,customers,initialItems,initialCustomer='',initialRtn='',orderNumber='',saveLabel='Guardar pedido',onSave,onCancel,onDraftChange,onCreateCustomer}:{products:Product[];customers:Customer[];initialItems:CartItem[];initialCustomer?:string;initialRtn?:string;orderNumber?:string;saveLabel?:string;onSave:(items:CartItem[],customer:string,rtn:string,total:number,number:string)=>boolean;onCancel?:()=>void;onDraftChange?:(items:CartItem[],customer:string,rtn:string)=>void;onCreateCustomer:(customer:Customer)=>void}){
  const [items,setItems]=useState<CartItem[]>(()=>initialItems.map(item=>({...item})));
@@ -80,6 +82,7 @@ export function Orders({orders,onDelete,onInvoice,userId,products,customers,onSa
  const [notice,setNotice]=useState('');
  const [newDrafts,setNewDrafts]=useState<OrderDraft[]>(()=>{const saved=readDrafts(userId);return saved.length?saved:[{id:'new-initial-'+userId,customer:'',customerRtn:'',items:[]}];});
  const [editingIds,setEditingIds]=useState<number[]>([]);
+ const [savedTabTitles,setSavedTabTitles]=useState<Record<string,string>>(()=>readSavedTabTitles(userId));
  const [activeTab,setActiveTab]=useState('new:'+ (readDrafts(userId)[0]?.id??'new-initial-'+userId));
  const draftNumbersAssigned=useRef(false);
  useEffect(()=>{
@@ -89,6 +92,7 @@ export function Orders({orders,onDelete,onInvoice,userId,products,customers,onSa
   if(reserved.size)setNewDrafts(current=>current.map(draft=>reserved.has(draft.id)?{...draft,orderNumber:reserved.get(draft.id)}:draft));
  },[remoteReady,userId]);
  useEffect(()=>{try{localStorage.setItem(draftKey(userId),JSON.stringify(newDrafts));}catch{/* Los borradores siguen disponibles en memoria durante esta sesión. */}},[newDrafts,userId]);
+ useEffect(()=>{try{localStorage.setItem(tabTitleKey(userId),JSON.stringify(savedTabTitles));}catch{/* Los nombres personalizados siguen disponibles en memoria durante esta sesión. */}},[savedTabTitles,userId]);
  const [query,setQuery]=useState(''),[dateFrom,setDateFrom]=useState(''),[dateTo,setDateTo]=useState('');
  const matches=(order:OrderRecord,dateValue:string)=>{const day=String(dateValue||'').slice(0,10),term=query.trim().toLocaleLowerCase('es');return (!term||[order.number,order.customer??'',order.customerRtn??'',...order.items.map(item=>item.name)].join(' ').toLocaleLowerCase('es').includes(term))&&(!dateFrom||day>=dateFrom)&&(!dateTo||day<=dateTo);};
  const pending=orders.filter(order=>order.status==='Pendiente'&&matches(order,order.date)),invoiced=orders.filter(order=>order.status==='Facturado'&&matches(order,order.updatedAt||order.date));
@@ -116,8 +120,8 @@ export function Orders({orders,onDelete,onInvoice,userId,products,customers,onSa
   <div className="page-intro orders-heading"><div><h2>Pedidos</h2></div><button type="button" className="primary" onClick={addDraft} disabled={!remoteReady}><Plus size={16}/> Crear pedido</button></div>
   <section className="card orders-workspace">
    <div className="orders-tabs-bar" role="tablist" aria-label="Pedidos abiertos">
-    {newDrafts.map((draft,index)=><div className={'orders-tab'+(activeTab==='new:'+draft.id?' active':'')} key={draft.id} role="tab" aria-selected={activeTab==='new:'+draft.id}><button type="button" className="orders-tab-select" onClick={()=>setActiveTab('new:'+draft.id)}><span className="orders-tab-dot"/><span>{draft.customer||('Nuevo pedido '+(newDrafts.length-index))}</span></button><button type="button" className="orders-tab-close" aria-label="Cerrar borrador" onClick={()=>closeTab('new:'+draft.id)}><X size={13}/></button></div>)}
-    {editingIds.map(id=>{const order=orders.find(item=>item.id===id);if(!order)return null;return <div className={'orders-tab'+(activeTab==='saved:'+id?' active':'')} key={id} role="tab" aria-selected={activeTab==='saved:'+id}><button type="button" className="orders-tab-select" onClick={()=>setActiveTab('saved:'+id)}><span className="orders-tab-dot saved"/><span>{order.number}</span></button><button type="button" className="orders-tab-close" aria-label={'Cerrar '+order.number} onClick={()=>closeTab('saved:'+id)}><X size={13}/></button></div>;})}
+    {newDrafts.map((draft,index)=><div className={'orders-tab'+(activeTab==='new:'+draft.id?' active':'')} key={draft.id} role="tab" aria-selected={activeTab==='new:'+draft.id}><div className="orders-tab-select" onClick={()=>setActiveTab('new:'+draft.id)}><span className="orders-tab-dot"/><input type="text" className="orders-tab-title-input" aria-label="Nombre de la pestaña del pedido" value={draft.tabTitle??''} placeholder={draft.customer||('Nuevo pedido '+(newDrafts.length-index))} onFocus={()=>setActiveTab('new:'+draft.id)} onChange={event=>setNewDrafts(current=>current.map(item=>item.id===draft.id?{...item,tabTitle:event.target.value}:item))}/></div><button type="button" className="orders-tab-close" aria-label="Cerrar borrador" onClick={()=>closeTab('new:'+draft.id)}><X size={13}/></button></div>)}
+    {editingIds.map(id=>{const order=orders.find(item=>item.id===id);if(!order)return null;return <div className={'orders-tab'+(activeTab==='saved:'+id?' active':'')} key={id} role="tab" aria-selected={activeTab==='saved:'+id}><div className="orders-tab-select" onClick={()=>setActiveTab('saved:'+id)}><span className="orders-tab-dot saved"/><input type="text" className="orders-tab-title-input" aria-label={'Nombre de la pestaña del pedido '+order.number} value={savedTabTitles[String(id)]??''} placeholder={order.number} onFocus={()=>setActiveTab('saved:'+id)} onChange={event=>setSavedTabTitles(current=>({...current,[String(id)]:event.target.value}))}/></div><button type="button" className="orders-tab-close" aria-label={'Cerrar '+order.number} onClick={()=>closeTab('saved:'+id)}><X size={13}/></button></div>;})}
     <button type="button" className="orders-tab-add" onClick={addDraft} disabled={!remoteReady}><Plus size={15}/> Nuevo</button>
    </div>
    <div className="orders-tab-content">
