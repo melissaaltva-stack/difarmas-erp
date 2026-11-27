@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { Customer, Product, ErpSettings, QuoteRecord, QuoteLine } from '../domain/types';
-import { Plus, Search, Printer, Trash2, FileText, Eye, Save, ChevronDown, UserPlus } from 'lucide-react';
+import { Plus, Search, Printer, Trash2, FileText, Eye, Save, ChevronDown } from 'lucide-react';
 import { RegisterCustomerModal } from './Customers';
 import { CustomerSearchInput } from './CustomerSearchInput';
 const money=(n:number)=>new Intl.NumberFormat('es-HN',{style:'currency',currency:'HNL'}).format(n);
