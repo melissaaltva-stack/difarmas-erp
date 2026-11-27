@@ -7632,8 +7632,8 @@ button.icon-btn:focus-visible svg,
 
 /* Espacio de trabajo de pedidos con pestañas */
 .orders-workspace{padding:0;overflow:hidden;gap:0}
-.orders-tabs-bar{display:flex;align-items:stretch;gap:4px;min-width:0;overflow-x:auto;padding:9px 10px 0;background:var(--surface-muted,#f4f7f5);border-bottom:1px solid var(--border,#e2e9e5);scrollbar-width:thin}
-.orders-tab{display:flex;align-items:center;gap:2px;flex:0 0 auto;max-width:220px;min-width:125px;padding:0 5px;border:1px solid transparent;border-bottom:0;border-radius:8px 8px 0 0;color:var(--text-secondary,#687a72);background:transparent}
+.orders-tabs-bar{display:flex;flex-wrap:wrap;align-items:stretch;align-content:flex-start;gap:4px;min-width:0;overflow:visible;padding:9px 10px 8px;background:var(--surface-muted,#f4f7f5);border-bottom:1px solid var(--border,#e2e9e5);scrollbar-width:none}
+.orders-tab{display:flex;align-items:center;gap:2px;flex:1 1 150px;min-width:0;max-width:220px;padding:0 5px;border:1px solid transparent;border-bottom:0;border-radius:8px 8px 0 0;color:var(--text-secondary,#687a72);background:transparent}
 .orders-tab.active{background:var(--surface,#fff);border-color:var(--border,#dfe8e3);color:var(--text,#263b33);margin-bottom:-1px;position:relative}
 .orders-tab-select{display:flex;align-items:center;gap:7px;min-width:0;flex:1;padding:10px 5px;border:0;background:transparent;color:inherit;font:inherit;font-size:12px;font-weight:650;text-align:left;cursor:pointer}
 .orders-tab-select span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -7641,8 +7641,9 @@ button.icon-btn:focus-visible svg,
 .orders-tab-dot.saved{background:#4b91b8}
 .orders-tab-close{display:grid;place-items:center;width:23px;height:23px;flex:0 0 23px;border:0;border-radius:5px;background:transparent;color:#83928b;cursor:pointer}
 .orders-tab-close:hover{background:#e8eeea;color:#a33f3f}
-.orders-tab-add{display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;align-self:center;margin:0 5px 7px;padding:7px 10px;border:1px dashed #b8c9c0;border-radius:7px;background:transparent;color:#47725f;font-size:11px;font-weight:650;cursor:pointer}
+.orders-tab-add{display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;align-self:center;margin:0 5px 0;padding:7px 10px;border:1px dashed #b8c9c0;border-radius:7px;background:transparent;color:#47725f;font-size:11px;font-weight:650;cursor:pointer}
 .orders-tab-add:hover{background:#eaf2ed}
+.orders-tabs-bar button:disabled{opacity:.55;cursor:not-allowed}
 .orders-tab-content{min-width:0;padding:14px}
 .orders-tab-panel[hidden]{display:none!important}
 .orders-tab-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;padding:0 2px 10px;border-bottom:1px solid var(--border,#e7ece9)}
@@ -7651,7 +7652,7 @@ button.icon-btn:focus-visible svg,
 .orders-tab-panel-heading small,.orders-tab-panel-heading>span{color:var(--text-secondary,#74847c);font-size:11px}
 .orders-tab-panel>.order-editor{border:0;box-shadow:none;padding:0}
 .orders-tab-panel .invoice-layout{gap:12px}
-@media(max-width:650px){.orders-tabs-bar{padding-left:7px;padding-right:7px}.orders-tab{min-width:112px;max-width:170px}.orders-tab-content{padding:9px}.orders-tab-panel-heading{align-items:flex-start}}
+@media(max-width:650px){.orders-tabs-bar{padding:8px 7px}.orders-tab{flex:1 1 135px;max-width:none}.orders-tab-add{margin-left:auto}.orders-tab-content{padding:9px}.orders-tab-panel-heading{align-items:flex-start}}
 
 
 /* Buscador de clientes compartido en Facturación, Pedidos y Cotizaciones */
